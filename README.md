@@ -1,4 +1,4 @@
-porting from https://github.com/tonyx/orderssystem
+porting from plain .net/mono version of https://github.com/tonyx/orderssystem to .net core
 - sql is the same: you may take the .sql script from plain that version of orderssystem
 - some bugs has been fixed
 - localization can't work using xml based properties (becasue of problem of donet core with Fsharp.configuration). As workaround for now I have plain .fs source files for strings
