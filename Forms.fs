@@ -377,11 +377,34 @@ let searchCourse: Form<SearchCourse> =
         ], []
     )
 
+type Comment = {
+    Comment: string    
+}
+
+let comment:Form<Comment> =
+    Form (
+        [],[]
+    )
+
+type CommentForCourse = {
+    CommentForCourse: decimal
+
+}
+
+let commentForCourse:Form<CommentForCourse>  = 
+    Form ( 
+        [DecimalProp ((fun f -> <@ f.CommentForCourse @>),[])],[] 
+    )
+
+
+
 type SearchIngredient = {
     Name: string
 }
 
+
 let searchIngredient: Form<SearchIngredient> =
+
     Form (
         [
             TextProp ((fun f -> <@ f.Name @>),[])

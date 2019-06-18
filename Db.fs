@@ -97,6 +97,9 @@ type TenderCode = DbContext.``public.tendercodesEntity``
 type PaymentItem = DbContext.``public.paymentitemEntity``
 type NonArchivedOrderDetail = DbContext.``public.nonarchivedorderdetailsEntity``
 type PaymentItemDetail = DbContext.``public.paymentitemdetailsEntity``
+type StandardComment = DbContext.``public.standardcommentsEntity``
+type CommentForCourse = DbContext.``public.commentsforcourseEntity``
+type CommentForCourseDetails = DbContext.``public.commentsforcoursedetailsEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -688,6 +691,52 @@ module Users =
         log.Debug("getTemporaryUsersView")
         ctx.Public.Usersview |> Seq.filter (fun (x:UsersView) -> x.Istemporary ) |> Seq.sortByDescending (fun (x:UsersView) -> x.Creationtime) |>  Seq.toList
 
+
+let getAllStandardComments (ctx:DbContext) =    
+    ctx.Public.Standardcomments |> Seq.sortBy (fun x -> x.Comment) |> Seq.toList
+
+
+let getStandardComment id (ctx:DbContext) =
+    ctx.Public.Standardcomments |> Seq.find (fun x -> x.Standardcommentid = id)
+
+let addStandardComment comment (ctx:DbContext) =
+    ctx.Public.Standardcomments.``Create(comment)``(comment)
+    ctx.SubmitUpdates()
+
+let getCommentsForCourseDetails courseId (ctx:DbContext) =
+    query {
+        for commentForCourse in ctx.Public.Commentsforcoursedetails do
+        where (commentForCourse.Courseid = courseId )
+        select commentForCourse
+    } |> Seq.toList
+
+
+let removeStandardComment id (ctx:DbContext) =
+     let comment = getStandardComment id ctx
+     comment.Delete()
+     ctx.SubmitUpdates()
+
+let addCommentForCourse courseId commentId (ctx:DbContext) =
+    ctx.Public.Commentsforcourse.Create(commentId, courseId) 
+    ctx.SubmitUpdates()
+    
+
+let getStandardCommentForCourse commentsForCourseId (ctx:DbContext) =
+    ctx.Public.Commentsforcourse |> Seq.find (fun x -> x.Commentsforcourseid = commentsForCourseId)
+
+let getAllStandardCommentsForCourse courseId (ctx:DbContext) =
+    query {
+        for standardCommentForCourse in ctx.Public.Commentsforcourse do
+            where (standardCommentForCourse.Courseid = courseId)
+            select standardCommentForCourse
+        } |> Seq.toList
+    
+
+let removeStandardCommentForCourse id (ctx:DbContext) =
+    let commentForCourse = getStandardCommentForCourse id ctx
+    commentForCourse.Delete()
+    ctx.SubmitUpdates()
+
 let tryGetIngredientByName ingredientName (ctx:DbContext) =
     query {
         for course in ctx.Public.Ingredient do 
@@ -740,7 +789,7 @@ let getObserverRoleStatusCategory (ctx: DbContext) =
 
 let getCategoryOfIngredients categoryid (ctx: DbContext) =
     log.Debug (sprintf "%s %d" "getCategoryOfIngredients" categoryid)
-    ctx.Public.Ingredientcategory  |> Seq.find (fun (x:IngredientCategory) -> x.Ingredientcategoryid = categoryid)
+    ctx.Public.Ingredientcategory |> Seq.find (fun x -> x.Ingredientcategoryid = categoryid)
 
 let getEnablerRoleStatusCategory (ctx: DbContext) =
     log.Debug("getEnablerRoleStatusCategory")
@@ -1156,6 +1205,7 @@ let createOrGetOutGroup orderId groupOut (ctx:DbContext) =
     ctx.SubmitUpdates()
     newGroup
 
+
 let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbContext) =
     let finalState = States.getFinalState ctx
     let course = Courses.getCourse courseId ctx
@@ -1168,12 +1218,23 @@ let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbCo
     let _ = match subGroupIdOption with
                 | Some N -> orderItem.Isinsasuborder <- true; orderItem.Suborderid <- N
                 | _ -> ()
-
     ctx.SubmitUpdates()
 
 let getTheOrderItemById orderItemId (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "getTheOrderItemById" orderItemId)
     ctx.Public.Orderitems |> Seq.find(fun (x:OrderItem) -> x.Orderitemid = orderItemId )
+
+let removeExistingCommentToOrderItem id ctx =
+    log.Debug("removeExistingCommentToOrderItem")
+    let orderItem  = getTheOrderItemById id ctx
+    let _ = orderItem.Comment <- ""
+    ctx.SubmitUpdates()
+
+let addCommentToOrderItemById (comment: string) orderItemId ctx =
+    let orderItem = getTheOrderItemById orderItemId ctx
+    let oldComment = orderItem.Comment
+    let _ = orderItem.Comment <- (oldComment+", "+comment)
+    ctx.SubmitUpdates()
 
 let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
     let orderItemsInSuborders = ids |> List.map (fun x -> getTheOrderItemById x ctx) |> List.filter (fun x -> x.Isinsasuborder)

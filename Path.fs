@@ -20,6 +20,10 @@ module Errors =
 
 module Orders =
 
+    let removeExistingCommentToOrderItem: IntPath = "/orders/removeExistingCommenToOrderItem/%d"
+    let addStandardCommentToOrderItem: IntPath2 = "/orders/addStandardCommentToOrderItem/%d/%d"
+
+    let selectStandardCommentsForOrderItem: IntPath = "/orders/selectStandardCommentsForOrderItem/%d"        
     let removeAllDiscountOfSubOrder: IntPath = "/orders/removeAllDiscountsOfSubOrder/%d" 
     let removePaymentItemOfSubOrder: IntPath3 = "/orders/removePaymentItemOfSubOrder/%d/%d/%d"
     let removePaymentItemOfOrder: IntPath2 = "/orders/removePaymentItemOfOrder/%d/%d"
@@ -81,6 +85,10 @@ module Orders =
     let selectOrderFromWhichMoveOrderItems: IntPath = "/orders/selectOrderFromWhichMoveOrderItems/%d"
     
 module Admin =
+    let removeStandardCommentForCourse: IntPath = "/admin/removeStandardCommentForCourse/%d"
+    let standardCommentsForCourse: IntPath  = "/admin/standardCommentsForCourse/%d"
+    let standardComments  = "/admin/standardComments"
+    let removeStandardComment: IntPath = "/admin/removeStandardComment/%d"
     let removePrinter: IntPath = "/admin/removePrinter/%d"
     let deleteIngredientPrice: IntPath = "/admin/deleteIngredientPrice/%d"
     let deleteIngredient: IntPath = "/admin/deleteIngredient/%d"

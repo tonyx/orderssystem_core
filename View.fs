@@ -73,6 +73,39 @@ let editTemporaryUser (user:Db.User) (host:string) =
 
 ]
 
+let standardComments (comments:Db.StandardComment list) = 
+    [
+        h2 "standard comments"
+
+        renderForm 
+         {
+            Form = Form.comment
+            Fieldsets =
+             [ { Legend = "commenti standard"
+                 Fields =
+                    [
+                        { Label = "nuovo commento"
+                          Html = formInput
+                            (fun f -> <@ f.Comment @>) []
+                        }
+                    ]
+                }
+             ]
+            SubmitText = "inserisci"
+         }
+        ulAttr ["id","item-list"] [
+            for comment in comments ->
+                tag "p" [] [
+                    
+                    Text (comment.Comment)
+                    a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
+                      [Text "rimuovi"]
+                ]
+                
+        ]
+    ]
+    
+
 let editUser (user:Db.User) = [
     h2 ("Edit user: " + user.Username)
     renderForm 
@@ -184,8 +217,7 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
 
 
 let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.IngredientCategory list) 
-      (ingredientsOfTheCourse:Db.IngredientOfCourse list)
-     message = [ 
+      (ingredientsOfTheCourse:Db.IngredientOfCourse list) (commentsForCourse:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) message = [ 
 
    h2 "Edit"
 
@@ -247,6 +279,19 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
    tag "p" [] [
         a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
    ]
+
+   h2 "commenti standard selezionabili:"
+   ulAttr ["id","item-list"] [
+        for commentForCourse in commentsForCourse ->
+            tag "p" [] [
+                Text(commentForCourse.Comment)
+                // a (sprintf Path.Admin.removeStandardCommentForCourse commentForCourse.Commentsforcourseid ) ["class","buttonX"]  [Text ("rimuovi")]
+            ]
+   ]
+
+   a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text ("modifica commenti standard selezionabili")]
+   br []
+
 
    tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
 
@@ -1448,6 +1493,11 @@ let allUsersLink user =
     | "admin" ->  tag "p" [] [a (Path.Admin.allUsers) ["class","buttonX"] [Text local.ManageOrdinaryUsers]]
     | _ -> em  ""
 
+let standardCommentsLink user =
+    match user.Role with
+    | "admin" ->  tag "p" [] [a (Path.Admin.standardComments) ["class","buttonX"] [Text "commenti standard"]]
+    | _ -> em""
+
 let temporaryUsersLink user =
     match user.Role with
     | "admin" ->  tag "p" [] [a (Path.Admin.temporaryUsers) ["class","buttonX"] [Text local.ManageTemporaryUsers]]
@@ -1508,6 +1558,7 @@ let controlPanel (user:UserLoggedOnSession) (dbUser: Db.User)=
         logOffButton
         deleteObjectsPage user
         optimizeVoidedLink dbUser
+        standardCommentsLink user
     ]
 
 let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
@@ -2301,6 +2352,69 @@ let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list
         tag "p" [] [a Path.Orders.addSingleOrder ["class","buttonX"] [Text local.NewOrder] ]
         script ["type","text/javascript"; "src","/autorefresh.js"] []
       ]
+
+let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) =
+    
+    let allStandardCommentsIds = allStandardComments |> List.map (fun x -> x.Standardcommentid)
+    let selectableStandardComments = allStandardComments |> List.map (fun x -> ((decimal)x.Standardcommentid,x.Comment))
+
+    [
+        h2 ("aggiungi commenti standard per "+course.Name)
+        renderForm 
+         {
+            Form = Form.commentForCourse
+            Fieldsets =
+             [ { Legend = "commenti standard"
+                 Fields =
+                    [
+                        { Label = "aggiungi commento possibile"
+                          Html = selectInput (fun f -> <@ f.CommentForCourse @>) selectableStandardComments  (None)
+                        }
+                    ]
+                }
+             ]
+            SubmitText = "inserisci"
+         }
+
+         
+        h2 "commenti esistenti:"
+        ulAttr ["id","item-list"] [
+        for commentForCourse in commentsForCourseDetails ->
+             tag "p" [] [
+                Text(commentForCourse.Comment)
+                a (sprintf Path.Admin.removeStandardCommentForCourse commentForCourse.Commentsforcourseid ) ["class","buttonX"]  [Text ("rimuovi")]
+
+                ]
+        ]
+
+        a (sprintf Path.Courses.editCourse course.Courseid) ["class","buttonX"] [Text ("ritorna")]
+
+    ]
+
+let selectStandardCommentsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) =
+    [
+        h2 ("commenti per "+orderItem.Name)
+        Text("commento esistente: "+orderItem.Comment) 
+        // (a (sprintf Path.Orders.removeExistingCommentToOrderItem orderItem.Orderitemid) ["class","buttonX"] [Text("azzera ")])
+        br []
+
+        em "commenti aggiungibili"
+
+        ulAttr ["id","item-list"] [
+            for standardComment in selectableStandardComments ->
+                tag "p" [] [
+                
+                     Text(standardComment.Comment)
+                     a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text("aggiungi")]
+                 ]
+
+        ]
+        a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text("torna all'ordine")]
+        let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
+        a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("variazioni")]
+
+
+    ]       
 
 let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list ) 
     (categories:Db.CourseCategories list) (orderItemsOfOrders: Map<int,Db.OrderItemDetails list>)  

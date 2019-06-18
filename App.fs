@@ -1112,6 +1112,8 @@ let editCourse id  =
    log.Debug(sprintf "%s %d ""editCourse" id)
    let ctx = Db.getContext()
    let courseCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun g -> decimal g.Categoryid,g.Name)
+   let commentsForCourse = Db.getCommentsForCourseDetails id ctx
+   let allStandardComments = Db.getAllStandardComments ctx
 
    let visibleIngredientCategories = Db.getVisibleIngredientCategories ctx
 
@@ -1122,14 +1124,14 @@ let editCourse id  =
        choose [
            GET >=> warbler (fun _ ->
                html (View.editCourse course courseCategories visibleIngredientCategories 
-                 ingredientsOfTheCourse ""))
+                 ingredientsOfTheCourse commentsForCourse allStandardComments ""))
 
            POST >=> bindToForm Form.course (fun form ->
                match (Db.Courses.tryFindCourseByName form.Name ctx) with
                | Some X when X.Courseid <> course.Courseid -> 
                 "un piatto di nome "+ form.Name + "esiste già" |> 
                     View.editCourse course courseCategories visibleIngredientCategories 
-                         ingredientsOfTheCourse |> html
+                         ingredientsOfTheCourse commentsForCourse allStandardComments |> html
                | _ ->
                    let desc = match form.Description with | Some d -> d | _ -> ""
                    Db.Courses.updateCourse 
@@ -1383,10 +1385,14 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
 
           POST >=> bindToForm Form.orderItem (fun form ->
             let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+            let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItem.Courseid ctx
+                             
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
-
-            Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+            
+            match (List.length standardCommentsForThisCourse) with 
+                | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
         )
        ]
       | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
@@ -1420,9 +1426,15 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
             let course = Db.getCourseDetail ((int)form.CourseId) ctx
             
             let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
+            let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItem.Courseid ctx
+
+
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
 
+            match (List.length standardCommentsForThisCourse) with 
+                | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
 
             Redirection.FOUND (backUrl+"#order"+(orderId|> string))
         )
@@ -3264,6 +3276,29 @@ let rejectOrderItem orderItemId (user:UserLoggedOnSession) =
       ]
     | false -> Redirection.FOUND Path.Orders.orderItemsProgress
 
+
+let standardComments = 
+    let ctx = Db.getContext()
+    choose [
+        GET >=> warbler (fun _ ->
+            let comments = Db.getAllStandardComments ctx
+            View.standardComments comments |> html
+        )
+        POST >=> bindToForm Form.comment (fun form ->
+            let _ = Db.addStandardComment form.Comment ctx
+            Redirection.FOUND Path.Admin.standardComments
+            
+        )
+
+        
+    ]
+
+
+let removeStandardComment id =
+    let ctx = Db.getContext()
+    let _ = Db.removeStandardComment id ctx
+    Redirection.FOUND Path.Admin.standardComments
+
 let resetDiscount orderId = 
     log.Debug(sprintf "%s %d\n" "resetDiscount" orderId)
     let ctx = Db.getContext()
@@ -3311,6 +3346,36 @@ let qrUserImageGen (user:UserLoggedOnSession) =
         DotLiquid.page("qrCode.html") o
     ) 
 
+let removeStandardCommentForCourse commentForCourseId =
+    let ctx = Db.getContext()
+    let standardComment = Db.getStandardCommentForCourse commentForCourseId ctx
+    standardComment.Delete()
+    ctx.SubmitUpdates()
+    let courseId = standardComment.Courseid
+
+
+    //Redirection.FOUND (sprintf Path.Courses.editCourse courseId)
+    Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId)
+
+let standardCommentsForCourse courseId =
+    let ctx = Db.getContext()
+    let course = Db.Courses.getCourse courseId ctx
+    choose [
+        GET >=> warbler (fun _ -> 
+                let commentsForCourseDetails = Db.getCommentsForCourseDetails courseId ctx
+                // let commentsForCourseDetailsIds = commetnForCourseDetails |> List.map (fun x -> x.Commentsforcourseid)
+                let allStandardComments = Db.getAllStandardComments ctx
+
+                let existingCommentsForCourseIds = commentsForCourseDetails |> List. map (fun x -> x.Standardcommentid)
+
+                let selectableStandardComments = allStandardComments  |> (List.filter (fun x -> (not (List.contains x.Standardcommentid existingCommentsForCourseIds))))
+
+                View.standardCommentsForCourse course commentsForCourseDetails selectableStandardComments  |> html
+            )
+        POST >=> bindToForm Form.commentForCourse (fun form ->
+            let _ = Db.addCommentForCourse ((int)form.CommentForCourse) courseId ctx
+            Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId))
+    ]
 
 
 let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetailsWrapped list) =
@@ -3322,6 +3387,37 @@ let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetai
     let stateGroupMapping = List.zip (setOfDifferentStates |> Set.toList) availableGroupIdentifiers |> Map.ofList
     stateGroupMapping
 
+let selectStandardCommentsForOrderItem orderItemId =
+    let ctx = Db.getContext()
+    //let orderItem = Db.getTheOrderItemById orderItemId ctx
+    //let orderItem = Db.getTheOrderItemById orderItemId ctx
+    let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
+    //let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItemDetail.Courseid ctx
+    let standardCommentsForThisCourse = Db.getCommentsForCourseDetails orderItemDetail.Courseid ctx
+    //let backUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid)
+
+    match (List.length standardCommentsForThisCourse) with 
+          | 0 -> Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
+          | _ -> View.selectStandardCommentsForOrderItem orderItemDetail standardCommentsForThisCourse  |> html
+
+          //Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
+
+
+
+let addStandardCommentToOrderItem commentId orderItemId  =
+    let ctx = Db.getContext()
+    let comment = Db.getStandardComment commentId ctx
+    Db.addCommentToOrderItemById comment.Comment orderItemId ctx
+    
+    Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItemId)
+
+    // View.addStandardCommentToOrderItem |> html
+
+let removeExistingCommentToOrderItem id =
+    let ctx = Db.getContext()
+    let _ = Db.removeExistingCommentToOrderItem id ctx
+    Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem id)
+    
 
 let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
     log.Debug("selectOrderFromWhichMoveOrderItems")
@@ -3375,8 +3471,14 @@ let noCache =
   >=> setHeader "Expires" "0"
 
 let webPart =
-    choose [ 
-
+    choose [
+        pathScan Path.Orders.removeExistingCommentToOrderItem (fun id -> loggedOn (removeExistingCommentToOrderItem id))
+        pathScan Path.Orders.addStandardCommentToOrderItem (fun (commentId,orderItemId) -> loggedOn (addStandardCommentToOrderItem commentId orderItemId))
+        pathScan Path.Orders.selectStandardCommentsForOrderItem (fun id -> loggedOn (selectStandardCommentsForOrderItem id))
+        pathScan Path.Admin.standardCommentsForCourse (fun id -> admin (standardCommentsForCourse id))
+        pathScan Path.Admin.removeStandardCommentForCourse (fun id -> admin (removeStandardCommentForCourse id))
+        pathScan Path.Admin.removeStandardComment (fun id -> admin  (removeStandardComment id))
+        path Path.Admin.standardComments >=> standardComments
         pathScan Path.Orders.removeAllDiscountOfSubOrder (fun id -> admin (removeAllDiscountOfSubOrder id))
         pathScan Path.Orders.removePaymentItemOfOrder (fun (paymentId,orderId) -> admin (removePaymentItemOfOrder paymentId orderId) )
         pathScan Path.Orders.createEcrReceiptInstructionForSubOrder (fun (suborderid,orderid) -> admin (createEcrReceiptInstructionForSubOrder suborderid orderid))
