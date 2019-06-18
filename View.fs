@@ -2392,29 +2392,30 @@ let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.Co
     ]
 
 let selectStandardCommentsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) =
+    let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
     [
         h2 ("commenti per "+orderItem.Name)
+    
         Text("commento esistente: "+orderItem.Comment) 
-        // (a (sprintf Path.Orders.removeExistingCommentToOrderItem orderItem.Orderitemid) ["class","buttonX"] [Text("azzera ")])
+
+        (a (sprintf Path.Orders.removeExistingCommentToOrderItem orderItem.Orderitemid) ["class","buttonX"] [Text("azzera ")])
         br []
-
-        em "commenti aggiungibili"
-
+        h2 ("commenti aggiugibili:")
         ulAttr ["id","item-list"] [
             for standardComment in selectableStandardComments ->
                 tag "p" [] [
-                
-                     Text(standardComment.Comment)
-                     a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text("aggiungi")]
-                 ]
-
+                    Text(standardComment.Comment)
+                    a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text("aggiungi")]
+                ]
         ]
+        a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("inserisci variazioni")]
+        br []
         a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text("torna all'ordine")]
-        let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
-        a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("variazioni")]
+
+    ]
 
 
-    ]       
+    
 
 let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list ) 
     (categories:Db.CourseCategories list) (orderItemsOfOrders: Map<int,Db.OrderItemDetails list>)  
