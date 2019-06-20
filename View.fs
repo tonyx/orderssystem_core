@@ -849,6 +849,10 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option)  (courses: Db.C
             
             tag "p" [] [ a (sprintf Path.Courses.addCourseByCategory ((int)theCategory.Categoryid)) 
                 ["class","buttonX"] [Text (local.AddNewItem+theCategory.Name)]]
+            
+            tag "p" [] [ a (sprintf Path.Courses.makeSubCourseCategory ((int)theCategory.Categoryid)) 
+                ["class","buttonX"] [Text ("aggiugni sottocategoria")]]
+
             br []
             div [] [Text(local.CoursesOfType+theCategory.Name+": "+local.ClickToChange)]
             br []
@@ -895,20 +899,53 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option)  (courses: Db.C
         ]
     | None -> [ Text("an error occurred, unexisting category")]
 
+let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
+    [
+        h2 ("Inserisci sottocategoria di "+courseCategory.Name)
+
+        div ["id", "register-message"] [
+            Text message
+        ]
+
+        renderForm 
+            { Form = Form.subCourseCategory
+              Fieldsets =
+                  [ { Legend = "sottocategoria"
+                      Fields =
+                          [ 
+                            {   Label = "nome"
+                                Html = formInput (fun f -> <@ f.Name@>) []
+                            }
+                            {   Label = "visibilità"
+                                Html = selectInput (fun f -> <@ f.Visibility@>) visibilityType (Some "VISIBILE")
+                            }
+                          ] 
+                    }
+
+                  ]
+              SubmitText = "inserisci"   
+            }
+    ]
 
 
 let seeVisibleCoursesPaginated (category:Db.CourseCategories option)  (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
     match category with 
-    | Some theCategory -> 
-        [
+      | Some theCategory -> 
+        
+          [
             h2 (local.AllVisibleCoursesOfCategory + theCategory.Name); 
             tag "p" [] [ a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid 0) 
                 ["class", "buttonX"] [Text (local.ClickToSeeAllVisibleCoursesOfCategory+theCategory.Name)]]
             
             tag "p" [] [ a (sprintf Path.Courses.addCourseByCategory ((int)theCategory.Categoryid)) 
                 ["class","buttonX"] [Text (local.AddNewItem + theCategory.Name)]]
+
+            tag "p" [] [ a (sprintf Path.Courses.makeSubCourseCategory ((int)theCategory.Categoryid)) 
+                ["class","buttonX"] [Text ("aggiugi sottocategoria")]]
+
+            
             br []
             div [] [Text(local.CoursesOfCategory + theCategory.Name+":"+ local.ClickToChange)]
             br []
@@ -935,8 +972,10 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option)  (courses: 
             ) @ (nextPageLink theCategory pageNumber)))
 
             div [] [a Path.Courses.adminCategories [] [Text local.GoBack]]
-        ]
-    | None -> [ Text("an error occurred, unexisting category")]
+          ]
+        
+      | None -> [ Text("an error occurred, unexisting category")]
+    
 
 
 
@@ -1148,7 +1187,7 @@ let ingredientCatgoriesAdministrationPage  (allIngredientCategories:Db.Ingredien
                   a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategory.Ingredientcategoryid 0) ["class",buttonClass] 
                     [Text (ingredientCategory.Name + " "+visibility  )]
                   a ((sprintf Path.Admin.switchVisibilityOfIngredientCategory
-                    ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories)))  ["class","buttonX"] [Text("modifica visibilità")]
+                    ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories)))  ["class","buttonX"] [Text("modifica visibilitÃ ")]
             ]
 
         ]
@@ -2055,7 +2094,7 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
             ]
         ]
         br []
-        tag "p" [] [a (encodedBackUrl) ["class","buttonX"] [Text(local.GoBack)]]
+        tag "p" [] [a (encodedBackUrl) ["class","buttonX"] [Text("prosegui")]]
         script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
         script ["type","text/javascript"; "src","/autocompleteEditOrderItemIng.js"] []
     ]

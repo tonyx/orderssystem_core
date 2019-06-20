@@ -146,6 +146,9 @@ module Admin =
 
 
 module Courses =
+
+    let makeSubCourseCategory: IntPath = "/courses/makeSubCourseCategory/%d"
+
     let deleteIngredientToCourse: IntPath2 = "/courses/deleteingredientToCourse/%d/%d"
     let selectAllIngredientsForCourseEdit: IntPath = "/courses/selectAllIngredientsForCourseEdit/%d"
     let selectIngredientCategoryForCourseEdit: IntPath2 = "/course/selectIngredientCategoryForCourseEdit/%d/%d"

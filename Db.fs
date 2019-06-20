@@ -100,6 +100,8 @@ type PaymentItemDetail = DbContext.``public.paymentitemdetailsEntity``
 type StandardComment = DbContext.``public.standardcommentsEntity``
 type CommentForCourse = DbContext.``public.commentsforcourseEntity``
 type CommentForCourseDetails = DbContext.``public.commentsforcoursedetailsEntity``
+type SubCategoryMapping = DbContext.``public.subcategorymappingEntity``
+type FatherSonCategoriesDetails = DbContext.``public.fathersoncategoriesdetailsEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -241,6 +243,23 @@ module Courses =
                 select category
         } |> Seq.toList
 
+    let getAllFatherSonCategoriesDetails (ctx:DbContext) =
+        ctx.Public.Fathersoncategoriesdetails |> Seq.toList
+    
+    let getAllSubCategoryMapping (ctx:DbContext) =
+        ctx.Public.Subcategorymapping |> Seq.toList
+
+
+    let getAllRootCategories (ctx:DbContext) =
+        let allSons = getAllSubCategoryMapping ctx |> List.map (fun x -> x.Sonid)
+        ctx.Public.Coursecategories |> Seq.filter  (fun x -> (not (List.contains x.Categoryid allSons))) |> Seq.toList |> List.sortBy (fun x -> x.Name)
+
+    let getAllActiveVisibleRootCategories (ctx:DbContext) =
+        let allSons = getAllSubCategoryMapping ctx |> List.map (fun x -> x.Sonid)
+        ctx.Public.Coursecategories |> Seq.filter  (fun x -> (not (List.contains x.Categoryid allSons))) |> Seq.filter (fun x -> (x.Visibile && not x.Abstract)) |>  Seq.toList |> List.sortBy (fun x -> x.Name)
+
+
+
     let getVisibleCourseCategories (ctx: DbContext) : CourseCategories list =
         log.Debug("getVisibleCourseCategories")
         query {
@@ -325,6 +344,9 @@ module Courses =
                 where (category.Categoryid=id)
                 select category
         } |> Seq.tryHead
+
+    let getCourseCategory id (ctx: DbContext) =
+        ctx.Public.Coursecategories |> Seq.find (fun x -> x.Categoryid = id)
 
     let tryFindCategoryByName categoryName (ctx: DbContext) : CourseCategories option =
         log.Debug(sprintf "%s %s" "tryFindCategoryByName" categoryName )

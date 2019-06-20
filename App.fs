@@ -931,7 +931,8 @@ let adminRoles  =  warbler (fun _ ->
 let adminCategories  = warbler (fun _ ->
     log.Debug("adminCategories")
     let ctx = Db.getContext()
-    let coursesCategories = Db.Courses.getAllCategories ctx
+    //let coursesCategories = Db.Courses.getAllCategories ctx
+    let coursesCategories = Db.Courses.getAllRootCategories ctx
     View.coursesAdministrationPage  coursesCategories |> html)
 
 let allOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
@@ -2419,7 +2420,8 @@ let viewSingleOrder orderId (user:UserLoggedOnSession)=
                                 | _ -> []
 
     let userView = Db.getUserViewById user.UserId ctx //orderDetail.Userid ctx
-    let activeCategories = Db.Courses.getActiveConcreteCategories ctx
+    //let activeCategories = Db.Courses.getActiveConcreteCategories ctx
+    let activeCategories = Db.Courses.getAllActiveVisibleRootCategories ctx
     let orderItemDetails = Db.getOrderItemDetailOfOrderById orderId ctx
     let mapOfLinkedStates = Db.getMapOfStates ctx 
     let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
@@ -3417,7 +3419,16 @@ let removeExistingCommentToOrderItem id =
     let ctx = Db.getContext()
     let _ = Db.removeExistingCommentToOrderItem id ctx
     Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem id)
-    
+   
+let makeSubCourseCategory id =
+    let ctx = Db.getContext()
+    let courseCategory = Db.Courses.getCourseCategory id ctx
+    choose [
+        GET >=> warbler (fun _ ->
+            View.makeSubCourseCategory courseCategory "" |> html
+        )
+        POST >=> Redirection.FOUND Path.home
+    ]
 
 let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
     log.Debug("selectOrderFromWhichMoveOrderItems")
@@ -3472,6 +3483,7 @@ let noCache =
 
 let webPart =
     choose [
+        pathScan Path.Courses.makeSubCourseCategory (fun id -> admin (makeSubCourseCategory id))
         pathScan Path.Orders.removeExistingCommentToOrderItem (fun id -> loggedOn (removeExistingCommentToOrderItem id))
         pathScan Path.Orders.addStandardCommentToOrderItem (fun (commentId,orderItemId) -> loggedOn (addStandardCommentToOrderItem commentId orderItemId))
         pathScan Path.Orders.selectStandardCommentsForOrderItem (fun id -> loggedOn (selectStandardCommentsForOrderItem id))

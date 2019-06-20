@@ -327,6 +327,23 @@ let courseCategoryEdit : Form<CourseCategory> =
            ],[ ]
    )
 
+type SubCourseCategory = {
+    Name: string
+    Visibility: string
+}
+
+let subCourseCategory : Form<SubCourseCategory> = 
+   Form (
+       [ 
+           TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
+           TextProp ((fun f -> <@ f.Visibility @>), [] )
+           ],[ ]
+   )
+
+
+
+
+
 type InvoiceForm = {
     CompanyId: decimal
     Comment: string
