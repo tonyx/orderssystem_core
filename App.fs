@@ -1072,17 +1072,19 @@ let manageAllCoursesOfACategoryPaginated categoryId pageNumber =
             let coursesOfPage = Db.Courses.getAllCoursesDetailsByCategoryAndPage categoryId pageNumber ctx
             let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
             let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+            let subCategories = Db.getAllSubCourseCategories categoryId ctx
 
             let category = Db.Courses.tryGetCategoryById categoryId ctx
-            View.seeAllCoursesPaginated category coursesOfPage numberOfPages pageNumber |> html)
+            View.seeAllCoursesPaginated category subCategories coursesOfPage numberOfPages pageNumber |> html)
 
         POST >=> bindToForm Form.searchCourse (fun form -> 
             let coursesOfPage = Db.Courses.getAllCoursesDetailsByCategoryWithTextNameSearch categoryId form.Name ctx
             let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
             let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
 
+            let subCategories = Db.getAllSubCourseCategories categoryId ctx
             let category = Db.Courses.tryGetCategoryById categoryId ctx
-            View.seeAllCoursesPaginated category coursesOfPage numberOfPages pageNumber |> html
+            View.seeAllCoursesPaginated category subCategories coursesOfPage numberOfPages pageNumber |> html
         
         )
     ]
@@ -1094,8 +1096,9 @@ let manageVisibleCoursesOfACategoryPaginated categoryId pageNumber =
     let numberOfAllCourses = Db.Courses.getNumberOfVisibleCoursesOfACatgory categoryId ctx
     let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
 
+    let subCategories = Db.getVisibleSubCourseCategories categoryId ctx
     let category = Db.Courses.tryGetCategoryById categoryId ctx
-    View.seeVisibleCoursesPaginated category coursesOfPage numberOfPages pageNumber |> html
+    View.seeVisibleCoursesPaginated category subCategories coursesOfPage numberOfPages pageNumber |> html
 
 let manageCategories = warbler (fun _ ->
     log.Debug("manageCategories")
@@ -1103,11 +1106,6 @@ let manageCategories = warbler (fun _ ->
     let allCategories = Db.Courses.getAllCategories ctx
     View.seeCategories allCategories |> html)
 
-let manageVisibleCourses = warbler (fun _ ->
-    log.Debug("manageVisibleCourses")
-    let ctx = Db.getContext()
-    let allCourses = Db.Courses.getAllCourseDetails ctx
-    View.seeVisibleCourses "categoria" (List.filter (fun x -> x.Visibility)  allCourses) |> html) 
 
 let editCourse id  =
    log.Debug(sprintf "%s %d ""editCourse" id)
@@ -3427,7 +3425,13 @@ let makeSubCourseCategory id =
         GET >=> warbler (fun _ ->
             View.makeSubCourseCategory courseCategory "" |> html
         )
-        POST >=> Redirection.FOUND Path.home
+        POST >=> bindToForm Form.subCourseCategory (fun form ->
+             let visibility = form.Visibility = "VISIBLE"
+             match (Db.Courses.tryFindCategoryByName form.Name ctx) with
+                | Some X when X.Categoryid <> courseCategory.Categoryid -> View.makeSubCourseCategory courseCategory "esiste gia'" |> html
+                | _ -> let sonCategory = Db.createSubCourseCategory form.Name  visibility id ctx
+                       Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated sonCategory.Categoryid 0)
+        )
     ]
 
 let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =

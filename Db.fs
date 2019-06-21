@@ -248,6 +248,14 @@ module Courses =
     
     let getAllSubCategoryMapping (ctx:DbContext) =
         ctx.Public.Subcategorymapping |> Seq.toList
+    
+    let getAllCoursesByCourseCategory id (ctx: DbContext) =
+        ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
+
+    let moveCoursesCategories oriCategoryId targetCategoryId (ctx: DbContext) =
+        let courses = getAllCoursesByCourseCategory oriCategoryId ctx
+        let _ = courses |> List.iter (fun (x:Course) -> x.Categoryid <- targetCategoryId)
+        ctx.SubmitUpdates()
 
 
     let getAllRootCategories (ctx:DbContext) =
@@ -1607,6 +1615,57 @@ let newCategory (categoryName:string) (visibility:bool) (abstractness:bool) (ctx
     let category = ctx.Public.Coursecategories.``Create(abstract, name)``(abstractness,categoryName)
     category.Visibile<-visibility
     ctx.SubmitUpdates()
+    category
+
+let createSubCategoryMapping fatherId sonId (ctx:DbContext) =
+    let newMapping =  ctx.Public.Subcategorymapping.``Create(fatherid, sonid)``(fatherId,sonId)
+    ctx.SubmitUpdates()
+
+let createSubCourseCategory name visibility fatherId  (ctx:DbContext) =
+    log.Debug("createSubCourseCategory")
+    let sonCategory = newCategory name visibility false ctx
+    let newMapping = createSubCategoryMapping fatherId (sonCategory.Categoryid) ctx
+    ctx.SubmitUpdates()
+    Courses.moveCoursesCategories fatherId sonCategory.Categoryid ctx
+    sonCategory
+
+
+//let getAllSubCourseCategories categoryId (ctx:DbContext): CourseCategories list =
+//    log.Debug("getAllSubCategories")
+//    query {
+//        for category in ctx.Public.Coursecategories do
+//            join subCategoryMapping in ctx.Public.Subcategorymapping on (category.Categoryid = subCategoryMapping.Fatherid)
+//            where (category.Categoryid = categoryId)
+//            select category 
+//    } |> Seq.toList
+
+
+
+let getAllSubCourseCategories categoryId (ctx:DbContext): FatherSonCategoriesDetails list =
+    log.Debug("getAllSubCategories")
+    query {
+        for fatherson in ctx.Public.Fathersoncategoriesdetails do
+            where (fatherson.Fatherid = categoryId)
+            select fatherson 
+    } |> Seq.toList
+
+let getVisibleSubCourseCategories categoryId (ctx:DbContext): FatherSonCategoriesDetails list =
+    log.Debug("getAllSubCategories")
+    query {
+        for fatherson in ctx.Public.Fathersoncategoriesdetails do
+            where (fatherson.Fatherid = categoryId && fatherson.Sonvisible = true)
+            select fatherson 
+    } |> Seq.toList
+
+
+
+let tryGetCourseCategoryFather categoryId (ctx: DbContext): (CourseCategories option) = 
+    let fatherMapping = ctx.Public.Subcategorymapping |> Seq.tryFind (fun x -> x.Sonid = categoryId) 
+    match fatherMapping with 
+        | Some X -> Some (Courses.getCourseCategory X.Fatherid ctx)
+        | None -> None
+   
+
 
 let tryFindUserByName username (ctx : DbContext) : User option = 
    log.Debug("tryFindUserByName")
@@ -2601,8 +2660,11 @@ let safeRemoveOrder orderId (ctx:DbContext) =
 let getAllActionableStateOfUser userId (ctx:DbContext) =
     ctx.Public.Waiteractionablestates |> Seq.filter (fun (x:WaiterActionableState) -> x.Userid = userId)
 
-let getAllCoursesByCourseCategory id (ctx: DbContext) =
-    ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
+//let getAllCoursesByCourseCategory id (ctx: DbContext) =
+//    ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
+
+
+
 
 let safeDeleteUser userId (ctx:DbContext) =
     log.Debug("safeDeleteUser")
@@ -2697,7 +2759,7 @@ let safeDeleteCourseCategory id (ctx: DbContext) =
     let courseCategory = Courses.tryGetCourseCategory id ctx
     match courseCategory with
     | Some theCourseCategory ->
-        let connectedCourses = getAllCoursesByCourseCategory id ctx
+        let connectedCourses = Courses.getAllCoursesByCourseCategory id ctx
         connectedCourses |> List.iter (fun (x:Course) -> safeDeleteCourse x ctx)
         ctx.SubmitUpdates()
         let connectedEnablers = getAllEnablersByCourseCategory id ctx

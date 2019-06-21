@@ -836,7 +836,7 @@ let seeAllCourses (category:Db.CourseCategories option)  (courses: Db.Coursedeta
     | None -> [ Text("an error occurred, unexisting category")]
 
 
-let seeAllCoursesPaginated (category:Db.CourseCategories option)  (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
+let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list)  (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
 
@@ -856,6 +856,16 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option)  (courses: Db.C
             br []
             div [] [Text(local.CoursesOfType+theCategory.Name+": "+local.ClickToChange)]
             br []
+
+            div [] [Text("sottocategorie esistenti:")]
+
+
+            ulAttr ["id","item-list"] [
+                for subCategory in subCategories ->
+                  //  tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
+                    tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
+            ]
+
 
             renderForm 
                 { Form = Form.searchCourse
@@ -928,7 +938,7 @@ let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
     ]
 
 
-let seeVisibleCoursesPaginated (category:Db.CourseCategories option)  (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
+let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list)   (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
     match category with 
@@ -949,6 +959,14 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option)  (courses: 
             br []
             div [] [Text(local.CoursesOfCategory + theCategory.Name+":"+ local.ClickToChange)]
             br []
+            div [] [Text("sottocategorie esistenti:")]
+
+            ulAttr ["id","item-list"] [
+                for subCategory in subCategories ->
+                    tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
+                   // tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
+            ]
+
 
             table [
                     for course in courses  ->           
