@@ -365,8 +365,7 @@ ALTER TABLE ONLY public.commentsforcourse
 
 --
 -- Name: ingredientcategory; Type: TABLE; Schema: public; Owner: Tonyx
---
-
+-- 
 CREATE VIEW public.commentsforcoursedetails AS
     SELECT b.comment,
       a.commentsforcourseid,
@@ -385,6 +384,34 @@ CREATE TABLE public.ingredientcategory (
 );
 
 
+CREATE SEQUENCE public.subcategory_mapping_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE public.subcategorymapping (
+    subcategorymappingid integer NOT NULL,
+    fatherid integer NOT NULL,
+    sonid integer NOT NULL
+);
+
+
+ALTER TABLE ONLY public.subcategorymapping ALTER COLUMN subcategorymappingid SET DEFAULT nextval('public.subcategory_mapping_seq');
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT coursecommentid_pair UNIQUE (fatherid,sonid);
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT subcategorymapping_pkey PRIMARY KEY (subcategorymappingid);
+
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT father_fk FOREIGN KEY (fatherid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT son_fk FOREIGN KEY (sonid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
 
 --
 -- Name: ingredient_categoryid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
@@ -397,6 +424,22 @@ CREATE SEQUENCE public.ingredient_categoryid_seq
     NO MAXVALUE
     CACHE 1;
 
+
+CREATE VIEW public.fathersoncategoriesdetails AS
+    SELECT a.categoryid,
+        a.name as fathername,
+        a.categoryid as fatherid,
+        c.name as sonname,
+        c.categoryid as sonid,
+        b.subcategorymappingid,
+        a.visibile as fathervisible,
+        c.visibile as sonvisible
+    FROM (((public.coursecategories a
+        JOIN public.subcategorymapping b ON ((a.categoryid=b.fatherid)))                
+        JOIN public.coursecategories c ON ((c.categoryid=b.sonid))));
+
+
+     
 
 
 --
@@ -416,6 +459,8 @@ CREATE TABLE public.ingredientcourse (
     ingredientid integer NOT NULL,
     quantity numeric(10,2)
 );
+
+
 
 
 
