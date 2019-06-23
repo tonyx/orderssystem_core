@@ -446,79 +446,118 @@ let logon msg = [
 ]
 
 
-let addOrderItemForStrippedUsers  coursesIdWithName coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem = [
-    h2 local.Add
-    renderForm
-        { Form = Form.strippedOrderItem
-          Fieldsets = 
-              [ { Legend = "Order item"
-                  Fields = 
-                      [ 
-                        { Label = local.CourseBySelection
-                          Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                        { Label = local.CourseByFreeText
-                          Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
-                        { Label = local.Quantity
-                          Html = formInput (fun f -> <@ f.Quantity @>) 
-                           [ "Value", "1" ] } 
-
-                        { Label = local.ExitGroup
-                          Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None
-                            } 
-
-                        { Label = local.Comment
-                          Html = formInput (fun f -> <@ f.Comment @>) 
-                           [ ] } 
-                          ] } ]
-          SubmitText = local.Add }
-    div [] [
-        a Path.home [] [Text local.MainPage ]
-    ]
-    script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
-    script ["type", "text/javascript"; "src", "/script_options_stripped.js" ] []
-
-]
-
-
-let addOrderItem  coursesIdWithName coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem = 
-
-    let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
+let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
+    
+    let sonCategoriesLink = match (List.length subCategories) with
+        | 0 ->  em ""
+        | X -> div [] [h2 "sottocategorie:"; div [] [
+                 for category in subCategories ->
+                    a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)]
+                ]
+            ]
+        
+    let fatherCategoryLink = match fatherCategory with
+        | Some theFather -> div [] [h2 "categoria padre: "; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
+        | None -> em ""
 
     [
-    h2 local.Add
-    renderForm
-        { Form = Form.orderItem
-          Fieldsets = 
-              [ { Legend = "Order Item"
-                  Fields = 
-                      [ 
-                        { Label = local.CourseBySelection
-                          Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                        { Label = local.CourseByFreeText
-                          Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
-                        { Label = local.Quantity
-                          Html = formInput (fun f -> <@ f.Quantity @>) 
-                           [ "Value", "1" ] } 
-                        { Label = local.ExitGroup
-                          Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None }
+        fatherCategoryLink
+        sonCategoriesLink
+        h2 (local.Add+" "+categoryName)
+        renderForm
+            { Form = Form.strippedOrderItem
+              Fieldsets = 
+                  [ { Legend = "Order item"
+                      Fields = 
+                          [ 
+                            { Label = local.CourseBySelection
+                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
+                            { Label = local.CourseByFreeText
+                              Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
+                            { Label = local.Quantity
+                              Html = formInput (fun f -> <@ f.Quantity @>) 
+                               [ "Value", "1" ] } 
 
-                        { Label = local.Comment
-                          Html = formInput (fun f -> <@ f.Comment @>) 
-                           [ ] } 
-                        { Label = local.Price
-                          Html = formInput (fun f -> <@ f.Price @>) 
-                           [ ] }
-                          ] } ]
-          SubmitText = local.Add }
-    br []
-    br []
-    div [] [
-        a Path.home [] [Text local.MainPage]
+                            { Label = local.ExitGroup
+                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None
+                                } 
+
+                            { Label = local.Comment
+                              Html = formInput (fun f -> <@ f.Comment @>) 
+                               [ ] } 
+                              ] } ]
+              SubmitText = local.Add }
+        div [] [
+            a Path.home [] [Text local.MainPage ]
+            br []
+        ]
+        div [] [
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text "torna all'ordine"]
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script ["type", "text/javascript"; "src", "/script_options_stripped.js" ] []
+
     ]
-    script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
-    script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
-    script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
-]
+
+
+let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
+
+    let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
+    let sonCategoriesLink = match (List.length subCategories) with
+        | 0 ->  em ""
+        | X -> div [] [h2 "sottocategorie:"; div [] [
+                 for category in subCategories ->
+                    a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)]
+                ]
+            ]
+    let fatherCategoryLink = match fatherCategory with
+        | Some theFather -> div [] [h2 "categoria padre: "; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
+        | None -> em ""
+
+    [
+        fatherCategoryLink
+        sonCategoriesLink
+
+        h2 (local.Add+ " "+categoryName)
+        renderForm
+            { Form = Form.orderItem
+              Fieldsets = 
+                  [ { Legend = "Order Item"
+                      Fields = 
+                          [ 
+                            { Label = local.CourseBySelection
+                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
+                            { Label = local.CourseByFreeText
+                              Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
+                            { Label = local.Quantity
+                              Html = formInput (fun f -> <@ f.Quantity @>) 
+                               [ "Value", "1" ] } 
+                            { Label = local.ExitGroup
+                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None }
+
+                            { Label = local.Comment
+                              Html = formInput (fun f -> <@ f.Comment @>) 
+                               [ ] } 
+                            { Label = local.Price
+                              Html = formInput (fun f -> <@ f.Price @>) 
+                               [ ] }
+                              ] } ]
+              SubmitText = local.Add }
+        br []
+        br []
+        div [] [
+            a Path.home [] [Text local.MainPage]
+            br []
+        ]
+        br []
+        div [] [
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text "torna all'ordine"]
+            br []
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
+        script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
+    ]
 
 
 let createOrder message  = [
@@ -551,7 +590,7 @@ let editOrderItemForStrippedUsers (orderItem:Db.OrderItemDetails) (courses:Db.Co
 
     div [] [
          for category in categories ->
-            a (sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl)  [] [Text (" "+category.Name)]
+             a (sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl)  ["class","buttonX"] [Text (" "+category.Name)]
     ]
 
     h2 "Edit"
@@ -836,13 +875,18 @@ let seeAllCourses (category:Db.CourseCategories option)  (courses: Db.Coursedeta
     | None -> [ Text("an error occurred, unexisting category")]
 
 
-let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list)  (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
+let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list) (father:Db.CourseCategories option) (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
 
+    let fatherLink = match father with 
+        | Some X -> div [] [h2 "categoria padre:"; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]; 
+                              (a (sprintf Path.Courses.mergeSubCourseCategoryToFather category.Value.Categoryid) ["class","buttonX"] [Text("unisci alla categoria padre")])   ]
+        | None ->  em ""
+
+
     match category with 
-    | Some theCategory -> 
-        [
+    | Some theCategory -> [
             h2 (local.AllVisibleCoursesOfCategory + theCategory.Name); 
             tag "p" [] [ a (sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated theCategory.Categoryid 0) 
                 ["class", "buttonX"] [Text (local.AllVisibleCoursesOfCategory + theCategory.Name)]]
@@ -857,15 +901,17 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
             div [] [Text(local.CoursesOfType+theCategory.Name+": "+local.ClickToChange)]
             br []
 
-            div [] [Text("sottocategorie esistenti:")]
+            div [] [
+                fatherLink
+                br []
+            ]
 
+            div [] [Text("sottocategorie esistenti:")]
 
             ulAttr ["id","item-list"] [
                 for subCategory in subCategories ->
-                  //  tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
                     tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
             ]
-
 
             renderForm 
                 { Form = Form.searchCourse
@@ -938,9 +984,14 @@ let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
     ]
 
 
-let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list)   (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
+let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list) (father:Db.CourseCategories option)   (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
+
+    let fatherLink = match father with 
+        | Some X -> div [] [h2 "categoria padre:"; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]]
+        | None ->  em ""
+    
     match category with 
       | Some theCategory -> 
         
@@ -959,12 +1010,17 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
             br []
             div [] [Text(local.CoursesOfCategory + theCategory.Name+":"+ local.ClickToChange)]
             br []
+            div [] [
+                fatherLink
+                br []
+            ]
+
+            
             div [] [Text("sottocategorie esistenti:")]
 
             ulAttr ["id","item-list"] [
                 for subCategory in subCategories ->
                     tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
-                   // tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated subCategory.Sonid 0) ["class","buttonX"] [Text(subCategory.Sonname)]]
             ]
 
 
@@ -2466,6 +2522,7 @@ let selectStandardCommentsForOrderItem (orderItem:Db.OrderItemDetails) (selectab
                 ]
         ]
         a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("inserisci variazioni")]
+        br []
         br []
         a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text("torna all'ordine")]
 

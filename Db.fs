@@ -1,7 +1,5 @@
 
 module OrdersSystem.Db
-
-open FSharp.Data
 open FSharp.Data.Sql
 // open OrdersSystem
 open System
@@ -245,12 +243,50 @@ module Courses =
 
     let getAllFatherSonCategoriesDetails (ctx:DbContext) =
         ctx.Public.Fathersoncategoriesdetails |> Seq.toList
-    
+   
+    let rec getAllSubCategoriesIdsByFatherId fatherId (ctx:DbContext) =
+        log.Debug("getAllSubCategoryMappingByFatherId")
+        let (result: int list) = ctx.Public.Subcategorymapping |> Seq.filter (fun x -> x.Fatherid = fatherId ) |> Seq.map (fun x -> x.Sonid) |> Seq.toList
+        match (List.length result) with
+            | 0 -> result
+            | X -> result @ (List.fold (fun acc y -> (acc @ (getAllSubCategoriesIdsByFatherId y ctx))) [] result )
+
     let getAllSubCategoryMapping (ctx:DbContext) =
         ctx.Public.Subcategorymapping |> Seq.toList
     
     let getAllCoursesByCourseCategory id (ctx: DbContext) =
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
+
+
+    let getFatherSonCategoriesDetailsByFatherId fatherId (ctx:DbContext) =
+        log.Debug(sprintf "getAllFatherSonCategoriesDetailsByFatherId %d" fatherId)
+        query {
+            for entry in ctx.Public.Fathersoncategoriesdetails do
+                where (entry.Fatherid = fatherId)
+                sortBy entry.Sonname
+                select entry
+        } |> Seq.toList
+    
+    let getVisibleFatherSonCategoriesDetailsByFatherId fatherId (ctx:DbContext) =
+        log.Debug(sprintf "getVisibleFatherSonCategoriesDetailsByFatherId %d" fatherId)
+        query {
+            for entry in ctx.Public.Fathersoncategoriesdetails do
+                join category in ctx.Public.Coursecategories on (entry.Sonid=category.Categoryid)
+                where (entry.Fatherid = fatherId && category.Visibile = true)
+                sortBy entry.Sonname
+                select entry
+        } |> Seq.toList
+
+
+
+    let getFatherSonCategoriesDetailsBySonId sonId (ctx:DbContext) =
+        log.Debug(sprintf "getAllFatherSonCategoriesDetailsBySonId %d" sonId)
+        query {
+            for entry in ctx.Public.Fathersoncategoriesdetails do
+                where (entry.Sonid = sonId)
+                select entry
+        } |> Seq.tryHead
+
 
     let moveCoursesCategories oriCategoryId targetCategoryId (ctx: DbContext) =
         let courses = getAllCoursesByCourseCategory oriCategoryId ctx
@@ -304,6 +340,14 @@ module Courses =
                 select course
         } |> Seq.toList
 
+
+    let getVisibleCoursesByCategoryAndSubCategories categoryId (ctx:DbContext): Course list =
+        log.Debug("getVisibleCoursesByCategoryAndSubCategories")
+        let allCategoriesHierarchy = [categoryId]@(getAllSubCategoriesIdsByFatherId categoryId ctx)
+        let toReturn = allCategoriesHierarchy |> List.map (fun x -> getVisibleCoursesByCategory x ctx) |> List.fold (@) []
+        toReturn
+
+
     let createCourse price name  description  visibility  categoryId (ctx: DbContext) =
         log.Debug(sprintf "%s %.2f %s %s %b %d " "createCourse" price name description visibility categoryId)
         let newCourse = ctx.Public.Courses.Create(categoryId,name,visibility)
@@ -354,6 +398,7 @@ module Courses =
         } |> Seq.tryHead
 
     let getCourseCategory id (ctx: DbContext) =
+        log.Debug(sprintf "getCourseCategory %d" id)
         ctx.Public.Coursecategories |> Seq.find (fun x -> x.Categoryid = id)
 
     let tryFindCategoryByName categoryName (ctx: DbContext) : CourseCategories option =
@@ -1573,6 +1618,7 @@ let getOrderItemDetailOfOrderDetail (order: Orderdetail) (ctx: DbContext): Order
             select orderItem
         } |> Seq.toList
 
+
 let getOrderItemDetailOfOrderDetailThatAreNotInInitState (order: Orderdetail) (ctx: DbContext): OrderItemDetails list  =
     log.Debug(sprintf "%s %d" "getOrderItemDetailOfOrderDetailThatAreNotInInitState" order.Orderid)
     let initState = States.getInitState ctx
@@ -1621,6 +1667,7 @@ let createSubCategoryMapping fatherId sonId (ctx:DbContext) =
     let newMapping =  ctx.Public.Subcategorymapping.``Create(fatherid, sonid)``(fatherId,sonId)
     ctx.SubmitUpdates()
 
+
 let createSubCourseCategory name visibility fatherId  (ctx:DbContext) =
     log.Debug("createSubCourseCategory")
     let sonCategory = newCategory name visibility false ctx
@@ -1628,6 +1675,26 @@ let createSubCourseCategory name visibility fatherId  (ctx:DbContext) =
     ctx.SubmitUpdates()
     Courses.moveCoursesCategories fatherId sonCategory.Categoryid ctx
     sonCategory
+
+
+let getCourseCategoryFather categoryId (ctx:DbContext) =
+    let fatherMapping = ctx.Public.Subcategorymapping |> Seq.find (fun x -> x.Sonid = categoryId)
+    Courses.getCourseCategory fatherMapping.Fatherid ctx
+
+let unlinkSonFromFather sonId fatherId (ctx:DbContext) =
+    let fatherSonLinkQuery = query {
+        for fatherSonLink in ctx.Public.Subcategorymapping do
+            where (fatherSonLink.Fatherid = fatherId && fatherSonLink.Sonid = sonId)
+            select fatherSonLink
+        } 
+    let fatherSonLink = fatherSonLinkQuery |> Seq.head
+    let _ = fatherSonLink.Delete()
+    ctx.SubmitUpdates()
+
+
+//let moveSubCourseCategoryToFather categoryId (ctx:DbContext) =
+//    let 
+    
 
 
 //let getAllSubCourseCategories categoryId (ctx:DbContext): CourseCategories list =
@@ -1665,7 +1732,6 @@ let tryGetCourseCategoryFather categoryId (ctx: DbContext): (CourseCategories op
         | Some X -> Some (Courses.getCourseCategory X.Fatherid ctx)
         | None -> None
    
-
 
 let tryFindUserByName username (ctx : DbContext) : User option = 
    log.Debug("tryFindUserByName")
@@ -3009,7 +3075,6 @@ let getStatesPrinterMapping printerId (ctx:DbContext) =
             where (printerStateMapping.Printerid = printerId)
             select printerStateMapping
     } |> Seq.toList
-
 let getIngredientDecrementsStartingFromDate ingredientId date (ctx: DbContext): IngredientDecrementView list =
     log.Debug("getIngredientDecrementsStartingFromDate")
     let myDate = System.DateTime.Parse(date,CultureInfo.CreateSpecificCulture("en-US"))

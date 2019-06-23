@@ -1073,18 +1073,20 @@ let manageAllCoursesOfACategoryPaginated categoryId pageNumber =
             let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
             let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
             let subCategories = Db.getAllSubCourseCategories categoryId ctx
+            let father = Db.tryGetCourseCategoryFather categoryId ctx
 
             let category = Db.Courses.tryGetCategoryById categoryId ctx
-            View.seeAllCoursesPaginated category subCategories coursesOfPage numberOfPages pageNumber |> html)
+            View.seeAllCoursesPaginated category subCategories father coursesOfPage numberOfPages pageNumber |> html)
 
         POST >=> bindToForm Form.searchCourse (fun form -> 
             let coursesOfPage = Db.Courses.getAllCoursesDetailsByCategoryWithTextNameSearch categoryId form.Name ctx
             let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
             let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
 
+            let father = Db.tryGetCourseCategoryFather categoryId ctx
             let subCategories = Db.getAllSubCourseCategories categoryId ctx
             let category = Db.Courses.tryGetCategoryById categoryId ctx
-            View.seeAllCoursesPaginated category subCategories coursesOfPage numberOfPages pageNumber |> html
+            View.seeAllCoursesPaginated category subCategories father coursesOfPage numberOfPages pageNumber |> html
         
         )
     ]
@@ -1095,10 +1097,11 @@ let manageVisibleCoursesOfACategoryPaginated categoryId pageNumber =
     let coursesOfPage = Db.Courses.getVisibleCoursesDetailsByCategoryAndPage categoryId pageNumber ctx
     let numberOfAllCourses = Db.Courses.getNumberOfVisibleCoursesOfACatgory categoryId ctx
     let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+    let father = Db.tryGetCourseCategoryFather categoryId ctx
 
     let subCategories = Db.getVisibleSubCourseCategories categoryId ctx
     let category = Db.Courses.tryGetCategoryById categoryId ctx
-    View.seeVisibleCoursesPaginated category subCategories coursesOfPage numberOfPages pageNumber |> html
+    View.seeVisibleCoursesPaginated category subCategories father coursesOfPage numberOfPages pageNumber |> html
 
 let manageCategories = warbler (fun _ ->
     log.Debug("manageCategories")
@@ -1365,22 +1368,25 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
     let anOrder = Db.Orders.tryGetOrder orderId ctx
 
     let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+    let subCategories = Db.Courses.getVisibleFatherSonCategoriesDetailsByFatherId categoryId ctx
+    let fatherCategory = Db.Courses.getFatherSonCategoriesDetailsBySonId categoryId ctx
+    let category = Db.Courses.getCourseCategory categoryId ctx
 
     match anOrder with
     | Some theOrder  ->
          choose [
           GET >=> warbler (fun x ->
             let visibleCourses  =
-                Db.Courses.getVisibleCoursesByCategory categoryId ctx
+                Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
 
             let coursesIdWithPrices =
                 visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
 
             let coursesNames = 
-                Db.Courses.getVisibleCoursesByCategory categoryId ctx
-                |> List.map (fun g -> decimal g.Courseid, g.Name)
+                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
 
-            html (View.addOrderItem coursesNames coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem))
+            html (View.addOrderItem  orderId coursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
+          )
 
           POST >=> bindToForm Form.orderItem (fun form ->
             let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
@@ -1392,7 +1398,7 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
             match (List.length standardCommentsForThisCourse) with 
                 | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
                 | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
-        )
+          )
        ]
       | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
      
@@ -1403,22 +1409,25 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
     let anOrder = Db.Orders.tryGetOrder orderId ctx
 
     let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+    let subCategories = Db.Courses.getFatherSonCategoriesDetailsByFatherId categoryId ctx
+    let fatherCategory = Db.Courses.getFatherSonCategoriesDetailsBySonId categoryId ctx
+    let category = Db.Courses.getCourseCategory categoryId ctx
 
     match anOrder with
     | Some theOrder  ->
          choose [
           GET >=> warbler (fun x ->
             let visibleCourses  =
-                Db.Courses.getVisibleCoursesByCategory categoryId ctx
+                // Db.Courses.getVisibleCoursesByCategory categoryId ctx
+                Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
 
             let coursesIdWithPrices =
                 visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
 
             let coursesNames = 
-                Db.Courses.getVisibleCoursesByCategory categoryId ctx
-                |> List.map (fun g -> decimal g.Courseid, g.Name)
+                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
 
-            html (View.addOrderItemForStrippedUsers  coursesNames coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
+            html (View.addOrderItemForStrippedUsers orderId  coursesNames coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
           )
 
           POST >=> bindToForm Form.strippedOrderItem (fun form ->
@@ -3434,6 +3443,18 @@ let makeSubCourseCategory id =
         )
     ]
 
+let mergeSubCourseCategoryToFather categoryId =
+    log.Debug("mergeSubCourseCategoryToFather")
+    let ctx = Db.getContext()
+    let father = Db.getCourseCategoryFather categoryId ctx
+    let _ = Db.Courses.moveCoursesCategories categoryId father.Categoryid ctx
+    let _ = Db.unlinkSonFromFather categoryId father.Categoryid ctx
+    let _ = Db.safeDeleteCourseCategory categoryId ctx
+
+    Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated father.Categoryid 0)
+    
+
+
 let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
     log.Debug("selectOrderFromWhichMoveOrderItems")
     let ctx = Db.getContext() 
@@ -3487,6 +3508,7 @@ let noCache =
 
 let webPart =
     choose [
+        pathScan Path.Courses.mergeSubCourseCategoryToFather (fun id -> admin (mergeSubCourseCategoryToFather id ))
         pathScan Path.Courses.makeSubCourseCategory (fun id -> admin (makeSubCourseCategory id))
         pathScan Path.Orders.removeExistingCommentToOrderItem (fun id -> loggedOn (removeExistingCommentToOrderItem id))
         pathScan Path.Orders.addStandardCommentToOrderItem (fun (commentId,orderItemId) -> loggedOn (addStandardCommentToOrderItem commentId orderItemId))

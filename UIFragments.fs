@@ -86,7 +86,6 @@ let renderForm (layout : FormLayout<_>) =
        yield submitInput layout.SubmitText
    ]
 
-
 let addItemOfCategory (order:Db.Orderdetail) (categories:Db.CourseCategories list) backUrl = 
   let pairOfCategories = makePairsOfAlist categories
   table [for category in pairOfCategories -> 

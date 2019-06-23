@@ -147,6 +147,7 @@ module Admin =
 
 module Courses =
 
+    let mergeSubCourseCategoryToFather: IntPath ="/courses/mergeSubCourseCategoryToFather/%d"
     let makeSubCourseCategory: IntPath = "/courses/makeSubCourseCategory/%d"
 
     let deleteIngredientToCourse: IntPath2 = "/courses/deleteingredientToCourse/%d/%d"
