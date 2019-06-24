@@ -403,6 +403,18 @@ let comment:Form<Comment> =
         [],[]
     )
 
+type StandardVariation = {
+    Name: string
+}
+
+let standardVariation:Form<StandardVariation> =
+    Form (
+        [],[]
+    )
+
+
+
+
 type CommentForCourse = {
     CommentForCourse: decimal
 

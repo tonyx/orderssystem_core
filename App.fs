@@ -2399,7 +2399,6 @@ let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingr
                 (let ingredientOfCourse = Db.getIngredientsOfCourse theOrderItemDetail.Courseid ctx
                  let existingVariations =  Db.getAllVariationDetailsOfOrderItem theOrderItemDetail.Orderitemid ctx
 
-
                  html (View.editOrderItemVariations theOrderItemDetail ingredientOfCourse 
                     existingVariations ingredientCategories ingredientsYouCanAdd specificCustomAddQuantitiesForIngredients  encodedBackUrl  )))
 
@@ -3443,6 +3442,7 @@ let makeSubCourseCategory id =
         )
     ]
 
+
 let mergeSubCourseCategoryToFather categoryId =
     log.Debug("mergeSubCourseCategoryToFather")
     let ctx = Db.getContext()
@@ -3453,6 +3453,35 @@ let mergeSubCourseCategoryToFather categoryId =
 
     Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated father.Categoryid 0)
     
+let manageStandardVariation id =
+    let ctx = Db.getContext()
+    let variation = Db.getStandardVariation id ctx
+    View.manageStandardVariation variation |> html
+
+let manageStandardVariations =
+    let ctx = Db.getContext()
+    choose [
+        GET >=> warbler (fun _ -> 
+            let allStandardVariations = Db.getAllStandardVariations ctx
+            View.manageStandardVariations allStandardVariations "" |> html
+        )
+        POST >=> bindToForm Form.standardVariation  (fun form ->
+            let existing = Db.tryGetStandardVariationByName form.Name ctx
+            match existing with 
+                | Some X -> 
+                    let allStandardVariations = Db.getAllStandardVariations ctx
+                    View.manageStandardVariations allStandardVariations "esiste gia'" |> html
+                | None ->
+                    let _ = Db.createStandardVariation form.Name ctx 
+                    Redirection.FOUND Path.Admin.manageStandardVariations
+        )
+    ]
+
+let removeStandardVariation variationId =
+    log.Debug("removeStandardVariation")
+    let ctx = Db.getContext()
+    let _ = Db.removeStandardVariation variationId ctx
+    Redirection.FOUND Path.Admin.manageStandardVariations
 
 
 let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
@@ -3508,6 +3537,10 @@ let noCache =
 
 let webPart =
     choose [
+
+        pathScan Path.Admin.manageStandardVariation (fun id -> (admin (manageStandardVariation id)))
+        pathScan Path.Admin.removeStandardVariation (fun id -> (admin (removeStandardVariation id)))
+        path Path.Admin.manageStandardVariations >=> admin manageStandardVariations
         pathScan Path.Courses.mergeSubCourseCategoryToFather (fun id -> admin (mergeSubCourseCategoryToFather id ))
         pathScan Path.Courses.makeSubCourseCategory (fun id -> admin (makeSubCourseCategory id))
         pathScan Path.Orders.removeExistingCommentToOrderItem (fun id -> loggedOn (removeExistingCommentToOrderItem id))

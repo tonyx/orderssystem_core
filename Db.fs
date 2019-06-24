@@ -1,4 +1,3 @@
-
 module OrdersSystem.Db
 open FSharp.Data.Sql
 // open OrdersSystem
@@ -100,6 +99,9 @@ type CommentForCourse = DbContext.``public.commentsforcourseEntity``
 type CommentForCourseDetails = DbContext.``public.commentsforcoursedetailsEntity``
 type SubCategoryMapping = DbContext.``public.subcategorymappingEntity``
 type FatherSonCategoriesDetails = DbContext.``public.fathersoncategoriesdetailsEntity``
+type StandardVariation = DbContext.``public.standardvariationsEntity``
+type StandardVariationItem = DbContext.``public.standardvariationitemEntity``
+type StandardVariationFourCourse = DbContext.``public.standardvariationforcourseEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -811,6 +813,36 @@ let removeStandardCommentForCourse id (ctx:DbContext) =
     let commentForCourse = getStandardCommentForCourse id ctx
     commentForCourse.Delete()
     ctx.SubmitUpdates()
+
+let getAllStandardVariations (ctx:DbContext) =
+    log.Debug("getAllStandardVariations")
+    ctx.Public.Standardvariations |> Seq.sortBy (fun x -> x.Name) |>  Seq.toList
+
+let createStandardVariation name (ctx:DbContext) =
+    let variation = ctx.Public.Standardvariations.``Create(name)``(name)
+    ctx.SubmitUpdates()
+    variation
+
+
+let tryGetStandardVariationByName name (ctx:DbContext) =
+    query {
+        for item in ctx.Public.Standardvariations do
+        where (item.Name = name)
+        select item
+    } |> Seq.tryHead
+
+let getStandardVariation id (ctx:DbContext) =
+    log.Debug("getStandardVariation")
+    ctx.Public.Standardvariations |> Seq.find (fun x -> x.Standardvariationid = id)
+
+let removeStandardVariation id (ctx:DbContext) =
+    log.Debug("removeStandardVariation")
+    let variation = getStandardVariation id ctx
+    variation.Delete()
+    ctx.SubmitUpdates()
+
+
+
 
 let tryGetIngredientByName ingredientName (ctx:DbContext) =
     query {

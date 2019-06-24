@@ -85,6 +85,9 @@ module Orders =
     let selectOrderFromWhichMoveOrderItems: IntPath = "/orders/selectOrderFromWhichMoveOrderItems/%d"
     
 module Admin =
+    let manageStandardVariation: IntPath = "/admin/manageStandardVariation/%d"
+    let removeStandardVariation: IntPath  =  "/admin/removeStandardVariation/%d"
+    let manageStandardVariations = "/admin/manageStandardVariations"
     let removeStandardCommentForCourse: IntPath = "/admin/removeStandardCommentForCourse/%d"
     let standardCommentsForCourse: IntPath  = "/admin/standardCommentsForCourse/%d"
     let standardComments  = "/admin/standardComments"

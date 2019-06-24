@@ -955,6 +955,42 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
         ]
     | None -> [ Text("an error occurred, unexisting category")]
 
+let manageStandardVariations (standardVariations:Db.StandardVariation list) msg =
+    [
+        h2 "variazioni standard"
+        h2(msg)
+        renderForm 
+            { Form = Form.standardVariation
+              Fieldsets =
+                [ { Legend = "variazione standard"
+                    Fields = 
+                        [
+                            {
+                                Label = local.Name
+                                Html = formInput (fun f -> <@ f.Name @>) []
+                            }
+                        ]
+                  }
+                  ]
+              SubmitText = "aggiungi" 
+            }
+
+        h2 "variazioni standard esistenti"
+        div [] [
+            for variation in standardVariations ->  
+                tag "p" [] [
+                    (a (sprintf Path.Admin.manageStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(variation.Name )])
+                    (a (sprintf Path.Admin.removeStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text("rimuovi")])
+                    br []
+                ]
+        ]
+    ]
+
+let manageStandardVariation variation =
+    [
+        h2 "variazione standard:" 
+    ]
+
 let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
     [
         h2 ("Inserisci sottocategoria di "+courseCategory.Name)
@@ -1611,6 +1647,11 @@ let standardCommentsLink user =
     | "admin" ->  tag "p" [] [a (Path.Admin.standardComments) ["class","buttonX"] [Text "commenti standard"]]
     | _ -> em""
 
+let standardVariationsLink user =
+    match user.Role with
+    | "admin" ->  tag "p" [] [a (Path.Admin.manageStandardVariations) ["class","buttonX"] [Text "variazioni standard"]]
+    | _ -> em ""
+
 let temporaryUsersLink user =
     match user.Role with
     | "admin" ->  tag "p" [] [a (Path.Admin.temporaryUsers) ["class","buttonX"] [Text local.ManageTemporaryUsers]]
@@ -1672,6 +1713,7 @@ let controlPanel (user:UserLoggedOnSession) (dbUser: Db.User)=
         deleteObjectsPage user
         optimizeVoidedLink dbUser
         standardCommentsLink user
+        standardVariationsLink user
     ]
 
 let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
