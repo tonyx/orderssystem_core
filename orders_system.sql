@@ -439,8 +439,101 @@ CREATE VIEW public.fathersoncategoriesdetails AS
         JOIN public.coursecategories c ON ((c.categoryid=b.sonid))));
 
 
-     
+CREATE SEQUENCE public.standard_variation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
+GRANT ALL on standard_variation_id_seq to SUAVE;
+
+CREATE TABLE public.standardvariations (
+    standardvariationid integer NOT NULL,
+    name varchar(49) NOT NULL
+);
+
+ALTER SEQUENCE public.standard_variation_id_seq OWNED BY public.standardvariations.standardvariationid;
+
+GRANT ALL on standardvariations to SUAVE;
+
+ALTER TABLE ONLY public.standardvariations ALTER COLUMN standardvariationid SET DEFAULT nextval('public.standard_variation_id_seq');
+
+ALTER TABLE ONLY public.standardvariations
+    ADD CONSTRAINT standard_variation_pk PRIMARY KEY (standardvariationid);
+
+ALTER TABLE ONLY public.standardvariations
+    ADD CONSTRAINT standard_variation_unique_name UNIQUE (name);
+
+CREATE SEQUENCE public.standard_variation_item_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+GRANT all on standard_variation_item_id_seq to SUAVE;
+
+CREATE TABLE public.standardvariationitem (
+    standardvariationitemid integer NOT NULL,
+    ingredientid integer NOT NULL,
+    tipovariazione character varying(30) NOT NULL,
+    plailnumvariation integer,
+    ingredientpriceid integer,
+    standardvariationid integer NOT NULL
+);
+
+ALTER SEQUENCE public.standard_variation_item_id_seq OWNED BY public.standardvariationitem.standardvariationitemid;
+
+
+GRANT all on standardvariationitem to SUAVE;
+
+ALTER TABLE ONLY public.standardvariationitem ALTER COLUMN standardvariationitemid SET DEFAULT nextval('public.standard_variation_item_id_seq');
+
+ALTER TABLE ONLY public.standardvariationitem
+    ADD CONSTRAINT standard_variation_item_pk PRIMARY KEY (standardvariationitemid);
+
+ALTER TABLE ONLY public.standardvariationitem
+    ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.standardvariationitem
+    ADD CONSTRAINT ingredientprice_fk FOREIGN KEY (ingredientpriceid) REFERENCES public.ingredientprice(ingredientpriceid) MATCH FULL;
+
+
+
+CREATE SEQUENCE public.standard_variation_for_course_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+GRANT ALL on standard_variation_for_course_id_seq to SUAVE;
+
+
+CREATE TABLE public.standardvariationforcourse (
+    standardvariationforcourseid integer NOT NULL,
+    standardvariationid integer NOT NULL,
+    courseid integer NOT NULL
+);
+
+ALTER SEQUENCE public.standard_variation_for_course_id_seq OWNED BY public.standardvariationforcourse.standardvariationforcourseid;
+
+GRANT ALL on standardvariationforcourse to SUAVE;
+
+ALTER TABLE ONLY public.standardvariationforcourse ALTER COLUMN standardvariationforcourseid SET DEFAULT nextval('public.standard_variation_for_course_id_seq');
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standard_variation_for_course_pk PRIMARY KEY (standardvariationforcourseid);
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standard_variation_unique_mapping UNIQUE (standardvariationid,courseid);
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standard_variation_for_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
 
 --
 -- Name: ingredient_categoryid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
@@ -3088,6 +3181,11 @@ ALTER TABLE ONLY public.waiteractionablestates
 --
 
 GRANT ALL ON TABLE public.archivedorderslogbuffer TO suave;
+
+GRANT ALL ON TABLE public.subcategory_mapping_seq TO suave;
+GRANT ALL ON TABLE public.subcategorymapping TO suave;
+GRANT ALL ON TABLE public.commentsforcoursedetails TO suave;
+GRANT ALL ON TABLE public.fathersoncategoriesdetails TO suave;
 
 
 --
