@@ -58,7 +58,7 @@
                             <option  value ="{{paymentmethod.index}}"  >{{paymentmethod.name}}</option>
                             {% endfor %}
                         </select>
-                        ammontare: <input name= "amount" type = "number" value = "{{model.residual_payment_due}}"/>
+                        ammontare: <input name= "amount" type = "number" step = "0.01" value = "{{model.residual_payment_due}}"/>
                         <br>
                         <input type="submit" value="Aggiungi">
                     </form>
