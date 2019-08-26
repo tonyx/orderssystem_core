@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.0
--- Dumped by pg_dump version 9.6.8
+-- Dumped from database version 11.5
+-- Dumped by pg_dump version 11.5
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -12,29 +12,16 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: archivedorderslogbuffer; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: archivedorderslogbuffer; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.archivedorderslogbuffer (
@@ -44,9 +31,10 @@ CREATE TABLE public.archivedorderslogbuffer (
 );
 
 
+ALTER TABLE public.archivedorderslogbuffer OWNER TO postgres;
 
 --
--- Name: archivedorderslog_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: archivedorderslog_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.archivedorderslog_id_seq
@@ -57,16 +45,86 @@ CREATE SEQUENCE public.archivedorderslog_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.archivedorderslog_id_seq OWNER TO postgres;
 
 --
--- Name: archivedorderslog_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: archivedorderslog_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.archivedorderslog_id_seq OWNED BY public.archivedorderslogbuffer.archivedlogbufferid;
 
 
 --
--- Name: coursecategories; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: comments_for_course_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.comments_for_course_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.comments_for_course_seq OWNER TO postgres;
+
+--
+-- Name: commentsforcourse; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.commentsforcourse (
+    commentsforcourseid integer DEFAULT nextval('public.comments_for_course_seq'::regclass) NOT NULL,
+    courseid integer NOT NULL,
+    standardcommentid integer NOT NULL
+);
+
+
+ALTER TABLE public.commentsforcourse OWNER TO postgres;
+
+--
+-- Name: standard_comments_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.standard_comments_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.standard_comments_seq OWNER TO postgres;
+
+--
+-- Name: standardcomments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.standardcomments (
+    standardcommentid integer DEFAULT nextval('public.standard_comments_seq'::regclass) NOT NULL,
+    comment character varying(59) NOT NULL
+);
+
+
+ALTER TABLE public.standardcomments OWNER TO postgres;
+
+--
+-- Name: commentsforcoursedetails; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.commentsforcoursedetails AS
+ SELECT b.comment,
+    a.commentsforcourseid,
+    a.courseid,
+    b.standardcommentid
+   FROM (public.commentsforcourse a
+     JOIN public.standardcomments b ON ((a.standardcommentid = b.standardcommentid)))
+  ORDER BY b.comment;
+
+
+ALTER TABLE public.commentsforcoursedetails OWNER TO postgres;
+
+--
+-- Name: coursecategories; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.coursecategories (
@@ -77,9 +135,10 @@ CREATE TABLE public.coursecategories (
 );
 
 
+ALTER TABLE public.coursecategories OWNER TO postgres;
 
 --
--- Name: courses; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: courses; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.courses (
@@ -92,9 +151,10 @@ CREATE TABLE public.courses (
 );
 
 
+ALTER TABLE public.courses OWNER TO postgres;
 
 --
--- Name: coursedetails2; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: coursedetails2; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.coursedetails2 AS
@@ -110,9 +170,10 @@ CREATE VIEW public.coursedetails2 AS
   ORDER BY a.courseid;
 
 
+ALTER TABLE public.coursedetails2 OWNER TO postgres;
 
 --
--- Name: courses_categoryid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: courses_categoryid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.courses_categoryid_seq
@@ -123,16 +184,17 @@ CREATE SEQUENCE public.courses_categoryid_seq
     CACHE 1;
 
 
+ALTER TABLE public.courses_categoryid_seq OWNER TO postgres;
 
 --
--- Name: courses_categoryid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: courses_categoryid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.courses_categoryid_seq OWNED BY public.coursecategories.categoryid;
 
 
 --
--- Name: courses_courseid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: courses_courseid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.courses_courseid_seq
@@ -143,16 +205,17 @@ CREATE SEQUENCE public.courses_courseid_seq
     CACHE 1;
 
 
+ALTER TABLE public.courses_courseid_seq OWNER TO postgres;
 
 --
--- Name: courses_courseid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: courses_courseid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.courses_courseid_seq OWNED BY public.courses.courseid;
 
 
 --
--- Name: customerdata_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: customerdata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.customerdata_id_seq
@@ -163,9 +226,10 @@ CREATE SEQUENCE public.customerdata_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.customerdata_id_seq OWNER TO postgres;
 
 --
--- Name: customerdata; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: customerdata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.customerdata (
@@ -175,9 +239,10 @@ CREATE TABLE public.customerdata (
 );
 
 
+ALTER TABLE public.customerdata OWNER TO postgres;
 
 --
--- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.defaulwaiteractionablestates_seq
@@ -188,10 +253,10 @@ CREATE SEQUENCE public.defaulwaiteractionablestates_seq
     CACHE 1;
 
 
-ALTER TABLE public.defaulwaiteractionablestates_seq OWNER TO "Tonyx";
+ALTER TABLE public.defaulwaiteractionablestates_seq OWNER TO postgres;
 
 --
--- Name: defaultactionablestates; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: defaultactionablestates; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.defaultactionablestates (
@@ -200,9 +265,10 @@ CREATE TABLE public.defaultactionablestates (
 );
 
 
+ALTER TABLE public.defaultactionablestates OWNER TO postgres;
 
 --
--- Name: enablers_elablersid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: enablers_elablersid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.enablers_elablersid_seq
@@ -213,9 +279,10 @@ CREATE SEQUENCE public.enablers_elablersid_seq
     CACHE 1;
 
 
+ALTER TABLE public.enablers_elablersid_seq OWNER TO postgres;
 
 --
--- Name: enablers; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: enablers; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.enablers (
@@ -226,9 +293,10 @@ CREATE TABLE public.enablers (
 );
 
 
+ALTER TABLE public.enablers OWNER TO postgres;
 
 --
--- Name: roles; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: roles; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.roles (
@@ -238,9 +306,10 @@ CREATE TABLE public.roles (
 );
 
 
+ALTER TABLE public.roles OWNER TO postgres;
 
 --
--- Name: states_stateid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: states_stateid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.states_stateid_seq
@@ -251,9 +320,10 @@ CREATE SEQUENCE public.states_stateid_seq
     CACHE 1;
 
 
+ALTER TABLE public.states_stateid_seq OWNER TO postgres;
 
 --
--- Name: states; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: states; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.states (
@@ -267,9 +337,10 @@ CREATE TABLE public.states (
 );
 
 
+ALTER TABLE public.states OWNER TO postgres;
 
 --
--- Name: enablersrolestatuscategories; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: enablersrolestatuscategories; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.enablersrolestatuscategories AS
@@ -283,9 +354,57 @@ CREATE VIEW public.enablersrolestatuscategories AS
      JOIN public.states e ON ((a.stateid = e.stateid)));
 
 
+ALTER TABLE public.enablersrolestatuscategories OWNER TO postgres;
 
 --
--- Name: incredientdecrementid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: subcategory_mapping_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.subcategory_mapping_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.subcategory_mapping_seq OWNER TO postgres;
+
+--
+-- Name: subcategorymapping; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.subcategorymapping (
+    subcategorymappingid integer DEFAULT nextval('public.subcategory_mapping_seq'::regclass) NOT NULL,
+    fatherid integer NOT NULL,
+    sonid integer NOT NULL
+);
+
+
+ALTER TABLE public.subcategorymapping OWNER TO postgres;
+
+--
+-- Name: fathersoncategoriesdetails; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.fathersoncategoriesdetails AS
+ SELECT a.categoryid,
+    a.name AS fathername,
+    a.categoryid AS fatherid,
+    c.name AS sonname,
+    c.categoryid AS sonid,
+    b.subcategorymappingid,
+    a.visibile AS fathervisible,
+    c.visibile AS sonvisible
+   FROM ((public.coursecategories a
+     JOIN public.subcategorymapping b ON ((a.categoryid = b.fatherid)))
+     JOIN public.coursecategories c ON ((c.categoryid = b.sonid)));
+
+
+ALTER TABLE public.fathersoncategoriesdetails OWNER TO postgres;
+
+--
+-- Name: incredientdecrementid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.incredientdecrementid_seq
@@ -296,9 +415,10 @@ CREATE SEQUENCE public.incredientdecrementid_seq
     CACHE 1;
 
 
+ALTER TABLE public.incredientdecrementid_seq OWNER TO postgres;
 
 --
--- Name: ingredient; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: ingredient; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ingredient (
@@ -315,66 +435,11 @@ CREATE TABLE public.ingredient (
 );
 
 
-
-CREATE SEQUENCE public.standard_comments_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-CREATE TABLE public.standardcomments (
-    standardcommentid integer NOT NULL,
-    comment character varying(59) NOT NULL
-);
-
-ALTER TABLE ONLY public.standardcomments ALTER COLUMN standardcommentid SET DEFAULT nextval('public.standard_comments_seq');
-
-
-ALTER TABLE ONLY public.standardcomments
-    ADD CONSTRAINT comment_uniquename UNIQUE (comment);
-
-
-ALTER TABLE ONLY public.standardcomments
-    ADD CONSTRAINT standardcomment_pkey PRIMARY KEY (standardcommentid);
-
-
-
-CREATE SEQUENCE public.comments_for_course_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-CREATE TABLE public.commentsforcourse (
-    commentsforcourseid integer NOT NULL,
-    courseid integer NOT NULL,
-    standardcommentid integer NOT NULL
-);
-
-ALTER TABLE ONLY public.commentsforcourse ALTER COLUMN commentsforcourseid SET DEFAULT nextval('public.comments_for_course_seq');
-ALTER TABLE ONLY public.commentsforcourse
-    ADD CONSTRAINT commentsforcourse_pkey PRIMARY KEY (commentsforcourseid);
-ALTER TABLE ONLY public.commentsforcourse
-    ADD CONSTRAINT coursecommentid_pair UNIQUE (courseid,standardcommentid);
-
-ALTER TABLE ONLY public.commentsforcourse
-    ADD CONSTRAINT commentsforcourse_fk FOREIGN KEY (standardcommentid) REFERENCES public.standardcomments(standardcommentid) MATCH FULL ON DELETE CASCADE;
+ALTER TABLE public.ingredient OWNER TO postgres;
 
 --
--- Name: ingredientcategory; Type: TABLE; Schema: public; Owner: Tonyx
--- 
-CREATE VIEW public.commentsforcoursedetails AS
-    SELECT b.comment,
-      a.commentsforcourseid,
-      a.courseid,
-      b.standardcommentid
-
-        FROM (public.commentsforcourse a
-            JOIN public.standardcomments b ON ((a.standardcommentid = b.standardcommentid)))
-      ORDER BY b.comment;
+-- Name: ingredientcategory; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE public.ingredientcategory (
     ingredientcategoryid integer NOT NULL,
@@ -384,37 +449,10 @@ CREATE TABLE public.ingredientcategory (
 );
 
 
-CREATE SEQUENCE public.subcategory_mapping_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-CREATE TABLE public.subcategorymapping (
-    subcategorymappingid integer NOT NULL,
-    fatherid integer NOT NULL,
-    sonid integer NOT NULL
-);
-
-
-ALTER TABLE ONLY public.subcategorymapping ALTER COLUMN subcategorymappingid SET DEFAULT nextval('public.subcategory_mapping_seq');
-
-ALTER TABLE ONLY public.subcategorymapping
-    ADD CONSTRAINT coursecommentid_pair UNIQUE (fatherid,sonid);
-
-ALTER TABLE ONLY public.subcategorymapping
-    ADD CONSTRAINT subcategorymapping_pkey PRIMARY KEY (subcategorymappingid);
-
-
-ALTER TABLE ONLY public.subcategorymapping
-    ADD CONSTRAINT father_fk FOREIGN KEY (fatherid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
-
-ALTER TABLE ONLY public.subcategorymapping
-    ADD CONSTRAINT son_fk FOREIGN KEY (sonid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
+ALTER TABLE public.ingredientcategory OWNER TO postgres;
 
 --
--- Name: ingredient_categoryid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: ingredient_categoryid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.ingredient_categoryid_seq
@@ -425,125 +463,17 @@ CREATE SEQUENCE public.ingredient_categoryid_seq
     CACHE 1;
 
 
-CREATE VIEW public.fathersoncategoriesdetails AS
-    SELECT a.categoryid,
-        a.name as fathername,
-        a.categoryid as fatherid,
-        c.name as sonname,
-        c.categoryid as sonid,
-        b.subcategorymappingid,
-        a.visibile as fathervisible,
-        c.visibile as sonvisible
-    FROM (((public.coursecategories a
-        JOIN public.subcategorymapping b ON ((a.categoryid=b.fatherid)))                
-        JOIN public.coursecategories c ON ((c.categoryid=b.sonid))));
-
-
-CREATE SEQUENCE public.standard_variation_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-GRANT ALL on standard_variation_id_seq to SUAVE;
-
-CREATE TABLE public.standardvariations (
-    standardvariationid integer NOT NULL,
-    name varchar(49) NOT NULL
-);
-
-ALTER SEQUENCE public.standard_variation_id_seq OWNED BY public.standardvariations.standardvariationid;
-
-GRANT ALL on standardvariations to SUAVE;
-
-ALTER TABLE ONLY public.standardvariations ALTER COLUMN standardvariationid SET DEFAULT nextval('public.standard_variation_id_seq');
-
-ALTER TABLE ONLY public.standardvariations
-    ADD CONSTRAINT standard_variation_pk PRIMARY KEY (standardvariationid);
-
-ALTER TABLE ONLY public.standardvariations
-    ADD CONSTRAINT standard_variation_unique_name UNIQUE (name);
-
-CREATE SEQUENCE public.standard_variation_item_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-GRANT all on standard_variation_item_id_seq to SUAVE;
-
-CREATE TABLE public.standardvariationitem (
-    standardvariationitemid integer NOT NULL,
-    ingredientid integer NOT NULL,
-    tipovariazione character varying(30) NOT NULL,
-    plailnumvariation integer,
-    ingredientpriceid integer,
-    standardvariationid integer NOT NULL
-);
-
-ALTER SEQUENCE public.standard_variation_item_id_seq OWNED BY public.standardvariationitem.standardvariationitemid;
-
-
-GRANT all on standardvariationitem to SUAVE;
-
-ALTER TABLE ONLY public.standardvariationitem ALTER COLUMN standardvariationitemid SET DEFAULT nextval('public.standard_variation_item_id_seq');
-
-ALTER TABLE ONLY public.standardvariationitem
-    ADD CONSTRAINT standard_variation_item_pk PRIMARY KEY (standardvariationitemid);
-
-ALTER TABLE ONLY public.standardvariationitem
-    ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
-
-ALTER TABLE ONLY public.standardvariationitem
-    ADD CONSTRAINT ingredientprice_fk FOREIGN KEY (ingredientpriceid) REFERENCES public.ingredientprice(ingredientpriceid) MATCH FULL;
-
-
-
-CREATE SEQUENCE public.standard_variation_for_course_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-GRANT ALL on standard_variation_for_course_id_seq to SUAVE;
-
-
-CREATE TABLE public.standardvariationforcourse (
-    standardvariationforcourseid integer NOT NULL,
-    standardvariationid integer NOT NULL,
-    courseid integer NOT NULL
-);
-
-ALTER SEQUENCE public.standard_variation_for_course_id_seq OWNED BY public.standardvariationforcourse.standardvariationforcourseid;
-
-GRANT ALL on standardvariationforcourse to SUAVE;
-
-ALTER TABLE ONLY public.standardvariationforcourse ALTER COLUMN standardvariationforcourseid SET DEFAULT nextval('public.standard_variation_for_course_id_seq');
-
-ALTER TABLE ONLY public.standardvariationforcourse
-    ADD CONSTRAINT standard_variation_for_course_pk PRIMARY KEY (standardvariationforcourseid);
-
-ALTER TABLE ONLY public.standardvariationforcourse
-    ADD CONSTRAINT standard_variation_unique_mapping UNIQUE (standardvariationid,courseid);
-
-ALTER TABLE ONLY public.standardvariationforcourse
-    ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
-
-ALTER TABLE ONLY public.standardvariationforcourse
-    ADD CONSTRAINT standard_variation_for_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
+ALTER TABLE public.ingredient_categoryid_seq OWNER TO postgres;
 
 --
--- Name: ingredient_categoryid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: ingredient_categoryid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.ingredient_categoryid_seq OWNED BY public.ingredientcategory.ingredientcategoryid;
 
 
 --
--- Name: ingredientcourse; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: ingredientcourse; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ingredientcourse (
@@ -554,11 +484,10 @@ CREATE TABLE public.ingredientcourse (
 );
 
 
-
-
+ALTER TABLE public.ingredientcourse OWNER TO postgres;
 
 --
--- Name: ingredientcourseid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: ingredientcourseid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.ingredientcourseid_seq
@@ -569,16 +498,17 @@ CREATE SEQUENCE public.ingredientcourseid_seq
     CACHE 1;
 
 
+ALTER TABLE public.ingredientcourseid_seq OWNER TO postgres;
 
 --
--- Name: ingredientcourseid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: ingredientcourseid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.ingredientcourseid_seq OWNED BY public.ingredientcourse.ingredientcourseid;
 
 
 --
--- Name: ingredientdecrement; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrement; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ingredientdecrement (
@@ -593,9 +523,10 @@ CREATE TABLE public.ingredientdecrement (
 );
 
 
+ALTER TABLE public.ingredientdecrement OWNER TO postgres;
 
 --
--- Name: orderitems; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: orderitems; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.orderitems (
@@ -617,9 +548,10 @@ CREATE TABLE public.orderitems (
 );
 
 
+ALTER TABLE public.orderitems OWNER TO postgres;
 
 --
--- Name: ingredientdecrementview; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrementview; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.ingredientdecrementview AS
@@ -648,9 +580,10 @@ CREATE VIEW public.ingredientdecrementview AS
      LEFT JOIN public.ingredientcourse e ON (((e.ingredientid = a.ingredientid) AND (e.courseid = c.courseid))));
 
 
+ALTER TABLE public.ingredientdecrementview OWNER TO postgres;
 
 --
--- Name: ingredientdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: ingredientdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.ingredientdetails AS
@@ -664,9 +597,10 @@ CREATE VIEW public.ingredientdetails AS
      JOIN public.ingredientcategory d ON ((b.ingredientcategoryid = d.ingredientcategoryid)));
 
 
+ALTER TABLE public.ingredientdetails OWNER TO postgres;
 
 --
--- Name: ingredientid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: ingredientid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.ingredientid_seq
@@ -677,16 +611,17 @@ CREATE SEQUENCE public.ingredientid_seq
     CACHE 1;
 
 
+ALTER TABLE public.ingredientid_seq OWNER TO postgres;
 
 --
--- Name: ingredientid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: ingredientid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.ingredientid_seq OWNED BY public.ingredient.ingredientid;
 
 
 --
--- Name: ingredientincrementid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: ingredientincrementid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.ingredientincrementid_seq
@@ -697,9 +632,10 @@ CREATE SEQUENCE public.ingredientincrementid_seq
     CACHE 1;
 
 
+ALTER TABLE public.ingredientincrementid_seq OWNER TO postgres;
 
 --
--- Name: ingredientincrement; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: ingredientincrement; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ingredientincrement (
@@ -713,9 +649,10 @@ CREATE TABLE public.ingredientincrement (
 );
 
 
+ALTER TABLE public.ingredientincrement OWNER TO postgres;
 
 --
--- Name: ingredientofcourses; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: ingredientofcourses; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.ingredientofcourses AS
@@ -738,9 +675,10 @@ CREATE VIEW public.ingredientofcourses AS
      JOIN public.ingredientcategory d ON ((b.ingredientcategoryid = d.ingredientcategoryid)));
 
 
+ALTER TABLE public.ingredientofcourses OWNER TO postgres;
 
 --
--- Name: ingredientpriceid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: ingredientpriceid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.ingredientpriceid_seq
@@ -751,9 +689,10 @@ CREATE SEQUENCE public.ingredientpriceid_seq
     CACHE 1;
 
 
+ALTER TABLE public.ingredientpriceid_seq OWNER TO postgres;
 
 --
--- Name: ingredientprice; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: ingredientprice; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ingredientprice (
@@ -767,9 +706,10 @@ CREATE TABLE public.ingredientprice (
 );
 
 
+ALTER TABLE public.ingredientprice OWNER TO postgres;
 
 --
--- Name: ingredientpricedetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: ingredientpricedetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.ingredientpricedetails AS
@@ -786,9 +726,10 @@ CREATE VIEW public.ingredientpricedetails AS
   ORDER BY b.name;
 
 
+ALTER TABLE public.ingredientpricedetails OWNER TO postgres;
 
 --
--- Name: invoicesid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: invoicesid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.invoicesid_seq
@@ -799,9 +740,10 @@ CREATE SEQUENCE public.invoicesid_seq
     CACHE 1;
 
 
+ALTER TABLE public.invoicesid_seq OWNER TO postgres;
 
 --
--- Name: invoices; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: invoices; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.invoices (
@@ -815,9 +757,10 @@ CREATE TABLE public.invoices (
 );
 
 
+ALTER TABLE public.invoices OWNER TO postgres;
 
 --
--- Name: orders; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: orders; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.orders (
@@ -840,9 +783,10 @@ CREATE TABLE public.orders (
 );
 
 
+ALTER TABLE public.orders OWNER TO postgres;
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
@@ -862,9 +806,10 @@ CREATE TABLE public.users (
 );
 
 
+ALTER TABLE public.users OWNER TO postgres;
 
 --
--- Name: nonarchivedorderdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: nonarchivedorderdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.nonarchivedorderdetails AS
@@ -890,9 +835,10 @@ CREATE VIEW public.nonarchivedorderdetails AS
   ORDER BY a.startingtime;
 
 
+ALTER TABLE public.nonarchivedorderdetails OWNER TO postgres;
 
 --
--- Name: nonemptyorderdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: nonemptyorderdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.nonemptyorderdetails AS
@@ -917,9 +863,10 @@ CREATE VIEW public.nonemptyorderdetails AS
   ORDER BY a.startingtime;
 
 
+ALTER TABLE public.nonemptyorderdetails OWNER TO postgres;
 
 --
--- Name: observers_observerid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: observers_observerid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.observers_observerid_seq
@@ -930,9 +877,10 @@ CREATE SEQUENCE public.observers_observerid_seq
     CACHE 1;
 
 
+ALTER TABLE public.observers_observerid_seq OWNER TO postgres;
 
 --
--- Name: observers; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: observers; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.observers (
@@ -943,9 +891,10 @@ CREATE TABLE public.observers (
 );
 
 
+ALTER TABLE public.observers OWNER TO postgres;
 
 --
--- Name: observers_observersid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: observers_observersid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.observers_observersid_seq
@@ -956,9 +905,10 @@ CREATE SEQUENCE public.observers_observersid_seq
     CACHE 1;
 
 
+ALTER TABLE public.observers_observersid_seq OWNER TO postgres;
 
 --
--- Name: observersrolestatuscategories; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: observersrolestatuscategories; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.observersrolestatuscategories AS
@@ -972,9 +922,10 @@ CREATE VIEW public.observersrolestatuscategories AS
      JOIN public.states e ON ((a.stateid = e.stateid)));
 
 
+ALTER TABLE public.observersrolestatuscategories OWNER TO postgres;
 
 --
--- Name: orderdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: orderdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.orderdetails AS
@@ -996,9 +947,10 @@ CREATE VIEW public.orderdetails AS
   ORDER BY a.startingtime;
 
 
+ALTER TABLE public.orderdetails OWNER TO postgres;
 
 --
--- Name: orderoutgroup_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: orderoutgroup_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.orderoutgroup_id_seq
@@ -1009,9 +961,10 @@ CREATE SEQUENCE public.orderoutgroup_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.orderoutgroup_id_seq OWNER TO postgres;
 
 --
--- Name: orderoutgroup; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: orderoutgroup; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.orderoutgroup (
@@ -1022,9 +975,10 @@ CREATE TABLE public.orderoutgroup (
 );
 
 
+ALTER TABLE public.orderoutgroup OWNER TO postgres;
 
 --
--- Name: suborderid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: suborderid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.suborderid_seq
@@ -1035,9 +989,10 @@ CREATE SEQUENCE public.suborderid_seq
     CACHE 1;
 
 
+ALTER TABLE public.suborderid_seq OWNER TO postgres;
 
 --
--- Name: suborder; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: suborder; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.suborder (
@@ -1053,9 +1008,10 @@ CREATE TABLE public.suborder (
 );
 
 
+ALTER TABLE public.suborder OWNER TO postgres;
 
 --
--- Name: orderitemdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: orderitemdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.orderitemdetails AS
@@ -1091,9 +1047,10 @@ CREATE VIEW public.orderitemdetails AS
      LEFT JOIN public.suborder f ON ((a.suborderid = f.suborderid)));
 
 
+ALTER TABLE public.orderitemdetails OWNER TO postgres;
 
 --
--- Name: orderitems_orderitemid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: orderitems_orderitemid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.orderitems_orderitemid_seq
@@ -1104,16 +1061,17 @@ CREATE SEQUENCE public.orderitems_orderitemid_seq
     CACHE 1;
 
 
+ALTER TABLE public.orderitems_orderitemid_seq OWNER TO postgres;
 
 --
--- Name: orderitems_orderitemid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: orderitems_orderitemid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.orderitems_orderitemid_seq OWNED BY public.orderitems.orderitemid;
 
 
 --
--- Name: orderitemstates; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: orderitemstates; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.orderitemstates (
@@ -1124,9 +1082,10 @@ CREATE TABLE public.orderitemstates (
 );
 
 
+ALTER TABLE public.orderitemstates OWNER TO postgres;
 
 --
--- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.orderitemstates_orderitemstates_id_seq
@@ -1137,16 +1096,17 @@ CREATE SEQUENCE public.orderitemstates_orderitemstates_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.orderitemstates_orderitemstates_id_seq OWNER TO postgres;
 
 --
--- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.orderitemstates_orderitemstates_id_seq OWNED BY public.orderitemstates.orderitemstatesid;
 
 
 --
--- Name: orderoutgroupdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: orderoutgroupdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.orderoutgroupdetails AS
@@ -1160,9 +1120,10 @@ CREATE VIEW public.orderoutgroupdetails AS
      JOIN public.orders b ON ((a.orderid = b.orderid)));
 
 
+ALTER TABLE public.orderoutgroupdetails OWNER TO postgres;
 
 --
--- Name: orders_orderid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: orders_orderid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.orders_orderid_seq
@@ -1173,16 +1134,17 @@ CREATE SEQUENCE public.orders_orderid_seq
     CACHE 1;
 
 
+ALTER TABLE public.orders_orderid_seq OWNER TO postgres;
 
 --
--- Name: orders_orderid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: orders_orderid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.orders_orderid_seq OWNED BY public.orders.orderid;
 
 
 --
--- Name: paymentid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: paymentid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.paymentid_seq
@@ -1193,9 +1155,10 @@ CREATE SEQUENCE public.paymentid_seq
     CACHE 1;
 
 
+ALTER TABLE public.paymentid_seq OWNER TO postgres;
 
 --
--- Name: paymentitem; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: paymentitem; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.paymentitem (
@@ -1207,9 +1170,10 @@ CREATE TABLE public.paymentitem (
 );
 
 
+ALTER TABLE public.paymentitem OWNER TO postgres;
 
 --
--- Name: tendercodesid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: tendercodesid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.tendercodesid_seq
@@ -1220,9 +1184,10 @@ CREATE SEQUENCE public.tendercodesid_seq
     CACHE 1;
 
 
+ALTER TABLE public.tendercodesid_seq OWNER TO postgres;
 
 --
--- Name: tendercodes; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: tendercodes; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.tendercodes (
@@ -1232,9 +1197,10 @@ CREATE TABLE public.tendercodes (
 );
 
 
+ALTER TABLE public.tendercodes OWNER TO postgres;
 
 --
--- Name: paymentitemdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: paymentitemdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.paymentitemdetails AS
@@ -1249,9 +1215,10 @@ CREATE VIEW public.paymentitemdetails AS
      JOIN public.tendercodes b ON ((a.tendercodesid = b.tendercodesid)));
 
 
+ALTER TABLE public.paymentitemdetails OWNER TO postgres;
 
 --
--- Name: printerforcategory_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: printerforcategory_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.printerforcategory_id_seq
@@ -1262,9 +1229,10 @@ CREATE SEQUENCE public.printerforcategory_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.printerforcategory_id_seq OWNER TO postgres;
 
 --
--- Name: printerforcategory; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: printerforcategory; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.printerforcategory (
@@ -1275,9 +1243,10 @@ CREATE TABLE public.printerforcategory (
 );
 
 
+ALTER TABLE public.printerforcategory OWNER TO postgres;
 
 --
--- Name: printers_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: printers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.printers_id_seq
@@ -1288,9 +1257,10 @@ CREATE SEQUENCE public.printers_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.printers_id_seq OWNER TO postgres;
 
 --
--- Name: printers; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: printers; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.printers (
@@ -1299,9 +1269,10 @@ CREATE TABLE public.printers (
 );
 
 
+ALTER TABLE public.printers OWNER TO postgres;
 
 --
--- Name: printerforcategorydetail; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: printerforcategorydetail; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.printerforcategorydetail AS
@@ -1318,9 +1289,10 @@ CREATE VIEW public.printerforcategorydetail AS
      JOIN public.states e ON ((a.stateid = e.stateid)));
 
 
+ALTER TABLE public.printerforcategorydetail OWNER TO postgres;
 
 --
--- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.printerforreceiptandinvoice_id_seq
@@ -1331,9 +1303,10 @@ CREATE SEQUENCE public.printerforreceiptandinvoice_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.printerforreceiptandinvoice_id_seq OWNER TO postgres;
 
 --
--- Name: printerforreceiptandinvoice; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: printerforreceiptandinvoice; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.printerforreceiptandinvoice (
@@ -1344,9 +1317,10 @@ CREATE TABLE public.printerforreceiptandinvoice (
 );
 
 
+ALTER TABLE public.printerforreceiptandinvoice OWNER TO postgres;
 
 --
--- Name: rejectedorderitems_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: rejectedorderitems_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.rejectedorderitems_id_seq
@@ -1357,9 +1331,10 @@ CREATE SEQUENCE public.rejectedorderitems_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.rejectedorderitems_id_seq OWNER TO postgres;
 
 --
--- Name: rejectedorderitems; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: rejectedorderitems; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.rejectedorderitems (
@@ -1371,9 +1346,10 @@ CREATE TABLE public.rejectedorderitems (
 );
 
 
+ALTER TABLE public.rejectedorderitems OWNER TO postgres;
 
 --
--- Name: roles_roleid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: roles_roleid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.roles_roleid_seq
@@ -1384,16 +1360,161 @@ CREATE SEQUENCE public.roles_roleid_seq
     CACHE 1;
 
 
+ALTER TABLE public.roles_roleid_seq OWNER TO postgres;
 
 --
--- Name: roles_roleid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: roles_roleid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.roles_roleid_seq OWNED BY public.roles.roleid;
 
 
 --
--- Name: tempuseractionablestates_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: standardvariationforcourse; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.standardvariationforcourse (
+    standardvariationforcourseid integer NOT NULL,
+    standardvariationid integer NOT NULL,
+    courseid integer NOT NULL
+);
+
+
+ALTER TABLE public.standardvariationforcourse OWNER TO postgres;
+
+--
+-- Name: standard_variation_for_course_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.standard_variation_for_course_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.standard_variation_for_course_id_seq OWNER TO postgres;
+
+--
+-- Name: standard_variation_for_course_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.standard_variation_for_course_id_seq OWNED BY public.standardvariationforcourse.standardvariationforcourseid;
+
+
+--
+-- Name: standardvariations; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.standardvariations (
+    standardvariationid integer NOT NULL,
+    name character varying(49) NOT NULL
+);
+
+
+ALTER TABLE public.standardvariations OWNER TO postgres;
+
+--
+-- Name: standard_variation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.standard_variation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.standard_variation_id_seq OWNER TO postgres;
+
+--
+-- Name: standard_variation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.standard_variation_id_seq OWNED BY public.standardvariations.standardvariationid;
+
+
+--
+-- Name: standardvariationitem; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.standardvariationitem (
+    standardvariationitemid integer NOT NULL,
+    ingredientid integer NOT NULL,
+    tipovariazione character varying(30) NOT NULL,
+    plailnumvariation integer,
+    ingredientpriceid integer,
+    standardvariationid integer NOT NULL
+);
+
+
+ALTER TABLE public.standardvariationitem OWNER TO postgres;
+
+--
+-- Name: standard_variation_item_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.standard_variation_item_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.standard_variation_item_id_seq OWNER TO postgres;
+
+--
+-- Name: standard_variation_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.standard_variation_item_id_seq OWNED BY public.standardvariationitem.standardvariationitemid;
+
+
+--
+-- Name: standardvariationforcoursedetails; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.standardvariationforcoursedetails AS
+ SELECT a.standardvariationforcourseid,
+    a.standardvariationid,
+    a.courseid,
+    b.name AS standardvariationname
+   FROM (public.standardvariationforcourse a
+     JOIN public.standardvariations b ON ((b.standardvariationid = a.standardvariationid)));
+
+
+ALTER TABLE public.standardvariationforcoursedetails OWNER TO postgres;
+
+--
+-- Name: standardvariationitemdetails; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.standardvariationitemdetails AS
+ SELECT a.standardvariationitemid,
+    a.standardvariationid,
+    a.ingredientid,
+    a.tipovariazione,
+    b.name AS ingredientname,
+    b.allergen,
+    a.plailnumvariation,
+    a.ingredientpriceid,
+    e.quantity,
+    e.addprice,
+    e.subtractprice
+   FROM (((public.standardvariationitem a
+     JOIN public.ingredient b ON ((a.ingredientid = b.ingredientid)))
+     JOIN public.standardvariations c ON ((a.standardvariationid = c.standardvariationid)))
+     LEFT JOIN public.ingredientprice e ON ((a.ingredientpriceid = e.ingredientpriceid)))
+  ORDER BY b.name;
+
+
+ALTER TABLE public.standardvariationitemdetails OWNER TO postgres;
+
+--
+-- Name: tempuseractionablestates_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.tempuseractionablestates_seq
@@ -1404,9 +1525,10 @@ CREATE SEQUENCE public.tempuseractionablestates_seq
     CACHE 1;
 
 
+ALTER TABLE public.tempuseractionablestates_seq OWNER TO postgres;
 
 --
--- Name: temp_user_actionable_states; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: temp_user_actionable_states; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.temp_user_actionable_states (
@@ -1416,9 +1538,10 @@ CREATE TABLE public.temp_user_actionable_states (
 );
 
 
+ALTER TABLE public.temp_user_actionable_states OWNER TO postgres;
 
 --
--- Name: temp_user_actionable_states_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: temp_user_actionable_states_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.temp_user_actionable_states_seq
@@ -1429,9 +1552,10 @@ CREATE SEQUENCE public.temp_user_actionable_states_seq
     CACHE 1;
 
 
+ALTER TABLE public.temp_user_actionable_states_seq OWNER TO postgres;
 
 --
--- Name: temp_user_default_actionable_states; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: temp_user_default_actionable_states; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.temp_user_default_actionable_states (
@@ -1440,9 +1564,10 @@ CREATE TABLE public.temp_user_default_actionable_states (
 );
 
 
+ALTER TABLE public.temp_user_default_actionable_states OWNER TO postgres;
 
 --
--- Name: users_userid_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: users_userid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.users_userid_seq
@@ -1453,16 +1578,17 @@ CREATE SEQUENCE public.users_userid_seq
     CACHE 1;
 
 
+ALTER TABLE public.users_userid_seq OWNER TO postgres;
 
 --
--- Name: users_userid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: users_userid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.users_userid_seq OWNED BY public.users.userid;
 
 
 --
--- Name: usersview; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: usersview; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.usersview AS
@@ -1483,9 +1609,10 @@ CREATE VIEW public.usersview AS
   ORDER BY a.username;
 
 
+ALTER TABLE public.usersview OWNER TO postgres;
 
 --
--- Name: variations; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: variations; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.variations (
@@ -1498,9 +1625,10 @@ CREATE TABLE public.variations (
 );
 
 
+ALTER TABLE public.variations OWNER TO postgres;
 
 --
--- Name: variationdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: variationdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.variationdetails AS
@@ -1523,9 +1651,10 @@ CREATE VIEW public.variationdetails AS
   ORDER BY b.name;
 
 
+ALTER TABLE public.variationdetails OWNER TO postgres;
 
 --
--- Name: variations_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: variations_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.variations_seq
@@ -1536,16 +1665,17 @@ CREATE SEQUENCE public.variations_seq
     CACHE 1;
 
 
+ALTER TABLE public.variations_seq OWNER TO postgres;
 
 --
--- Name: variations_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: variations_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.variations_seq OWNED BY public.variations.variationsid;
 
 
 --
--- Name: voidedorderslogbuffer; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: voidedorderslogbuffer; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.voidedorderslogbuffer (
@@ -1556,9 +1686,10 @@ CREATE TABLE public.voidedorderslogbuffer (
 );
 
 
+ALTER TABLE public.voidedorderslogbuffer OWNER TO postgres;
 
 --
--- Name: voidedorderslog_id_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: voidedorderslog_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.voidedorderslog_id_seq
@@ -1569,16 +1700,17 @@ CREATE SEQUENCE public.voidedorderslog_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.voidedorderslog_id_seq OWNER TO postgres;
 
 --
--- Name: voidedorderslog_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: Tonyx
+-- Name: voidedorderslog_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.voidedorderslog_id_seq OWNED BY public.voidedorderslogbuffer.voidedorderslogbufferid;
 
 
 --
--- Name: waiteractionablestates_seq; Type: SEQUENCE; Schema: public; Owner: Tonyx
+-- Name: waiteractionablestates_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.waiteractionablestates_seq
@@ -1589,9 +1721,10 @@ CREATE SEQUENCE public.waiteractionablestates_seq
     CACHE 1;
 
 
+ALTER TABLE public.waiteractionablestates_seq OWNER TO postgres;
 
 --
--- Name: waiteractionablestates; Type: TABLE; Schema: public; Owner: Tonyx
+-- Name: waiteractionablestates; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.waiteractionablestates (
@@ -1601,107 +1734,122 @@ CREATE TABLE public.waiteractionablestates (
 );
 
 
+ALTER TABLE public.waiteractionablestates OWNER TO postgres;
 
 --
--- Name: archivedorderslogbuffer archivedlogbufferid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: archivedorderslogbuffer archivedlogbufferid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.archivedorderslogbuffer ALTER COLUMN archivedlogbufferid SET DEFAULT nextval('public.archivedorderslog_id_seq'::regclass);
 
 
 --
--- Name: coursecategories categoryid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: coursecategories categoryid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.coursecategories ALTER COLUMN categoryid SET DEFAULT nextval('public.courses_categoryid_seq'::regclass);
 
 
 --
--- Name: courses courseid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: courses courseid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.courses ALTER COLUMN courseid SET DEFAULT nextval('public.courses_courseid_seq'::regclass);
 
 
 --
--- Name: ingredient ingredientid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: ingredient ingredientid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredient ALTER COLUMN ingredientid SET DEFAULT nextval('public.ingredientid_seq'::regclass);
 
 
 --
--- Name: ingredientcategory ingredientcategoryid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: ingredientcategory ingredientcategoryid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcategory ALTER COLUMN ingredientcategoryid SET DEFAULT nextval('public.ingredient_categoryid_seq'::regclass);
 
 
 --
--- Name: ingredientcourse ingredientcourseid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: ingredientcourse ingredientcourseid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcourse ALTER COLUMN ingredientcourseid SET DEFAULT nextval('public.ingredientcourseid_seq'::regclass);
 
 
 --
--- Name: orderitems orderitemid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: orderitems orderitemid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderitems ALTER COLUMN orderitemid SET DEFAULT nextval('public.orderitems_orderitemid_seq'::regclass);
 
 
 --
--- Name: orderitemstates orderitemstatesid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: orderitemstates orderitemstatesid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderitemstates ALTER COLUMN orderitemstatesid SET DEFAULT nextval('public.orderitemstates_orderitemstates_id_seq'::regclass);
 
 
 --
--- Name: orders orderid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: orders orderid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders ALTER COLUMN orderid SET DEFAULT nextval('public.orders_orderid_seq'::regclass);
 
 
 --
--- Name: roles roleid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: roles roleid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN roleid SET DEFAULT nextval('public.roles_roleid_seq'::regclass);
 
 
 --
--- Name: users userid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: standardvariationforcourse standardvariationforcourseid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationforcourse ALTER COLUMN standardvariationforcourseid SET DEFAULT nextval('public.standard_variation_for_course_id_seq'::regclass);
+
+
+--
+-- Name: standardvariationitem standardvariationitemid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationitem ALTER COLUMN standardvariationitemid SET DEFAULT nextval('public.standard_variation_item_id_seq'::regclass);
+
+
+--
+-- Name: standardvariations standardvariationid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariations ALTER COLUMN standardvariationid SET DEFAULT nextval('public.standard_variation_id_seq'::regclass);
+
+
+--
+-- Name: users userid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN userid SET DEFAULT nextval('public.users_userid_seq'::regclass);
 
 
 --
--- Name: variations variationsid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: variations variationsid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.variations ALTER COLUMN variationsid SET DEFAULT nextval('public.variations_seq'::regclass);
 
 
 --
--- Name: voidedorderslogbuffer voidedorderslogbufferid; Type: DEFAULT; Schema: public; Owner: Tonyx
+-- Name: voidedorderslogbuffer voidedorderslogbufferid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.voidedorderslogbuffer ALTER COLUMN voidedorderslogbufferid SET DEFAULT nextval('public.voidedorderslog_id_seq'::regclass);
 
 
 --
--- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 282, true);
-
-
---
--- Data for Name: archivedorderslogbuffer; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: archivedorderslogbuffer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.archivedorderslogbuffer (archivedlogbufferid, archivedtime, orderid) FROM stdin;
@@ -1709,37 +1857,39 @@ COPY public.archivedorderslogbuffer (archivedlogbufferid, archivedtime, orderid)
 
 
 --
--- Data for Name: coursecategories; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: commentsforcourse; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid) FROM stdin;
+1	536	5
+2	536	4
+3	537	7
+4	537	6
+\.
+
+
+--
+-- Data for Name: coursecategories; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
+70	secondi	t	f
+71	superalcolici	t	f
 \.
 
 
 --
--- Data for Name: courses; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: courses; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.courses (courseid, name, description, price, categoryid, visibility) FROM stdin;
+536	bistecca		10.00	70	t
+537	cuba libre		6.00	71	t
 \.
 
 
 --
--- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.courses_categoryid_seq', 69, true);
-
-
---
--- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.courses_courseid_seq', 535, true);
-
-
---
--- Data for Name: customerdata; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: customerdata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.customerdata (customerdataid, data, name) FROM stdin;
@@ -1747,14 +1897,7 @@ COPY public.customerdata (customerdataid, data, name) FROM stdin;
 
 
 --
--- Name: customerdata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.customerdata_id_seq', 12, true);
-
-
---
--- Data for Name: defaultactionablestates; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: defaultactionablestates; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.defaultactionablestates (defaultactionablestatesid, stateid) FROM stdin;
@@ -1762,14 +1905,7 @@ COPY public.defaultactionablestates (defaultactionablestatesid, stateid) FROM st
 
 
 --
--- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.defaulwaiteractionablestates_seq', 30, true);
-
-
---
--- Data for Name: enablers; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: enablers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.enablers (enablersid, roleid, stateid, categoryid) FROM stdin;
@@ -1777,61 +1913,39 @@ COPY public.enablers (enablersid, roleid, stateid, categoryid) FROM stdin;
 
 
 --
--- Name: enablers_elablersid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.enablers_elablersid_seq', 190, true);
-
-
---
--- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.incredientdecrementid_seq', 270, true);
-
-
---
--- Data for Name: ingredient; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: ingredient; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredient (ingredientid, ingredientcategoryid, name, description, visibility, allergen, updateavailabilityflag, availablequantity, checkavailabilityflag, unitmeasure) FROM stdin;
 180	56	green salad		t	f	f	0.00	f	gr
+181	57	havana 3		t	f	f	0.00	f	cl
+182	57	havana 7		t	f	f	0.00	f	cl
+183	58	coca cola		t	f	f	0.00	f	gr
 \.
 
 
 --
--- Name: ingredient_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 56, true);
-
-
---
--- Data for Name: ingredientcategory; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: ingredientcategory; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredientcategory (ingredientcategoryid, name, description, visibility) FROM stdin;
 56	vegetables		t
+57	superalcolici		t
+58	soft drink		t
 \.
 
 
 --
--- Data for Name: ingredientcourse; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: ingredientcourse; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredientcourse (ingredientcourseid, courseid, ingredientid, quantity) FROM stdin;
+363	537	181	\N
 \.
 
 
 --
--- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.ingredientcourseid_seq', 362, true);
-
-
---
--- Data for Name: ingredientdecrement; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: ingredientdecrement; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredientdecrement (ingredientdecrementid, orderitemid, typeofdecrement, presumednormalquantity, recordedquantity, preparatorid, registrationtime, ingredientid) FROM stdin;
@@ -1839,14 +1953,7 @@ COPY public.ingredientdecrement (ingredientdecrementid, orderitemid, typeofdecre
 
 
 --
--- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.ingredientid_seq', 180, true);
-
-
---
--- Data for Name: ingredientincrement; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: ingredientincrement; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredientincrement (ingredientincrementid, ingredientid, comment, unitofmeasure, quantity, userid, registrationtime) FROM stdin;
@@ -1854,14 +1961,7 @@ COPY public.ingredientincrement (ingredientincrementid, ingredientid, comment, u
 
 
 --
--- Name: ingredientincrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.ingredientincrementid_seq', 32, true);
-
-
---
--- Data for Name: ingredientprice; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: ingredientprice; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredientprice (ingredientpriceid, ingredientid, quantity, isdefaultadd, isdefaultsubtract, addprice, subtractprice) FROM stdin;
@@ -1869,14 +1969,7 @@ COPY public.ingredientprice (ingredientpriceid, ingredientid, quantity, isdefaul
 
 
 --
--- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.ingredientpriceid_seq', 98, true);
-
-
---
--- Data for Name: invoices; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: invoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.invoices (invoicesid, data, invoicenumber, customerdataid, date, suborderid, orderid) FROM stdin;
@@ -1884,14 +1977,7 @@ COPY public.invoices (invoicesid, data, invoicenumber, customerdataid, date, sub
 
 
 --
--- Name: invoicesid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.invoicesid_seq', 45, true);
-
-
---
--- Data for Name: observers; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: observers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.observers (observersid, stateid, roleid, categoryid) FROM stdin;
@@ -1899,88 +1985,43 @@ COPY public.observers (observersid, stateid, roleid, categoryid) FROM stdin;
 
 
 --
--- Name: observers_observerid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.observers_observerid_seq', 210, true);
-
-
---
--- Name: observers_observersid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
-
-
---
--- Data for Name: orderitems; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: orderitems; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price, stateid, archived, startingtime, closingtime, ordergroupid, hasbeenrejected, suborderid, isinsasuborder, printcount) FROM stdin;
+1384	537	1	588	, molto ghiaccio	6.00	1	\N	2019-08-26 09:16:07.31542	\N	501	f	\N	f	0
 \.
 
 
 --
--- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1382, true);
-
-
---
--- Data for Name: orderitemstates; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: orderitemstates; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orderitemstates (orderitemstatesid, orderitemid, stateid, startingtime) FROM stdin;
+2596	1384	1	2019-08-26 09:16:07.31542
 \.
 
 
 --
--- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2594, true);
-
-
---
--- Data for Name: orderoutgroup; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: orderoutgroup; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) FROM stdin;
+501	0	588	1
 \.
 
 
 --
--- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 499, true);
-
-
---
--- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, closingtime, voided, archived, total, adjustedtotal, plaintotalvariation, percentagevariataion, adjustispercentage, adjustisplain, forqruserarchived) FROM stdin;
+588	8		t	2	2019-08-25 12:22:42.514751	\N	f	f	0.00	0.00	0.00	0.00	f	f	\N
 \.
 
 
 --
--- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.orders_orderid_seq', 587, true);
-
-
---
--- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.paymentid_seq', 115, true);
-
-
---
--- Data for Name: paymentitem; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: paymentitem; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.paymentitem (paymentid, suborderid, orderid, tendercodesid, amount) FROM stdin;
@@ -1988,7 +2029,7 @@ COPY public.paymentitem (paymentid, suborderid, orderid, tendercodesid, amount) 
 
 
 --
--- Data for Name: printerforcategory; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: printerforcategory; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.printerforcategory (printerforcategoryid, categoryid, printerid, stateid) FROM stdin;
@@ -1996,14 +2037,7 @@ COPY public.printerforcategory (printerforcategoryid, categoryid, printerid, sta
 
 
 --
--- Name: printerforcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.printerforcategory_id_seq', 55, true);
-
-
---
--- Data for Name: printerforreceiptandinvoice; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: printerforreceiptandinvoice; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.printerforreceiptandinvoice (printerforcategoryid, printinvoice, printreceipt, printerid) FROM stdin;
@@ -2011,14 +2045,7 @@ COPY public.printerforreceiptandinvoice (printerforcategoryid, printinvoice, pri
 
 
 --
--- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 4, true);
-
-
---
--- Data for Name: printers; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: printers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.printers (printerid, name) FROM stdin;
@@ -2026,14 +2053,7 @@ COPY public.printers (printerid, name) FROM stdin;
 
 
 --
--- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.printers_id_seq', 41, true);
-
-
---
--- Data for Name: rejectedorderitems; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: rejectedorderitems; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.rejectedorderitems (rejectedorderitemid, courseid, cause, timeofrejection, orderitemid) FROM stdin;
@@ -2041,14 +2061,7 @@ COPY public.rejectedorderitems (rejectedorderitemid, courseid, cause, timeofreje
 
 
 --
--- Name: rejectedorderitems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
-
-
---
--- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.roles (roleid, rolename, comment) FROM stdin;
@@ -2057,14 +2070,47 @@ COPY public.roles (roleid, rolename, comment) FROM stdin;
 
 
 --
--- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
+-- Data for Name: standardcomments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.roles_roleid_seq', 27, true);
+COPY public.standardcomments (standardcommentid, comment) FROM stdin;
+4	ben cotto
+5	al sangue
+6	poco ghiaccio
+7	molto ghiaccio
+\.
 
 
 --
--- Data for Name: states; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: standardvariationforcourse; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.standardvariationforcourse (standardvariationforcourseid, standardvariationid, courseid) FROM stdin;
+1	1	537
+\.
+
+
+--
+-- Data for Name: standardvariationitem; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.standardvariationitem (standardvariationitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid, standardvariationid) FROM stdin;
+1	182	👍	\N	\N	1
+2	181	🚫	\N	\N	1
+\.
+
+
+--
+-- Data for Name: standardvariations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.standardvariations (standardvariationid, name) FROM stdin;
+1	havana 7
+\.
+
+
+--
+-- Data for Name: states; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.states (stateid, isinitial, isfinal, statusname, nextstateid, isexceptional, creatingingredientdecrement) FROM stdin;
@@ -2075,14 +2121,15 @@ COPY public.states (stateid, isinitial, isfinal, statusname, nextstateid, isexce
 
 
 --
--- Name: states_stateid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
+-- Data for Name: subcategorymapping; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.states_stateid_seq', 6, true);
+COPY public.subcategorymapping (subcategorymappingid, fatherid, sonid) FROM stdin;
+\.
 
 
 --
--- Data for Name: suborder; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: suborder; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.suborder (suborderid, orderid, subtotal, comment, payed, creationtime, tendercodesid, subtotaladjustment, subtotalpercentadjustment) FROM stdin;
@@ -2090,14 +2137,7 @@ COPY public.suborder (suborderid, orderid, subtotal, comment, payed, creationtim
 
 
 --
--- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.suborderid_seq', 316, true);
-
-
---
--- Data for Name: temp_user_actionable_states; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: temp_user_actionable_states; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.temp_user_actionable_states (tempuseractionablestateid, userid, stateid) FROM stdin;
@@ -2105,14 +2145,7 @@ COPY public.temp_user_actionable_states (tempuseractionablestateid, userid, stat
 
 
 --
--- Name: temp_user_actionable_states_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.temp_user_actionable_states_seq', 12, true);
-
-
---
--- Data for Name: temp_user_default_actionable_states; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: temp_user_default_actionable_states; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.temp_user_default_actionable_states (tempmuseractionablestatesid, stateid) FROM stdin;
@@ -2120,14 +2153,7 @@ COPY public.temp_user_default_actionable_states (tempmuseractionablestatesid, st
 
 
 --
--- Name: tempuseractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.tempuseractionablestates_seq', 1, false);
-
-
---
--- Data for Name: tendercodes; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: tendercodes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.tendercodes (tendercodesid, tendercode, tendername) FROM stdin;
@@ -2140,14 +2166,7 @@ COPY public.tendercodes (tendercodesid, tendercode, tendername) FROM stdin;
 
 
 --
--- Name: tendercodesid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users (userid, username, password, enabled, canvoidorders, role, canmanageallorders, creationtime, istemporary, canchangetheprice, "table", consumed, canmanagecourses) FROM stdin;
@@ -2156,36 +2175,17 @@ COPY public.users (userid, username, password, enabled, canvoidorders, role, can
 
 
 --
--- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.users_userid_seq', 174, true);
-
-
---
--- Data for Name: variations; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: variations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.variations (variationsid, orderitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid) FROM stdin;
+1081	1384	182	👍	\N	\N
+1082	1384	181	🚫	\N	\N
 \.
 
 
 --
--- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.variations_seq', 1079, true);
-
-
---
--- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
---
-
-SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 307, true);
-
-
---
--- Data for Name: voidedorderslogbuffer; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: voidedorderslogbuffer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.voidedorderslogbuffer (voidedorderslogbufferid, voidedtime, orderid, userid) FROM stdin;
@@ -2193,7 +2193,7 @@ COPY public.voidedorderslogbuffer (voidedorderslogbufferid, voidedtime, orderid,
 
 
 --
--- Data for Name: waiteractionablestates; Type: TABLE DATA; Schema: public; Owner: Tonyx
+-- Data for Name: waiteractionablestates; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.waiteractionablestates (waiterwatchablestatesid, userid, stateid) FROM stdin;
@@ -2201,14 +2201,287 @@ COPY public.waiteractionablestates (waiterwatchablestatesid, userid, stateid) FR
 
 
 --
--- Name: waiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: Tonyx
+-- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 282, true);
+
+
+--
+-- Name: comments_for_course_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.comments_for_course_seq', 4, true);
+
+
+--
+-- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_categoryid_seq', 71, true);
+
+
+--
+-- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_courseid_seq', 537, true);
+
+
+--
+-- Name: customerdata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.customerdata_id_seq', 12, true);
+
+
+--
+-- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.defaulwaiteractionablestates_seq', 30, true);
+
+
+--
+-- Name: enablers_elablersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.enablers_elablersid_seq', 190, true);
+
+
+--
+-- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.incredientdecrementid_seq', 270, true);
+
+
+--
+-- Name: ingredient_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 58, true);
+
+
+--
+-- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientcourseid_seq', 363, true);
+
+
+--
+-- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientid_seq', 183, true);
+
+
+--
+-- Name: ingredientincrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientincrementid_seq', 32, true);
+
+
+--
+-- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientpriceid_seq', 98, true);
+
+
+--
+-- Name: invoicesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.invoicesid_seq', 45, true);
+
+
+--
+-- Name: observers_observerid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.observers_observerid_seq', 210, true);
+
+
+--
+-- Name: observers_observersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
+
+
+--
+-- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1384, true);
+
+
+--
+-- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2596, true);
+
+
+--
+-- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 501, true);
+
+
+--
+-- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orders_orderid_seq', 588, true);
+
+
+--
+-- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.paymentid_seq', 115, true);
+
+
+--
+-- Name: printerforcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printerforcategory_id_seq', 55, true);
+
+
+--
+-- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 4, true);
+
+
+--
+-- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printers_id_seq', 41, true);
+
+
+--
+-- Name: rejectedorderitems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
+
+
+--
+-- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.roles_roleid_seq', 27, true);
+
+
+--
+-- Name: standard_comments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_comments_seq', 7, true);
+
+
+--
+-- Name: standard_variation_for_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 1, true);
+
+
+--
+-- Name: standard_variation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_id_seq', 1, true);
+
+
+--
+-- Name: standard_variation_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 2, true);
+
+
+--
+-- Name: states_stateid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.states_stateid_seq', 6, true);
+
+
+--
+-- Name: subcategory_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.subcategory_mapping_seq', 1, false);
+
+
+--
+-- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.suborderid_seq', 316, true);
+
+
+--
+-- Name: temp_user_actionable_states_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.temp_user_actionable_states_seq', 12, true);
+
+
+--
+-- Name: tempuseractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tempuseractionablestates_seq', 1, false);
+
+
+--
+-- Name: tendercodesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
+
+
+--
+-- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_userid_seq', 174, true);
+
+
+--
+-- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.variations_seq', 1082, true);
+
+
+--
+-- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 307, true);
+
+
+--
+-- Name: waiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.waiteractionablestates_seq', 300, true);
 
 
 --
--- Name: archivedorderslogbuffer archivedlogbufferid_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: archivedorderslogbuffer archivedlogbufferid_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.archivedorderslogbuffer
@@ -2216,7 +2489,7 @@ ALTER TABLE ONLY public.archivedorderslogbuffer
 
 
 --
--- Name: coursecategories category_uniquename; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: coursecategories category_uniquename; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.coursecategories
@@ -2224,7 +2497,23 @@ ALTER TABLE ONLY public.coursecategories
 
 
 --
--- Name: coursecategories coursecategories_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: standardcomments comment_uniquename; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardcomments
+    ADD CONSTRAINT comment_uniquename UNIQUE (comment);
+
+
+--
+-- Name: commentsforcourse commentsforcourse_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.commentsforcourse
+    ADD CONSTRAINT commentsforcourse_pkey PRIMARY KEY (commentsforcourseid);
+
+
+--
+-- Name: coursecategories coursecategories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.coursecategories
@@ -2232,7 +2521,15 @@ ALTER TABLE ONLY public.coursecategories
 
 
 --
--- Name: courses courses_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: commentsforcourse coursecommentid_pair; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.commentsforcourse
+    ADD CONSTRAINT coursecommentid_pair UNIQUE (courseid, standardcommentid);
+
+
+--
+-- Name: courses courses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.courses
@@ -2240,7 +2537,7 @@ ALTER TABLE ONLY public.courses
 
 
 --
--- Name: customerdata customer_name_unique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: customerdata customer_name_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.customerdata
@@ -2248,7 +2545,7 @@ ALTER TABLE ONLY public.customerdata
 
 
 --
--- Name: customerdata customerdata_name_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: customerdata customerdata_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.customerdata
@@ -2256,7 +2553,7 @@ ALTER TABLE ONLY public.customerdata
 
 
 --
--- Name: customerdata customerdata_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: customerdata customerdata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.customerdata
@@ -2264,7 +2561,7 @@ ALTER TABLE ONLY public.customerdata
 
 
 --
--- Name: defaultactionablestates defaultactionablestateidunique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: defaultactionablestates defaultactionablestateidunique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.defaultactionablestates
@@ -2272,7 +2569,7 @@ ALTER TABLE ONLY public.defaultactionablestates
 
 
 --
--- Name: defaultactionablestates defaultactionablestates_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: defaultactionablestates defaultactionablestates_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.defaultactionablestates
@@ -2280,7 +2577,7 @@ ALTER TABLE ONLY public.defaultactionablestates
 
 
 --
--- Name: enablers enablers_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: enablers enablers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.enablers
@@ -2288,7 +2585,7 @@ ALTER TABLE ONLY public.enablers
 
 
 --
--- Name: enablers enablers_tripleidunique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: enablers enablers_tripleidunique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.enablers
@@ -2296,7 +2593,7 @@ ALTER TABLE ONLY public.enablers
 
 
 --
--- Name: ingredientcategory ing_cat_unique_name; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientcategory ing_cat_unique_name; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcategory
@@ -2304,7 +2601,7 @@ ALTER TABLE ONLY public.ingredientcategory
 
 
 --
--- Name: ingredient ing_unique_name; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredient ing_unique_name; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredient
@@ -2312,7 +2609,7 @@ ALTER TABLE ONLY public.ingredient
 
 
 --
--- Name: ingredientdecrement ingredient_decrement_unique_ordit_ingid; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrement ingredient_decrement_unique_ordit_ingid; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientdecrement
@@ -2320,7 +2617,7 @@ ALTER TABLE ONLY public.ingredientdecrement
 
 
 --
--- Name: ingredient ingredient_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredient ingredient_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredient
@@ -2328,7 +2625,7 @@ ALTER TABLE ONLY public.ingredient
 
 
 --
--- Name: ingredientcategory ingredientcateogory_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientcategory ingredientcateogory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcategory
@@ -2336,7 +2633,7 @@ ALTER TABLE ONLY public.ingredientcategory
 
 
 --
--- Name: ingredientcourse ingredientcourse_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientcourse ingredientcourse_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcourse
@@ -2344,7 +2641,7 @@ ALTER TABLE ONLY public.ingredientcourse
 
 
 --
--- Name: ingredientdecrement ingredientincrement_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrement ingredientincrement_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientdecrement
@@ -2352,7 +2649,7 @@ ALTER TABLE ONLY public.ingredientdecrement
 
 
 --
--- Name: ingredientincrement ingredientincrementid_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientincrement ingredientincrementid_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientincrement
@@ -2360,7 +2657,7 @@ ALTER TABLE ONLY public.ingredientincrement
 
 
 --
--- Name: ingredientprice ingredientprice_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientprice ingredientprice_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientprice
@@ -2368,7 +2665,7 @@ ALTER TABLE ONLY public.ingredientprice
 
 
 --
--- Name: ingredientprice ingredientprice_uniq; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientprice ingredientprice_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientprice
@@ -2376,7 +2673,7 @@ ALTER TABLE ONLY public.ingredientprice
 
 
 --
--- Name: invoices invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: invoices invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.invoices
@@ -2384,7 +2681,7 @@ ALTER TABLE ONLY public.invoices
 
 
 --
--- Name: observers observers_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: observers observers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.observers
@@ -2392,7 +2689,7 @@ ALTER TABLE ONLY public.observers
 
 
 --
--- Name: variations orderitem_ingredient_uniq; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: variations orderitem_ingredient_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.variations
@@ -2400,28 +2697,23 @@ ALTER TABLE ONLY public.variations
 
 
 --
--- Name: orderitems orderitems_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitems orderitems_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderitems
     ADD CONSTRAINT orderitems_pkey PRIMARY KEY (orderitemid);
 
 
-
-
 --
--- Name: orderitemstates orderitemstates_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitemstates orderitemstates_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderitemstates
     ADD CONSTRAINT orderitemstates_pkey PRIMARY KEY (orderitemstatesid);
 
 
-
-
-
 --
--- Name: orderoutgroup orderoutgroup_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderoutgroup orderoutgroup_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderoutgroup
@@ -2429,7 +2721,7 @@ ALTER TABLE ONLY public.orderoutgroup
 
 
 --
--- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders
@@ -2437,7 +2729,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: paymentitem payment_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: paymentitem payment_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.paymentitem
@@ -2445,7 +2737,7 @@ ALTER TABLE ONLY public.paymentitem
 
 
 --
--- Name: printerforcategory print_cat_state_unique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforcategory print_cat_state_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printerforcategory
@@ -2453,7 +2745,7 @@ ALTER TABLE ONLY public.printerforcategory
 
 
 --
--- Name: printers printer_unique_name; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printers printer_unique_name; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printers
@@ -2461,7 +2753,7 @@ ALTER TABLE ONLY public.printers
 
 
 --
--- Name: printerforcategory printerforcategory_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforcategory printerforcategory_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printerforcategory
@@ -2469,7 +2761,7 @@ ALTER TABLE ONLY public.printerforcategory
 
 
 --
--- Name: printerforreceiptandinvoice printerforreceiptandinvoice_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforreceiptandinvoice printerforreceiptandinvoice_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printerforreceiptandinvoice
@@ -2477,7 +2769,7 @@ ALTER TABLE ONLY public.printerforreceiptandinvoice
 
 
 --
--- Name: printers printers_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printers printers_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printers
@@ -2485,7 +2777,7 @@ ALTER TABLE ONLY public.printers
 
 
 --
--- Name: rejectedorderitems rejecteddorderitemhistoryid_pk; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: rejectedorderitems rejecteddorderitemhistoryid_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.rejectedorderitems
@@ -2493,7 +2785,7 @@ ALTER TABLE ONLY public.rejectedorderitems
 
 
 --
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.roles
@@ -2501,7 +2793,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: roles roles_rolename_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: roles roles_rolename_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.roles
@@ -2509,7 +2801,55 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: states state_uniquename; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: standardvariationforcourse standard_variation_for_course_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standard_variation_for_course_pk PRIMARY KEY (standardvariationforcourseid);
+
+
+--
+-- Name: standardvariationitem standard_variation_item_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationitem
+    ADD CONSTRAINT standard_variation_item_pk PRIMARY KEY (standardvariationitemid);
+
+
+--
+-- Name: standardvariations standard_variation_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariations
+    ADD CONSTRAINT standard_variation_pk PRIMARY KEY (standardvariationid);
+
+
+--
+-- Name: standardvariationforcourse standard_variation_unique_mapping; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standard_variation_unique_mapping UNIQUE (standardvariationid, courseid);
+
+
+--
+-- Name: standardvariations standard_variation_unique_name; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariations
+    ADD CONSTRAINT standard_variation_unique_name UNIQUE (name);
+
+
+--
+-- Name: standardcomments standardcomment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardcomments
+    ADD CONSTRAINT standardcomment_pkey PRIMARY KEY (standardcommentid);
+
+
+--
+-- Name: states state_uniquename; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.states
@@ -2517,7 +2857,7 @@ ALTER TABLE ONLY public.states
 
 
 --
--- Name: states stateid_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: states stateid_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.states
@@ -2525,7 +2865,7 @@ ALTER TABLE ONLY public.states
 
 
 --
--- Name: states states_statusname_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: states states_statusname_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.states
@@ -2533,7 +2873,23 @@ ALTER TABLE ONLY public.states
 
 
 --
--- Name: suborder suborderid_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: subcategorymapping subcategorymapping_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT subcategorymapping_pkey PRIMARY KEY (subcategorymappingid);
+
+
+--
+-- Name: subcategorymapping subcategorymappingimentid_pair; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT subcategorymappingimentid_pair UNIQUE (fatherid, sonid);
+
+
+--
+-- Name: suborder suborderid_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.suborder
@@ -2541,7 +2897,7 @@ ALTER TABLE ONLY public.suborder
 
 
 --
--- Name: temp_user_default_actionable_states temp_user_actionable_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_default_actionable_states temp_user_actionable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_default_actionable_states
@@ -2549,7 +2905,7 @@ ALTER TABLE ONLY public.temp_user_default_actionable_states
 
 
 --
--- Name: temp_user_actionable_states temp_user_actionable_states_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_actionable_states temp_user_actionable_states_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_actionable_states
@@ -2557,7 +2913,7 @@ ALTER TABLE ONLY public.temp_user_actionable_states
 
 
 --
--- Name: temp_user_default_actionable_states temp_user_actionable_states_unique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_default_actionable_states temp_user_actionable_states_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_default_actionable_states
@@ -2565,7 +2921,7 @@ ALTER TABLE ONLY public.temp_user_default_actionable_states
 
 
 --
--- Name: temp_user_actionable_states tempuserstateidunique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_actionable_states tempuserstateidunique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_actionable_states
@@ -2573,7 +2929,7 @@ ALTER TABLE ONLY public.temp_user_actionable_states
 
 
 --
--- Name: tendercodes tendercode_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: tendercodes tendercode_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.tendercodes
@@ -2581,7 +2937,7 @@ ALTER TABLE ONLY public.tendercodes
 
 
 --
--- Name: tendercodes tendercodes_unique_code; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: tendercodes tendercodes_unique_code; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.tendercodes
@@ -2589,7 +2945,7 @@ ALTER TABLE ONLY public.tendercodes
 
 
 --
--- Name: tendercodes tendercodes_unique_name; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: tendercodes tendercodes_unique_name; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.tendercodes
@@ -2597,7 +2953,7 @@ ALTER TABLE ONLY public.tendercodes
 
 
 --
--- Name: observers tripleidunique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: observers tripleidunique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.observers
@@ -2605,7 +2961,7 @@ ALTER TABLE ONLY public.observers
 
 
 --
--- Name: orderoutgroup unique_group_order; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderoutgroup unique_group_order; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderoutgroup
@@ -2613,7 +2969,7 @@ ALTER TABLE ONLY public.orderoutgroup
 
 
 --
--- Name: ingredientcourse unique_ing_courrse; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientcourse unique_ing_courrse; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcourse
@@ -2621,7 +2977,7 @@ ALTER TABLE ONLY public.ingredientcourse
 
 
 --
--- Name: courses uniquename; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: courses uniquename; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.courses
@@ -2629,7 +2985,7 @@ ALTER TABLE ONLY public.courses
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2637,7 +2993,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: variations variations_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: variations variations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.variations
@@ -2645,7 +3001,7 @@ ALTER TABLE ONLY public.variations
 
 
 --
--- Name: voidedorderslogbuffer voided_ord_uniq_user_order; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: voidedorderslogbuffer voided_ord_uniq_user_order; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.voidedorderslogbuffer
@@ -2653,7 +3009,7 @@ ALTER TABLE ONLY public.voidedorderslogbuffer
 
 
 --
--- Name: voidedorderslogbuffer voidedorderslogbufferid_key; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: voidedorderslogbuffer voidedorderslogbufferid_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.voidedorderslogbuffer
@@ -2661,7 +3017,7 @@ ALTER TABLE ONLY public.voidedorderslogbuffer
 
 
 --
--- Name: waiteractionablestates waiteractionablestates_pkey; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: waiteractionablestates waiteractionablestates_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.waiteractionablestates
@@ -2669,7 +3025,7 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
--- Name: waiteractionablestates waiterdstateidunique; Type: CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: waiteractionablestates waiterdstateidunique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.waiteractionablestates
@@ -2677,7 +3033,7 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
--- Name: observers category_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: observers category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.observers
@@ -2685,7 +3041,7 @@ ALTER TABLE ONLY public.observers
 
 
 --
--- Name: enablers category_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: enablers category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.enablers
@@ -2693,7 +3049,7 @@ ALTER TABLE ONLY public.enablers
 
 
 --
--- Name: variations category_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: variations category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.variations
@@ -2701,21 +3057,15 @@ ALTER TABLE ONLY public.variations
 
 
 --
--- Name: printerforcategory category_printer_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforcategory category_printer_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.printerforcategory
---    ADD CONSTRAINT category_printer_fk FOREIGN KEY (printerid) REFERENCES public.printers(printerid) MATCH FULL;
-
-
 
 ALTER TABLE ONLY public.printerforcategory
     ADD CONSTRAINT category_printer_fk FOREIGN KEY (printerid) REFERENCES public.printers(printerid) MATCH FULL ON DELETE CASCADE;
 
 
-
 --
--- Name: courses categoryfk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: courses categoryfk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.courses
@@ -2723,19 +3073,23 @@ ALTER TABLE ONLY public.courses
 
 
 --
--- Name: orderitems coursefk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: commentsforcourse commentsforcourse_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
---ALTER TABLE ONLY public.orderitems
- --   ADD CONSTRAINT coursefk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL;
+ALTER TABLE ONLY public.commentsforcourse
+    ADD CONSTRAINT commentsforcourse_fk FOREIGN KEY (standardcommentid) REFERENCES public.standardcomments(standardcommentid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: orderitems coursefk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY public.orderitems
     ADD CONSTRAINT coursefk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
 
 
-
 --
--- Name: defaultactionablestates defaultactionablestates_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: defaultactionablestates defaultactionablestates_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.defaultactionablestates
@@ -2743,7 +3097,7 @@ ALTER TABLE ONLY public.defaultactionablestates
 
 
 --
--- Name: enablers enablersrole; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: enablers enablersrole; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.enablers
@@ -2751,7 +3105,15 @@ ALTER TABLE ONLY public.enablers
 
 
 --
--- Name: ingredientincrement ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: subcategorymapping father_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT father_fk FOREIGN KEY (fatherid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: ingredientincrement ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientincrement
@@ -2759,7 +3121,7 @@ ALTER TABLE ONLY public.ingredientincrement
 
 
 --
--- Name: ingredientdecrement ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrement ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientdecrement
@@ -2767,7 +3129,7 @@ ALTER TABLE ONLY public.ingredientdecrement
 
 
 --
--- Name: ingredient ingredientcategory_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredient ingredientcategory_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredient
@@ -2775,19 +3137,15 @@ ALTER TABLE ONLY public.ingredient
 
 
 --
--- Name: ingredientcourse ingredientcourse_course_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientcourse ingredientcourse_course_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.ingredientcourse
---    ADD CONSTRAINT ingredientcourse_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.ingredientcourse
     ADD CONSTRAINT ingredientcourse_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: ingredientcourse ingredientcourse_ingredient_fk2; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientcourse ingredientcourse_ingredient_fk2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientcourse
@@ -2795,7 +3153,7 @@ ALTER TABLE ONLY public.ingredientcourse
 
 
 --
--- Name: ingredientprice ingredientprice_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientprice ingredientprice_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientprice
@@ -2803,7 +3161,7 @@ ALTER TABLE ONLY public.ingredientprice
 
 
 --
--- Name: invoices invoice_customer_data_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: invoices invoice_customer_data_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.invoices
@@ -2811,111 +3169,71 @@ ALTER TABLE ONLY public.invoices
 
 
 --
--- Name: printerforreceiptandinvoice invoice_receipt_printer_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforreceiptandinvoice invoice_receipt_printer_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
-
---ALTER TABLE ONLY public.printerforreceiptandinvoice
---    ADD CONSTRAINT invoice_receipt_printer_fk FOREIGN KEY (printerid) REFERENCES public.printers(printerid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.printerforreceiptandinvoice
     ADD CONSTRAINT invoice_receipt_printer_fk FOREIGN KEY (printerid) REFERENCES public.printers(printerid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: paymentitem oorder_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: paymentitem oorder_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.paymentitem
---    ADD CONSTRAINT oorder_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.paymentitem
     ADD CONSTRAINT oorder_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: archivedorderslogbuffer order_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: archivedorderslogbuffer order_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.archivedorderslogbuffer
---    ADD CONSTRAINT order_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
 
 ALTER TABLE ONLY public.archivedorderslogbuffer
     ADD CONSTRAINT order_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: invoices order_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: invoices order_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.invoices
---    ADD CONSTRAINT order_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.invoices
     ADD CONSTRAINT order_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: orderitems orderdetail_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitems orderdetail_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.orderitems
---    ADD CONSTRAINT orderdetail_fk FOREIGN KEY (ordergroupid) REFERENCES public.orderoutgroup(ordergroupid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.orderitems
     ADD CONSTRAINT orderdetail_fk FOREIGN KEY (ordergroupid) REFERENCES public.orderoutgroup(ordergroupid) MATCH FULL ON DELETE CASCADE;
 
 
-
 --
--- Name: orderitems orderfk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitems orderfk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.orderitems
- --   ADD CONSTRAINT orderfk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.orderitems
     ADD CONSTRAINT orderfk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
-ALTER TABLE ONLY public.orderitems
-    ADD CONSTRAINT suborderfk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL ON DELETE set null;
-
-
-
-
 --
--- Name: orderitemstates orderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitemstates orderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.orderitemstates
---    ADD CONSTRAINT orderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.orderitemstates
     ADD CONSTRAINT orderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: ingredientdecrement orderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrement orderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.ingredientdecrement
---    ADD CONSTRAINT orderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.ingredientdecrement
     ADD CONSTRAINT orderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL ON DELETE CASCADE;
 
 
-
 --
--- Name: orderitems orderitemstatus; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitems orderitemstatus; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orderitems
@@ -2923,31 +3241,23 @@ ALTER TABLE ONLY public.orderitems
 
 
 --
--- Name: orderoutgroup orderoutgroup_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderoutgroup orderoutgroup_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.orderoutgroup
---    ADD CONSTRAINT orderoutgroup_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.orderoutgroup
     ADD CONSTRAINT orderoutgroup_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: ingredientdecrement preparator_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientdecrement preparator_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.ingredientdecrement
---    ADD CONSTRAINT preparator_fk FOREIGN KEY (preparatorid) REFERENCES public.users(userid) MATCH FULL;
 
 ALTER TABLE ONLY public.ingredientdecrement
     ADD CONSTRAINT preparator_fk FOREIGN KEY (preparatorid) REFERENCES public.users(userid) MATCH FULL ON DELETE CASCADE;
 
 
-
 --
--- Name: printerforcategory print_category_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforcategory print_category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printerforcategory
@@ -2955,7 +3265,7 @@ ALTER TABLE ONLY public.printerforcategory
 
 
 --
--- Name: printerforcategory printer_cat_state_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: printerforcategory printer_cat_state_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.printerforcategory
@@ -2963,31 +3273,23 @@ ALTER TABLE ONLY public.printerforcategory
 
 
 --
--- Name: rejectedorderitems reject_orderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: rejectedorderitems reject_orderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.rejectedorderitems
---    ADD CONSTRAINT reject_orderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL;
 
 ALTER TABLE ONLY public.rejectedorderitems
     ADD CONSTRAINT reject_orderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL ON DELETE CASCADE;
 
 
-
 --
--- Name: rejectedorderitems rejected_item_course_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: rejectedorderitems rejected_item_course_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.rejectedorderitems
---    ADD CONSTRAINT rejected_item_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.rejectedorderitems
     ADD CONSTRAINT rejected_item_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: observers role1_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: observers role1_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.observers
@@ -2995,7 +3297,7 @@ ALTER TABLE ONLY public.observers
 
 
 --
--- Name: users rolefk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: users rolefk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -3003,7 +3305,39 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: observers state1_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: subcategorymapping son_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.subcategorymapping
+    ADD CONSTRAINT son_fk FOREIGN KEY (sonid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: standardvariationforcourse standard_variation_for_course_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standard_variation_for_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: standardvariationitem standardvariation_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationitem
+    ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: standardvariationforcourse standardvariation_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationforcourse
+    ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: observers state1_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.observers
@@ -3011,24 +3345,15 @@ ALTER TABLE ONLY public.observers
 
 
 --
--- Name: orderitemstates state2_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitemstates state2_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.orderitemstates
---    ADD CONSTRAINT state2_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.orderitemstates
-    ADD CONSTRAINT state2_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL 
-    ON DELETE CASCADE;
+    ADD CONSTRAINT state2_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL ON DELETE CASCADE;
 
-
-
-ALTER TABLE ONLY public.invoices
-    ADD CONSTRAINT suborder_fk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL ON DELETE CASCADE;
 
 --
--- Name: enablers state_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: enablers state_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.enablers
@@ -3036,39 +3361,39 @@ ALTER TABLE ONLY public.enablers
 
 
 --
--- Name: invoices suborder_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: invoices suborder_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.invoices
-    ADD CONSTRAINT suborder_fk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL;
-
+    ADD CONSTRAINT suborder_fk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: paymentitem suborder_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: paymentitem suborder_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.paymentitem
---    ADD CONSTRAINT suborder_fk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL;
 
 ALTER TABLE ONLY public.paymentitem
     ADD CONSTRAINT suborder_fk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: suborder suborderorder_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orderitems suborderfk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
---ALTER TABLE ONLY public.suborder
---    ADD CONSTRAINT suborderorder_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
+ALTER TABLE ONLY public.orderitems
+    ADD CONSTRAINT suborderfk FOREIGN KEY (suborderid) REFERENCES public.suborder(suborderid) MATCH FULL ON DELETE SET NULL;
 
+
+--
+-- Name: suborder suborderorder_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
 ALTER TABLE ONLY public.suborder
     ADD CONSTRAINT suborderorder_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: temp_user_default_actionable_states temp_user_actionable_states_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_default_actionable_states temp_user_actionable_states_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_default_actionable_states
@@ -3076,7 +3401,7 @@ ALTER TABLE ONLY public.temp_user_default_actionable_states
 
 
 --
--- Name: temp_user_actionable_states tempuser_state_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_actionable_states tempuser_state_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_actionable_states
@@ -3084,7 +3409,7 @@ ALTER TABLE ONLY public.temp_user_actionable_states
 
 
 --
--- Name: temp_user_actionable_states tempuser_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: temp_user_actionable_states tempuser_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.temp_user_actionable_states
@@ -3092,28 +3417,23 @@ ALTER TABLE ONLY public.temp_user_actionable_states
 
 
 --
--- Name: paymentitem tendercode_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: paymentitem tendercode_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.paymentitem
-   ADD CONSTRAINT tendercode_fk FOREIGN KEY (tendercodesid) REFERENCES public.tendercodes(tendercodesid) MATCH FULL;
-
+    ADD CONSTRAINT tendercode_fk FOREIGN KEY (tendercodesid) REFERENCES public.tendercodes(tendercodesid) MATCH FULL;
 
 
 --
--- Name: ingredientincrement user_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: ingredientincrement user_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.ingredientincrement
---    ADD CONSTRAINT user_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.ingredientincrement
     ADD CONSTRAINT user_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: orders userfk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: orders userfk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.orders
@@ -3121,7 +3441,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: variations variationingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: variations variationingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.variations
@@ -3129,19 +3449,15 @@ ALTER TABLE ONLY public.variations
 
 
 --
--- Name: variations variationorderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: variations variationorderitem_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.variations
- --   ADD CONSTRAINT variationorderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.variations
     ADD CONSTRAINT variationorderitem_fk FOREIGN KEY (orderitemid) REFERENCES public.orderitems(orderitemid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: voidedorderslogbuffer voided_ord_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: voidedorderslogbuffer voided_ord_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.voidedorderslogbuffer
@@ -3149,19 +3465,15 @@ ALTER TABLE ONLY public.voidedorderslogbuffer
 
 
 --
--- Name: voidedorderslogbuffer voided_order_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: voidedorderslogbuffer voided_order_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
-
---ALTER TABLE ONLY public.voidedorderslogbuffer
---    ADD CONSTRAINT voided_order_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL;
-
 
 ALTER TABLE ONLY public.voidedorderslogbuffer
     ADD CONSTRAINT voided_order_fk FOREIGN KEY (orderid) REFERENCES public.orders(orderid) MATCH FULL ON DELETE CASCADE;
 
 
 --
--- Name: waiteractionablestates waiterstate_state_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: waiteractionablestates waiterstate_state_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.waiteractionablestates
@@ -3169,7 +3481,7 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
--- Name: waiteractionablestates waiterstateuser_fk; Type: FK CONSTRAINT; Schema: public; Owner: Tonyx
+-- Name: waiteractionablestates waiterstateuser_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.waiteractionablestates
@@ -3177,586 +3489,693 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
--- Name: TABLE archivedorderslogbuffer; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE archivedorderslogbuffer; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.archivedorderslogbuffer TO suave;
 
-GRANT ALL ON TABLE public.subcategory_mapping_seq TO suave;
-GRANT ALL ON TABLE public.subcategorymapping TO suave;
-GRANT ALL ON TABLE public.commentsforcoursedetails TO suave;
-GRANT ALL ON TABLE public.fathersoncategoriesdetails TO suave;
-
 
 --
--- Name: SEQUENCE archivedorderslog_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE archivedorderslog_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.archivedorderslog_id_seq TO suave;
 
 
 --
--- Name: TABLE coursecategories; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE comments_for_course_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.comments_for_course_seq TO suave;
+
+
+--
+-- Name: TABLE commentsforcourse; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.commentsforcourse TO suave;
+
+
+--
+-- Name: SEQUENCE standard_comments_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.standard_comments_seq TO suave;
+
+
+--
+-- Name: TABLE standardcomments; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.standardcomments TO suave;
+
+
+--
+-- Name: TABLE commentsforcoursedetails; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.commentsforcoursedetails TO suave;
+
+
+--
+-- Name: TABLE coursecategories; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.coursecategories TO suave;
 
 
 --
--- Name: TABLE courses; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE courses; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.courses TO suave;
 
 
 --
--- Name: TABLE coursedetails2; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE coursedetails2; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.coursedetails2 TO suave;
 
 
 --
--- Name: SEQUENCE courses_categoryid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE courses_categoryid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.courses_categoryid_seq TO suave;
 
 
 --
--- Name: SEQUENCE courses_courseid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE courses_courseid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.courses_courseid_seq TO suave;
 
 
 --
--- Name: SEQUENCE customerdata_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE customerdata_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.customerdata_id_seq TO suave;
 
 
 --
--- Name: TABLE customerdata; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE customerdata; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.customerdata TO suave;
 
 
 --
--- Name: SEQUENCE defaulwaiteractionablestates_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE defaulwaiteractionablestates_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.defaulwaiteractionablestates_seq TO suave;
 
 
 --
--- Name: TABLE defaultactionablestates; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE defaultactionablestates; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.defaultactionablestates TO suave;
 
 
 --
--- Name: SEQUENCE enablers_elablersid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE enablers_elablersid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.enablers_elablersid_seq TO suave;
 
 
 --
--- Name: TABLE enablers; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE enablers; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.enablers TO suave;
 
 
 --
--- Name: TABLE roles; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE roles; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.roles TO suave;
 
 
 --
--- Name: SEQUENCE states_stateid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE states_stateid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.states_stateid_seq TO suave;
 
 
 --
--- Name: TABLE states; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE states; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.states TO suave;
 
 
 --
--- Name: TABLE enablersrolestatuscategories; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE enablersrolestatuscategories; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.enablersrolestatuscategories TO suave;
 
 
 --
--- Name: SEQUENCE incredientdecrementid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE subcategory_mapping_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.subcategory_mapping_seq TO suave;
+
+
+--
+-- Name: TABLE subcategorymapping; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.subcategorymapping TO suave;
+
+
+--
+-- Name: TABLE fathersoncategoriesdetails; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.fathersoncategoriesdetails TO suave;
+
+
+--
+-- Name: SEQUENCE incredientdecrementid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.incredientdecrementid_seq TO suave;
 
 
 --
--- Name: TABLE ingredient; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredient; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredient TO suave;
 
 
 --
--- Name: TABLE ingredientcategory; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientcategory; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientcategory TO suave;
 
 
 --
--- Name: SEQUENCE ingredient_categoryid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE ingredient_categoryid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.ingredient_categoryid_seq TO suave;
 
 
 --
--- Name: TABLE ingredientcourse; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientcourse; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientcourse TO suave;
 
 
 --
--- Name: SEQUENCE ingredientcourseid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE ingredientcourseid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.ingredientcourseid_seq TO suave;
 
 
 --
--- Name: TABLE ingredientdecrement; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientdecrement; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientdecrement TO suave;
 
 
 --
--- Name: TABLE orderitems; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderitems; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderitems TO suave;
 
 
 --
--- Name: TABLE ingredientdecrementview; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientdecrementview; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientdecrementview TO suave;
 
 
 --
--- Name: TABLE ingredientdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientdetails TO suave;
 
 
 --
--- Name: SEQUENCE ingredientid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE ingredientid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.ingredientid_seq TO suave;
 
 
 --
--- Name: SEQUENCE ingredientincrementid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE ingredientincrementid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.ingredientincrementid_seq TO suave;
 
 
 --
--- Name: TABLE ingredientincrement; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientincrement; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientincrement TO suave;
 
 
 --
--- Name: TABLE ingredientofcourses; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientofcourses; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientofcourses TO suave;
 
 
 --
--- Name: SEQUENCE ingredientpriceid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE ingredientpriceid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.ingredientpriceid_seq TO suave;
 
 
 --
--- Name: TABLE ingredientprice; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientprice; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientprice TO suave;
 
 
 --
--- Name: TABLE ingredientpricedetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE ingredientpricedetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.ingredientpricedetails TO suave;
 
 
 --
--- Name: SEQUENCE invoicesid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE invoicesid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.invoicesid_seq TO suave;
 
 
 --
--- Name: TABLE invoices; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE invoices; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.invoices TO suave;
 
 
 --
--- Name: TABLE orders; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orders; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orders TO suave;
 
 
 --
--- Name: TABLE users; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE users; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.users TO suave;
 
 
 --
--- Name: TABLE nonarchivedorderdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE nonarchivedorderdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.nonarchivedorderdetails TO suave;
 
 
 --
--- Name: TABLE nonemptyorderdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE nonemptyorderdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.nonemptyorderdetails TO suave;
 
 
 --
--- Name: SEQUENCE observers_observerid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE observers_observerid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.observers_observerid_seq TO suave;
 
 
 --
--- Name: TABLE observers; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE observers; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.observers TO suave;
 
 
 --
--- Name: SEQUENCE observers_observersid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE observers_observersid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.observers_observersid_seq TO suave;
 
 
 --
--- Name: TABLE observersrolestatuscategories; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE observersrolestatuscategories; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.observersrolestatuscategories TO suave;
 
 
 --
--- Name: TABLE orderdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderdetails TO suave;
 
 
 --
--- Name: SEQUENCE orderoutgroup_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE orderoutgroup_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.orderoutgroup_id_seq TO suave;
 
 
 --
--- Name: TABLE orderoutgroup; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderoutgroup; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderoutgroup TO suave;
 
 
 --
--- Name: SEQUENCE suborderid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE suborderid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.suborderid_seq TO suave;
 
 
 --
--- Name: TABLE suborder; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE suborder; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.suborder TO suave;
 
 
 --
--- Name: TABLE orderitemdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderitemdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderitemdetails TO suave;
 
 
 --
--- Name: SEQUENCE orderitems_orderitemid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE orderitems_orderitemid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.orderitems_orderitemid_seq TO suave;
 
 
 --
--- Name: TABLE orderitemstates; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderitemstates; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderitemstates TO suave;
 
 
 --
--- Name: SEQUENCE orderitemstates_orderitemstates_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE orderitemstates_orderitemstates_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.orderitemstates_orderitemstates_id_seq TO suave;
 
 
 --
--- Name: TABLE orderoutgroupdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderoutgroupdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderoutgroupdetails TO suave;
 
 
 --
--- Name: SEQUENCE orders_orderid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE orders_orderid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.orders_orderid_seq TO suave;
 
 
 --
--- Name: SEQUENCE paymentid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE paymentid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.paymentid_seq TO suave;
 
 
 --
--- Name: TABLE paymentitem; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE paymentitem; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.paymentitem TO suave;
 
 
 --
--- Name: SEQUENCE tendercodesid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE tendercodesid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.tendercodesid_seq TO suave;
 
 
 --
--- Name: TABLE tendercodes; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE tendercodes; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.tendercodes TO suave;
 
 
 --
--- Name: TABLE paymentitemdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE paymentitemdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.paymentitemdetails TO suave;
 
 
 --
--- Name: SEQUENCE printerforcategory_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE printerforcategory_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.printerforcategory_id_seq TO suave;
 
 
 --
--- Name: TABLE printerforcategory; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE printerforcategory; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.printerforcategory TO suave;
 
 
 --
--- Name: SEQUENCE printers_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE printers_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.printers_id_seq TO suave;
 
 
 --
--- Name: TABLE printers; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE printers; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.printers TO suave;
 
 
 --
--- Name: TABLE printerforcategorydetail; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE printerforcategorydetail; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.printerforcategorydetail TO suave;
 
 
 --
--- Name: SEQUENCE printerforreceiptandinvoice_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE printerforreceiptandinvoice_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.printerforreceiptandinvoice_id_seq TO suave;
 
 
 --
--- Name: TABLE printerforreceiptandinvoice; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE printerforreceiptandinvoice; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.printerforreceiptandinvoice TO suave;
 
 
 --
--- Name: SEQUENCE rejectedorderitems_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE rejectedorderitems_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.rejectedorderitems_id_seq TO suave;
 
 
 --
--- Name: TABLE rejectedorderitems; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE rejectedorderitems; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.rejectedorderitems TO suave;
 
 
 --
--- Name: SEQUENCE roles_roleid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE roles_roleid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.roles_roleid_seq TO suave;
 
 
 --
--- Name: SEQUENCE tempuseractionablestates_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE standardvariationforcourse; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.standardvariationforcourse TO suave;
+
+
+--
+-- Name: SEQUENCE standard_variation_for_course_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.standard_variation_for_course_id_seq TO suave;
+
+
+--
+-- Name: TABLE standardvariations; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.standardvariations TO suave;
+
+
+--
+-- Name: SEQUENCE standard_variation_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.standard_variation_id_seq TO suave;
+
+
+--
+-- Name: TABLE standardvariationitem; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.standardvariationitem TO suave;
+
+
+--
+-- Name: SEQUENCE standard_variation_item_id_seq; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE public.standard_variation_item_id_seq TO suave;
+
+
+--
+-- Name: TABLE standardvariationforcoursedetails; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.standardvariationforcoursedetails TO suave;
+
+
+--
+-- Name: TABLE standardvariationitemdetails; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.standardvariationitemdetails TO suave;
+
+
+--
+-- Name: SEQUENCE tempuseractionablestates_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.tempuseractionablestates_seq TO suave;
 
 
 --
--- Name: TABLE temp_user_actionable_states; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE temp_user_actionable_states; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.temp_user_actionable_states TO suave;
 
 
 --
--- Name: SEQUENCE temp_user_actionable_states_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE temp_user_actionable_states_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.temp_user_actionable_states_seq TO suave;
 
 
 --
--- Name: TABLE temp_user_default_actionable_states; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE temp_user_default_actionable_states; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.temp_user_default_actionable_states TO suave;
 
 
 --
--- Name: SEQUENCE users_userid_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE users_userid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.users_userid_seq TO suave;
 
 
 --
--- Name: TABLE usersview; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE usersview; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.usersview TO suave;
 
 
 --
--- Name: TABLE variations; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE variations; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.variations TO suave;
 
 
 --
--- Name: TABLE variationdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE variationdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.variationdetails TO suave;
 
 
 --
--- Name: SEQUENCE variations_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE variations_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.variations_seq TO suave;
 
 
 --
--- Name: TABLE voidedorderslogbuffer; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE voidedorderslogbuffer; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.voidedorderslogbuffer TO suave;
 
 
 --
--- Name: SEQUENCE voidedorderslog_id_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE voidedorderslog_id_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.voidedorderslog_id_seq TO suave;
 
 
 --
--- Name: SEQUENCE waiteractionablestates_seq; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: SEQUENCE waiteractionablestates_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.waiteractionablestates_seq TO suave;
 
 
 --
--- Name: TABLE waiteractionablestates; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE waiteractionablestates; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.waiteractionablestates TO suave;

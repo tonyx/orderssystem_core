@@ -28,6 +28,7 @@
 //    printfn "Hello World from F#!"
 //    0 // return an integer exit code
 
+
 module OrdersSystem.App
 
 open System
@@ -458,7 +459,7 @@ let deleteCourses =
                 Redirection.FOUND Path.Admin.deleteCourses
             | _ ->  Redirection.FOUND Path.Admin.deleteCourses
         )
-        ]
+    ]
 
 let emtpy (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let ctx = Db.getContext()
@@ -539,7 +540,8 @@ let myOrdersSingles (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let initialStateId = (Db.States.getInitState ctx).Stateid
     let outGroupsOfOrders = myOrders |> List.map (fun (x:Db.Orderdetail) -> 
         (x.Orderid,Db.getOutGroupOfOrdeHavingSomeItemsInInitialState x.Orderid ctx)) |> Map.ofList
-    View.ordersListbySingles userView  myOrders otherOrders  mapOfLinkedStates statesEnabledForUser backUrl  initialStateId  outGroupsOfOrders |> html)
+    //View.ordersListbySingles userView  myOrders otherOrders  mapOfLinkedStates statesEnabledForUser backUrl  initialStateId  outGroupsOfOrders |> html)
+    View.ordersListbySingles userView  myOrders otherOrders  mapOfLinkedStates statesEnabledForUser   initialStateId  outGroupsOfOrders |> html)
 
 
 let ordinaryUsers  = warbler (fun _ ->
@@ -616,9 +618,7 @@ let fillIngredient id pageNumberBack (user:UserLoggedOnSession) =
 
             let oriCategory = ingredient.Ingredientcategoryid
 
-            let backUrl = (sprintf  Path.Admin.editIngredientCategoryPaginated  oriCategory pageNumberBack)
-
-            View.fillIngredient "" ingredient allSelectableCategories backUrl |> html)
+            View.fillIngredient "" ingredient allSelectableCategories pageNumberBack |> html)
 
         POST >=> bindToForm Form.ingredientLoad (fun form ->
                 
@@ -640,11 +640,11 @@ let editIngredientPrices id =
             View.editIngredientPrices ingredient ingredientPricesDetails "" |> html
         )
         POST >=> bindToForm Form.ingredientPrice (fun form -> 
-            let isDefaultSubtract = form.IsDefaultSubtract = "YES"
-            let isDefaultAdd = form.IsDefaultAdd = "YES"
+            let isDefaultSubtract = (form.IsDefaultSubtract = Form.YES) //"YES"
+            let isDefaultAdd = (form.IsDefaultAdd = Form.YES)
             match (Db.tryCreateIngredientPrice form.AddPrice id isDefaultAdd isDefaultSubtract form.Quantity form.SubtractPrice ctx) with
                 | Some _ -> Redirection.found (sprintf Path.Admin.editIngredientPrices id)
-                | None -> View.editIngredientPrices ingredient ingredientPricesDetails "esiste gia" |> html
+                | None -> View.editIngredientPrices ingredient ingredientPricesDetails local.AlreadyExists |> html
         )
     ]
 
@@ -663,8 +663,8 @@ let editIngredient id  pageNumberBack =
 
             let ingredient = Db.getIngredientById id ctx
             let oriCategory = ingredient.Ingredientcategoryid
-            let backUrl = (sprintf  Path.Admin.editIngredientCategoryPaginated  oriCategory pageNumberBack)
-            View.editIngredient "" ingredient allSelectableCategories backUrl |> html)
+            //let backUrl = (sprintf  Path.Admin.editIngredientCategoryPaginated  oriCategory pageNumberBack)
+            View.editIngredient "" ingredient allSelectableCategories pageNumberBack |> html)
         POST >=> bindToForm Form.ingredientEdit (fun form ->
             let ctx = Db.getContext()
 
@@ -672,22 +672,22 @@ let editIngredient id  pageNumberBack =
             match existing with
             | Some theExisting when (theExisting.Ingredientid <> id) ->
                 let allIngredientOfCategory = Db.getallIngredientsOfACategory theExisting.Ingredientcategoryid ctx
+                let message = local.NameIsUsed
                 let category = Db.getCategoryOfIngredients theExisting.Ingredientcategoryid ctx
-                let message = "il nome e' gia' usato"
                 View.ingredientsOfACategory message category allIngredientOfCategory  |> html
 
             | _ ->
-                let visibility = (form.Visibility = "VISIBLE")
+                let visibility = (form.Visibility = Form.VISIBLE)
                 let description = match form.Comment with | Some X -> X | _ -> ""
                 let ingredient = Db.getIngredientById id ctx
                 ingredient.Name <- form.Name
                 ingredient.Description <-description
-                ingredient.Allergen <- (form.Allergene = "YES")
+                ingredient.Allergen <- (form.Allergene = Form.YES) // 
                 ingredient.Visibility <- visibility
                 let oriCategory = ingredient.Ingredientcategoryid
                 ingredient.Ingredientcategoryid <- (int)form.Category
-                ingredient.Updateavailabilityflag <- (form.UpdateAvailabilityFlag = "YES")
-                ingredient.Checkavailabilityflag <- (form.CheckAvailabilityFlag = "YES")
+                ingredient.Updateavailabilityflag <- (form.UpdateAvailabilityFlag = Form.YES)
+                ingredient.Checkavailabilityflag <- (form.CheckAvailabilityFlag = Form.YES)
                 ingredient.Unitmeasure <- (form.UnitOfMeasure)
                 ctx.SubmitUpdates()
                 Redirection.found (sprintf Path.Admin.editIngredientCategoryPaginated oriCategory pageNumberBack)
@@ -730,14 +730,15 @@ let editIngredientCategory (idCategory: int) (user: UserLoggedOnSession) =
                 let allIngredientOfCategory = Db.getallIngredientsOfACategory idCategory ctx
                 let category = Db.getCategoryOfIngredients idCategory ctx
                 let allCategories = Db.getAllIngredientCategories ctx
-                let message = "ingrediente "+form.Name + " esiste già"
+                //let message = "ingrediente "+form.Name + " esiste già"
+                let message = "ingrediente "+form.Name + " "+local.AlreadyExists
                 View.ingredientsOfACategory message category allIngredientOfCategory   |> html
             | None ->
-                let visibility = (form.Visibility = "VISIBLE")
-                let allergene = (form.Allergene = "YES")
+                let visibility = (form.Visibility = Form.VISIBLE)
+                let allergene = (form.Allergene = Form.YES)
                 let description = match form.Comment with | Some X -> X | _ -> ""
-                let updateAvailabilityFlag = (form.UpdateAvailabilityFlag = "YES")
-                let checkAvailabilityFlag = (form.CheckAvailabilityFlag = "YES")
+                let updateAvailabilityFlag = (form.UpdateAvailabilityFlag =  Form.YES)
+                let checkAvailabilityFlag = (form.CheckAvailabilityFlag = Form.YES)
                 let unitOfMeasure = form.UnitOfMeasure
 
                 let newIngredient = Db.newIngredient form.Name visibility description idCategory allergene form.AvailableQuantity  updateAvailabilityFlag checkAvailabilityFlag unitOfMeasure  ctx
@@ -755,12 +756,13 @@ let visibleingredientCategories =
     let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun x ->
-            let backUrl = match x.request.queryParam("returnPath") with | Choice1Of2 par -> par | _ -> Path.home
+            //let backUrl = match x.request.queryParam("returnPath") with | Choice1Of2 par -> par | _ -> Path.home
             let ctx = Db.getContext()
             let visibleIngredientCategories = Db.getVisibleIngredientCategories ctx
-            View.visibleIngreientCategoriesAdministrationPage visibleIngredientCategories backUrl |> html)
+            //View.visibleIngreientCategoriesAdministrationPage visibleIngredientCategories backUrl |> html)
+            View.visibleIngreientCategoriesAdministrationPage visibleIngredientCategories  |> html)
         POST >=> bindToForm Form.ingredientCategory ( fun form -> 
-            let visibility = (form.Visibility = "VISIBLE")  
+            let visibility = (form.Visibility = Form.VISIBLE)  
             let description = match form.Comment with | Some X -> X | _ -> ""
             let _ = Db.newIngredientCatgory form.Name visibility description ctx
             Redirection.FOUND Path.Admin.allIngredientCategories
@@ -913,7 +915,7 @@ let adminIngredientCategories =
             let allIngredientCategories = Db.getAllIngredientCategories ctx
             View.ingredientCatgoriesAdministrationPage allIngredientCategories  |> html)
         POST >=> bindToForm Form.ingredientCategory ( fun form -> 
-            let visibility = (form.Visibility = "VISIBLE")  
+            let visibility = (form.Visibility = Form.VISIBLE)  
             let description = match form.Comment with | Some X -> X | _ -> ""
             let _ = Db.newIngredientCatgory form.Name visibility description ctx
             Redirection.FOUND Path.Admin.allIngredientCategories
@@ -1121,19 +1123,20 @@ let editCourse id  =
 
    let ingredientsOfTheCourse = Db.getIngredientsOfACourse id ctx
 
-   match Db.Courses.tryFindCourse id ctx with
-   | Some course ->
-       choose [
+   let course = Db.Courses.getCourse id ctx
+   let standardVariationForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails id ctx
+
+   choose [
            GET >=> warbler (fun _ ->
                html (View.editCourse course courseCategories visibleIngredientCategories 
-                 ingredientsOfTheCourse commentsForCourse allStandardComments ""))
+                 ingredientsOfTheCourse commentsForCourse allStandardComments standardVariationForCourseDetails ""))
 
            POST >=> bindToForm Form.course (fun form ->
                match (Db.Courses.tryFindCourseByName form.Name ctx) with
                | Some X when X.Courseid <> course.Courseid -> 
-                "un piatto di nome "+ form.Name + "esiste già" |> 
+                    local.ACourseNamed + form.Name + local.AlreadyExists |>
                     View.editCourse course courseCategories visibleIngredientCategories 
-                         ingredientsOfTheCourse commentsForCourse allStandardComments |> html
+                         ingredientsOfTheCourse commentsForCourse allStandardComments standardVariationForCourseDetails |> html
                | _ ->
                    let desc = match form.Description with | Some d -> d | _ -> ""
                    Db.Courses.updateCourse 
@@ -1141,14 +1144,12 @@ let editCourse id  =
                        form.Price 
                        form.Name 
                        desc   
-                       (form.Visibile = "VISIBLE")
+                       (form.Visibile = Form.VISIBLE)
                        ((int)form.CategoryId) ctx
                    let retPath = sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated ((int)form.CategoryId) 0
                    Redirection.FOUND retPath
                )
-       ]
-   | None -> 
-       never
+    ]
 
 let editCourseCategory id =
    log.Debug(sprintf "%s %d " "editCourseCategory" id)
@@ -1163,11 +1164,12 @@ let editCourseCategory id =
                let categoryExists = Db.Courses.tryGetCourseCategoryByName form.Name ctx
                match categoryExists with
                | Some X when  (X.Categoryid <> id) -> 
-                   "una categoria con il nome " + form.Name + " esiste già" |> (View.editCourseCategory courseCategory) |> html
+                   local.ACategoryNamed + form.Name + local.AlreadyExists |>(View.editCourseCategory courseCategory) |> html
                | _ ->
            
-                   let visibility = match form.Visibility with "VISIBLE" -> true | _ -> false
-                   let isAbstract = form.Abstract = "ABSTRACT"
+                   //let visibility = match form.Visibility with Form.VISIBLE -> true | _ -> false
+                   let visibility =  (form.Visibility = Form.VISIBLE)
+                   let isAbstract = (form.Abstract = Form.ABSTRACT)
                    Db.updateCourseCategory 
                         courseCategory
                         form.Name
@@ -1190,11 +1192,11 @@ let editUser id   =
             GET >=> warbler (fun _ ->
                 html (View.editUser user))
             POST >=> bindToForm Form.userEdit   (fun form ->
-                let enabled = match form.Enabled with | "YES" -> true | _ -> false
-                let canVoidOrders = match form.CanVoidOrder with | "YES" -> true | _ -> false
-                let canManageallOrders = match form.CanManageAllorders with | "YES" -> true | _ -> false
-                let canChangeThePrices = form.CanChangeThePrices = "YES"
-                let canManageAllCourses = form.CanManageAllCourses = "YES"
+                let enabled = match form.Enabled with | Form.YES -> true | _ -> false
+                let canVoidOrders = match form.CanVoidOrder with |  Form.YES -> true | _ -> false
+                let canManageallOrders = match form.CanManageAllorders with | Form.YES -> true | _ -> false
+                let canChangeThePrices = form.CanChangeThePrices = Form.YES
+                let canManageAllCourses = form.CanManageAllCourses =  Form.YES
 
                 Db.updateUserStatus id enabled canVoidOrders canManageallOrders canChangeThePrices canManageAllCourses ctx
                 Redirection.FOUND Path.Admin.allUsers)
@@ -1215,20 +1217,20 @@ let editTemporaryUser id   =
 
 
 let createCategory =
+    log.Debug("createCategory")
     choose [
         GET >=> (View.createCourseCategory ""  |> html)
         POST >=> bindToForm Form.courseCategoryEdit (fun form ->
-            log.Debug("createCategory")
             let ctx = Db.getContext()
             match Db.Courses.tryFindCategoryByName form.Name ctx with
             | Some existing ->
-                "Sorry this catgory name is already taken. Try another one."
+                local.ACategoryNamed + form.Name + local.AlreadyExists 
                 |> View.createCourseCategory
                 |> html
             | None ->
                let categoryName  = form.Name
-               let visibility = form.Visibility = "VISIBLE" 
-               let isAbstract = form.Abstract = "ABSTRACT"
+               let visibility = (form.Visibility = Form.VISIBLE)
+               let isAbstract = (form.Abstract = Form.ABSTRACT)
                Db.newCategory categoryName visibility isAbstract ctx
                Redirection.FOUND Path.Courses.adminCategories
             )
@@ -1327,7 +1329,7 @@ let addUser =
             let ctx = Db.getContext()
             match Db.tryFindUsersViewByName form.Username ctx with
             | Some existing ->
-                "Sorry this username is already taken. Try another one."
+                local.UserNameIsTaken 
                 |> View.register roles
                 |> html
             | None ->
@@ -1335,12 +1337,12 @@ let addUser =
                let role = form.Role
 
                let dbRole = Db.getRole ((int)role) ctx
-               if (dbRole.Rolename = "admin") then failwith "can't add another admin"
+               if (dbRole.Rolename = "admin") then failwith local.CantAddAnotherAdmin
 
                let defaultEnablingStates = Db.getActionableDefaultStatesForWaiter ctx
-               let canmanageOrders = form.CanManageAllorders = "YES"
-               let canChangeThePrices = form.CanChangeThePrices = "YES"
-               let canManageAllCourses = form.CanManageAllCourses = "YES"
+               let canmanageOrders = form.CanManageAllorders = Form.YES 
+               let canChangeThePrices = form.CanChangeThePrices =  Form.YES
+               let canManageAllCourses = form.CanManageAllCourses = Form.YES
 
                let user = Db.newUser canChangeThePrices canmanageOrders form.Username  (passHash password) ((int) role) canManageAllCourses ctx
                let actionablesStatesIds = List.map (fun (x:Db.DefaultActionableState) -> x.Stateid) defaultEnablingStates
@@ -1397,7 +1399,7 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
             
             match (List.length standardCommentsForThisCourse) with 
                 | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
-                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
+                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
           )
        ]
       | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
@@ -1442,7 +1444,7 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
 
             match (List.length standardCommentsForThisCourse) with 
                 | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
-                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
+                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
 
             Redirection.FOUND (backUrl+"#order"+(orderId|> string))
         )
@@ -1564,8 +1566,13 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
     let ctx = Db.getContext()
     let _ = removeSpooledFiles()
     let printCount = orderOutGroupDetail.Printcount
-    let header = "Tavolo: " + orderOutGroupDetail.Table + "\n"+"Stampa di questa comanda: n. " + (printCount |> string) + "\n"+
-        "Gruppo uscita: "+ (orderOutGroupDetail.Groupidentifier |> string) + "\ndata stampa:" + DateTime.Now.ToLocalTime().ToString() + "\n"
+
+    //let header = "Tavolo: " + orderOutGroupDetail.Table + "\n"+"Stampa di questa comanda: n. " + (printCount |> string) + "\n"+
+    //    "Gruppo uscita: "+ (orderOutGroupDetail.Groupidentifier |> string) + "\ndata stampa:" + DateTime.Now.ToLocalTime().ToString() + "\n"
+
+    let header = local.Table  + orderOutGroupDetail.Table + "\n"+local.ProgressivePrintCounterForThisReceipt  + (printCount |> string) + "\n"+
+        local.ExitGroup+ (orderOutGroupDetail.Groupidentifier |> string) +  local.TimeStamp + DateTime.Now.ToLocalTime().ToString() + "\n"
+
     let orderItems = Db.getOrderItemsDetailOfOrderByOutGroup orderOutGroupDetail.Ordergroupid ctx
     let toBeWorkedState = Db.States.getStateByName("TOBEWORKED")
     let printers = Db.getPrinters ctx
@@ -1603,7 +1610,7 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
         outFile.Close() |> ignore
         )
     let _ = forPrintersFileNames |> List.iter (fun (x,y) -> 
-        System.Diagnostics.Process.Start(Settings.Printcommand, "-P " + x + " " + AppDomain.CurrentDomain.BaseDirectory + y) |> ignore
+        System.Diagnostics.Process.Start(Settings.Printcommand, Settings.PrinterSelector  + x + " " + AppDomain.CurrentDomain.BaseDirectory + y) |> ignore
         File.Copy(y,y.Replace(".txt",".ok"))
     )
     ()
@@ -1759,6 +1766,7 @@ let setOrderToArchivedIfAllorderItemsAreDone  orderId =
     ret
 
 // deprecated
+//
 let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
     log.Debug("moveOrderItemNextStep")
     warbler (fun _ ->
@@ -2233,7 +2241,7 @@ let createCourseByCatgory id =
 
             | None ->
                 let description = match form.Description with | Some X -> X | _ -> ""
-                let course = Db.Courses.createCourse form.Price form.Name description (form.Visibile = "VISIBLE") ((int)form.CategoryId) ctx
+                let course = Db.Courses.createCourse form.Price form.Name description (form.Visibile = Form.VISIBLE) ((int)form.CategoryId) ctx
                 let retPath = sprintf Path.Courses.editCourse course.Courseid 
                 Redirection.FOUND retPath
         )
@@ -2350,8 +2358,11 @@ let adjustPriceOfOrderItemByVariations orderItemId =
     let originalPrice = course.Price
 
     let variations = orderItem.``public.variations by orderitemid`` |> Seq.toList
+    //let addVariations = variations |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = Globals.AGGIUNGIMOLTO || 
+    //        x.Tipovariazione = Globals.AGGIUNGINORMALE || x.Tipovariazione = Globals.AGGIUNGIPOCO )
+    //
     let addVariations = variations |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = Globals.AGGIUNGIMOLTO || 
-            x.Tipovariazione = Globals.AGGIUNGINORMALE || x.Tipovariazione = Globals.AGGIUNGIPOCO)
+            x.Tipovariazione = Globals.AGGIUNGINORMALE || x.Tipovariazione = Globals.AGGIUNGIPOCO )
 
     let subtractVariations = variations |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = Globals.SENZA) 
 
@@ -2383,36 +2394,39 @@ let adjustPriceOfOrderItemByVariations orderItemId =
 let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingredientsYouCanAdd: Db.IngredientDetail list) encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d " "editOrderItemVariationPassingUserLoggedOnAndIngredientList" orderItemId)
     let ctx = Db.getContext()
-    let orderItemDetail = Db.Orders.tryGetOrderItemDetail orderItemId ctx
+    //let orderItemDetail = Db.Orders.tryGetOrderItemDetail orderItemId ctx
+    let theOrderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
     let ingredientCategories = Db.getVisibleIngredientCategories ctx
-    match orderItemDetail with
-    | Some theOrderItemDetail -> 
-        let dbUser = Db.getUserById user.UserId ctx
-        if (user.UserId = theOrderItemDetail.Userid || dbUser.Canmanageallorders || user.Role = "admin" ) then
-          choose [
-            GET >=> warbler (fun _ ->
-                let ctx = Db.getContext()
-                let _ = adjustPriceOfOrderItemByVariations theOrderItemDetail.Orderitemid
+    let standardVariationsForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails theOrderItemDetail.Courseid ctx
+    //let encodedBackUrl = WebUtility.(sprintf Path.Orders.viewOrder theOrderItemDetail.Orderid)
 
-                let specificCustomAddQuantitiesForIngredients = ingredientsYouCanAdd |> List.map (fun (x:Db.IngredientDetail) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
 
-                (let ingredientOfCourse = Db.getIngredientsOfCourse theOrderItemDetail.Courseid ctx
-                 let existingVariations =  Db.getAllVariationDetailsOfOrderItem theOrderItemDetail.Orderitemid ctx
+    let dbUser = Db.getUserById user.UserId ctx
+    if (user.UserId = theOrderItemDetail.Userid || dbUser.Canmanageallorders || user.Role = "admin" ) then
+      choose [
+        GET >=> warbler (fun _ ->
+            let ctx = Db.getContext()
+            let _ = adjustPriceOfOrderItemByVariations theOrderItemDetail.Orderitemid
 
-                 html (View.editOrderItemVariations theOrderItemDetail ingredientOfCourse 
-                    existingVariations ingredientCategories ingredientsYouCanAdd specificCustomAddQuantitiesForIngredients  encodedBackUrl  )))
+            let specificCustomAddQuantitiesForIngredients = ingredientsYouCanAdd |> List.map (fun (x:Db.IngredientDetail) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
 
-            POST >=> bindToForm Form.addIngredient (fun form -> 
-                let ctx = Db.getContext()
-                let _ = Db.addAddIngredientVariationByName orderItemId (form.IngredientByText) form.Quantity ctx
-                let _ = adjustPriceOfOrderItemByVariations orderItemId
-                let redirTo = (sprintf Path.Orders.editOrderItemVariation orderItemId encodedBackUrl)
-                Redirection.found (redirTo)
-            )
-         ]
-         
-         else (Redirection.FOUND Path.home)
-    | None -> Redirection.FOUND Path.home
+            (let ingredientOfCourse = Db.getIngredientsOfCourse theOrderItemDetail.Courseid ctx
+             let existingVariations =  Db.getAllVariationDetailsOfOrderItem theOrderItemDetail.Orderitemid ctx
+
+             html (View.editOrderItemVariations theOrderItemDetail ingredientOfCourse 
+                existingVariations ingredientCategories ingredientsYouCanAdd specificCustomAddQuantitiesForIngredients standardVariationsForCourseDetails encodedBackUrl  )))
+
+        POST >=> bindToForm Form.addIngredient (fun form -> 
+            let ctx = Db.getContext()
+            let _ = Db.addAddIngredientVariationByName orderItemId (form.IngredientByText) form.Quantity ctx
+            let _ = adjustPriceOfOrderItemByVariations orderItemId
+            //let redirTo = (sprintf Path.Orders.editOrderItemVariation orderItemId encodedBackUrl)
+            let redirTo = (sprintf Path.Orders.editOrderItemVariation orderItemId )
+            Redirection.found (redirTo)
+        )
+     ]
+     
+     else (Redirection.FOUND Path.home)
 
 let viewSingleOrder orderId (user:UserLoggedOnSession)=
     log.Debug(sprintf "%s %d" "viewSingleOrder" orderId)
@@ -2443,7 +2457,8 @@ let viewSingleOrder orderId (user:UserLoggedOnSession)=
 
 
 
-let editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl (user:UserLoggedOnSession) =
+//let editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl (user:UserLoggedOnSession) =
+let editOrderItemVariationPassingUserLoggedOn orderItemId  (user:UserLoggedOnSession) =
     warbler (fun  x ->  
         log.Debug(sprintf "%s %d" "editOrderItemVariationPassingUserLoggedOn" orderItemId )
         let ctx = Db.getContext()
@@ -2460,12 +2475,15 @@ let editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl (user:U
 
         let ingredientDetailsYouCanAddWithoutAlreadyThere =  ingredientDetailsYouCanAdd |> 
             List.filter (fun (x:Db.IngredientDetail) -> not (List.contains x.Ingredientid  ingredientIdsOfCourse ))
+        
+        let encodedBackUrl = WebUtility.UrlEncode (sprintf Path.Orders.viewOrder theOrderItem.Orderid)
 
         editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId ingredientDetailsYouCanAddWithoutAlreadyThere encodedBackUrl user 
     )
 
 
-let editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId categoryId encodedBackUrl (user:UserLoggedOnSession) =
+let editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId categoryId  (user:UserLoggedOnSession) =
+
     warbler ( fun x ->
         log.Debug(sprintf "%s %d " "editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn" orderItemId)
         let ctx = Db.getContext()
@@ -2473,6 +2491,7 @@ let editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId c
         let ingredientsDetailYouCanAdd = Db.getVisibleIngredientsDetailOfACategory categoryId ctx
 
         let orderItem = Db.getTheOrderItemById orderItemId ctx
+        let encodedBackUrl = WebUtility.UrlEncode (sprintf Path.Orders.viewOrder orderItem.Orderid)
 
         let courseOfOrderItem = Db.Courses.getCourse orderItem.Courseid ctx
         let ingredientIdsOfCourse = courseOfOrderItem.``public.ingredientcourse by courseid`` |> Seq.toList |> List.map (fun (x:Db.IngredientCourse) -> x.Ingredientid) 
@@ -2503,7 +2522,8 @@ let addWithoutIngredientVariation orderItemId ingredientId encodedBackUrl  (user
             ()
 
     let _ = adjustPriceOfOrderItemByVariations orderItemId 
-    editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl user
+    //editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeAllInvisibleIngredients orderItemId encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d " "removeAllInvisibleIngredients" orderItemId)
@@ -2516,7 +2536,7 @@ let removeAllInvisibleIngredients orderItemId encodedBackUrl (user:UserLoggedOnS
         let unavailables = ingredientsOfTheCourse |> List.filter (fun (x:Db.IngredientOfCourse) -> ( not x.Visibility))
         unavailables |> List.iter (fun (x:Db.IngredientOfCourse) -> Db.addRemoveIngredientVariation orderItemId x.Ingredientid ctx) 
     | _ -> ()
-    editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeAllAllergenic orderItemId  encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d" "removeAllAllergenic" orderItemId)
@@ -2529,7 +2549,8 @@ let removeAllAllergenic orderItemId  encodedBackUrl (user:UserLoggedOnSession) =
         let allergenics = ingredientsOfTheCourse |> List.filter (fun (x:Db.IngredientOfCourse) -> x.Allergen)
         allergenics |> List.iter (fun (x:Db.IngredientOfCourse) -> Db.addRemoveIngredientVariation orderItemId x.Ingredientid ctx)
     | _ -> ()
-    editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn orderItemId  user
+
 let addDiminuishIngredientVariation orderItemId ingredientId encodedBackUrl (user:UserLoggedOnSession)=
     log.Debug(sprintf "%s %d %d " "addDiminuishIngredientVariation" orderItemId ingredientId )
     let ctx = Db.getContext()
@@ -2537,7 +2558,7 @@ let addDiminuishIngredientVariation orderItemId ingredientId encodedBackUrl (use
     let dbUser = Db.getUserById user.UserId ctx
     let _ = if (orderDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
         (Db.addDiminuishIngredientVariattion orderItemId ingredientId ctx) else ()
-    editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user:UserLoggedOnSession)=
     log.Debug(sprintf "%s %d %d" "addIncreaseIngredientVariation"  orderItemId  ingredientId)
@@ -2556,7 +2577,7 @@ let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user
             else ()
 
     let _ = adjustPriceOfOrderItemByVariations orderItemId 
-    editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeIngredientVariation variationId orderitemId  encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d %d " "removeIngredientVariation" variationId orderitemId)
@@ -2566,7 +2587,7 @@ let removeIngredientVariation variationId orderitemId  encodedBackUrl (user:User
     let _ = if (orderDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
       (Db.removeIngredientVariation  variationId ctx) else ()
     let _ = adjustPriceOfOrderItemByVariations orderitemId
-    editOrderItemVariationPassingUserLoggedOn orderitemId encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn orderitemId  user
 
 let increaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d " "increaseUnitaryIngredientVariation" variationId)
@@ -2578,7 +2599,7 @@ let increaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLogg
         variation.Plailnumvariation <- variation.Plailnumvariation + 1
         ctx.SubmitUpdates()
     let _ = adjustPriceOfOrderItemByVariations variation.Orderitemid
-    editOrderItemVariationPassingUserLoggedOn variation.Orderitemid encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn variation.Orderitemid  user
 
 let decreaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLoggedOnSession) =
     let ctx = Db.getContext()
@@ -2593,7 +2614,7 @@ let decreaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLogg
 
     let _ = adjustPriceOfOrderItemByVariations variation.Orderitemid
 
-    editOrderItemVariationPassingUserLoggedOn variation.Orderitemid encodedBackUrl user
+    editOrderItemVariationPassingUserLoggedOn variation.Orderitemid  user
 
 
 let deleteUser id  = warbler (fun x ->
@@ -2978,8 +2999,6 @@ let wholeOrderPaymentItems  orderId  =
 
 
 
-
-
 let removePaymentItemOfSubOrder paymentItemId subOrderId orderId  (user:UserLoggedOnSession) =
     let ctx = Db.getContext()
     Db.Orders.removePaymentItem paymentItemId ctx
@@ -3046,7 +3065,7 @@ let deleteSubOrder subOrderId orderId (user:UserLoggedOnSession) =
 type LiquidWrappedOrderItems = {orderitemdetailswrapped: OrderItemDetailsWrapped list; 
     suborderwrapped: SubOrderWrapped list; orderid: int; table: string; encodedbackurl: string; tendercodes: TenderCodeWrapped list }
 
- type LiquidWrapperOrderItemsWithGenericCourses = { orderitemdetailswrapped: OrderItemDetailsWrapped list; 
+type LiquidWrapperOrderItemsWithGenericCourses = { orderitemdetailswrapped: OrderItemDetailsWrapped list; 
      suborderwrapped: SubOrderWrapped list; orderid: int; coursewrappedlist: CourseWrapped list; encodedbackurl: string; }
 
 let recomputeSubOrderTotal (subOrder:Db.SubOrder) =
@@ -3346,13 +3365,24 @@ let qrUserImageGen (user:UserLoggedOnSession) =
         let qrCodeData  = qrGenerator.CreateQrCode(urlToCode,QRCodeGenerator.ECCLevel.Q)
         let qrCode = new QRCode(qrCodeData);
         let qrCodeImage = qrCode.GetGraphic(20)
+        log.Debug("qrCodeImage")
+        log.Debug(qrCodeImage)
+
+        qrCodeImage.Save("nomefile.bmp")
         let stream = new System.IO.MemoryStream()
+
         qrCodeImage.Save(stream,qrCodeImage.RawFormat)
+        //qrCodeImage.Save(stream,qrCodeImage.RawFormat)
+
+        //let _ = Async.Start(saveImages)
+
         let arrayOfQrCode = stream.ToArray()
+
         let encoded = System.Convert.ToBase64String (arrayOfQrCode)
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o
     ) 
+
 
 let removeStandardCommentForCourse commentForCourseId =
     let ctx = Db.getContext()
@@ -3371,7 +3401,6 @@ let standardCommentsForCourse courseId =
     choose [
         GET >=> warbler (fun _ -> 
                 let commentsForCourseDetails = Db.getCommentsForCourseDetails courseId ctx
-                // let commentsForCourseDetailsIds = commetnForCourseDetails |> List.map (fun x -> x.Commentsforcourseid)
                 let allStandardComments = Db.getAllStandardComments ctx
 
                 let existingCommentsForCourseIds = commentsForCourseDetails |> List. map (fun x -> x.Standardcommentid)
@@ -3383,6 +3412,23 @@ let standardCommentsForCourse courseId =
         POST >=> bindToForm Form.commentForCourse (fun form ->
             let _ = Db.addCommentForCourse ((int)form.CommentForCourse) courseId ctx
             Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId))
+    ]
+
+let standardVariationsForCourse courseId =
+    let ctx = Db.getContext()
+    let course = Db.Courses.getCourse courseId ctx
+    choose [
+        GET >=> warbler (fun _ ->
+            let standardVariationsForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails courseId ctx
+            let allStandardVariations = Db.StandardVariations.getAllStandardVariations ctx
+            let existingVariationForCourseIds = standardVariationsForCourseDetails |> List.map (fun x -> x.Standardvariationid)
+            let selectableStandardVariations = allStandardVariations |> (List.filter (fun x -> (not (List.contains x.Standardvariationid existingVariationForCourseIds) )))
+            View.standardVariationsForCourse course standardVariationsForCourseDetails selectableStandardVariations |> html
+        )
+        POST >=> bindToForm Form.variationForCourse (fun form ->
+            let _ = Db.StandardVariations.addStandardVariationForCourse ((int )form.VariationForCourse) courseId ctx
+            Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
+        )
     ]
 
 
@@ -3397,19 +3443,15 @@ let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetai
 
 let selectStandardCommentsForOrderItem orderItemId =
     let ctx = Db.getContext()
-    //let orderItem = Db.getTheOrderItemById orderItemId ctx
-    //let orderItem = Db.getTheOrderItemById orderItemId ctx
     let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
-    //let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItemDetail.Courseid ctx
     let standardCommentsForThisCourse = Db.getCommentsForCourseDetails orderItemDetail.Courseid ctx
-    //let backUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid)
+    let standardVariationsForThisCourse = Db.StandardVariations.getStandardVariationsForCourseDetails orderItemDetail.Courseid ctx
 
-    match (List.length standardCommentsForThisCourse) with 
-          | 0 -> Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
-          | _ -> View.selectStandardCommentsForOrderItem orderItemDetail standardCommentsForThisCourse  |> html
+    match (List.length standardCommentsForThisCourse,List.length standardVariationsForThisCourse) with 
+          | (0,0) -> Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
+          | _ -> View.selectStandardCommentsAndVariationsForOrderItem orderItemDetail standardCommentsForThisCourse standardVariationsForThisCourse |> html
 
           //Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
-
 
 
 let addStandardCommentToOrderItem commentId orderItemId  =
@@ -3417,14 +3459,30 @@ let addStandardCommentToOrderItem commentId orderItemId  =
     let comment = Db.getStandardComment commentId ctx
     Db.addCommentToOrderItemById comment.Comment orderItemId ctx
     
-    Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItemId)
+    Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItemId)
 
     // View.addStandardCommentToOrderItem |> html
+
+let addStandardVariationToOrderItem standardVariationId orderItemId =
+    let ctx = Db.getContext()
+    Db.StandardVariations.setStandardVariationToOrderItem standardVariationId orderItemId ctx
+    let _ = adjustPriceOfOrderItemByVariations orderItemId
+    //Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItemId)
+    //
+    
+    let viewOrderUrl = WebUtility.UrlEncode (sprintf Path.Orders.viewOrder orderItemId) 
+    
+    //Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId viewOrderUrl)
+    Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId )
+
+
+
+    
 
 let removeExistingCommentToOrderItem id =
     let ctx = Db.getContext()
     let _ = Db.removeExistingCommentToOrderItem id ctx
-    Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem id)
+    Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem id)
    
 let makeSubCourseCategory id =
     let ctx = Db.getContext()
@@ -3434,7 +3492,7 @@ let makeSubCourseCategory id =
             View.makeSubCourseCategory courseCategory "" |> html
         )
         POST >=> bindToForm Form.subCourseCategory (fun form ->
-             let visibility = form.Visibility = "VISIBLE"
+             let visibility = (form.Visibility = Form.VISIBLE)
              match (Db.Courses.tryFindCategoryByName form.Name ctx) with
                 | Some X when X.Categoryid <> courseCategory.Categoryid -> View.makeSubCourseCategory courseCategory "esiste gia'" |> html
                 | _ -> let sonCategory = Db.createSubCourseCategory form.Name  visibility id ctx
@@ -3455,8 +3513,44 @@ let mergeSubCourseCategoryToFather categoryId =
     
 let manageStandardVariation id =
     let ctx = Db.getContext()
-    let variation = Db.getStandardVariation id ctx
-    View.manageStandardVariation variation |> html
+    choose [
+        GET >=> warbler (fun _ ->
+            let standardVariation = Db.getStandardVariation id ctx
+            let ingredientCategories = Db.getAllIngredientCategories ctx
+            let variationItemDetails = Db.StandardVariations.getStandardVariationItemDetails id ctx
+            let (allIngredients:Db.Ingredient list) = Db.getAllIngredients ctx
+
+            let specificCustomAddQuantitiesForIngredients = allIngredients |> List.map (fun (x:Db.Ingredient) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
+            View.manageStandardVariation standardVariation variationItemDetails ingredientCategories allIngredients specificCustomAddQuantitiesForIngredients  |> html
+        )
+
+        POST >=> bindToForm Form.ingredientVariation (fun form -> 
+            Db.StandardVariations.addAddIngredientStandardVariationItem id ((int)form.IngredientBySelect) form.Quantity ctx
+            Redirection.FOUND (sprintf Path.Admin.manageStandardVariation id )
+//            match form.Quantity with
+//                |  Globals.ALT_MOLTO -> Redirection.FOUND Path.home
+//                |  "POCO" -> Redirection.FOUND Path.home
+//                | _ -> Redirection.FOUND Path.home
+        )
+    ]
+
+
+let manageStandardVariationByIngredientCategory standardVariationId ingredientCategoryId =
+    choose [
+        GET >=> warbler (fun _ ->
+            let ctx = Db.getContext()
+            let standardVariation = Db.getStandardVariation standardVariationId ctx
+            let ingredientCategories = Db.getAllIngredientCategories ctx
+            let variationItemDetails = Db.StandardVariations.getStandardVariationItemDetails standardVariationId ctx
+            let (ingredients:Db.Ingredient list) = Db.getIngredientsByCategory ingredientCategoryId ctx 
+            let specificCustomAddQuantitiesForIngredients = ingredients |> List.map (fun (x:Db.Ingredient) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
+
+            View.manageStandardVariation standardVariation variationItemDetails ingredientCategories ingredients  specificCustomAddQuantitiesForIngredients |> html
+        )
+        POST >=> Redirection.FOUND Path.home
+    ]
+
+
 
 let manageStandardVariations =
     let ctx = Db.getContext()
@@ -3482,6 +3576,21 @@ let removeStandardVariation variationId =
     let ctx = Db.getContext()
     let _ = Db.removeStandardVariation variationId ctx
     Redirection.FOUND Path.Admin.manageStandardVariations
+
+let removeStandardVariationItem id =
+    let ctx = Db.getContext()
+    let variationItem = Db.StandardVariations.getStandardVariationItem id ctx
+    let standardVariationId = variationItem.Standardvariationid
+    variationItem.Delete()
+    ctx.SubmitUpdates()
+
+    Redirection.FOUND (sprintf Path.Admin.manageStandardVariation standardVariationId)
+
+//    log.Debug(sprintf "removeStandardVariationItem %d" id)
+//    let ctx = Db.getContext()
+//    let standardVariationItem = Db.
+//    let _ = Db.removeStandardVariation variationId ctx
+//    Redirection.FOUND Path.Admin.manageStandardVariations
 
 
 let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
@@ -3537,7 +3646,10 @@ let noCache =
 
 let webPart =
     choose [
+        pathScan Path.Admin.standardVariationsForCourse (fun id -> (admin (standardVariationsForCourse id )))
+        pathScan Path.Admin.removeStandardVariationItem (fun id -> (admin (removeStandardVariationItem id)))
 
+        pathScan Path.Admin.manageStandardVariationByIngredientCategory (fun (variationId,categoryId) -> (admin (manageStandardVariationByIngredientCategory variationId categoryId)))
         pathScan Path.Admin.manageStandardVariation (fun id -> (admin (manageStandardVariation id)))
         pathScan Path.Admin.removeStandardVariation (fun id -> (admin (removeStandardVariation id)))
         path Path.Admin.manageStandardVariations >=> admin manageStandardVariations
@@ -3545,7 +3657,8 @@ let webPart =
         pathScan Path.Courses.makeSubCourseCategory (fun id -> admin (makeSubCourseCategory id))
         pathScan Path.Orders.removeExistingCommentToOrderItem (fun id -> loggedOn (removeExistingCommentToOrderItem id))
         pathScan Path.Orders.addStandardCommentToOrderItem (fun (commentId,orderItemId) -> loggedOn (addStandardCommentToOrderItem commentId orderItemId))
-        pathScan Path.Orders.selectStandardCommentsForOrderItem (fun id -> loggedOn (selectStandardCommentsForOrderItem id))
+        pathScan Path.Orders.addStandardVariationToOrderItem (fun (variationId,orderItemId) -> loggedOn (addStandardVariationToOrderItem variationId orderItemId))
+        pathScan Path.Orders.selectStandardCommentsAndVariationsForOrderItem (fun id -> loggedOn (selectStandardCommentsForOrderItem id))
         pathScan Path.Admin.standardCommentsForCourse (fun id -> admin (standardCommentsForCourse id))
         pathScan Path.Admin.removeStandardCommentForCourse (fun id -> admin (removeStandardCommentForCourse id))
         pathScan Path.Admin.removeStandardComment (fun id -> admin  (removeStandardComment id))
@@ -3586,8 +3699,10 @@ let webPart =
         path Path.Admin.deleteTemporaryUsers >=> admin deleteTemporaryUsers
         path Path.Admin.deleteObjects >=> admin deleteObjects
         path Path.Admin.optimizeVoided >=> admin  optimizeVoided
-        pathScan Path.Orders.editOrderItemVariation ( fun (orderItemId,encodedBackUrl) -> anyUserPassingUserLoggedOn (editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl))
-        pathScan Path.Orders.editOrderItemVariationByIngredientCategory ( fun (orderItemId,categoryId,encodedBackUrl) -> anyUserPassingUserLoggedOn (editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId categoryId encodedBackUrl))
+        //pathScan Path.Orders.editOrderItemVariation ( fun (orderItemId,encodedBackUrl) -> anyUserPassingUserLoggedOn (editOrderItemVariationPassingUserLoggedOn orderItemId encodedBackUrl))
+        pathScan Path.Orders.editOrderItemVariation ( fun orderItemId -> anyUserPassingUserLoggedOn (editOrderItemVariationPassingUserLoggedOn orderItemId ))
+        //pathScan Path.Orders.editOrderItemVariationByIngredientCategory ( fun (orderItemId,categoryId,encodedBackUrl) -> anyUserPassingUserLoggedOn (editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId categoryId encodedBackUrl))
+        pathScan Path.Orders.editOrderItemVariationByIngredientCategory ( fun (orderItemId,categoryId) -> anyUserPassingUserLoggedOn (editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId categoryId ))
         pathScan Path.Orders.removeIngredientVariation (fun (variationId, orderItemId,encodedBackUrl) ->  anyUserPassingUserLoggedOn (removeIngredientVariation variationId orderItemId encodedBackUrl)  )
         pathScan Path.Orders.increaseUnitaryIngredientVariation (fun (variationId,encodedBackUrl) -> anyUserPassingUserLoggedOn (increaseUnitaryIngredientVariation variationId encodedBackUrl))
         pathScan Path.Orders.decreaseUnitaryIngredientVariation (fun (variationId,encodedBackUrl) -> anyUserPassingUserLoggedOn (decreaseUnitaryIngredientVariation variationId encodedBackUrl))
@@ -3694,7 +3809,7 @@ let webPart =
 let cfg =
   { defaultConfig with
       bindings = [ HttpBinding.createSimple HTTP "0.0.0.0" 8083  ] 
-      homeFolder= Some @"C:\Users\Dany\programmi_tony\orderssystem_core"
+      homeFolder= Some @"C:\Users\pc\programmi_tony\orderssystem_core"
     //    bindings = [ HttpBinding.createSimple (HTTPS cert) "0.0.0.0" 8443  ] 
   }
 

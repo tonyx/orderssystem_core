@@ -21,7 +21,7 @@ let [<Literal>] dbVendor = Common.DatabaseProviderTypes.POSTGRESQL
 let [<Literal>] connexStringName = "DefaultConnectionString"
 
 // let [<Literal>] resPath = "/Users/Tonyx/Projects/mrbilly6/OrdersSystem/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql entity framework
-let [<Literal>] resPath = "C:/Users/Dany/programmi_tony/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql entity framework
+let [<Literal>] resPath = "C:/Users/pc/programmi_tony/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql entity framework
 
 let [<Literal>] indivAmount = 1000
 let [<Literal>] useOptTypes  = false
@@ -102,6 +102,8 @@ type FatherSonCategoriesDetails = DbContext.``public.fathersoncategoriesdetailsE
 type StandardVariation = DbContext.``public.standardvariationsEntity``
 type StandardVariationItem = DbContext.``public.standardvariationitemEntity``
 type StandardVariationFourCourse = DbContext.``public.standardvariationforcourseEntity``
+type StandardVariationItemDetails = DbContext.``public.standardvariationitemdetailsEntity``
+type StandardVariationForCourseDetails = DbContext.``public.standardvariationforcoursedetailsEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -132,6 +134,8 @@ module Courses =
                 where (course.Courseid = id)
                 select course
         } |> Seq.tryHead
+
+
 
     let getAllCourses (ctx: DbContext) : Course list =
         log.Debug("getAllCourses")
@@ -824,6 +828,8 @@ let createStandardVariation name (ctx:DbContext) =
     variation
 
 
+
+
 let tryGetStandardVariationByName name (ctx:DbContext) =
     query {
         for item in ctx.Public.Standardvariations do
@@ -939,7 +945,7 @@ let getAllVisibleIngredientCategories (ctx:DbContext) =
 
 let getAllIngredients (ctx:DbContext) =
     log.Debug("getAllIngredients")    
-    ctx.Public.Ingredient |> Seq.toList
+    ctx.Public.Ingredient |> Seq.sortBy (fun x -> x.Name)  |> Seq.toList
 
 let getallIngredientsOfACategory idCategory (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "getallIngredientsOfACategory" idCategory)
@@ -2319,6 +2325,7 @@ let tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId (
         where (variation.Ingredientid = ingredientId && variation.Orderitemid = orderItemId)
         select variation
     } |> Seq.tryHead
+
 let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     log.Debug("addIncreaseIngredientVariation")
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
@@ -2328,6 +2335,7 @@ let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
 
     let _ = ctx.Public.Variations.Create(ingredientId,orderItemId,Globals.MOLTO)
     ctx.SubmitUpdates()
+
 let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     log.Debug("addAddNormalIngredientVariation")
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
@@ -2336,6 +2344,7 @@ let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
         | _ -> ()
     let _ = ctx.Public.Variations.Create(ingredientId, orderItemId, Globals.AGGIUNGINORMALE)
     ctx.SubmitUpdates()
+
 let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) =
     log.Debug("addAddIngredientVariation")
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
@@ -2345,6 +2354,7 @@ let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) 
     let (newVariation:Variation) = ctx.Public.Variations.Create(ingredientId, orderItemId, quantity)
     let _ = match quantity with | Globals.UNITARY_MEASUSERE -> newVariation.Plailnumvariation <- 1 | _ -> ()    
     ctx.SubmitUpdates()
+
 let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredientPriceId (ctx:DbContext) =
     log.Debug("addIngredientVariationByIngredientPriceRef")
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
@@ -2354,6 +2364,7 @@ let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredie
     let (newVariation:Variation) = ctx.Public.Variations.Create(ingredientId,orderItemId,Globals.PER_PREZZO_INGREDIENTE)
     newVariation.Ingredientpriceid <- ingredientPriceId 
     ctx.SubmitUpdates()
+
 let getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault ingredientId (ctx:DbContext) =
     log.Debug("getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault")
     let defaultAdd =
@@ -2524,6 +2535,15 @@ let getVariationDetailsOfOrderItem orderItemId (ctx: DbContext) =
         where (variation.Orderitemid = orderItemId)
         select variation
     } |> Seq.toList
+
+let tryGetVariationOfOrderItemAndIngredient orderItemId ingredientId (ctx:DbContext) =
+    query {
+        for variation in ctx.Public.Variations do
+            where (variation.Orderitemid = orderItemId && variation.Ingredientid = ingredientId)
+            select variation
+    } |> Seq.tryHead
+        
+
 
 let deleteAllVariationsOfOrderItem orderItemId (ctx:DbContext) =
     log.Debug("deleteAllVariationsOfOrderItem")
@@ -2890,7 +2910,7 @@ let addPaymentItemToOrder orderId tenderId amount (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let getIngredientsByCategory categoryId (ctx:DbContext) =
-    ctx.Public.Ingredient |> Seq.filter (fun (x:Ingredient) -> x.Ingredientcategoryid = categoryId)
+    ctx.Public.Ingredient |> Seq.filter (fun (x:Ingredient) -> x.Ingredientcategoryid = categoryId) |> Seq.toList
 let getVariationByIngredient ingredientId (ctx: DbContext) =
     ctx.Public.Variations |> Seq.filter (fun (x:Variation) -> x.Ingredientid = ingredientId)
 let getIngredientCourseByIngredient ingredientId (ctx: DbContext) =
@@ -2974,7 +2994,7 @@ let getTemporaryUserByName name (ctx:DbContext) =
     | _ -> None
 
 let getRoleByName name (ctx:DbContext) =
-    log.Debug("getRoleByName")
+    log.Debug("getRoleByName: "+name)
     ctx.Public.Roles |> Seq.find (fun (x:Role) -> x.Rolename = name)  
 
 let getCourseDetail courseId (ctx:DbContext) =
@@ -3117,6 +3137,183 @@ let addAmountOfingredientAvailability (ingredient:Ingredient) (amount:decimal) (
     ingredient.Availablequantity<- (ingredient.Availablequantity + amount)
     log.Debug("updated quantity")
     ctx.SubmitUpdates()
+
+
+module StandardVariations =
+   
+    let getStandardVariationItem id (ctx:DbContext) =
+        log.Debug(sprintf "getStandardVariationItem %d" id)
+        ctx.Public.Standardvariationitem |> Seq.find (fun x -> x.Standardvariationitemid = id)
+
+    
+
+    let getStandardVariationsForCourseDetails id (ctx:DbContext) =
+        log.Debug(sprintf "getAllStandardVariationForCourseDetailsByCourseId %d" id)
+        query {
+            for standardVariationForCourseDetails in ctx.Public.Standardvariationforcoursedetails do
+            where (standardVariationForCourseDetails.Courseid = id ) 
+            select standardVariationForCourseDetails
+        } |> Seq.toList
+     
+    let getAllStandardVariations (ctx:DbContext) =
+        log.Debug("getAllStandardVariations") 
+        ctx.Public.Standardvariations |> Seq.toList
+
+    let addStandardVariationForCourse standardVariationId courseId (ctx:DbContext) =
+        log.Debug("addStandardVariationForCourse")
+        ctx.Public.Standardvariationforcourse.``Create(courseid, standardvariationid)``(courseId,standardVariationId)
+        ctx.SubmitUpdates()
+    
+
+    let getStandardVariationItemDetails standardVariationId (ctx:DbContext) =
+        log.Debug("getStandardVariationDetails")
+        query {
+            for standardVariationItemDetail in ctx.Public.Standardvariationitemdetails do
+                where (standardVariationItemDetail.Standardvariationid = standardVariationId)
+                select standardVariationItemDetail
+        } |> Seq.toList
+
+    let tryGetUnitaryIngredientStandardVariationitemOfStandardVariation standardVariationId ingredientId (ctx:DbContext) =
+        log.Debug("tryGetUnitaryngredientStandardVariationitemOfStandardVariation")
+        query {
+            for variationItem in ctx.Public.Standardvariationitem do
+            join ingredient in ctx.Public.Ingredient on (variationItem.Ingredientid = ingredient.Ingredientid)
+            where (variationItem.Ingredientid = ingredientId && variationItem.Standardvariationid = standardVariationId && ingredient.Unitmeasure = Globals.UNITARY_MEASUSERE)
+            select variationItem
+        } |> Seq.tryHead
+     
+
+    let tryGetAStandardIngredientVariationItem standardVariationId ingredientId (ctx:DbContext) =
+        log.Debug("tryGetAStandardIngredientVariationItem")
+        query {
+            for standardVariationItem in ctx.Public.Standardvariationitem do
+                where (standardVariationItem.Ingredientid = ingredientId && standardVariationItem.Standardvariationid = standardVariationId)
+                select standardVariationItem
+        } |> Seq.tryHead
+
+
+    let addAddNormalIngredientStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
+        log.Debug("addAddNormalIngredientVariation")
+        let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
+        let _ = match existingVariation with   
+            | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+            | _ -> ()
+        let _ = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)``(ingredientId,standardVariationId,Globals.AGGIUNGINORMALE)
+        ctx.SubmitUpdates()
+
+
+    let addIngreaseIngredientStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
+        log.Debug("addAddNormalIngredientVariation")
+        let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
+        let _ = match existingVariation with   
+            | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+            | _ -> ()
+
+        let _ = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)``(ingredientId,standardVariationId,Globals.MOLTO)
+        ctx.SubmitUpdates()
+
+    let addAddIngredientStandardVariationItem standardVariationId ingredientId (quantity:string) (ctx:DbContext) =
+        log.Debug("addAddIngredientVariation")
+        let mut: int ref = ref 1
+        let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
+        let _ = match existingVariation with   
+            | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+            | _ -> ()
+
+        let overwritten = Int32.TryParse(quantity,mut)
+        let newVariationItem = ctx.Public.Standardvariationitem.Create(ingredientId, standardVariationId, quantity)
+        let ingredient = getIngredientById ingredientId ctx
+        let _ = match ingredient.Unitmeasure with 
+            | Globals.UNITARY_MEASUSERE -> newVariationItem.Plailnumvariation <- (if (quantity = Globals.SENZA) then -1 else 1)
+            | _ -> ()    
+        let _ = match overwritten with
+            | true -> newVariationItem.Ingredientpriceid <- !mut; newVariationItem.Tipovariazione <- ""
+            | _ -> ()
+        ctx.SubmitUpdates()
+
+
+    let addStandardIngredientVariationItemByIngredientPriceRef standardVariationId ingredientId ingredientPriceId (ctx:DbContext) = 
+        log.Debug("addIngredientVariationByIngredientPriceRef")
+        let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
+        let _ = match existingVariation with   
+            | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+            | _ -> ()
+        let newVariation = ctx.Public.Standardvariationitem.Create(ingredientId,standardVariationId,Globals.PER_PREZZO_INGREDIENTE)
+        newVariation.Ingredientpriceid <- ingredientPriceId 
+        ctx.SubmitUpdates()
+
+    let removeEventuallyExistingStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
+        log.Debug("removeEventuallyExistingStandardVariationItem")
+        let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
+        match existingVariation with 
+        | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+        | None -> ()
+
+    let addRemoveUnitaryStandardIngredientVariationItemOrDecreaseByOne standardVariationId ingredientId (ctx:DbContext) =
+         log.Debug("addRemoveUnitaryStandardIngredientVariationItemOrDecreaseByOne")
+         let existingUnitaryVariation = tryGetUnitaryIngredientStandardVariationitemOfStandardVariation standardVariationId ingredientId ctx 
+         match existingUnitaryVariation with 
+         | Some theExistingUnitaryVariation  -> 
+            theExistingUnitaryVariation.Plailnumvariation <- theExistingUnitaryVariation.Plailnumvariation - 1
+            ctx.SubmitUpdates()
+         | None -> 
+            removeEventuallyExistingStandardVariationItem standardVariationId ingredientId ctx
+            let newVariation = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)`` (ingredientId,standardVariationId,Globals.UNITARY_MEASUSERE)
+            newVariation.Plailnumvariation <- -1
+            ctx.SubmitUpdates()
+
+
+    let addAddUnitaryStandardIngredientVariationitemOrIncreaseByOne standardVariationId ingredientId (ctx:DbContext) =
+         log.Debug("addAddUnitaryStandardIngredientVariationitemOrIncreaseByOne")
+         let existingUnitaryVariation = tryGetUnitaryIngredientStandardVariationitemOfStandardVariation  standardVariationId ingredientId ctx 
+         match existingUnitaryVariation with
+         | Some theExistingUnitaryVariation -> 
+            theExistingUnitaryVariation.Plailnumvariation <- theExistingUnitaryVariation.Plailnumvariation + 1
+            ctx.SubmitUpdates()
+         | None ->
+            removeEventuallyExistingStandardVariationItem standardVariationId ingredientId ctx
+            let newVariation = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)`` (ingredientId,standardVariationId,Globals.UNITARY_MEASUSERE)
+            newVariation.Plailnumvariation <- 1
+            ctx.SubmitUpdates()
+
+    let addRemoveStandardIngredientVariationItem variationId ingrdientId (ctx:DbContext) =
+        log.Debug("addRemoveStandardIngredientVariationItem")
+        let existingVariation = tryGetAStandardIngredientVariationItem variationId ingrdientId ctx
+        let _ = match existingVariation with
+                | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+                | _ -> ()
+        let _ = ctx.Public.Standardvariationitem.Create(ingrdientId,variationId,Globals.SENZA)
+        ctx.SubmitUpdates()
+
+    
+    let copyStandardVariationItemToOrderItem standardVariationItemId orderItemId (ctx:DbContext) =
+        log.Debug("copyStandardVariationItemToOrderItem")
+        let standardVariationItem = getStandardVariationItem standardVariationItemId ctx
+        let possibleExistingVariation = tryGetVariationOfOrderItemAndIngredient orderItemId standardVariationItem.Ingredientid ctx 
+
+        match possibleExistingVariation with
+        | None ->
+            let variation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)``(standardVariationItem.Ingredientid,orderItemId,standardVariationItem.Tipovariazione)
+
+            log.Debug(standardVariationItem.Ingredientpriceid)
+
+            let _ = match standardVariationItem.Ingredientpriceid with
+                | 0 -> ()
+                | X -> variation.SetColumn("ingredientpriceid",X)
+
+            ctx.SubmitUpdates()
+        | _ -> ()     
+
+    let setStandardVariationToOrderItem standardVariationId orderItemId (ctx:DbContext) =
+        log.Debug(sprintf "setStandardVariationToOrderItem %d %d" standardVariationId orderItemId)
+        let standardVariation = getStandardVariation standardVariationId ctx
+        let standardVariationItems = standardVariation.``public.standardvariationitem by standardvariationid``
+        let _ = standardVariationItems |> Seq.iter (fun x -> copyStandardVariationItemToOrderItem x.Standardvariationitemid orderItemId ctx)
+        ()
+        
+
+
+
 
 
 

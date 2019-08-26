@@ -22,8 +22,9 @@ module Orders =
 
     let removeExistingCommentToOrderItem: IntPath = "/orders/removeExistingCommenToOrderItem/%d"
     let addStandardCommentToOrderItem: IntPath2 = "/orders/addStandardCommentToOrderItem/%d/%d"
+    let addStandardVariationToOrderItem: IntPath2 = "/orders/addStandardVariationToOrderItem/%d/%d"
 
-    let selectStandardCommentsForOrderItem: IntPath = "/orders/selectStandardCommentsForOrderItem/%d"        
+    let selectStandardCommentsAndVariationsForOrderItem: IntPath = "/orders/selectStandardCommentsAndVariationsForOrderItem/%d"        
     let removeAllDiscountOfSubOrder: IntPath = "/orders/removeAllDiscountsOfSubOrder/%d" 
     let removePaymentItemOfSubOrder: IntPath3 = "/orders/removePaymentItemOfSubOrder/%d/%d/%d"
     let removePaymentItemOfOrder: IntPath2 = "/orders/removePaymentItemOfOrder/%d/%d"
@@ -53,8 +54,12 @@ module Orders =
     let deleteOrderItem: IntStrPath = "/orders/deleteOrderItem/%d/%s"
     let removeAllAllergenicFromOrderItem: IntStrPath = "/order/removeAllergenicFromOrderItem/%d/%s"
     let removeAllUnavailableIngredientsFromOrderItem: IntStrPath = "/order/removeAllUnavailablesFromOrderItem/%d/%s"
-    let editOrderItemVariation: IntStrPath = "/orders/editOrderItemVariation/%d/%s"
-    let editOrderItemVariationByIngredientCategory: Int2StrPath = "/orders/editOrderItemVariationWithIngredentCategory/%d/%d/%s"
+    //let editOrderItemVariation: IntStrPath = "/orders/editOrderItemVariation/%d/%s"
+    let editOrderItemVariation: IntPath = "/orders/editOrderItemVariation/%d"
+
+
+    //let editOrderItemVariationByIngredientCategory: Int2StrPath = "/orders/editOrderItemVariationWithIngredentCategory/%d/%d/%s"
+    let editOrderItemVariationByIngredientCategory: IntPath2 = "/orders/editOrderItemVariationWithIngredentCategory/%d/%d"
     let editOrderItemByCategory: Int2StrPath = "/editOrderItmeByCategory/%d/%d/%s"
     let resetVariationsAndEditOrderItemByCategory: Int2StrPath = "/resetVarAndeditOrderItmeByCategory/%d/%d/%s"
     let editDoneOrderitem: IntPath2 = "/editDoneOrderItem/%d/%d"
@@ -85,6 +90,9 @@ module Orders =
     let selectOrderFromWhichMoveOrderItems: IntPath = "/orders/selectOrderFromWhichMoveOrderItems/%d"
     
 module Admin =
+    let standardVariationsForCourse: IntPath = "/admin/standardVariationsForCourse/%d"
+    let removeStandardVariationItem: IntPath = "/admin/removeStandardVariationItem/%d"
+    let manageStandardVariationByIngredientCategory: IntPath2 = "/admin/manageStandardVariation/%d/%d"
     let manageStandardVariation: IntPath = "/admin/manageStandardVariation/%d"
     let removeStandardVariation: IntPath  =  "/admin/removeStandardVariation/%d"
     let manageStandardVariations = "/admin/manageStandardVariations"

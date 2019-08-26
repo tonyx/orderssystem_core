@@ -2,6 +2,25 @@ module OrdersSystem.Form
 
 open Suave.Form
 
+
+// specific ui form options:
+
+
+[<Literal>]
+let YES = "YES"
+[<Literal>]
+let NO = "NO"
+
+[<Literal>]
+let ABSTRACT = "ABSTRACT"
+
+[<Literal>]
+let VISIBLE = "VISIBLE"
+
+//
+//
+
+
 let pattern = passwordRegex @"(\w){6,20}"
 
 let decimalNumberPattern =  matches  @"-{0,1}\d*(\.{0,1}\d*)"
@@ -209,9 +228,10 @@ let ingredientSelector:Form<IngredientSelector> =
     ],[]
     )
 
+
+
 type AddIngredient = {
     IngredientBySelect: decimal
-    // Quantity: decimal
     Quantity: string 
     IngredientByText: string
 } 
@@ -219,7 +239,17 @@ type AddIngredient = {
 let addIngredient:Form<AddIngredient> = 
     Form ([
         DecimalProp ((fun f -> <@f.IngredientBySelect @> ),[])
-        // DecimalProp ((fun f -> <@f.Quantity @> ),[])
+    ],[])
+
+
+type IngredientVariation = {
+    IngredientBySelect: decimal
+    Quantity: string
+}
+
+let ingredientVariation:Form<IngredientVariation> = 
+    Form ([
+        DecimalProp ((fun f -> <@f.IngredientBySelect @> ),[])
     ],[])
 
 
@@ -327,23 +357,6 @@ let courseCategoryEdit : Form<CourseCategory> =
            ],[ ]
    )
 
-type SubCourseCategory = {
-    Name: string
-    Visibility: string
-}
-
-let subCourseCategory : Form<SubCourseCategory> = 
-   Form (
-       [ 
-           TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
-           TextProp ((fun f -> <@ f.Visibility @>), [] )
-           ],[ ]
-   )
-
-
-
-
-
 type InvoiceForm = {
     CompanyId: decimal
     Comment: string
@@ -395,45 +408,69 @@ let searchCourse: Form<SearchCourse> =
     )
 
 type Comment = {
-    Comment: string    
+    Comment: string
 }
 
-let comment:Form<Comment> =
+let comment: Form<Comment> =
     Form (
-        [],[]
+        [
+            TextProp ((fun f -> <@ f.Comment@>),[])
+        ], []
     )
+
+
+
+type SubCourseCategory = {
+    Name: string
+    Visibility: string
+}
+
+let subCourseCategory : Form<SubCourseCategory> =
+   Form (
+       [
+           TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
+           TextProp ((fun f -> <@ f.Visibility @>), [] )
+           ],[ ]
+   )
+
+type CommentForCourse = {
+    CommentForCourse: decimal
+}
+
+
+let commentForCourse:Form<CommentForCourse>  =
+    Form (
+        [DecimalProp ((fun f -> <@ f.CommentForCourse @>),[])],[]
+    )
+
+type VariationForCourse = {
+    VariationForCourse: decimal
+}
+
+
+let variationForCourse:Form<VariationForCourse>  =
+    Form (
+        [DecimalProp ((fun f -> <@ f.VariationForCourse @>),[])],[]
+    )
+
 
 type StandardVariation = {
     Name: string
 }
 
-let standardVariation:Form<StandardVariation> =
+let standardVariation: Form<StandardVariation> =
     Form (
-        [],[]
+        [
+            TextProp ((fun f -> <@f.Name@>),[])
+        ], []
     )
-
-
-
-
-type CommentForCourse = {
-    CommentForCourse: decimal
-
-}
-
-let commentForCourse:Form<CommentForCourse>  = 
-    Form ( 
-        [DecimalProp ((fun f -> <@ f.CommentForCourse @>),[])],[] 
-    )
-
 
 
 type SearchIngredient = {
     Name: string
 }
 
-
 let searchIngredient: Form<SearchIngredient> =
-
     Form (
         [
             TextProp ((fun f -> <@ f.Name @>),[])

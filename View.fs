@@ -23,6 +23,8 @@ let percentageOrValue = [("PERCENTUALE","PERCENTUALE");("VALORE","VALORE")]
 
 let pocoNormaleMolto = [(Globals.AGGIUNGIPOCO,"POCO");(Globals.AGGIUNGINORMALE,"NORMALE");(Globals.AGGIUNGIMOLTO,"MOLTO")]
 
+let allVariationsTypesDropDownList = [ (Globals.SENZA,"SENZA") ;(Globals.POCO,"POCO");(Globals.MOLTO,"MOLTO");(Globals.AGGIUNGIPOCO,"AGGIUNGI POCO");(Globals.AGGIUNGINORMALE,"AGGIUNGI NORMALE");(Globals.AGGIUNGIMOLTO,"AGGIUNGI MOLTO")]
+
 let yesOrNo = [("NO","NO");("YES","YES")]
 
 let visibilityTypeBool = [(true,"VISIBLE");(false,"INVISIBLE")]
@@ -75,23 +77,24 @@ let editTemporaryUser (user:Db.User) (host:string) =
 
 let standardComments (comments:Db.StandardComment list) = 
     [
-        h2 "standard comments"
+        //h2 "standard comments"
+        h2 local.StandardComments
 
         renderForm 
          {
             Form = Form.comment
             Fieldsets =
-             [ { Legend = "commenti standard"
+             [ { Legend = local.StandardComments
                  Fields =
                     [
-                        { Label = "nuovo commento"
+                        { Label = local.NewComment
                           Html = formInput
                             (fun f -> <@ f.Comment @>) []
                         }
                     ]
                 }
              ]
-            SubmitText = "inserisci"
+            SubmitText = local.Insert
          }
         ulAttr ["id","item-list"] [
             for comment in comments ->
@@ -99,7 +102,7 @@ let standardComments (comments:Db.StandardComment list) =
                     
                     Text (comment.Comment)
                     a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
-                      [Text "rimuovi"]
+                      [Text local.Remove]
                 ]
                 
         ]
@@ -107,7 +110,7 @@ let standardComments (comments:Db.StandardComment list) =
     
 
 let editUser (user:Db.User) = [
-    h2 ("Edit user: " + user.Username)
+    h2 (local.EditUser + user.Username)
     renderForm 
        { Form = Form.userEdit
          Fieldsets = 
@@ -217,7 +220,8 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
 
 
 let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.IngredientCategory list) 
-      (ingredientsOfTheCourse:Db.IngredientOfCourse list) (commentsForCourse:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) message = [ 
+      (ingredientsOfTheCourse:Db.IngredientOfCourse list) (commentsForCourse:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) 
+      (standardVariationForCourseDetails:Db.StandardVariationForCourseDetails list)  message = [ 
 
    h2 "Edit"
 
@@ -280,18 +284,31 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
         a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
    ]
 
-   h2 "commenti standard selezionabili:"
+   //h2 "commenti standard selezionabili:"
+   h2 local.SelectableStandardComments
    ulAttr ["id","item-list"] [
         for commentForCourse in commentsForCourse ->
+
             tag "p" [] [
                 Text(commentForCourse.Comment)
-                // a (sprintf Path.Admin.removeStandardCommentForCourse commentForCourse.Commentsforcourseid ) ["class","buttonX"]  [Text ("rimuovi")]
             ]
    ]
 
-   a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text ("modifica commenti standard selezionabili")]
+   //a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text ("modifica commenti standard selezionabili")]
+   a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardComments)]
    br []
 
+   h2 local.SelectableStandardVariations
+   ulAttr ["id","item-list"] [
+        for standardVariationForCourseDetail in standardVariationForCourseDetails ->
+            tag "p" [] [
+                Text(standardVariationForCourseDetail.Standardvariationname)
+            ]
+   ]
+
+   //a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text ("modifica variazioni standard selezionabili")]
+   a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardVariations)]
+   br []
 
    tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
 
@@ -406,9 +423,9 @@ let register (roles: Db.Role list)   msg =
 ]
 
 let notFound = [
-    h2 "Pagina non trovata"
+    h2 local.PageNotFound
     p [] [
-        Text "Could not find the requested resource"
+        Text local.CouldNotFindTheRequestedResource
     ]
     p [] [
         Text "Back to "
@@ -437,11 +454,11 @@ let logon msg = [
           Fieldsets = 
               [ { Legend = "Account Information"
                   Fields = 
-                      [ { Label = "User Name"
+                      [ { Label = local.UserName
                           Html = formInput (fun f -> <@ f.Username @>) [] }
                         { Label = "Password"
                           Html = formInput (fun f -> <@ f.Password @>) [] } ] } ]
-          SubmitText = "Log On" 
+          SubmitText = local.LogOn
         }
 ]
 
@@ -450,14 +467,14 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
     
     let sonCategoriesLink = match (List.length subCategories) with
         | 0 ->  em ""
-        | X -> div [] [h2 "sottocategorie:"; div [] [
+        | X -> div [] [h2 local.SubCategories; div [] [
                  for category in subCategories ->
                     a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)]
                 ]
             ]
         
     let fatherCategoryLink = match fatherCategory with
-        | Some theFather -> div [] [h2 "categoria padre: "; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
+        | Some theFather -> div [] [h2 local.FatherCategory; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
         | None -> em ""
 
     [
@@ -492,7 +509,7 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
             br []
         ]
         div [] [
-            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text "torna all'ordine"]
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
         ]
         script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
         script ["type", "text/javascript"; "src", "/script_options_stripped.js" ] []
@@ -511,7 +528,7 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
                 ]
             ]
     let fatherCategoryLink = match fatherCategory with
-        | Some theFather -> div [] [h2 "categoria padre: "; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
+        | Some theFather -> div [] [h2 local.FatherCategory; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
         | None -> em ""
 
     [
@@ -551,7 +568,7 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
         ]
         br []
         div [] [
-            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text "torna all'ordine"]
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
             br []
         ]
         script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
@@ -586,49 +603,50 @@ let editOrderItemForStrippedUsers (orderItem:Db.OrderItemDetails) (courses:Db.Co
     let idCoursesAndNames = List.map (fun (x:Db.Course)  -> ((decimal)x.Courseid,x.Name)) courses
 
     [
-    Text(local.ChangeTo)
+        Text(local.ChangeTo)
 
-    div [] [
-         for category in categories ->
-             a (sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl)  ["class","buttonX"] [Text (" "+category.Name)]
+        div [] [
+             for category in categories ->
+                 a (sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl)  ["class","buttonX"] [Text (" "+category.Name)]
+        ]
+
+        h2 "Edit"
+        renderForm
+            { Form = Form.strippedOrderItem
+              Fieldsets = 
+                  [ { Legend = "Order item"
+                      Fields = 
+                          [ 
+
+                            { Label = local.CourseBySelection
+                              Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
+
+                            { Label = local.CourseByFreeText
+                              Html = formInput (fun f -> <@ f.CourseByName @>)  []   } 
+
+                            { Label = local.ExitGroup
+                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier ))  } 
+
+                            { Label = local.Quantity
+                              Html = formInput (fun f -> <@ f.Quantity @>) 
+                               [ "Value", (orderItem.Quantity.ToString())] } 
+
+                            { Label = local.Comment
+                              Html = formInput (fun f -> <@ f.Comment @>) 
+                               [ "Value", (orderItem.Comment) ] } 
+
+                              ] } ]
+              SubmitText = local.Update }
+        br []
+        br []
+
+        div [] [
+            a Path.home [] [Text local.MainPage]
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script ["type", "text/javascript"; "src", "/script_options_stripped.js" ] []
     ]
 
-    h2 "Edit"
-    renderForm
-        { Form = Form.strippedOrderItem
-          Fieldsets = 
-              [ { Legend = "Order item"
-                  Fields = 
-                      [ 
-
-                        { Label = local.CourseBySelection
-                          Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
-
-                        { Label = local.CourseByFreeText
-                          Html = formInput (fun f -> <@ f.CourseByName @>)  []   } 
-
-                        { Label = local.ExitGroup
-                          Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier ))  } 
-
-                        { Label = local.Quantity
-                          Html = formInput (fun f -> <@ f.Quantity @>) 
-                           [ "Value", (orderItem.Quantity.ToString())] } 
-
-                        { Label = local.Comment
-                          Html = formInput (fun f -> <@ f.Comment @>) 
-                           [ "Value", (orderItem.Comment) ] } 
-
-                          ] } ]
-          SubmitText = local.Update }
-    br []
-    br []
-
-    div [] [
-        a Path.home [] [Text local.MainPage]
-    ]
-    script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
-    script ["type", "text/javascript"; "src", "/script_options_stripped.js" ] []
-]
 let editOrderItemForOrdinaryUsers (orderItem:Db.OrderItemDetails) 
     (courses:Db.Course list)  (categories:Db.CourseCategories list)  
     (ingredients:Db.IngredientOfCourse list ) (outGroup: int) backUrl viableGroupOutIdsForOrderItem = 
@@ -639,53 +657,53 @@ let editOrderItemForOrdinaryUsers (orderItem:Db.OrderItemDetails)
     let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter pricesForCourses 
 
     [
-    Text(local.ChangeTo)
-    div [] [
-         for category in categories ->
-            a ((sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl))  [] [Text (" "+category.Name)]
+        Text(local.ChangeTo)
+        div [] [
+             for category in categories ->
+                a ((sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl))  [] [Text (" "+category.Name)]
+        ]
+
+        h2 "Edit"
+        renderForm
+            { Form = Form.orderItem
+              Fieldsets = 
+                  [ { Legend = "Order item"
+                      Fields = 
+                          [ 
+
+                            { Label = local.CourseBySelection
+                              Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
+
+                            { Label = local.CourseByFreeText
+                              Html = formInput (fun f -> <@ f.CourseByName @>)  []  } 
+
+                            { Label = local.ExitGroup
+                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier))   } 
+
+                            { Label = local.Quantity
+                              Html = formInput (fun f -> <@ f.Quantity @>) 
+                               [ "Value", (orderItem.Quantity.ToString())] } 
+
+                            { Label = local.Comment
+                              Html = formInput (fun f -> <@ f.Comment @>) 
+                               [ "Value", (orderItem.Comment) ] } 
+
+                            { Label = local.Price
+                              Html = formInput (fun f -> <@ f.Price @>) 
+                               [ "Value", formatDec (orderItem.Price) ] } 
+
+                              ] } ]
+              SubmitText = local.Update }
+        br []
+        br []
+
+        div [] [
+            a Path.home [] [Text local.MainPage]
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
+        script ["type","text/javascript"; "src","/script_options_add_order_item.js?kzXq"] [  ]
     ]
-
-    h2 "Edit"
-    renderForm
-        { Form = Form.orderItem
-          Fieldsets = 
-              [ { Legend = "Order item"
-                  Fields = 
-                      [ 
-
-                        { Label = local.CourseBySelection
-                          Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
-
-                        { Label = local.CourseByFreeText
-                          Html = formInput (fun f -> <@ f.CourseByName @>)  []  } 
-
-                        { Label = local.ExitGroup
-                          Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier))   } 
-
-                        { Label = local.Quantity
-                          Html = formInput (fun f -> <@ f.Quantity @>) 
-                           [ "Value", (orderItem.Quantity.ToString())] } 
-
-                        { Label = local.Comment
-                          Html = formInput (fun f -> <@ f.Comment @>) 
-                           [ "Value", (orderItem.Comment) ] } 
-
-                        { Label = local.Price
-                          Html = formInput (fun f -> <@ f.Price @>) 
-                           [ "Value", formatDec (orderItem.Price) ] } 
-
-                          ] } ]
-          SubmitText = local.Update }
-    br []
-    br []
-
-    div [] [
-        a Path.home [] [Text local.MainPage]
-    ]
-    script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
-    script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
-    script ["type","text/javascript"; "src","/script_options_add_order_item.js?kzXq"] [  ]
-]
 
 
 
@@ -721,34 +739,41 @@ let createCourseCategory msg  = [
 
 let createCourseByCategory message visibleCategories categoryId  = 
     [
-    h2 local.CreateNewCourse
-    div ["id", "register-message"] [
-            Text message
-    ]
+        
+          h2 local.CreateCourse
+          h2 local.CreateNewCourse
 
-    renderForm
-        { Form = Form.course
-          Fieldsets = 
-              [ { Legend = local.Course
-                  Fields = 
-                      [ 
-                        { Label = local.Name
-                          Html = formInput (fun f -> <@ f.Name @>) [] }
-                        { Label = local.Price
-                          Html = formInput (fun f -> <@ f.Price @>) [] }
-                        { Label = local.Description
-                          Html = formInput (fun f -> <@ f.Description @>) [] } 
-                        { Label = local.Visibility
-                          Html = selectInput (fun f -> <@ f.Visibile @>) visibilityType (Some "VISIBLE") } 
-                        { Label = local.Category
-                          Html = selectInput (fun f -> <@ f.CategoryId @>) visibleCategories (Some categoryId) } 
+          div ["id", "register-message"] [
+                  Text message
+          ]
 
-                          ] } ]
-          SubmitText = local.Add }
-    div [] [
-        a Path.home [] [Text local.MainPage]
+
+          renderForm
+           {    Form = Form.course
+                Fieldsets = 
+                    [ { Legend = local.Course
+                        Fields = 
+                            [ 
+                              { Label = local.Name
+                                Html = formInput (fun f -> <@ f.Name @>) [] }
+                              { Label = local.Price
+                                Html = formInput (fun f -> <@ f.Price @>) [] }
+                              { Label = local.Description
+                                Html = formInput (fun f -> <@ f.Description @>) [] } 
+                              { Label = local.Visibility
+                                Html = selectInput (fun f -> <@ f.Visibile @>) visibilityType (Some "VISIBLE") } 
+                              { Label = local.Category
+                                Html = selectInput (fun f -> <@ f.CategoryId @>) visibleCategories (Some categoryId) } 
+  
+                           ] 
+                      } 
+                 ]
+                SubmitText = local.Add 
+           }
+          div [] [
+            a Path.home [] [Text local.MainPage]
+          ]
     ]
-]
 
 let createCourse visibleCategories   = 
     [
@@ -851,7 +876,7 @@ let seeVisibleCoursesOfACategory (category:Db.CourseCategories option) (courses:
                     ]
             a Path.Courses.adminCategories [] [Text local.GoBack]
         ]
-    | None -> [ Text("an error occurred, unexisting category")]
+    | None -> [ Text(local.ErrorUnexistingCategory)]
 
 
 let seeAllCourses (category:Db.CourseCategories option)  (courses: Db.Coursedetails list) =
@@ -880,8 +905,8 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
 
     let fatherLink = match father with 
-        | Some X -> div [] [h2 "categoria padre:"; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]; 
-                              (a (sprintf Path.Courses.mergeSubCourseCategoryToFather category.Value.Categoryid) ["class","buttonX"] [Text("unisci alla categoria padre")])   ]
+        | Some X -> div [] [h2 local.FatherCategory; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]; 
+                            (a (sprintf Path.Courses.mergeSubCourseCategoryToFather category.Value.Categoryid) ["class","buttonX"] [Text(local.MergeWithFatherCategory)])]
         | None ->  em ""
 
 
@@ -895,7 +920,7 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
                 ["class","buttonX"] [Text (local.AddNewItem+theCategory.Name)]]
             
             tag "p" [] [ a (sprintf Path.Courses.makeSubCourseCategory ((int)theCategory.Categoryid)) 
-                ["class","buttonX"] [Text ("aggiugni sottocategoria")]]
+                ["class","buttonX"] [Text (local.AddSubCategory)]]
 
             br []
             div [] [Text(local.CoursesOfType+theCategory.Name+": "+local.ClickToChange)]
@@ -906,7 +931,7 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
                 br []
             ]
 
-            div [] [Text("sottocategorie esistenti:")]
+            div [] [Text(local.ExistingSubCategories)]
 
             ulAttr ["id","item-list"] [
                 for subCategory in subCategories ->
@@ -957,12 +982,12 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
 
 let manageStandardVariations (standardVariations:Db.StandardVariation list) msg =
     [
-        h2 "variazioni standard"
+        h2 local.StandardVariations
         h2(msg)
         renderForm 
             { Form = Form.standardVariation
               Fieldsets =
-                [ { Legend = "variazione standard"
+                [ { Legend = local.StandardVariation
                     Fields = 
                         [
                             {
@@ -972,7 +997,7 @@ let manageStandardVariations (standardVariations:Db.StandardVariation list) msg 
                         ]
                   }
                   ]
-              SubmitText = "aggiungi" 
+              SubmitText = local.Add
             }
 
         h2 "variazioni standard esistenti"
@@ -980,20 +1005,73 @@ let manageStandardVariations (standardVariations:Db.StandardVariation list) msg 
             for variation in standardVariations ->  
                 tag "p" [] [
                     (a (sprintf Path.Admin.manageStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(variation.Name )])
-                    (a (sprintf Path.Admin.removeStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text("rimuovi")])
+                    (a (sprintf Path.Admin.removeStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(local.Remove)])
                     br []
                 ]
         ]
     ]
 
-let manageStandardVariation variation =
+let manageStandardVariation (standardVariation:Db.StandardVariation) (standardVariationItemDetails:Db.StandardVariationItemDetails list) (ingredientCategories:Db.IngredientCategory list) (ingredientsYouCanAdd:Db.Ingredient list) specificCustomAddQuantitiesForIngredients  =
+    let flatListOfIngredientButtons = (ingredientCategories |> List.map (fun (x:Db.IngredientCategory) -> 
+        td [ a ((sprintf Path.Admin.manageStandardVariationByIngredientCategory standardVariation.Standardvariationid 
+                  x.Ingredientcategoryid )) ["class","buttonX"]
+                  [Text (x.Name)]    ])) @ [ td [  a ((sprintf Path.Admin.manageStandardVariation standardVariation.Standardvariationid )) ["class","buttonX"] [Text(local.All)] ]]
+
+    let triplesOfIngredientsList = makePairsOfAlist flatListOfIngredientButtons
+
+    let mappedSpecificCustomAddQuantititesForAddIngredients = 
+        specificCustomAddQuantitiesForIngredients |> Map.toList |>  List.map (fun (x,y:Db.IngredientPrice list) -> (x,y |> List.map (fun (z:Db.IngredientPrice) -> (z.Ingredientpriceid, z.Quantity) )))
+
+    let javascriptFormatOfCustomAddQantititesForAddingredients = Utils.intPairsMapToJavascriptString mappedSpecificCustomAddQuantititesForAddIngredients
+    let ingredientMap = ingredientsYouCanAdd |> List.map (fun (x:Db.Ingredient) -> ((decimal)x.Ingredientid,x.Name))
+
     [
-        h2 "variazione standard:" 
+        h2 (local.StandardVariation + standardVariation.Name)
+        renderForm
+            { 
+              Form = Form.ingredientVariation
+              Fieldsets =
+                [ { Legend = local.ModifyIngredient
+                    Fields = 
+                        [
+                            {
+                                Label = local.Choose
+                                Html = selectInput (fun f -> <@ f.IngredientBySelect @>) 
+                                    ingredientMap (None)
+                            }
+                            {  Label = local.Quantity
+                               Html =  selectInput 
+                                           (fun f -> <@ f.Quantity  @>) 
+                                            allVariationsTypesDropDownList (Some Globals.AGGIUNGINORMALE)
+                            }
+
+                        ]
+                  }
+                  ]
+              SubmitText = local.Add
+            }
+
+        div [] [
+            for detail in standardVariationItemDetails ->
+                div [] [
+                        tag "p" [] [(Text(detail.Ingredientname+" - "));
+                        (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione))));
+                        //(Text("prezzo: "+((string)(detail.Addprice))));
+                        (Text(local.Price + ((string)(detail.Addprice))));
+                        (Text(local.Quantity + ((string)(detail.Quantity))));
+                        ((a (sprintf Path.Admin.removeStandardVariationItem detail.Standardvariationitemid)) ["class","buttonX"] [Text(local.Remove)])
+                       ]
+                ]
+        ]
+
+        script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
+        script ["type","text/javascript"; "src","/autocompleteEditStandardVariationIng.js"] []
+
     ]
 
 let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
     [
-        h2 ("Inserisci sottocategoria di "+courseCategory.Name)
+        h2 (local.AddSubCategoryOf + courseCategory.Name)
 
         div ["id", "register-message"] [
             Text message
@@ -1002,20 +1080,20 @@ let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
         renderForm 
             { Form = Form.subCourseCategory
               Fieldsets =
-                  [ { Legend = "sottocategoria"
+                  [ { Legend = local.SubCategory
                       Fields =
                           [ 
-                            {   Label = "nome"
+                            {   Label = local.Name
                                 Html = formInput (fun f -> <@ f.Name@>) []
                             }
-                            {   Label = "visibilità"
+                            {   Label = local.Visibility
                                 Html = selectInput (fun f -> <@ f.Visibility@>) visibilityType (Some "VISIBILE")
                             }
                           ] 
                     }
 
                   ]
-              SubmitText = "inserisci"   
+              SubmitText = local.Insert
             }
     ]
 
@@ -1025,7 +1103,7 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
 
     let fatherLink = match father with 
-        | Some X -> div [] [h2 "categoria padre:"; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]]
+        | Some X -> div [] [h2 local.FatherCategory; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]]
         | None ->  em ""
     
     match category with 
@@ -1040,7 +1118,7 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
                 ["class","buttonX"] [Text (local.AddNewItem + theCategory.Name)]]
 
             tag "p" [] [ a (sprintf Path.Courses.makeSubCourseCategory ((int)theCategory.Categoryid)) 
-                ["class","buttonX"] [Text ("aggiugi sottocategoria")]]
+                ["class","buttonX"] [Text (local.AddSubCategory)]]
 
             
             br []
@@ -1052,7 +1130,7 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
             ]
 
             
-            div [] [Text("sottocategorie esistenti:")]
+            div [] [Text(local.ExistingSubCategories)]
 
             ulAttr ["id","item-list"] [
                 for subCategory in subCategories ->
@@ -1089,7 +1167,10 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
 
 
 
-let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backUrl:string) =
+//let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backUrl:string) =
+let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backPageNumber:int) =
+
+    let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated ingredient.Ingredientcategoryid backPageNumber)
 
     [
         tag "h1" [] [Text (local.Ingredient + ": " + ingredient.Name)]
@@ -1119,8 +1200,10 @@ let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: 
     ]
 
 
-let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backUrl:string) =
+//let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backUrl:string) =
+let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backPageNumber:int) =
     let allIngredientCategoriesIdName = List.map (fun (x:Db.IngredientCategory) -> ((decimal)x.Ingredientcategoryid, x.Name)) allIngredientCategories
+    let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated ingredient.Ingredientcategoryid backPageNumber)
 
     [
         tag "h1" [] [Text (local.Ingredient + ingredient.Name)]
@@ -1206,7 +1289,8 @@ let ingredientsOfACategory message (category:Db.IngredientCategory) (allIngredie
     ]
 
 
-let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list) backUrl =
+//let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list) backUrl =
+let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list)  =
     [
         tag "h1" [] [Text local.VisibleCategoriesOfIngredients]
         tag "p" [] [ (a (Path.Admin.allIngredientCategories) ["class","buttonX"] [Text(local.SeeAll)])]
@@ -1249,7 +1333,7 @@ let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db
 
 let about =
     [
-        Text("Orders System. Copyright: Antonio Lucca/Luckysoft. Tonyx1@gmail.com. This software is released under the term of the General Public License")
+        Text("Orders System. Copyright: Antonio Lucca/Luckysoft. Tonyx1@gmail.com. This software is released under the terms of the General Public License 3")
     ]
 
 let adminPrinters (printers: Db.Printer list)=
@@ -1297,7 +1381,7 @@ let ingredientCatgoriesAdministrationPage  (allIngredientCategories:Db.Ingredien
                   a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategory.Ingredientcategoryid 0) ["class",buttonClass] 
                     [Text (ingredientCategory.Name + " "+visibility  )]
                   a ((sprintf Path.Admin.switchVisibilityOfIngredientCategory
-                    ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories)))  ["class","buttonX"] [Text("modifica visibilitÃ ")]
+                    ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories)))  ["class","buttonX"] [Text(local.SwitchVisibility)]
             ]
 
         ]
@@ -1550,15 +1634,12 @@ let createRole (user:UserLoggedOnSession) =
           SubmitText = local.CreateRole  } 
 
       ]
-    | _ -> failwith "user is not enabled"
+    | _ -> failwith local.UserIsNotEnabled
 
 
 
 let rolesAdministrationPage  (roles: Db.Role list) (allRolesWithObservers:Db.ObserverRoleStatusCategory list)  (allRolesWithEnablers:Db.EnablerRoleStatusCategory list)  =
-
-
     let roleEnablerObserverCategoriesByCheckBoxes = tag "p" [] [a Path.Admin.roleEnablerObserverCategoriesByCheckBoxes   ["class","buttonX"] [Text local.AccessRights]]
-
     let defaultStateEnabler = tag "p" [] [a Path.Admin.defaultActionableStatesForOrderOwner   ["class","buttonX"] [Text local.DefaultStatesForWaiter]]
     let tempUserDefaultStateEnabler = tag "p" [] [a Path.Admin.tempUserDefaultActionableStates   ["class","buttonX"] [Text local.DefaultStatesForTemporaryUsers]]
 
@@ -1644,12 +1725,12 @@ let allUsersLink user =
 
 let standardCommentsLink user =
     match user.Role with
-    | "admin" ->  tag "p" [] [a (Path.Admin.standardComments) ["class","buttonX"] [Text "commenti standard"]]
+    | "admin" ->  tag "p" [] [a (Path.Admin.standardComments) ["class","buttonX"] [Text local.StandardComments]]
     | _ -> em""
 
 let standardVariationsLink user =
     match user.Role with
-    | "admin" ->  tag "p" [] [a (Path.Admin.manageStandardVariations) ["class","buttonX"] [Text "variazioni standard"]]
+    | "admin" ->  tag "p" [] [a (Path.Admin.manageStandardVariations) ["class","buttonX"] [Text local.StandardVariations]]
     | _ -> em ""
 
 let temporaryUsersLink user =
@@ -1675,8 +1756,8 @@ let deleteObjectsPage user =
 let changePasswordButton =
      tag "p" [] [a (Path.Account.changePassword) ["class","buttonX"] [Text local.ChangePassword]]
 
-let myOrdersButton =
-    tag "p" [] [a Path.Orders.myOrders  ["class","buttonX"] [Text "mie  comande (totali)"]]
+//let myOrdersButton =
+//    tag "p" [] [a Path.Orders.myOrders  ["class","buttonX"] [Text "mie  comande (totali)"]]
 
 let myOrdersButtonSingles =
     tag "p" [] [a Path.Orders.myOrdersSingles  ["class","buttonX"] [Text local.Orders]]
@@ -1725,7 +1806,7 @@ let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
 
 let viewableOrderItems (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,State>) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
     [
-    h2  "order item in progress"  
+    h2  local.OrderItemsInProgress
     tag "p" []  [
        table  [
          for orderItem in orderItems  -> 
@@ -1962,7 +2043,7 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode (backUrl+"#order"+ (orderItem.Orderid |> string ))  ) )) ["",""] [Text local.Ingredients]
+         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["",""] [Text local.Ingredients]
 
         else em ""
 
@@ -2082,15 +2163,25 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
     ]
 
 
-
 let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: Db.IngredientOfCourse list)  
     (existingVariations: Db.VariationDetail list) (ingredientCategories: Db.IngredientCategory list) 
-    (ingredientsYouCanAdd: Db.IngredientDetail list) (specificCustomAddQuantitiesForIngredients: Map<int,Db.IngredientPrice list>)  encodedBackUrl  =
+    (ingredientsYouCanAdd: Db.IngredientDetail list) (specificCustomAddQuantitiesForIngredients: Map<int,Db.IngredientPrice list>) 
+    (standardVariationsForCourseDetails: Db.StandardVariationForCourseDetails list) encodedBackUrlX  =
 
+    let encodedBackUrl = WebUtility.UrlEncode (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
+
+//    let flatListOfIngredientButtons = (ingredientCategories |> List.map (fun (x:Db.IngredientCategory) -> 
+//        td [ a ((sprintf Path.Orders.editOrderItemVariationByIngredientCategory orderItemDetail.Orderitemid 
+//                  x.Ingredientcategoryid )) ["class","buttonX"]
+//                  [Text (x.Name)]    ])) @ [ td [  a ((sprintf Path.Orders.editOrderItemVariation orderItemDetail.Orderitemid (WebUtility.UrlEncode encodedBackUrl))) ["class","buttonX"] [Text(local.All)] ]]
+//
     let flatListOfIngredientButtons = (ingredientCategories |> List.map (fun (x:Db.IngredientCategory) -> 
         td [ a ((sprintf Path.Orders.editOrderItemVariationByIngredientCategory orderItemDetail.Orderitemid 
-                  x.Ingredientcategoryid (WebUtility.HtmlEncode encodedBackUrl))) ["class","buttonX"]
-                  [Text (x.Name)]    ])) @ [ td [  a ((sprintf Path.Orders.editOrderItemVariation orderItemDetail.Orderitemid (WebUtility.UrlEncode encodedBackUrl))) ["class","buttonX"] [Text(local.All)] ]]
+                  x.Ingredientcategoryid )) ["class","buttonX"]
+                  [Text (x.Name)]    ])) @ [ td [  a ((sprintf Path.Orders.editOrderItemVariation orderItemDetail.Orderitemid )) ["class","buttonX"] [Text(local.All)] ]]
+
+
+
 
     let triplesOfIngredientsList = makePairsOfAlist flatListOfIngredientButtons
 
@@ -2138,6 +2229,20 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
              SubmitText = local.Add }
         Text(sprintf  "%s %.2f." local.OriginalPrice orderItemDetail.Originalprice)
         Text(sprintf  "%s %.2f." local.RecalculatedPrice orderItemDetail.Price)
+
+
+        tag "fieldset" [] [
+            tag "legend" [] [Text("variazioni applicabili ")]
+            ulAttr["id","item-list"] [
+                for standardVariation in standardVariationsForCourseDetails ->
+                    
+                    tag "p" [] [
+                        //Text(standardVariation.Standardvariationname)
+                        a (sprintf Path.Orders.addStandardVariationToOrderItem standardVariation.Standardvariationid orderItemDetail.Orderitemid) ["class","buttonX"] [Text(standardVariation.Standardvariationname)]
+                    ]
+            ]
+        ]
+
 
         tag "fieldset" [] [
             tag "legend" [] [Text(local.ExistingVariations)]
@@ -2210,14 +2315,16 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
             ]
         ]
         br []
-        tag "p" [] [a (encodedBackUrl) ["class","buttonX"] [Text("prosegui")]]
+//        tag "p" [] [a (encodedBackUrl) ["class","buttonX"] [Text("prosegui")]]
+        tag "p" [] [a (sprintf Path.Orders.viewOrder orderItemDetail.Orderid) ["class","buttonX"] [Text("prosegui")]]
         script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
         script ["type","text/javascript"; "src","/autocompleteEditOrderItemIng.js"] []
     ]
 
 let  askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) =
     [
-        Text("Sicuro che vuoi annullare l'ordine?")
+        //Text("Sicuro che vuoi annullare l'ordine?")
+        Text(local.AreYouSureVoidOrder+"?")
         br []
         a ((sprintf Path.Orders.confirmVoidOrderFromMyOrders orderId encodedBackUrl)) ["class","buttonX"] [Text local.Yes ]
         br []
@@ -2226,10 +2333,7 @@ let  askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLo
     ]
 
 
-let qrOrder (user:UserLoggedOnSession) (orders: Db.Orderdetail list ) 
-    (categories:Db.CourseCategories list) (orderItemsOfOrders: Map<int,Db.OrderItemDetails list>)  
-    (mapOfStates: Map<int,Db.State>)   (eventualRejectionsOfOrderItems: Map<int,Db.RejectedOrderItems option>)  = 
-
+let qrOrder (user:UserLoggedOnSession) (orders: Db.Orderdetail list ) (categories:Db.CourseCategories list) (orderItemsOfOrders: Map<int,Db.OrderItemDetails list>)  (mapOfStates: Map<int,Db.State>)   (eventualRejectionsOfOrderItems: Map<int,Db.RejectedOrderItems option>)  = 
 
     let ctx = Db.getContext()
     let dbUser = Db.tryFindUserById (user.UserId) ctx
@@ -2246,7 +2350,8 @@ let qrOrder (user:UserLoggedOnSession) (orders: Db.Orderdetail list )
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode Path.Extension.qrUserOrder))) ["",""] [Text local.Ingredients]
+         //a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode Path.Extension.qrUserOrder))) ["",""] [Text local.Ingredients]
+         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid )) ["",""] [Text local.Ingredients]
         else em ""
 
     let goNextStateLink (orderItem:Db.OrderItemDetails) =
@@ -2353,7 +2458,7 @@ let chooseDateForDecrementHistory ingredientId  =
     ]
 
 
-let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.IngredientPriceDetail list) msg=
+let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.IngredientPriceDetail list) msg =
     let ingredientCategoryId = ingredient.Ingredientcategoryid
     [
         h2(local.AddIngredientPrice + ingredient.Name + local.MeasuringSystem + ingredient.Unitmeasure)
@@ -2482,8 +2587,11 @@ let seeIngredientsOfACategoryPaginated (category:Db.IngredientCategory) (allIngr
         (a  Path.Admin.allIngredientCategories [] [Text(local.GoBack)])
     ]
 
+//let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list ) (otherOrders: Db.Orderdetail list)   
+//    (mapOfStates: Map<int,Db.State>) statesEnabledForUser backUrl  initStateId (outGroupsOfOrders: Map<int,Db.OrderOutGroup list>)  =
+
 let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list ) (otherOrders: Db.Orderdetail list)   
-    (mapOfStates: Map<int,Db.State>) statesEnabledForUser backUrl  initStateId (outGroupsOfOrders: Map<int,Db.OrderOutGroup list>)  =
+    (mapOfStates: Map<int,Db.State>) statesEnabledForUser initStateId (outGroupsOfOrders: Map<int,Db.OrderOutGroup list>)  =
 
     let someOrderItemsAreAtInitialState (orderItems:  Db.OrderItemDetails List) = 
         (orderItems |> List.tryFind (fun (x:OrderItemDetails) -> x.Stateid = initStateId)).IsSome
@@ -2493,7 +2601,7 @@ let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode (backUrl+"#order"+ (orderItem.Orderid |> string ))  ) )) ["",""] [Text local.Ingredients]
+         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["",""] [Text local.Ingredients]
 
         else em ""
     [
@@ -2514,59 +2622,114 @@ let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.Co
     let selectableStandardComments = allStandardComments |> List.map (fun x -> ((decimal)x.Standardcommentid,x.Comment))
 
     [
-        h2 ("aggiungi commenti standard per "+course.Name)
+        //h2 ("aggiungi commenti standard per "+course.Name)
+        h2 (local.AddStandardCommentFor+course.Name)
         renderForm 
          {
             Form = Form.commentForCourse
             Fieldsets =
-             [ { Legend = "commenti standard"
+             [ { Legend = local.StandardComments
                  Fields =
                     [
-                        { Label = "aggiungi commento possibile"
+                        { Label = local.AddSelectableComment
                           Html = selectInput (fun f -> <@ f.CommentForCourse @>) selectableStandardComments  (None)
                         }
                     ]
                 }
              ]
-            SubmitText = "inserisci"
+            SubmitText = local.Insert
          }
 
          
-        h2 "commenti esistenti:"
+        h2 local.ExistingComments
         ulAttr ["id","item-list"] [
         for commentForCourse in commentsForCourseDetails ->
              tag "p" [] [
                 Text(commentForCourse.Comment)
-                a (sprintf Path.Admin.removeStandardCommentForCourse commentForCourse.Commentsforcourseid ) ["class","buttonX"]  [Text ("rimuovi")]
+                a (sprintf Path.Admin.removeStandardCommentForCourse commentForCourse.Commentsforcourseid ) ["class","buttonX"]  [Text (local.Remove)]
 
                 ]
         ]
 
-        a (sprintf Path.Courses.editCourse course.Courseid) ["class","buttonX"] [Text ("ritorna")]
+        a (sprintf Path.Courses.editCourse course.Courseid) ["class","buttonX"] [Text (local.GoBack)]
 
     ]
 
-let selectStandardCommentsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) =
+let standardVariationsForCourse (course:Db.Course) (standardVariationsForCourseDetails:Db.StandardVariationForCourseDetails list) (selectableStandardVariations:Db.StandardVariation list) =
+    let selectableStandardVariationsMap = selectableStandardVariations |> List.map (fun x -> (((decimal)x.Standardvariationid), x.Name))
+    [
+        //h2 ("aggiungi variazioni standard per "+course.Name)
+        h2 (local.AddSelectableVariationsFor+course.Name)
+        renderForm 
+         {
+            Form = Form.variationForCourse
+            Fieldsets =
+             [ { Legend = local.SelectableStandardVariations
+                 Fields =
+                    [
+                        { Label = local.AddSelectableVariation
+                          Html = selectInput (fun f -> <@ f.VariationForCourse @>) selectableStandardVariationsMap  (None)
+                        }
+                    ]
+                }
+             ]
+            SubmitText = local.Insert
+         }
+
+        h2 local.ExistingVariations
+        ulAttr ["id","item-list"] [
+        for standardVariationForCourseDetail in standardVariationsForCourseDetails ->
+             tag "p" [] [
+                Text(standardVariationForCourseDetail.Standardvariationname)
+                a (sprintf Path.Admin.removeStandardCommentForCourse standardVariationForCourseDetail.Standardvariationforcourseid ) ["class","buttonX"]  [Text (local.Remove)]
+             ]
+        ]
+
+        a (sprintf Path.Courses.editCourse course.Courseid) ["class","buttonX"] [Text (local.GoBack) ]
+    ]
+
+
+let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) (selectableStandardVariations:Db.StandardVariationForCourseDetails list) =
     let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
     [
-        h2 ("commenti per "+orderItem.Name)
+        //h2 ("commenti per "+orderItem.Name)
+        h2 (local.CommentsFor+orderItem.Name)
     
-        Text("commento esistente: "+orderItem.Comment) 
+        Text(local.ExistingComment + orderItem.Comment) 
 
-        (a (sprintf Path.Orders.removeExistingCommentToOrderItem orderItem.Orderitemid) ["class","buttonX"] [Text("azzera ")])
+        (a (sprintf Path.Orders.removeExistingCommentToOrderItem orderItem.Orderitemid) ["class","buttonX"] [Text(local.Reset)])
         br []
-        h2 ("commenti aggiugibili:")
+        //h2 ("commenti aggiugibili:")
+        h2 (local.SelectableComments)
         ulAttr ["id","item-list"] [
             for standardComment in selectableStandardComments ->
                 tag "p" [] [
                     Text(standardComment.Comment)
-                    a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text("aggiungi")]
+                    a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text(local.Add)]
                 ]
         ]
-        a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("inserisci variazioni")]
+
+
+
+//        br []
+//        h2 ("variazioni standard aggiungibili:")
+//        ulAttr ["id","item-list"] [
+//            for selectableStandardVariation in selectableStandardVariations ->
+//            tag "p" [] [
+//                Text(selectableStandardVariation.Standardvariationname)
+//                a (sprintf Path.Orders.addStandardVariationToOrderItem selectableStandardVariation.Standardvariationid orderItem.Orderitemid) ["class","buttonX"] [Text("aggiungi")]
+//            ]
+//                
+//        ]
+
+
+
+        //a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("inserisci variazioni")]
+        a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
         br []
         br []
-        a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text("torna all'ordine")]
+
+        a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
 
     ]
 
@@ -2585,7 +2748,8 @@ let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list )
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode (backUrl+"#order"+ (orderItem.Orderid |> string ))  ) )) ["",""] [Text local.Ingredients]
+         //a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode (backUrl+"#order"+ (orderItem.Orderid |> string ))  ) )) ["",""] [Text local.Ingredients]
+         a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["",""] [Text local.Ingredients]
 
         else em ""
 
@@ -2676,6 +2840,3 @@ let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list )
         script ["type","text/javascript"; "src","/autorefresh.js"] []
     ]
 
-
-    
-   

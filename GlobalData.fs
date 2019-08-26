@@ -21,20 +21,33 @@ module OrdersSystem.Globals
     [<Literal>]
     let PER_PREZZO_INGREDIENTE = "PER_PREZZO_INGREDIENTE"
 
+    [<Literal>] 
     let SENZA =   "🚫" // \xF0\x9F\x98\x81" // U+1F601 //  "\xF0\x9F\x91\x87"   // "SENZA"
     let ALT_SENZA = "SENZA"
+
+    [<Literal>] 
     let POCO = "✋" // "POCO"
     let ALT_POCO = "POCO"
+
+    [<Literal>] 
     let MOLTO =  "😍" //  "MOLTO"
 
+    [<Literal>] 
     let ALT_MOLTO = "MOLTO"
 
+    [<Literal>] 
     let AGGIUNGIPOCO =  "✋" // "AGGIUNGI POCO" 
+
+    [<Literal>] 
     let UNITARIO = "unitary"
 
     let ALT_AGGIUNGIPOCO = "AGGIUNGI POCO"
+
+    [<Literal>] 
     let AGGIUNGINORMALE = "👍" // "AGGIUNGI NORMALE"
     let ALT_AGGIUNGINORMALE = "AGGIUNGI NORMALE"
+
+    [<Literal>] 
     let AGGIUNGIMOLTO = "😍" // "AGGIUNGI MOLTO"
     let ALT_AGGIUNGIMOLTO = "AGGIUNGI MOLTO"
     let ALERGEN_MARK = "(😤!)"
