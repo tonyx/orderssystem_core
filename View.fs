@@ -1289,7 +1289,6 @@ let ingredientsOfACategory message (category:Db.IngredientCategory) (allIngredie
     ]
 
 
-//let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list) backUrl =
 let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list)  =
     [
         tag "h1" [] [Text local.VisibleCategoriesOfIngredients]
@@ -1310,7 +1309,7 @@ let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db
               SubmitText = local.CreateNewCategory }
         br []
         br []
-        tag "h2" [] [Text local.VisibleExistingCategories] // "categorie visibili esistenti:"
+        tag "h2" [] [Text local.VisibleExistingCategories] 
         ulAttr ["id","item-list"] [
             for ingredientCategory in visibleIngredientCategories  -> 
             let visibility = match ingredientCategory.Visibility with | true -> "VISIBILE" | _ -> "NASCOSTO"
@@ -1662,13 +1661,33 @@ let rolesAdministrationPage  (roles: Db.Role list) (allRolesWithObservers:Db.Obs
                 ]
          ]
     ]
-
-let coursesAdministrationPage  (categories: Db.CourseCategories list) =
+        
+let coursesAdministrationPage  (categories: Db.CourseCategories list) (courses: Db.Coursedetails list) =
      [
          tag "h1" [] [Text local.CourseCategoriesManagement ] 
          br []
 
          tag "p" [] [a Path.Courses.addCategory ["class","buttonX"] [Text (local.AddCategory)]]
+         br []
+          
+         renderForm 
+                { Form = Form.searchCourse
+                  Fieldsets =
+                    [ { Legend = local.SearchCourse 
+                        Fields = 
+                            [
+                                {
+                                    Label = local.Name
+                                    Html = formInput (fun f -> <@ f.Name @>) []
+                                }
+                            ]
+                      }
+                      ]
+                  SubmitText = local.Search
+                }
+         
+         br  []
+
          table
             [
              for category in categories  -> 
@@ -1684,6 +1703,22 @@ let coursesAdministrationPage  (categories: Db.CourseCategories list) =
                       td [a (sprintf Path.Courses.switchCourseCategoryVisibility category.Categoryid) ["class","buttonX"]  [Text(local.Visibility)]]
                       td [a (sprintf Path.Courses.editCategory category.Categoryid) ["class","buttonX"]  [Text(local.Name )]]
                 ]
+                ]
+         ]
+
+         br []
+         table
+            [
+             for course in courses  -> 
+                let buttonStyle =
+                   match course.Visibility with
+                   | true -> "buttonX"
+                   | false -> "buttonY"
+                tr [
+                   td [
+                     td [a (sprintf Path.Courses.editCourse course.Courseid) ["class",buttonStyle] [Text(course.Name)]]
+                     td [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated course.Categoryid 0) ["class","buttonX"] [Text(course.Coursecategoryname)]]
+                   ]
                 ]
          ]
      ]

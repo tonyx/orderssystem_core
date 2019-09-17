@@ -9,4 +9,4 @@ module OrdersSystem.Settings
     //let PrinterSelector = "-P " // unix
     let PrinterSelector = "/D:" // windows
     let Localization = "en" 
-    let EcrFilePath = @"C:\Users\Dany\programmi_tony\orderssystem_core\ecr.txt"
+    let EcrFilePath = @"C:\Users\pc\programmi_tony\orderssystem_core\ecr.txt"

@@ -104,6 +104,7 @@ type StandardVariationItem = DbContext.``public.standardvariationitemEntity``
 type StandardVariationFourCourse = DbContext.``public.standardvariationforcourseEntity``
 type StandardVariationItemDetails = DbContext.``public.standardvariationitemdetailsEntity``
 type StandardVariationForCourseDetails = DbContext.``public.standardvariationforcoursedetailsEntity``
+type OrderItemSubOrderMapping = DbContext.``public.orderitemsubordermappingEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -198,16 +199,39 @@ module Courses =
         if (startIndex < allCourses.Length) then [startIndex .. upperIndex ] |> List.map (fun i -> allCourses.[i]) 
             else []
 
-    let getAllCoursesDetailsByCategoryWithTextNameSearch categoryId (name:string) (ctx: DbContext): Coursedetails list =
-        log.Debug(sprintf "%s %d %s " "getAllCoursesDetailsByCategoryWithTextNameSearch" categoryId name)
-        let allCourses =
-            query {
+
+    let rec getAllSubCategoriesIdsByFatherId fatherId (ctx:DbContext) =
+        log.Debug("getAllSubCategoryMappingByFatherId")
+        let (result: int list) = ctx.Public.Subcategorymapping |> Seq.filter (fun x -> x.Fatherid = fatherId ) |> Seq.map (fun x -> x.Sonid) |> Seq.toList
+        match (List.length result) with
+            | 0 -> result
+            | X -> result @ (List.fold (fun acc y -> (acc @ (getAllSubCategoriesIdsByFatherId y ctx))) [] result )
+
+   
+    let searchCoursesByCategory categoryId (name:string) (ctx:DbContext) = 
+        log.Debug(sprintf "searchCourseByCategory %d\n" categoryId)
+        query {
                     for corseDetails in ctx.Public.Coursedetails2  do
                         where (categoryId = corseDetails.Categoryid && corseDetails.Name.ToLower().Contains(name.ToLower()))
-                        sortBy corseDetails.Courseid
                         select corseDetails
+        } |> Seq.toList
 
-            } |> Seq.toArray
+    let searchCourses  (name:string) (ctx:DbContext) = 
+        log.Debug(sprintf "searchCourses %s\n" name)
+        query {
+                    for corseDetails in ctx.Public.Coursedetails2  do
+                        where (corseDetails.Name.ToLower().Contains(name.ToLower()))
+                        select corseDetails
+        } |> Seq.toList
+
+
+    let getAllCoursesDetailsByCategoryWithTextNameSearch categoryId (name:string) (ctx: DbContext): Coursedetails list =
+        log.Debug(sprintf "%s %d %s " "getAllCoursesDetailsByCategoryWithTextNameSearch" categoryId name)
+        let subCategoriesIds = getAllSubCategoriesIdsByFatherId categoryId ctx
+        let catCourses = searchCoursesByCategory categoryId name ctx 
+        let subCourses = subCategoriesIds |> List.map (fun x -> searchCoursesByCategory x name ctx) |> List.fold (@) []
+        let allCourses = catCourses @ subCourses |> List.toArray
+
         let startIndex = 0 
         let upperIndex = min (allCourses.Length - 1) (startIndex + Globals.NUM_DB_ITEMS_IN_A_PAGE - 1)
         if (startIndex < allCourses.Length) then [startIndex .. upperIndex ] |> List.map (fun i -> allCourses.[i]) 
@@ -250,12 +274,6 @@ module Courses =
     let getAllFatherSonCategoriesDetails (ctx:DbContext) =
         ctx.Public.Fathersoncategoriesdetails |> Seq.toList
    
-    let rec getAllSubCategoriesIdsByFatherId fatherId (ctx:DbContext) =
-        log.Debug("getAllSubCategoryMappingByFatherId")
-        let (result: int list) = ctx.Public.Subcategorymapping |> Seq.filter (fun x -> x.Fatherid = fatherId ) |> Seq.map (fun x -> x.Sonid) |> Seq.toList
-        match (List.length result) with
-            | 0 -> result
-            | X -> result @ (List.fold (fun acc y -> (acc @ (getAllSubCategoriesIdsByFatherId y ctx))) [] result )
 
     let getAllSubCategoryMapping (ctx:DbContext) =
         ctx.Public.Subcategorymapping |> Seq.toList
@@ -493,6 +511,7 @@ module Orders =
                 where (orderItem.Orderid = orderId && orderItem.Stateid <> initState.Stateid)
                 select orderItem
         } |> Seq.toList
+
     let getVoidedOrders (ctx:DbContext) =
         ctx.Public.Orders |> Seq.filter (fun (x:Order) -> x.Voided) |> Seq.toList
 
@@ -646,6 +665,16 @@ module Orders =
             select item
         } |> Seq.toList
 
+    let getPaymentItemDetailsOfSubOrderRef subOrderId (ctx:DbContext) =
+        log.Debug(sprintf "%s %d" "getPaymentItemDetailsOfSubOrder" subOrderId)
+        query { 
+            for item in ctx.Public.Paymentitemdetails do
+            where (item.Suborderid = subOrderId)
+            select item
+        } |> Seq.toList
+
+
+
     let getPaymentItemsOfOrder orderId (ctx:DbContext) =
         log.Debug(sprintf "%s %d" "getPaymentItmsOfubOrder" orderId)
         let order = getOrder orderId ctx
@@ -682,11 +711,16 @@ module Orders =
         order.``public.suborder by orderid`` |> Seq.toList |> List.sortBy (fun (x:SubOrder) -> x.Creationtime)
 
     let getOrderItemsOfSubOrder subOrderId (ctx: DbContext) =
+        log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
         query {
             for orderItem in ctx.Public.Orderitems do
             where (orderItem.Suborderid = subOrderId && orderItem.Isinsasuborder = true)
             select orderItem
         } |> Seq.toList
+
+    
+    
+
 
     let getDoneOrderDetails (ctx: DbContext) : Orderdetail list =
         log.Debug("getDoneOrderDetails")
@@ -732,7 +766,7 @@ module Orders =
         // let _ = connectedPaymentItems |> Seq.iter (fun (x:PaymentItem) -> x.Delete())
 
         let orderItems = getOrderItemsOfSubOrder subOrderId ctx
-        let _ = orderItems |> List.iter(fun (x:OrderItem) -> x.Suborderid <- 0; x.Isinsasuborder <- false) // null
+        let _ = orderItems |> List.iter(fun (x:OrderItem) -> x.Suborderid <- 0; x.SetColumn("suborderid",null); x.Isinsasuborder <- false) // null
         ctx.SubmitUpdates()
         subOrder.Delete()
         ctx.SubmitUpdates()
@@ -741,6 +775,14 @@ module Orders =
         log.Debug(sprintf "%s %d" "isSubOrderPayed" subOrderId)
         let subOrder = getSubOrder subOrderId ctx
         subOrder.Payed
+
+    let orderItemIsInASubOrder orderItemId (ctx: DbContext) =
+        log.Debug(sprintf "orderItemIsInASubOrder %d" orderItemId)
+        query {
+            for orderitemsubordermapping in ctx.Public.Orderitemsubordermapping do
+                where (orderitemsubordermapping.Orderitemid = orderItemId)
+                select orderitemsubordermapping
+        } |> Seq.length > 0 
 
 
 
@@ -1356,6 +1398,7 @@ let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
             | N when (N > 1) -> differentSubOrdersIds |>   Set.iter (fun x -> Orders.forceDeleteSubOrder x ctx); None
             | 1 -> Set.toList differentSubOrdersIds |> List.tryHead
             | _ -> None
+
 let createOrderItemByCourseName courseName orderid quantity comment price (groupOut: decimal) (ctx: DbContext) =
     log.Debug(sprintf "%s %s %d %.2f" "createOrderItemByCourseName" courseName orderid  price  )
     let course = match Courses.tryFindCourseByName courseName ctx with
@@ -1410,8 +1453,31 @@ let bindOrderItemToSubOrder orderItemId subOrderId (ctx: DbContext) =
     orderItem.Isinsasuborder <- true
     orderItem.Suborderid <- subOrderId
     let subOrder = Orders.getSubOrder subOrderId ctx
+    // subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
+    ctx.SubmitUpdates()
+
+
+// tonyx
+
+let addOrderItemPriceToSubOrder orderItemId subOrderId  (ctx:DbContext) =
+    let orderItem = getTheOrderItemById orderItemId ctx
+    let subOrder = Orders.getSubOrder subOrderId ctx
     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
     ctx.SubmitUpdates()
+
+
+let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
+    log.Debug(sprintf "bindOrderItemToSubOrderRef %d %d" orderItemId subOrderId)
+    let orderItem = getTheOrderItemById orderItemId ctx
+     
+    let subOrder = Orders.getSubOrder subOrderId ctx
+    let _ = ctx.Public.Orderitemsubordermapping.``Create(orderitemid, suborderid)``(orderItemId,subOrderId)
+    subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
+    ctx.SubmitUpdates()
+    
+
+
+
 
 let updatePasswordOfUser idUser passwordHash (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "updatePasswordOfUser" idUser)
@@ -2911,8 +2977,10 @@ let addPaymentItemToOrder orderId tenderId amount (ctx:DbContext) =
 
 let getIngredientsByCategory categoryId (ctx:DbContext) =
     ctx.Public.Ingredient |> Seq.filter (fun (x:Ingredient) -> x.Ingredientcategoryid = categoryId) |> Seq.toList
+
 let getVariationByIngredient ingredientId (ctx: DbContext) =
     ctx.Public.Variations |> Seq.filter (fun (x:Variation) -> x.Ingredientid = ingredientId)
+
 let getIngredientCourseByIngredient ingredientId (ctx: DbContext) =
     ctx.Public.Ingredientcourse |> Seq.filter (fun (x:IngredientCourse) -> x.Ingredientid = ingredientId)
 
@@ -3311,9 +3379,6 @@ module StandardVariations =
         let _ = standardVariationItems |> Seq.iter (fun x -> copyStandardVariationItemToOrderItem x.Standardvariationitemid orderItemId ctx)
         ()
         
-
-
-
 
 
 
