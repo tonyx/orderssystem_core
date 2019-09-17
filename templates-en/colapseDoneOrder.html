@@ -50,10 +50,18 @@
                             <td style="background-color:{{item.csscolor}}; color:black;">
                                 <div>
                                     <a href = "/orders/editDoneOrderItemFromSubSplitting/{{item.orderitemid}}/{{item.categoryid}}/{{item.orderid}}">
-                                    qtà: {{item.quantity}}  {{item.name}} €: {{item.price}} . Total: {{item.totalprice}}
+                                    qtà: {{item.quantity}}  {{item.name}} 
+			    </td>
+                            <td style="background-color:{{item.csscolor}}; color:black;">
+				    
+				    €: {{item.price}} 
+			    </td>
+                            <td style="background-color:{{item.csscolor}}; color:black;">
+				    Total: {{item.totalprice}}
                                     </a>
-                                    <a href = "/orders/editOrderItemVariation/{{item.orderitemid}}/{{model.encodedbackurl}}">ingredient</a>
-                                    <input type ="checkbox"    name  = "orderitem{{item.orderitemid}}"></label>
+			    </td>
+                            <td style="background-color:{{item.csscolor}}; color:black;">
+				    <input type ="checkbox"  {% if item.isinasuborder %} disabled="disabled" {% endif %}       name = "orderitem{{item.orderitemid}}"></label>
                                     {% if item.isinasuborder != true and item.quantity > 1 %} 
                                     <a href ="/orders/splitOrderItemInToUnitaryOrderItems/{{item.orderitemid}}" class="buttonX"> expand  /a>
                                     {% endif %}
