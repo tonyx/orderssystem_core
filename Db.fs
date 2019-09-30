@@ -111,6 +111,7 @@ let getContext() = Sql.GetDataContext(TPConnectionString)
 
 module Courses = 
     let tryFindCourseByName name (ctx: DbContext) =
+        log.Debug(sprintf "tryFindCourseByName %s" name)
         query {
             for course in ctx.Public.Courses do
                 where (course.Name =% (name+"%"))
@@ -122,6 +123,7 @@ module Courses =
         ctx.Public.Courses |> Seq.find (fun (x:Course) -> x.Courseid = courseId)
 
     let tryGetCourseByName courseName (ctx:DbContext) =
+        log.Debug(sprintf "%s tryGetCourseByName " courseName)
         query {
             for course in ctx.Public.Courses do 
             where (course.Name = courseName)
@@ -168,6 +170,7 @@ module Courses =
         } |> Seq.toList
 
     let getAllCoursesDetailsByCatgory categoryId (ctx: DbContext) : Coursedetails list =
+        log.Debug(sprintf "getAllCoursesDetailsByCatgory %d" categoryId)
         query {
             for corseDetails in ctx.Public.Coursedetails2  do
                 where (categoryId = corseDetails.Categoryid)
@@ -179,9 +182,11 @@ module Courses =
         ctx.Public.Courses |> Seq.length
 
     let getNumberOfAllCoursesOfACategory categoryId (ctx: DbContext) =
+        log.Debug(sprintf "getNumberOfAllCoursesOfACatgory %d" categoryId)
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> (x.Categoryid = categoryId)) |> Seq.length
 
     let getNumberOfVisibleCoursesOfACatgory categoryId (ctx: DbContext) =
+        log.Debug(sprintf "getNumberOfVisibleCoursesOfACategory %d" categoryId)
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> (x.Categoryid = categoryId ) && x.Visibility) |>  Seq.length
 
     let getAllCoursesDetailsByCategoryAndPage categoryId pageId (ctx: DbContext): Coursedetails list =
@@ -201,7 +206,7 @@ module Courses =
 
 
     let rec getAllSubCategoriesIdsByFatherId fatherId (ctx:DbContext) =
-        log.Debug("getAllSubCategoryMappingByFatherId")
+        log.Debug(sprintf "getAllSubCategoryMappingByFatherId %d" fatherId)
         let (result: int list) = ctx.Public.Subcategorymapping |> Seq.filter (fun x -> x.Fatherid = fatherId ) |> Seq.map (fun x -> x.Sonid) |> Seq.toList
         match (List.length result) with
             | 0 -> result
@@ -272,13 +277,16 @@ module Courses =
         } |> Seq.toList
 
     let getAllFatherSonCategoriesDetails (ctx:DbContext) =
+        log.Debug("getAllFatherSonCategoriesDetails")
         ctx.Public.Fathersoncategoriesdetails |> Seq.toList
    
 
     let getAllSubCategoryMapping (ctx:DbContext) =
+        log.Debug("getAllSubCategoryMapping")
         ctx.Public.Subcategorymapping |> Seq.toList
     
     let getAllCoursesByCourseCategory id (ctx: DbContext) =
+        log.Debug(sprintf "getAllCoursesByCourseCategory %d" id)
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
 
 
@@ -307,18 +315,21 @@ module Courses =
         log.Debug(sprintf "getAllFatherSonCategoriesDetailsBySonId %d" sonId)
         query {
             for entry in ctx.Public.Fathersoncategoriesdetails do
-                where (entry.Sonid = sonId)
+                where  (entry.Sonid = sonId)
                 select entry
         } |> Seq.tryHead
 
 
     let moveCoursesCategories oriCategoryId targetCategoryId (ctx: DbContext) =
+        log.Debug(sprintf "moveCoursesCategories %d %d" oriCategoryId targetCategoryId)
+
         let courses = getAllCoursesByCourseCategory oriCategoryId ctx
         let _ = courses |> List.iter (fun (x:Course) -> x.Categoryid <- targetCategoryId)
         ctx.SubmitUpdates()
 
 
     let getAllRootCategories (ctx:DbContext) =
+        log.Debug("getAllRootCategories")
         let allSons = getAllSubCategoryMapping ctx |> List.map (fun x -> x.Sonid)
         ctx.Public.Coursecategories |> Seq.filter  (fun x -> (not (List.contains x.Categoryid allSons))) |> Seq.toList |> List.sortBy (fun x -> x.Name)
 
@@ -454,18 +465,22 @@ module States =
         ctx.Public.States |> Seq.find (fun (x:State) -> x.Statusname = stateName)
 
     let getAllStates (ctx:DbContext) =
+        log.Debug("getAllStates")
         ctx.Public.States |> Seq.toList
 
     let getOrdinaryStates (ctx: DbContext): State list =
+        log.Debug("getOrdinaryStates")
         ctx.Public.States |>  Seq.filter (fun (x:State) -> (not x.Isexceptional) ) |> Seq.toList
 
     let getFinalState (ctx:DbContext) =
         ctx.Public.States |> Seq.find( fun (x:State) -> x.Isfinal)
+
     let getState id (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "getState" id)
         ctx.Public.States |> Seq.find (fun (x:State) -> x.Stateid = id)
 
     let tryGetStateByName statName (ctx:DbContext) =
+        log.Debug(sprintf "tryGetStateByName %s" statName)
         ctx.Public.States |> Seq.tryFind (fun (x:State)-> x.Statusname = statName) 
 
     let getInitState (ctx:DbContext): State =
@@ -513,6 +528,7 @@ module Orders =
         } |> Seq.toList
 
     let getVoidedOrders (ctx:DbContext) =
+        log.Debug("getVoidedOrders")
         ctx.Public.Orders |> Seq.filter (fun (x:Order) -> x.Voided) |> Seq.toList
 
     let getPayableOrderDetails (ctx: DbContext) =
@@ -624,13 +640,15 @@ module Orders =
         } |> Seq.toList
 
     let getSubOrdersOfOrder (order:Order) (ctx: DbContext) =
+        log.Debug(sprintf "getSubOrdersOfOrder %d " order.Orderid)
         order.``public.suborder by orderid`` |> Seq.toList
 
     let getOrder orderId (ctx: DbContext)  =
         log.Debug(sprintf "%s %d" "getorder" orderId)
         ctx.Public.Orders |> Seq.find (fun (x: Order) -> x.Orderid = orderId)     
 
-    let createSubOrderOfOrderItem orderId (ctx: DbContext) =
+    let createSubOrderOfOrder orderId (ctx: DbContext) =
+        log.Debug(sprintf "createSubOrderOfOrder %d " orderId)
         let subOrder = ctx.Public.Suborder.``Create(creationtime, orderid, payed, subtotal)``(System.DateTime.Now,orderId,false,System.Decimal(0))
         ctx.SubmitUpdates()
         subOrder
@@ -766,7 +784,7 @@ module Orders =
         // let _ = connectedPaymentItems |> Seq.iter (fun (x:PaymentItem) -> x.Delete())
 
         let orderItems = getOrderItemsOfSubOrder subOrderId ctx
-        let _ = orderItems |> List.iter(fun (x:OrderItem) -> x.Suborderid <- 0; x.SetColumn("suborderid",null); x.Isinsasuborder <- false) // null
+        let _ = orderItems |> List.iter(fun (x:OrderItem) ->  x.SetColumn("suborderid",null); x.Isinsasuborder <- false) // null
         ctx.SubmitUpdates()
         subOrder.Delete()
         ctx.SubmitUpdates()
@@ -816,17 +834,21 @@ module Users =
 
 
 let getAllStandardComments (ctx:DbContext) =    
+    log.Debug("getAllStandardComments")
     ctx.Public.Standardcomments |> Seq.sortBy (fun x -> x.Comment) |> Seq.toList
 
 
 let getStandardComment id (ctx:DbContext) =
+    log.Debug(sprintf "getStandardcomment %d" id)
     ctx.Public.Standardcomments |> Seq.find (fun x -> x.Standardcommentid = id)
 
 let addStandardComment comment (ctx:DbContext) =
+    log.Debug(sprintf "addStandardComment %s" comment)
     ctx.Public.Standardcomments.``Create(comment)``(comment)
     ctx.SubmitUpdates()
 
 let getCommentsForCourseDetails courseId (ctx:DbContext) =
+    log.Debug(sprintf "getCommentsForCourseDetails %d" courseId)
     query {
         for commentForCourse in ctx.Public.Commentsforcoursedetails do
         where (commentForCourse.Courseid = courseId )
@@ -835,19 +857,23 @@ let getCommentsForCourseDetails courseId (ctx:DbContext) =
 
 
 let removeStandardComment id (ctx:DbContext) =
-     let comment = getStandardComment id ctx
-     comment.Delete()
-     ctx.SubmitUpdates()
+    log.Debug(sprintf "removeStandardComment %d" id) 
+    let comment = getStandardComment id ctx
+    comment.Delete()
+    ctx.SubmitUpdates()
 
 let addCommentForCourse courseId commentId (ctx:DbContext) =
+    log.Debug(sprintf "addcommentForCourse courseid:%d commentId:%d" courseId commentId)
     ctx.Public.Commentsforcourse.Create(commentId, courseId) 
     ctx.SubmitUpdates()
     
 
 let getStandardCommentForCourse commentsForCourseId (ctx:DbContext) =
+    log.Debug(sprintf "getStandardCommentForCourse %d" commentsForCourseId)
     ctx.Public.Commentsforcourse |> Seq.find (fun x -> x.Commentsforcourseid = commentsForCourseId)
 
 let getAllStandardCommentsForCourse courseId (ctx:DbContext) =
+    log.Debug(sprintf "getallStandardcommentsForCourse %d" courseId)
     query {
         for standardCommentForCourse in ctx.Public.Commentsforcourse do
             where (standardCommentForCourse.Courseid = courseId)
@@ -856,6 +882,7 @@ let getAllStandardCommentsForCourse courseId (ctx:DbContext) =
     
 
 let removeStandardCommentForCourse id (ctx:DbContext) =
+    log.Debug(sprintf "removeStandardCommentForCourse %d" id)
     let commentForCourse = getStandardCommentForCourse id ctx
     commentForCourse.Delete()
     ctx.SubmitUpdates()
@@ -865,6 +892,7 @@ let getAllStandardVariations (ctx:DbContext) =
     ctx.Public.Standardvariations |> Seq.sortBy (fun x -> x.Name) |>  Seq.toList
 
 let createStandardVariation name (ctx:DbContext) =
+    log.Debug(sprintf "createStandardVariation %s" name)
     let variation = ctx.Public.Standardvariations.``Create(name)``(name)
     ctx.SubmitUpdates()
     variation
@@ -873,6 +901,7 @@ let createStandardVariation name (ctx:DbContext) =
 
 
 let tryGetStandardVariationByName name (ctx:DbContext) =
+    log.Debug(sprintf "tryGetStandardVariationByName %s" name)
     query {
         for item in ctx.Public.Standardvariations do
         where (item.Name = name)
@@ -880,11 +909,11 @@ let tryGetStandardVariationByName name (ctx:DbContext) =
     } |> Seq.tryHead
 
 let getStandardVariation id (ctx:DbContext) =
-    log.Debug("getStandardVariation")
+    log.Debug(sprintf "getStandardVariation %d" id)
     ctx.Public.Standardvariations |> Seq.find (fun x -> x.Standardvariationid = id)
 
 let removeStandardVariation id (ctx:DbContext) =
-    log.Debug("removeStandardVariation")
+    log.Debug(sprintf "removeStandardVariation %d" id)
     let variation = getStandardVariation id ctx
     variation.Delete()
     ctx.SubmitUpdates()
@@ -893,6 +922,7 @@ let removeStandardVariation id (ctx:DbContext) =
 
 
 let tryGetIngredientByName ingredientName (ctx:DbContext) =
+    log.Debug(sprintf "tryGetIngredientByName %s" ingredientName)
     query {
         for course in ctx.Public.Ingredient do 
         where (course.Name = ingredientName)
@@ -955,6 +985,7 @@ let getActionableDefaultStatesForWaiter (ctx: DbContext) =
     ctx.Public.Defaultactionablestates |> Seq.toList
 
 let getDefaultActionableStatesForTempUser (ctx: DbContext) =
+    log.Debug("getDefaultAcionableStateForTempUser")
     ctx.Public.TempUserDefaultActionableStates |> Seq.toList
 
 let getActionableStatesForSpecificWaiter id (ctx:DbContext) =
@@ -978,6 +1009,7 @@ let getIngredientsOfACourse courseId (ctx:DbContext) =
     ctx.Public.Ingredientofcourses |> Seq.filter (fun (x:IngredientOfCourse) -> x.Courseid = courseId) |> Seq.toList
 
 let getVisibleIngredientCategories (ctx: DbContext) =
+    log.Debug("getVisibleIngredientCategories")
     ctx.Public.Ingredientcategory |> Seq.sortBy (fun (x:IngredientCategory) -> x.Name) |>  
         Seq.filter (fun (x:IngredientCategory) -> x.Visibility) |> Seq.toList
 
@@ -1028,7 +1060,7 @@ let getPrinter printerId (ctx:DbContext) =
     ctx.Public.Printers |> Seq.find (fun (x:Printer) -> x.Printerid = printerId) 
 
 let getPrinterForCourseCategoryAssociation printerId (ctx:DbContext) =
-    log.Debug("getPrinterForCourseCategoryAssociation")
+    log.Debug(sprintf "getPrinterForCourseCategoryAssociation %d" printerId)
     query {
         for printerAssociation in ctx.Public.Printerforcategory do
         where (printerAssociation.Printerid = printerId)
@@ -1057,12 +1089,15 @@ let safeRemovePrinter printerId (ctx:DbContext) =
 
 
 let getAllCustomers (ctx:DbContext) =
+    log.Debug("getAllCustomers")
     ctx.Public.Customerdata |> Seq.toList
 
 let tryFindCustomerDataByName name (ctx:DbContext) =
+    log.Debug(sprintf "tryFindCustomerDataByName %s" name)
     ctx.Public.Customerdata |> Seq.tryFind (fun (x:CustomerData) -> x.Name = name)
     
 let tryFindCustomerDataByData data (ctx:DbContext) =
+    log.Debug(sprintf "tryFindCustomerDataByData %s" data)
     ctx.Public.Customerdata |> Seq.tryFind (fun (x:CustomerData) -> x.Data = data)
 
 let tryUpdateCustomerData customerId companyName customerData (ctx:DbContext) =
@@ -1089,21 +1124,21 @@ let createCustmomerData (companyName: string) (customerData:string) (ctx:DbConte
     newCustomerData
 
 let createInvoiceBySubOrderIdWithNoCustomerId subOrderId invoiceText invoiceNumber (ctx:DbContext) =
-    log.Debug("createInvoiceBySubOrderIdWithNoCustomerId")
+    log.Debug(sprintf "createInvoiceBySubOrderIdWithNoCustomerId subOrderId: %d invoiceNumber %d" subOrderId invoiceNumber)
     let now = System.DateTime.Now
     let newInvoice = ctx.Public.Invoices.``Create(data, date, invoicenumber)``(invoiceText,now,invoiceNumber)
     let _ = newInvoice.Suborderid <- subOrderId
     ctx.SubmitUpdates()
 
 let createInvoiceByOrderIdWithNoCustomerId orderId invoiceText invoiceNumber (ctx:DbContext) =
-    log.Debug("createInvoiceWithNoCustomerId")
+    log.Debug(sprintf "createInvoiceWithNoCustomerId orderId: %d invoiceNumber: %d" invoiceNumber)
     let now = System.DateTime.Now
     let newInvoice = ctx.Public.Invoices.``Create(data, date, invoicenumber)``(invoiceText,now,invoiceNumber)
     let _ = newInvoice.Orderid <- orderId
     ctx.SubmitUpdates()
 
 let createInvoiceBysubOrderIdAndCustomerId subOrderId customerDataId invoiceText invoiceNumber (ctx:DbContext) =
-    log.Debug("createInvoiceWithCustomerId")
+    log.Debug(sprintf "createInvoiceWithCustomerId subOrderId: %d invoiceNumber: %d" subOrderId invoiceNumber)
     let now = System.DateTime.Now
     let newInvoice = ctx.Public.Invoices.``Create(data, date, invoicenumber)``(invoiceText,now,invoiceNumber)
     let _ = newInvoice.Customerdataid <- customerDataId
@@ -1230,21 +1265,25 @@ let tryRemoveRoleStateCategoryEnablerByStateName (roleId:int) stateName (categor
     | _ -> ()
 
 let tryRemoveRoleStateCategoryObserverByStateName (roleId:int) stateName (categoryId:int) (ctx: DbContext) =
+    log.Debug(sprintf "tryRemoveRoleStateCategoryObserverByStateName roleId: %d categoryId %d" roleId categoryId)
     let state = States.tryGetStateByName stateName ctx
     match state with 
     | Some theState -> tryRemoveRoleStateCategoryObserverMap roleId theState.Stateid categoryId ctx
     | _ -> ()
 
 let tryCreateRoleStateCategoryEnablerByStateName (roleId:int) stateName (categoryId: int) (ctx:DbContext) =
+    log.Debug(sprintf "tryCreateroleStateCategoryEnlerByStateName %d" roleId)
     let state = States.tryGetStateByName stateName ctx
     match state with
     | Some theState -> tryCreateRoleStateCategoryEnablerMap roleId theState.Stateid categoryId ctx
     | _ -> None
 
 let getRoles (ctx: DbContext): Role list =
+    log.Debug("getRoles")
     ctx.Public.Roles |> Seq.toList
 
 let createRole (name:string) (comment:string option) (ctx: DbContext) =
+    log.Debug(sprintf "createRole %s " name)
     let role = ctx.Public.Roles.Create(name)
     let theComment = match comment with Some X -> X | _ -> ""
     role.Comment<- theComment
@@ -1281,17 +1320,20 @@ let getAllIngredientsOfACategoryByPageWithNameSearch idCategory pageNumber (name
         else []
                 
 let tableIsAlreadyInAnOpenOrder table (ctx:DbContext) =
+    log.Debug(sprintf "tableIsAlreadyInAnOpenOrder %s" table)
     let ordersOfTable =  query {
         for order in ctx.Public.Orders do
             where (order.Archived = false && order.Voided = false && order.Table = table)
             select order
     }
     Seq.length ordersOfTable >0
+
 let createOrderByUser table person (userid:int) (ctx:DbContext) =
     log.Debug(sprintf "%s %s %d" "createOrderByUser" table userid)
     let order = ctx.Public.Orders.Create(false,person,System.DateTime.Now,table,userid)
     ctx.SubmitUpdates()
     order
+
 let latestInvoiceNumber (ctx:DbContext) =
     log.Debug("latestInvoiceNumber")
     query {
@@ -1342,6 +1384,7 @@ let getCategoryOforderItem id (ctx:DbContext) =
 
 
 let getFirstNAvailableOutGroupIdentifier  n (ctx:DbContext) =
+    log.Debug(sprintf "getFirstNAvailableOuGroupIdentifier %d" n)
     let usedIdentifiers = ctx.Public.Orderoutgroup |> Seq.map (fun x -> x.Groupidentifier) |> Seq.toList
     let firstNAvailbales = [for i in 1 .. 42 do if (not (List.contains i usedIdentifiers) ) then yield i] |> List.take n
     firstNAvailbales
@@ -1362,6 +1405,7 @@ let createOrGetOutGroup orderId groupOut (ctx:DbContext) =
 
 
 let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbContext) =
+    log.Debug(sprintf "createPlainUnitaryOrderItemById orderId:%d courseId:%d" orderId courseId)
     let finalState = States.getFinalState ctx
     let course = Courses.getCourse courseId ctx
     let price = course.Price
@@ -1380,18 +1424,20 @@ let getTheOrderItemById orderItemId (ctx: DbContext) =
     ctx.Public.Orderitems |> Seq.find(fun (x:OrderItem) -> x.Orderitemid = orderItemId )
 
 let removeExistingCommentToOrderItem id ctx =
-    log.Debug("removeExistingCommentToOrderItem")
+    log.Debug(sprintf "removeExistingCommentToOrderItem %d" id)
     let orderItem  = getTheOrderItemById id ctx
     let _ = orderItem.Comment <- ""
     ctx.SubmitUpdates()
 
 let addCommentToOrderItemById (comment: string) orderItemId ctx =
+    log.Debug(sprintf " addCommentToOrderItemById %s  %d " comment orderItemId)
     let orderItem = getTheOrderItemById orderItemId ctx
     let oldComment = orderItem.Comment
     let _ = orderItem.Comment <- (oldComment+", "+comment)
     ctx.SubmitUpdates()
 
 let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
+    log.Debug("unBoundDifferentSubGroupOfOrderItemsByIs" )
     let orderItemsInSuborders = ids |> List.map (fun x -> getTheOrderItemById x ctx) |> List.filter (fun x -> x.Isinsasuborder)
     let differentSubOrdersIds = orderItemsInSuborders |> List.map (fun x -> x.Suborderid) |> Set.ofList
     match (Set.count differentSubOrdersIds) with
@@ -1460,6 +1506,7 @@ let bindOrderItemToSubOrder orderItemId subOrderId (ctx: DbContext) =
 // tonyx
 
 let addOrderItemPriceToSubOrder orderItemId subOrderId  (ctx:DbContext) =
+    log.Debug(sprintf "addOrderItemPriceToSubOrder orderItemId: %d subOrderId: %d")
     let orderItem = getTheOrderItemById orderItemId ctx
     let subOrder = Orders.getSubOrder subOrderId ctx
     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
@@ -1475,8 +1522,6 @@ let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
     ctx.SubmitUpdates()
     
-
-
 
 
 let updatePasswordOfUser idUser passwordHash (ctx:DbContext) =
@@ -1752,6 +1797,7 @@ let newUser canChangeThePrices canSeeAllOrders username password roleid canManag
     user
 
 let tryFindIngredientCatgoryByName name (ctx: DbContext): IngredientCategory option =
+    log.Debug(sprintf "tryFindIngredientCategoryByName %s" name)
     query {
         for ingredientCategory in  ctx.Public.Ingredientcategory do
             where (ingredientCategory.Name = name)
@@ -1759,15 +1805,18 @@ let tryFindIngredientCatgoryByName name (ctx: DbContext): IngredientCategory opt
     } |> Seq.tryHead
 
 let getIngredientCatgory id  (ctx: DbContext) =
+    log.Debug(sprintf "setIngredientCategory %d" id)
     ctx.Public.Ingredientcategory |> Seq.find (fun (x:IngredientCategory) -> x.Ingredientcategoryid = id) 
 
 let newCategory (categoryName:string) (visibility:bool) (abstractness:bool) (ctx: DbContext) =
+    log.Debug("newCategory")
     let category = ctx.Public.Coursecategories.``Create(abstract, name)``(abstractness,categoryName)
     category.Visibile<-visibility
     ctx.SubmitUpdates()
     category
 
 let createSubCategoryMapping fatherId sonId (ctx:DbContext) =
+    log.Debug("createSubCategoryMapping")
     let newMapping =  ctx.Public.Subcategorymapping.``Create(fatherid, sonid)``(fatherId,sonId)
     ctx.SubmitUpdates()
 
@@ -1782,10 +1831,12 @@ let createSubCourseCategory name visibility fatherId  (ctx:DbContext) =
 
 
 let getCourseCategoryFather categoryId (ctx:DbContext) =
+    log.Debug(sprintf "getCourseCategoryFather %d" categoryId)
     let fatherMapping = ctx.Public.Subcategorymapping |> Seq.find (fun x -> x.Sonid = categoryId)
     Courses.getCourseCategory fatherMapping.Fatherid ctx
 
 let unlinkSonFromFather sonId fatherId (ctx:DbContext) =
+    log.Debug(sprintf "unlinkSonFromFather %d %d" sonId fatherId)
     let fatherSonLinkQuery = query {
         for fatherSonLink in ctx.Public.Subcategorymapping do
             where (fatherSonLink.Fatherid = fatherId && fatherSonLink.Sonid = sonId)
@@ -1813,7 +1864,7 @@ let unlinkSonFromFather sonId fatherId (ctx:DbContext) =
 
 
 let getAllSubCourseCategories categoryId (ctx:DbContext): FatherSonCategoriesDetails list =
-    log.Debug("getAllSubCategories")
+    log.Debug(sprintf "getAllSubCategories %d" categoryId )
     query {
         for fatherson in ctx.Public.Fathersoncategoriesdetails do
             where (fatherson.Fatherid = categoryId)
@@ -1821,7 +1872,7 @@ let getAllSubCourseCategories categoryId (ctx:DbContext): FatherSonCategoriesDet
     } |> Seq.toList
 
 let getVisibleSubCourseCategories categoryId (ctx:DbContext): FatherSonCategoriesDetails list =
-    log.Debug("getAllSubCategories")
+    log.Debug(sprintf "getAllSubCategories %d " categoryId)
     query {
         for fatherson in ctx.Public.Fathersoncategoriesdetails do
             where (fatherson.Fatherid = categoryId && fatherson.Sonvisible = true)
@@ -1831,6 +1882,7 @@ let getVisibleSubCourseCategories categoryId (ctx:DbContext): FatherSonCategorie
 
 
 let tryGetCourseCategoryFather categoryId (ctx: DbContext): (CourseCategories option) = 
+    log.Debug(sprintf "tryGetCourseCategoryFather %d" categoryId)
     let fatherMapping = ctx.Public.Subcategorymapping |> Seq.tryFind (fun x -> x.Sonid = categoryId) 
     match fatherMapping with 
         | Some X -> Some (Courses.getCourseCategory X.Fatherid ctx)
@@ -1854,7 +1906,7 @@ let tryFindUsersViewByName username (ctx : DbContext) : UsersView option =
    } |> Seq.tryHead
 
 let getAllOrderItemsOfOrder orderId (ctx:DbContext) =
-    log.Debug("getAllOrderItemsOfOrder")
+    log.Debug(sprintf "getAllOrderItemsOfOrder %d" orderId )
     query {
         for orderItem in ctx.Public.Orderitems do
             where (orderItem.Orderid = orderId)
@@ -1862,11 +1914,11 @@ let getAllOrderItemsOfOrder orderId (ctx:DbContext) =
     } |> Seq.toList
 
 let getIngredientPrice id (ctx:DbContext) =
-    log.Debug("getIngredientprice")
+    log.Debug(sprintf "getIngredientprice %d" id)
     ctx.Public.Ingredientprice |> Seq.find (fun (x:IngredientPrice) -> x.Ingredientpriceid = id )
 
 let getAllOrderItemDetailsOfOrder orderId (ctx:DbContext) =
-    log.Debug("getAllOrderItemDetailsOfOrder")
+    log.Debug(sprintf "getAllOrderItemDetailsOfOrder %d" orderId)
     query {
         for orderItem in ctx.Public.Orderitemdetails do
             where (orderItem.Orderid = orderId)
@@ -1884,7 +1936,7 @@ let userEnabledByRoletoChangeStateOfThisOrderItem (orderItemDetail:OrderItemDeta
         } |> Seq.isEmpty |> not
 
 let tryGetNextState (stateId: int) (ctx:DbContext): State option =
-    log.Debug("tryGetNextState")
+    log.Debug(sprintf "tryGetNextState %d" stateId)
     let currentState = ctx.Public.States |> Seq.filter (fun (x:State) -> x.Stateid = stateId) |> Seq.tryHead
     match currentState with
     | Some theCurrentState -> 
@@ -1893,12 +1945,12 @@ let tryGetNextState (stateId: int) (ctx:DbContext): State option =
     | None -> None
 
 let getNextStateId (stateId: int) (ctx:DbContext) =
-    log.Debug("getNextStateId")
+    log.Debug(sprintf "getNextStateId %d " stateId)
     let currentState = ctx.Public.States |> Seq.find (fun (x:State) -> x.Stateid = stateId)
     currentState.Nextstateid
 
 let tryGetOrderItemById(orderItemId: int) (ctx: DbContext) =
-    log.Debug("tryGetOrderItemById")
+    log.Debug(sprintf "tryGetOrderItemById %d" orderItemId)
     query {
         for orderItem  in ctx.Public.Orderitems do
             where (orderItem.Orderitemid = orderItemId)
@@ -1906,7 +1958,7 @@ let tryGetOrderItemById(orderItemId: int) (ctx: DbContext) =
     } |> Seq.tryHead
 
 let tryGetOrderItemDetailById orderItemId (ctx: DbContext) =
-    log.Debug("tryGetOrderItemDetailById")
+    log.Debug(sprintf "tryGetOrderItemDetailById %d" orderItemId)
     query {
         for orderItemDetail  in ctx.Public.Orderitemdetails do
             where (orderItemDetail.Orderitemid = orderItemId)
@@ -2010,14 +2062,14 @@ let createIngredientDecrementsOfOrderItem (orderItem: OrderItem) preparatorId (c
     ()
 
 let createCloneOfRejectedOrderitem newOrderItemId (rejectedOrderItemToBeCloned: RejectedOrderItems) (ctx:DbContext)=
-    log.Debug("createCloneOfRejectedOrderitem")
+    log.Debug(sprintf "createCloneOfRejectedOrderitem %d" newOrderItemId)
     let cloneOfRejectedOrderItem = ctx.Public.Rejectedorderitems.``Create(cause, courseid, orderitemid, timeofrejection)`` (rejectedOrderItemToBeCloned.Cause,rejectedOrderItemToBeCloned.Courseid,newOrderItemId,rejectedOrderItemToBeCloned.Timeofrejection)
     ctx.SubmitUpdates()
     cloneOfRejectedOrderItem
 
 let createClonedIngredientDecrement newOrderItemId (splitFactor: decimal) (ingredientDecrementToBeCloned: IngredientDecrement ) (ctx:DbContext) =
     log.Debug(sprintf "%s %d " "createClonedIngredientDecrement" newOrderItemId)
-    let splittedPresumedNormalQuantity = ingredientDecrementToBeCloned.Presumednormalquantity / splitFactor
+    let splittedPresumedNormalQuantity = ingredientDecrementToBeCloned.Presumednormalquantity / splitFactor 
     let splittedRecordedQuantity = ingredientDecrementToBeCloned.Recordedquantity / splitFactor
 
     let clonedDecrement = ctx.Public.Ingredientdecrement.``Create(ingredientid, orderitemid, preparatorid, registrationtime, typeofdecrement)`` (ingredientDecrementToBeCloned.Ingredientid,newOrderItemId,ingredientDecrementToBeCloned.Preparatorid,ingredientDecrementToBeCloned.Registrationtime,ingredientDecrementToBeCloned.Typeofdecrement)
@@ -2046,7 +2098,7 @@ let getDecrementViewById (ingredientDecrementId:int) (ctx:DbContext) =
     ctx.Public.Ingredientdecrementview |> Seq.filter (fun ingredientDecrementView -> ingredientDecrementView.Ingredientdecrementid = ingredientDecrementId) |> Seq.head
 
 let getIngredientById id (ctx:DbContext) =
-    log.Debug("getIngredientById")
+    log.Debug(sprintf "getIngredientById %d" id)
     ctx.Public.Ingredient |> Seq.filter (fun (x:Ingredient) -> x.Ingredientid = id) |> Seq.head
 
 let decrementIngredinetAvailabilityByAmount (ingredientDecrement:IngredientDecrement) (ctx:DbContext) =
@@ -2055,13 +2107,13 @@ let decrementIngredinetAvailabilityByAmount (ingredientDecrement:IngredientDecre
     ingredient.Availablequantity <- ingredient.Availablequantity - ingredientDecrement.Presumednormalquantity
 
 let decreaseIngredientAvailabilityByAmount ingredientId amount (ctx:DbContext) =
-    log.Debug("decreaseIngredientAvailabilityByAmount")
+    log.Debug(sprintf "decreaseIngredientAvailabilityByAmount %d" ingredientId)
     let ingredient = getIngredientById ingredientId ctx
     ingredient.Availablequantity <- ingredient.Availablequantity - amount
     ctx.SubmitUpdates()
 
 let getIngredientDecrementsByOrderItemId orderItemId  (ctx:DbContext) =
-    log.Debug("getIngredientDecrementsByOrderItemId")
+    log.Debug(sprintf "getIngredientDecrementsByOrderItemId %d" orderItemId)
     ctx.Public.Ingredientdecrement |> Seq.filter (fun (x:IngredientDecrement) -> x.Orderitemid = orderItemId)
 
 let updateAvailableQuantityOfIngredientsOfOrderItems (orderItem:OrderItem) (ctx:DbContext) =
@@ -2080,6 +2132,7 @@ let isInitialState stateId (ctx:DbContext) =
     state.Isinitial
 
 let isOrderItemHavingOrdersItemAtInitialState orderId (ctx:DbContext) =
+    log.Debug(sprintf "isOrderitemHavingOrdersItemAtInitialState %d" orderId)
     let orderItemAtInitialState = getAllOrderItemDetailsOfOrder orderId ctx |> 
         List.tryFind (fun (x:OrderItemDetails) -> isInitialState x.Stateid ctx)
     match orderItemAtInitialState with
@@ -2166,7 +2219,7 @@ let getOrderItemDetailsOfAParticularStateAndAParticularCategory (stateId,categor
     } |> Seq.toList
 
 let tryGetObserverRoleCategorySatateMappingById  (id:int)  (ctx: DbContext) =
-    log.Debug("tryGetObserverRoleCategorySatateMappingById")
+    log.Debug(sprintf "tryGetObserverRoleCategorySatateMappingById %d" id)
     query {
         for observer in ctx.Public.Observers do
         where (observer.Observersid = id)
@@ -2174,7 +2227,7 @@ let tryGetObserverRoleCategorySatateMappingById  (id:int)  (ctx: DbContext) =
     } |> Seq.tryHead
 
 let tryGetEnablerRoleCategorySatateMappingById  (id:int)  (ctx: DbContext) =
-    log.Debug("tryGetEnablerRoleCategorySatateMappingById")
+    log.Debug(sprintf "tryGetEnablerRoleCategorySatateMappingById %d" id)
     query {
         for enabler in ctx.Public.Enablers do
         where (enabler.Enablersid = id)
@@ -2182,14 +2235,14 @@ let tryGetEnablerRoleCategorySatateMappingById  (id:int)  (ctx: DbContext) =
     } |> Seq.tryHead
 
 let deleteEnabler id (ctx: DbContext) =
-    log.Debug("deleteEnabler")
+    log.Debug(sprintf "deleteEnabler %d" id)
     let enabler = tryGetEnablerRoleCategorySatateMappingById id ctx
     match enabler with
     | Some theEnabler -> theEnabler.Delete(); ctx.SubmitUpdates()
     | None -> ()
 
 let isUserAdmin userId (ctx: DbContext) =
-    log.Debug(sprintf "%s %dd " "isUserAdmin" userId)
+    log.Debug(sprintf "%s %d " "isUserAdmin" userId)
     let isAdmin = query {
             for user in ctx.Public.Users do
                 join role in ctx.Public.Roles on (user.Role = role.Roleid)
@@ -2198,7 +2251,7 @@ let isUserAdmin userId (ctx: DbContext) =
     not (Seq.isEmpty isAdmin)
 
 let tryGetEnablerByRoleAndCategory roleid categoryid (ctx: DbContext) =
-    log.Debug("tryGetEnablerByRoleAndCategory")
+    log.Debug(sprintf "tryGetEnablerByRoleAndCategory %d %d"  roleid categoryid)
     query {
         for enabler in ctx.Public.Enablers do
         where (enabler.Categoryid = categoryid && enabler.Roleid = roleid) 
@@ -2206,7 +2259,7 @@ let tryGetEnablerByRoleAndCategory roleid categoryid (ctx: DbContext) =
     } |> Seq.tryHead
 
 let deleteObserver id (ctx: DbContext) =
-    log.Debug("deleteObserver")
+    log.Debug(sprintf "deleteObserver %d" id)
     let observer = tryGetObserverRoleCategorySatateMappingById id ctx
 
     match observer with
@@ -2220,7 +2273,7 @@ let deleteObserver id (ctx: DbContext) =
     | None ->  log.Error("error unknown id for observer")
 
 let archiveOrder id (ctx:DbContext) =
-    log.Debug("archiveOrder")
+    log.Debug(sprintf "archiveOrder %d" id)
     let order = tryGetOrderById id ctx
     match order with
     | Some theOrder -> 
@@ -2231,7 +2284,7 @@ let archiveOrder id (ctx:DbContext) =
     | _ -> ()
 
 let isUserEnabledToSeeWholeOrders userId (ctx:DbContext) =
-    log.Debug("isUserEnabledToSeeWholeOrders")
+    log.Debug(sprintf "isUserEnabledToSeeWholeOrders %d" userId)
     let user = getUserById userId  ctx
     user.Canmanageallorders
 
@@ -2244,11 +2297,11 @@ let getLatestLogOrder (ctx: DbContext) =
     } |> Seq.tryHead
 
 let getNumbeOfAllIngredientsOfACategory idCategory (ctx: DbContext) =
-    log.Debug("getNumbeOfAllIngredientsOfACategory")
+    log.Debug(sprintf "getNumbeOfAllIngredientsOfACategory %d" idCategory)
     ctx.Public.Ingredient |> Seq.filter (fun (x:Ingredient) -> (x.Ingredientcategoryid = idCategory)) |> Seq.length
 
 let getLatestVoidedOrder userId (ctx:DbContext) =
-    log.Debug("getLatestVoidedOrder")
+    log.Debug(sprintf "getLatestVoidedOrder %d" userId)
     query {
         for voidedOrder in ctx.Public.Voidedorderslogbuffer do
         where (voidedOrder.Userid = userId)
@@ -2257,14 +2310,14 @@ let getLatestVoidedOrder userId (ctx:DbContext) =
     } |> Seq.tryHead
 
 let newIngredientCatgory name visibility description (ctx: DbContext) = 
-    log.Debug("newIngredientCatgory")
+    log.Debug(sprintf "newIngredientCatgory %s" name)
     let newIngredient = ctx.Public.Ingredientcategory.Create(name, visibility)
     newIngredient.Description <- description
     ctx.SubmitUpdates()
 
 let newIngredient name visibility description idCategory allergene 
     (availableQuantity:decimal) updateAvailabilityFlag checkAvailabilityFlag unitOfMeasure (ctx: DbContext) =
-    log.Debug("newIngredient")
+    log.Debug(sprintf "newIngredient %s" name )
 
     let newIngredient = ctx.Public.Ingredient.``Create(allergen, checkavailabilityflag, ingredientcategoryid, name, unitmeasure, updateavailabilityflag, visibility)`` (allergene,checkAvailabilityFlag, idCategory,name,unitOfMeasure, updateAvailabilityFlag,visibility)
 
@@ -2275,7 +2328,7 @@ let newIngredient name visibility description idCategory allergene
     newIngredient
 
 let tryGetIngredientCategory id (ctx: DbContext) =
-    log.Debug("tryGetIngredientCategory")
+    log.Debug(sprintf "tryGetIngredientCategory %d" id)
     query {
         for category in ctx.Public.Ingredientcategory do
         where (category.Ingredientcategoryid = id)
@@ -2283,7 +2336,7 @@ let tryGetIngredientCategory id (ctx: DbContext) =
     } |> Seq.tryHead
 
 let tryGetIngredientById id (ctx: DbContext) =
-    log.Debug("tryGetIngredientById")
+    log.Debug(sprintf "tryGetIngredientById %d" id)
     query {
         for ingredient in ctx.Public.Ingredient do
         where (ingredient.Ingredientid = id)
@@ -2291,7 +2344,7 @@ let tryGetIngredientById id (ctx: DbContext) =
     } |> Seq.tryHead
 
 let findIngredientByName name (ctx:DbContext) =
-    log.Debug("findIngredientByName")
+    log.Debug(sprintf "findIngredientByName %s" name)
     query {
         for ingredient in ctx.Public.Ingredient do
         where (ingredient.Name = name)
@@ -2299,7 +2352,7 @@ let findIngredientByName name (ctx:DbContext) =
     } |> Seq.tryHead
 
 let addIngredientToCourseByName ingredientName courseId quantity ctx =
-    log.Debug("addIngredientToCourseByName")
+    log.Debug(sprintf "addIngredientToCourseByName %s %d" ingredientName courseId)
     let ingredient = findIngredientByName ingredientName ctx
     match ingredient with
     | Some theIngredient -> 
@@ -2307,7 +2360,7 @@ let addIngredientToCourseByName ingredientName courseId quantity ctx =
     | None -> ()
 
 let getIngredientPrices ingredientId (ctx:DbContext) =
-    log.Debug("getIngredientPrices")
+    log.Debug(sprintf "getIngredientPrices %d" ingredientId)
     query {
         for item in ctx.Public.Ingredientprice do
         where (item.Ingredientid=ingredientId)
@@ -2315,7 +2368,7 @@ let getIngredientPrices ingredientId (ctx:DbContext) =
     } |> Seq.toList
 
 let tryFindIngridientPriceOfQuantity ingredientId quantity (ctx: DbContext) =
-    log.Debug("getIngredientPrices")
+    log.Debug(sprintf "getIngredientPrices %d" ingredientId)
     ctx.Public.Ingredientprice |> Seq.tryFind (fun (x:IngredientPrice) -> (x.Ingredientid = ingredientId && x.Quantity = quantity))
 
 let makeAllIngredientPriceNoDefaultAdd (ctx:DbContext) =
@@ -2334,12 +2387,12 @@ let makeAllIngredientPriceOfIngredientNoDefaultAdd ingredientId (ctx:DbContext) 
     ctx.SubmitUpdates()
 
 let makeAllIngredientPriceOfIngredientNoDefaultSubtract ingredientId (ctx:DbContext) =
-    log.Debug("makeAllIngredientPriceNoDefaultSubtract")
+    log.Debug(sprintf "makeAllIngredientPriceNoDefaultSubtract %d" ingredientId)
     let _ = ctx.Public.Ingredientprice |> Seq.filter(fun (x:IngredientPrice) -> x.Ingredientid = ingredientId ) |> Seq.iter (fun (x:IngredientPrice) -> x.Isdefaultsubtract <- false) 
     ctx.SubmitUpdates()
 
 let tryCreateIngredientPrice addPrice ingredientId isDefaultAdd isDefaultSubtract quantity subtractPrice (ctx: DbContext) =
-    log.Debug("tryCreateIngredientPrice")
+    log.Debug(sprintf "tryCreateIngredientPrice %d " ingredientId)
     let alreadyExisting = tryFindIngridientPriceOfQuantity ingredientId quantity ctx
     match alreadyExisting with
     | Some x -> None
@@ -2351,7 +2404,7 @@ let tryCreateIngredientPrice addPrice ingredientId isDefaultAdd isDefaultSubtrac
         Some newIngredientPrice
 
 let deleteIngredientPrice (ingredientPrice:IngredientPrice) (ctx:DbContext) =
-    log.Debug("deleteIngredientPrice")
+    log.Debug(sprintf "deleteIngredientPrice %d" ingredientPrice.Ingredientpriceid)
     ingredientPrice.Delete()
     ctx.SubmitUpdates()
 
@@ -2361,14 +2414,14 @@ let safeDeleteVariation (variation:Variation) (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let safeDeleteIngredientPrice (ingredientPrice:IngredientPrice) (ctx:DbContext) =
-    log.Debug("safeDeleteIngredientPrice")
+    log.Debug(sprintf "safeDeleteIngredientPrice %d" ingredientPrice.Ingredientpriceid)
     let variations = ingredientPrice.``public.variations by ingredientpriceid``
     let _  = variations |> Seq.iter  (fun (x:Variation) -> safeDeleteVariation x ctx)
     ingredientPrice.Delete()
     ctx.SubmitUpdates()
 
 let getIngredientsOfCourse courseId (ctx:DbContext) =
-    log.Debug("getIngredientsOfCourse")
+    log.Debug(sprintf "getIngredientsOfCourse %d" courseId)
     query {
         for ingredientOfCourse in ctx.Public.Ingredientofcourses do
         where (ingredientOfCourse.Courseid = courseId)
@@ -2376,7 +2429,7 @@ let getIngredientsOfCourse courseId (ctx:DbContext) =
     } |> Seq.toList
 
 let tryGetUnitaryIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId (ctx:DbContext) =
-    log.Debug("tryGetUnitaryIngredientVariationOfOrderItemAndIngredient")
+    log.Debug(sprintf "tryGetUnitaryIngredientVariationOfOrderItemAndIngredient %d %d" orderItemId ingredientId)
     query {
         for variation in ctx.Public.Variations do
         join ingredient in ctx.Public.Ingredient on (variation.Ingredientid = ingredient.Ingredientid)
@@ -2385,7 +2438,7 @@ let tryGetUnitaryIngredientVariationOfOrderItemAndIngredient orderItemId ingredi
     } |> Seq.tryHead
 
 let tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId (ctx:DbContext) =
-    log.Debug("tryGetIngredientVariationOfOrderItemAndIngredient")
+    log.Debug(sprintf "tryGetIngredientVariationOfOrderItemAndIngredient %d %d" orderItemId ingredientId)
     query {
         for variation in ctx.Public.Variations do
         where (variation.Ingredientid = ingredientId && variation.Orderitemid = orderItemId)
@@ -2393,7 +2446,7 @@ let tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId (
     } |> Seq.tryHead
 
 let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
-    log.Debug("addIncreaseIngredientVariation")
+    log.Debug(sprintf "addIncreaseIngredientVariation %d %d" orderItemId ingredientId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
     let _ = match existingVariation with
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
@@ -2403,7 +2456,7 @@ let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
-    log.Debug("addAddNormalIngredientVariation")
+    log.Debug(sprintf "addAddNormalIngredientVariation %d %d" orderItemId ingredientId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
     let _ = match existingVariation with   
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
@@ -2412,7 +2465,7 @@ let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) =
-    log.Debug("addAddIngredientVariation")
+    log.Debug(sprintf "addAddIngredientVariation %d %d %s" orderItemId ingredientId quantity)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
     let _ = match existingVariation with   
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
@@ -2422,7 +2475,7 @@ let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) 
     ctx.SubmitUpdates()
 
 let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredientPriceId (ctx:DbContext) =
-    log.Debug("addIngredientVariationByIngredientPriceRef")
+    log.Debug(sprintf "addIngredientVariationByIngredientPriceRef %d" orderItemId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
     let _ = match existingVariation with   
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
@@ -2432,7 +2485,7 @@ let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredie
     ctx.SubmitUpdates()
 
 let getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault ingredientId (ctx:DbContext) =
-    log.Debug("getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault")
+    log.Debug(sprintf "getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault %d" ingredientId)
     let defaultAdd =
         query {
                 for priceVariation in ctx.Public.Ingredientprice do
@@ -2444,7 +2497,7 @@ let getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault ingredientId 
     | None -> (decimal)0.0
     
 let getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault ingredientId (ctx:DbContext) =
-    log.Debug("getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault")
+    log.Debug(sprintf "getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault %d" ingredientId)
     let defaultSubtract =
         query {
                 for priceVariation in ctx.Public.Ingredientprice do
@@ -2456,7 +2509,7 @@ let getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault ingredie
     | None -> (decimal)0.0
 
 let addAddIngredientVariationByName orderItemid ingredientName (quantity:string) (ctx:DbContext) =
-    log.Debug("addAddIngredientVariationByName")
+    log.Debug(sprintf "addAddIngredientVariationByName %d" orderItemid) 
     let  mut: float ref = ref 1.1
     let ingredient = ctx.Public.Ingredient |> Seq.tryFind  (fun (x:Ingredient) -> x.Name = ingredientName)
     match ingredient with
@@ -2487,7 +2540,7 @@ let addDiminuishIngredientVariattion orderItemId ingredientId (ctx:DbContext) =
     let _ = ctx.Public.Variations.Create(ingredientId,orderItemId,Globals.POCO)
     ctx.SubmitUpdates()
 let tryGetVariation variationId (ctx: DbContext) =
-    log.Debug("tryGetVariation")
+    log.Debug(sprintf "tryGetVariation %d" variationId)
     ctx.Public.Variations |> Seq.tryFind (fun (x:Variation) -> x.Variationsid = variationId)
 let removeIngredientVariation variationId (ctx: DbContext) =
     log.Debug("removeIngredientVariation")
@@ -2497,14 +2550,14 @@ let removeIngredientVariation variationId (ctx: DbContext) =
     | None -> ()
 
 let removeEventuallyExistingVariation orderItemId ingredientId (ctx:DbContext) =
-    log.Debug("removeEventuallyExistingVariation")
+    log.Debug(sprintf "removeEventuallyExistingVariation %d" orderItemId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
     match existingVariation with 
     | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
     | None -> ()
 
 let addAddUnitaryIngredientVariationOrIncreaseByOne orderItemId ingredientId (ctx:DbContext) =
-     log.Debug("addAddUnitaryIngredientVariationOrIncreaseByOne")
+     log.Debug(sprintf "addAddUnitaryIngredientVariationOrIncreaseByOne %d %d" orderItemId ingredientId)
      let existingUnitaryVariation = tryGetUnitaryIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx 
      match existingUnitaryVariation with
      | Some theExistingUnitaryVariation -> 
@@ -2517,6 +2570,8 @@ let addAddUnitaryIngredientVariationOrIncreaseByOne orderItemId ingredientId (ct
         ctx.SubmitUpdates()
             
 let getIdsOfNonUnitaryOrderItemsOfOrder orderId (ctx:DbContext) = 
+    log.Debug(sprintf "getIdsOfNonUnitaryOrderItemsOfOrder %d" orderId)
+    
     query {
         for orderItem in ctx.Public.Orderitems do
             where (orderItem.Orderid = orderId && orderItem.Quantity>1)
@@ -2524,7 +2579,7 @@ let getIdsOfNonUnitaryOrderItemsOfOrder orderId (ctx:DbContext) =
     } 
 
 let addRemoveUnitaryIngredientVariationOrDecreaseByOne orderItemId ingredientId (ctx:DbContext) =
-     log.Debug("addRemoveUnitaryIngredientVariationOrDecreaseByOne")
+     log.Debug(sprintf "addRemoveUnitaryIngredientVariationOrDecreaseByOne %d %d" orderItemId ingredientId )
      let existingUnitaryVariation = tryGetUnitaryIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx 
      match existingUnitaryVariation with 
      | Some theExistingUnitaryVariation  -> 
@@ -2537,7 +2592,7 @@ let addRemoveUnitaryIngredientVariationOrDecreaseByOne orderItemId ingredientId 
         ctx.SubmitUpdates()
 
 let addRemoveIngredientVariation orderItemId ingrdientId (ctx:DbContext) =
-    log.Debug("addRemoveIngredientVariation")
+    log.Debug(sprintf "addRemoveIngredientVariation %d %d" orderItemId ingrdientId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingrdientId ctx
     let _ = match existingVariation with
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
@@ -2546,7 +2601,7 @@ let addRemoveIngredientVariation orderItemId ingrdientId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let getAllVariationDetailsOfOrderItem orderItemId (ctx:DbContext) =
-    log.Debug("getAllVariationDetailsOfOrderItem")
+    log.Debug(sprintf "getAllVariationDetailsOfOrderItem %d" orderItemId)
     query {
         for variationDetail in ctx.Public.Variationdetails do
         where (variationDetail.Orderitemid = orderItemId ) 
@@ -2554,23 +2609,27 @@ let getAllVariationDetailsOfOrderItem orderItemId (ctx:DbContext) =
     } |> Seq.toList
 
 let getAllVariationsOfOrderItem orderItemId   (ctx:DbContext): Variation list =
-    query {
+    log.Debug(sprintf "getAllVariationsOfOrderItem %d" orderItemId)
+    query { 
         for variation in ctx.Public.Variations do
         where (variation.Orderitemid = orderItemId)
         select variation
     } |> Seq.toList
 
 let SetOrderItemAsRejected orderItemId (ctx:DbContext) =
+    log.Debug(sprintf "SetOrderItemAsRejected %d" orderItemId)
     let orderItem = getTheOrderItemById orderItemId ctx
     orderItem.Hasbeenrejected <- true;
     ctx.SubmitUpdates()
 
 let removeAllVariationsOfOrderItem orderItemId (ctx:DbContext) =
+    log.Debug(sprintf "removeAllVariationsOfOrderItem %d" orderItemId)
     let variations = getAllVariationsOfOrderItem orderItemId ctx
     let _ = variations |> List.iter (fun (x:Variation) -> x.Delete())
     ctx.SubmitUpdates()
 
 let updateOrderItemAndPriceByCourseName orderItemId courseName quantity comment newPrice (groupOut: decimal ) (ctx: DbContext) =
+     log.Debug(sprintf "updateOrderItemAndPriceByCourseName %d %s" orderItemId courseName) 
      let tryOrderItem = Orders.getOrderItemById orderItemId ctx
      let thecomment  = match comment with | Some c -> c | None -> ""
 
@@ -2596,6 +2655,7 @@ let updateOrderItemAndPriceByCourseName orderItemId courseName quantity comment 
      | _ -> ()
 
 let getVariationDetailsOfOrderItem orderItemId (ctx: DbContext) =
+    log.Debug(sprintf "getVariationDetailsOfOrderItem %d" orderItemId )
     query {
         for variation in ctx.Public.Variationdetails do
         where (variation.Orderitemid = orderItemId)
@@ -2603,6 +2663,7 @@ let getVariationDetailsOfOrderItem orderItemId (ctx: DbContext) =
     } |> Seq.toList
 
 let tryGetVariationOfOrderItemAndIngredient orderItemId ingredientId (ctx:DbContext) =
+    log.Debug(sprintf "tryGetVariationOfOrderItemAndIngredient orderItemId:%d ingredientId:%d" orderItemId ingredientId )
     query {
         for variation in ctx.Public.Variations do
             where (variation.Orderitemid = orderItemId && variation.Ingredientid = ingredientId)
@@ -2612,18 +2673,19 @@ let tryGetVariationOfOrderItemAndIngredient orderItemId ingredientId (ctx:DbCont
 
 
 let deleteAllVariationsOfOrderItem orderItemId (ctx:DbContext) =
-    log.Debug("deleteAllVariationsOfOrderItem")
+    log.Debug(sprintf "deleteAllVariationsOfOrderItem %d" orderItemId)
     let variations = getAllVariationsOfOrderItem orderItemId ctx
     List.iter (fun (x:Variation) -> x.Delete()) variations
     ctx.SubmitUpdates()
 
 let deleteAllRejectionOfOrderItem orderItemId (ctx:DbContext) =
-    log.Debug("deleteAllRejectionOfOrderItem")
+    log.Debug(sprintf "deleteAllRejectionOfOrderItem %d" orderItemId)
     let rejectionOfOrderItems = ctx.Public.Rejectedorderitems |> Seq.filter(fun (x:RejectedOrderItems) -> x.Orderitemid = orderItemId)  
     Seq.iter (fun (x:RejectedOrderItems) -> x.Delete()) rejectionOfOrderItems
     ctx.SubmitUpdates()
 
 let getOrderOutGroup groupId (ctx:DbContext) =
+    log.Debug(sprintf "getOrderOutGroup %d" groupId)
     ctx.Public.Orderoutgroup |> Seq.find (fun (x:OrderOutGroup) -> x.Ordergroupid = groupId)
 
 let deleteOrderOutGroupByIdIfItIsEmpty groupId ctx =
@@ -2652,19 +2714,23 @@ let deleteAnyEmptyOrderOutGroupOfOrder orderId (ctx:DbContext) =
     ()
 
 let isOrderItemPayed (orderItem: OrderItem) (ctx:DbContext)  =
+    log.Debug(sprintf "isOrderItemPayed %d" orderItem.Orderitemid)
     match orderItem.Isinsasuborder with
         | false -> false 
         | true -> let theSubOrder = ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = orderItem.Suborderid)
                   theSubOrder.Payed
 
 let orderOutGroupsOfOrder (order: Order) (ctx:DbContext) =
+    log.Debug(sprintf "orderOutGropusOfOrder %d" order.Orderid)
     let groups = order.``public.orderoutgroup by orderid``
     groups
 
 let movableOrderItems (orderItems: OrderItem list) (ctx:DbContext) =
+    log.Debug("movableOrderItems")
     orderItems |> List.filter (fun (y:OrderItem) -> not (isOrderItemPayed y ctx))
 
 let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
+    log.Debug(sprintf "unBoundOrderItemFromAnySubGroupIfItIsNotPayed %d" orderItemId)
     let orderItem = getTheOrderItemById orderItemId ctx
     match isOrderItemPayed orderItem ctx with
         | false -> orderItem.Isinsasuborder <- false
@@ -2672,6 +2738,7 @@ let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
         | true ->()
 
 let tryMoveOrderItemToAnOutGroupOfAnotherOrder orderItemId outGroupId (ctx:DbContext) =
+    log.Debug(sprintf "tryMoveOrderItemToAnOutGroupfOfanotherOrder %d %d" orderItemId outGroupId )
     let orderItem = getTheOrderItemById orderItemId ctx
     let outGroup = getOrderOutGroup outGroupId ctx
     let oriOutGroup = getOrderOutGroup orderItem.Ordergroupid ctx
@@ -2684,7 +2751,7 @@ let tryMoveOrderItemToAnOutGroupOfAnotherOrder orderItemId outGroupId (ctx:DbCon
                    deleteOrderOutGroupItIsEmpty oriOutGroup ctx
 
 let deleteOrderItem orderItemid (ctx:DbContext) =
-    log.Debug("deleteOrderItem")
+    log.Debug(sprintf "deleteOrderItem %d" orderItemid)
     let tryOrderItem = Orders.getOrderItemById orderItemid ctx
     match tryOrderItem with
     | Some orderItem -> 
@@ -2700,24 +2767,28 @@ let deleteOrderItem orderItemid (ctx:DbContext) =
     | None -> () 
 
 let isObserverRoleCatState (roleId:int) (catId:int)  (stateId:int )  (ctx:DbContext) =
+    log.Debug(sprintf "isObservrerRoleCatState %d %d %d"  roleId catId stateId)
     let observer = ctx.Public.Observers |> Seq.tryFind (fun (x:Observer) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = catId))
     match observer with
     | Some _ -> true
     | _ -> false
 
 let isEnablerRoleCatState (roleId:int) (catId:int) (stateId:int )  (ctx:DbContext) =
+    log.Debug(sprintf "isEnablerRoleCatState %d %d %d" roleId catId stateId)
     let enabler = ctx.Public.Enablers |> Seq.tryFind (fun (x:Enabler) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = catId))
     match enabler with
     | Some _ -> true
     | _ -> false
 
 let isObserverForRoleState (roleId:int) (stateId: int) (ctx:DbContext) =
+    log.Debug(sprintf "isObserverForRoleState %d %d " roleId stateId )
     let observer = ctx.Public.Observers |> Seq.tryFind (fun (x:Observer) -> (x.Roleid = roleId && x.Stateid = stateId))
     match observer with
     | Some _ -> true
     | _ -> false
 
 let isEnablerForRoleState (roleId:int) (stateId: int) (ctx:DbContext) =
+    log.Debug(sprintf "isEnablerForRoleState %d %d" roleId stateId)
     let enabler = ctx.Public.Enablers |> Seq.tryFind (fun (x:Enabler) -> (x.Roleid = roleId && x.Stateid = stateId))
     match enabler with
     | Some _ -> true
@@ -2748,16 +2819,19 @@ let safeRemoveOrderItem orderItemId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let getOrderIdOfSubOrder subOrderId (ctx:DbContext) =
+    log.Debug(sprintf "getOrderIdsOfSubOrder %d" subOrderId)
     let subOrder = Orders.getSubOrder  subOrderId ctx
     subOrder.Orderid
 
 let setSubOrderAsPayed subOrderId (ctx:DbContext) =
+    log.Debug( sprintf "setSubOrderAsPayed %d" subOrderId)
     let subOrder = Orders.getSubOrder  subOrderId ctx
     let _ = subOrder.Payed <- true
     
     ctx.SubmitUpdates()
 
 let setOrderAsPayed orderId (ctx:DbContext) =
+    log.Debug(sprintf "setOrderAsPayed %d" orderId)
     let order = Orders.getOrder  orderId ctx
     let _ = order.Archived <- true
     ctx.SubmitUpdates()
@@ -2786,13 +2860,15 @@ let splitOrderItemInToUnitaryOrderItems id  (ctx:DbContext) =
 
 
 let getUserViewById userId (ctx:DbContext):UsersView =
-    log.Debug("getUserViewById")
+    log.Debug(sprintf "getUserViewById %d" userId)
     ctx.Public.Usersview |> Seq.find (fun (x:UsersView) -> x.Userid = userId)
 
 let getAllOrdersOfUser userId (ctx:DbContext) =
+    log.Debug(sprintf "getAllOrdersOfUser %d" userId)
     ctx.Public.Orders |> Seq.filter (fun (x:Order) -> x.Userid = userId)
 
 let getOrderItemOfGroup groupId (ctx:DbContext) =
+    log.Debug(sprintf "getOrderItemOfGroup %d" groupId)
     query {
         for item in ctx.Public.Orderitems do
             where (item.Ordergroupid = groupId)
@@ -2851,7 +2927,7 @@ let getAllActionableStateOfUser userId (ctx:DbContext) =
 
 
 let safeDeleteUser userId (ctx:DbContext) =
-    log.Debug("safeDeleteUser")
+    log.Debug(sprintf "safeDeleteUser %d" userId)
     let user = getUserById userId ctx
     let connectedOrders = getAllOrdersOfUser userId ctx
 
@@ -2868,23 +2944,23 @@ let safeDeleteUser userId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let getAllUsersByRole roleId (ctx:DbContext) =
-    log.Debug("getAllUsersByRole")
+    log.Debug(sprintf "getAllUsersByRole %d" roleId)
     ctx.Public.Users |> Seq.filter (fun (x:User) -> x.Role  = roleId)
 
 let getAllEnablersByRole roleId (ctx:DbContext) =
-    log.Debug("getAllEnablersByRole")
+    log.Debug(sprintf "getAllEnablersByRole %d" roleId)
     ctx.Public.Enablers |> Seq.filter (fun (x:Enabler) -> x.Roleid = roleId)
 
 let getAllObserversByRole roleId (ctx:DbContext) =
-    log.Debug("getAllObserversByRole")
+    log.Debug(sprintf "getAllObserversByRole %d" roleId)
     ctx.Public.Observers |> Seq.filter (fun (x:Observer) -> x.Roleid = roleId)
 
 let getAllEnablersNamesByRole roleId (ctx:DbContext) =
-    log.Debug("getAllEnablersNamesByRole")
+    log.Debug(sprintf "getAllEnablersNamesByRole %d" roleId)
     ctx.Public.Enablers |> Seq.filter (fun (x:Enabler) -> x.Roleid = roleId)
 
 let safeDeleteRole roleId (ctx:DbContext) =
-    log.Debug("safeDeleteRole")
+    log.Debug(sprintf "safeDeleteRole %d" roleId)
     let role = getRole roleId ctx
     if (role.Rolename <> "admin" && role.Rolename <> "powerUser") then
         let connectedUsers = getAllUsersByRole roleId ctx
@@ -2900,15 +2976,17 @@ let safeDeleteRole roleId (ctx:DbContext) =
     else ()
 
 let getAllOrderItemsOfCourse courseId (ctx:DbContext) =
+    log.Debug(sprintf "getAllOrderItemsOfCourse %d" courseId) 
     ctx.Public.Orderitems |> Seq.filter (fun (x:OrderItem) -> x.Courseid = courseId )
 
 let getAllIngredientCourse courseId (ctx:DbContext) =
+    log.Debug(sprintf "getAllIngredientCourse %d" courseId )
     ctx.Public.Ingredientcourse |> Seq.filter  (fun (x:IngredientCourse) -> x.Courseid = courseId )
 let getAllRejectedOrderItemOfACourse courseId (ctx:DbContext) =
     ctx.Public.Rejectedorderitems |> Seq.filter (fun (x:RejectedOrderItems) -> x.Courseid = courseId)
 
 let safeDeleteCourse (course:Course) (ctx:DbContext) =
-    log.Debug("safeDeleteCourse")
+    log.Debug(sprintf "safeDeleteCourse %d " course.Courseid)
     // let connectedOrderItems = getAllOrderItemsOfCourse course.Courseid ctx
     // let rejectedOrderItemlist = getAllRejectedOrderItemOfACourse course.Courseid ctx
 
@@ -2926,12 +3004,13 @@ let safeDeleteCourse (course:Course) (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let getAllEnablersByCourseCategory id (ctx: DbContext) =
+    log.Debug(sprintf "getAllEnablersByCourseCatgory %d" id)
     ctx.Public.Enablers |> Seq.filter (fun (x:Enabler) -> x.Categoryid = id) |> Seq.toList
 let getAllObserversByCourseCategory  id (ctx: DbContext) =
     ctx.Public.Observers |> Seq.filter (fun (x:Observer) -> x.Categoryid = id) |> Seq.toList
 
 let getPrinterForCatgoryMappings categoryId (ctx: DbContext) =
-    log.Debug("getPrinterForCatgoryMappings")
+    log.Debug(sprintf "getPrinterForCatgoryMappings %d" categoryId)
     query {
         for printerForCategory in ctx.Public.Printerforcategory do
         where (printerForCategory.Categoryid = categoryId)
@@ -2939,7 +3018,7 @@ let getPrinterForCatgoryMappings categoryId (ctx: DbContext) =
     } |> Seq.toList
 
 let safeDeleteCourseCategory id (ctx: DbContext) =
-    log.Debug("safeDeleteCourseCategory")
+    log.Debug(sprintf "safeDeleteCourseCategory %d" id)
     let courseCategory = Courses.tryGetCourseCategory id ctx
     match courseCategory with
     | Some theCourseCategory ->
@@ -2961,10 +3040,11 @@ let safeDeleteCourseCategory id (ctx: DbContext) =
     | None -> () 
 
 let getAllTenderCodes (ctx:DbContext) =
+    log.Debug("geetAllTenderCodes")
     ctx.Public.Tendercodes |> Seq.toList
 
 let addPaymentItemToSubOrder subOrderId tenderId amount (ctx:DbContext) =
-    log.Debug("addPaymentItemToSubOrder")
+    log.Debug(sprintf "addPaymentItemToSubOrder %d %d " subOrderId tenderId)
     let newPaymentItem = ctx.Public.Paymentitem.``Create(amount, tendercodesid)``(amount,tenderId)
     let _ = newPaymentItem.Suborderid <- subOrderId
     ctx.SubmitUpdates()

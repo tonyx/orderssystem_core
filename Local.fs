@@ -1,4 +1,4 @@
-module OrdersSystem.local
+module OrdersSystem.local_en
 
             let SubmitVariations = "submit variations"
             let SelectableComments = "selectable comments "

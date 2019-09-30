@@ -8,5 +8,5 @@ module OrdersSystem.Settings
     let InRemoveIngredientAdjustPrice ="true" 
     //let PrinterSelector = "-P " // unix
     let PrinterSelector = "/D:" // windows
-    let Localization = "en" 
+    let Localization = "it" 
     let EcrFilePath = @"C:\Users\pc\programmi_tony\orderssystem_core\ecr.txt"

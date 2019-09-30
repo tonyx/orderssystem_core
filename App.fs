@@ -1857,7 +1857,7 @@ let orderItemProgress (user:UserLoggedOnSession) =
     html (View.viewableOrderItems concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
 
 let getNextState stateId =
-    log.Debug("getNextState")
+    log.Debug(sprintf "getNextState %d" stateId)
     let ctx = Db.getContext()
     let state = Db.States.getState stateId  ctx
     if (state.Isfinal) then state else
@@ -1865,7 +1865,7 @@ let getNextState stateId =
         Db.States.getState nextStateId ctx
 
 let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landingPage  encodedBackUrl  (user:UserLoggedOnSession)=
-    log.Debug("getNextState")
+    log.Debug(sprintf "editOrderItemByCategoryForStrippedUsers %d" orderItemId)
     let ctx = Db.getContext()
     let orderItem = Db.Orders.tryGetOrderItemDetail orderItemId ctx
     let categories = Db.Courses.getActiveCategories ctx
@@ -1907,7 +1907,7 @@ let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landing
     | None -> Redirection.FOUND landingPage
 
 let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landingPage encodedBackUrl  (user:UserLoggedOnSession)=
-    log.Debug("editOrderItemByCategoryForOrdinaryUsers")
+    log.Debug(sprintf "editOrderItemByCategoryForOrdinaryUsers %d %d" orderItemId categoryId)
     let ctx = Db.getContext()
     let orderItem = Db.Orders.tryGetOrderItemDetail orderItemId ctx
     let categories = Db.Courses.getActiveCategories ctx
@@ -3225,7 +3225,7 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
                 List.filter (fun z -> match (x.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false) |>
                     List.map (fun z -> z.Substring("orderitem".Length)) |> List.map (fun z -> (int) z)
             if (parametersFromRequest.Length>0) then (
-                let subOrder = Db.Orders.createSubOrderOfOrderItem id ctx
+                let subOrder = Db.Orders.createSubOrderOfOrder id ctx
                 // parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx)
                 parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx; Db.bindOrderItemToSubOrderRef z subOrder.Suborderid ctx)
                 Redirection.found (sprintf Path.Orders.subdivideDoneOrder id)
@@ -3441,18 +3441,22 @@ let qrUserImageGen (user:UserLoggedOnSession) =
         log.Debug(qrCodeImage)
 
         qrCodeImage.Save("nomefile.bmp")
-        let stream = new System.IO.MemoryStream()
+        let enc = System.IO.File.ReadAllBytes("nomefile.bmp")
+        
+        // let stream = new System.IO.MemoryStream()
 
-        qrCodeImage.Save(stream,qrCodeImage.RawFormat)
+        // qrCodeImage.Save(stream,qrCodeImage.RawFormat)
         //qrCodeImage.Save(stream,qrCodeImage.RawFormat)
 
         //let _ = Async.Start(saveImages)
 
-        let arrayOfQrCode = stream.ToArray()
+        // let arrayOfQrCode = stream.ToArray()
 
-        let encoded = System.Convert.ToBase64String (arrayOfQrCode)
+        // let encoded = System.Convert.ToBase64String (arrayOfQrCode)
+        let encoded = System.Convert.ToBase64String (enc)
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o
+        // readAllBytes
     ) 
 
 

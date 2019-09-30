@@ -334,7 +334,7 @@ let index container =
     (html [] [
         head [] [
             title [] "Orders system"
-            cssLink "/Site.css?ZkasaasdfsdXXyty"
+            cssLink "/Site.css?x"
         ]
         body [] [
             div ["id", "header"] [
