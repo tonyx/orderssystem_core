@@ -1064,8 +1064,22 @@ CREATE VIEW public.orderitemdetails AS
 
 ALTER TABLE public.orderitemdetails OWNER TO postgres;
 
+--
+-- Name: orderitemsubordermapping; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.orderitemsubordermapping (
+    orderitemsubordermappingid integer DEFAULT nextval('public.orderitem_sub_order_mapping_seq'::regclass) NOT NULL,
+    orderitemid integer NOT NULL,
+    suborderid integer NOT NULL
+);
 
 
+ALTER TABLE public.orderitemsubordermapping OWNER TO postgres;
+
+--
+-- Name: orderitemdetailsref; Type: VIEW; Schema: public; Owner: postgres
+--
 
 CREATE VIEW public.orderitemdetailsref AS
  SELECT a.orderitemid,
@@ -1097,14 +1111,11 @@ CREATE VIEW public.orderitemdetailsref AS
      JOIN public.orders d ON ((d.orderid = a.orderid)))
      JOIN public.users e ON ((d.userid = e.userid)))
      JOIN public.orderoutgroup g ON ((a.ordergroupid = g.ordergroupid)))
-         LEFT JOIN public.orderitemsubordermapping h ON ((a.orderitemid = h.orderitemid)))
-	 LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)));
+     LEFT JOIN public.orderitemsubordermapping h ON ((a.orderitemid = h.orderitemid)))
+     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)));
 
 
-
-GRANT ALL on orderitemdetailsref to suave;
-
-
+ALTER TABLE public.orderitemdetailsref OWNER TO postgres;
 
 --
 -- Name: orderitems_orderitemid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1161,19 +1172,6 @@ ALTER TABLE public.orderitemstates_orderitemstates_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.orderitemstates_orderitemstates_id_seq OWNED BY public.orderitemstates.orderitemstatesid;
 
-
---
--- Name: orderitemsubordermapping; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.orderitemsubordermapping (
-    orderitemsubordermappingid integer DEFAULT nextval('public.orderitem_sub_order_mapping_seq'::regclass) NOT NULL,
-    orderitemid integer NOT NULL,
-    suborderid integer NOT NULL
-);
-
-
-ALTER TABLE public.orderitemsubordermapping OWNER TO postgres;
 
 --
 -- Name: orderoutgroupdetails; Type: VIEW; Schema: public; Owner: postgres
@@ -1923,6 +1921,8 @@ ALTER TABLE ONLY public.voidedorderslogbuffer ALTER COLUMN voidedorderslogbuffer
 --
 
 COPY public.archivedorderslogbuffer (archivedlogbufferid, archivedtime, orderid) FROM stdin;
+284	2019-09-18 21:03:15.399342	594
+285	2019-09-18 21:14:04.577329	595
 \.
 
 
@@ -1946,6 +1946,7 @@ COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
 72	carne rossa	t	f
 70	secondi	t	f
 71	superalcolici	t	f
+73	pranzo	t	t
 \.
 
 
@@ -1956,6 +1957,7 @@ COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
 COPY public.courses (courseid, name, description, price, categoryid, visibility) FROM stdin;
 537	cuba libre		6.00	71	t
 536	bistecca		10.00	72	t
+538	pranzo		10.00	73	t
 \.
 
 
@@ -2060,6 +2062,13 @@ COPY public.observers (observersid, stateid, roleid, categoryid) FROM stdin;
 --
 
 COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price, stateid, archived, startingtime, closingtime, ordergroupid, hasbeenrejected, suborderid, isinsasuborder, printcount) FROM stdin;
+1409	538	1	594	\N	10.00	6	\N	2019-09-11 10:40:24.505283	\N	517	f	\N	f	1
+1410	538	1	594	\N	10.00	6	\N	2019-09-11 11:03:04.51646	\N	517	f	\N	f	1
+1406	537	1	594		6.00	2	\N	2019-09-10 16:23:47.974425	\N	515	f	\N	f	0
+1411	536	1	595		10.00	2	\N	2019-09-18 21:03:34.379382	\N	519	f	\N	f	0
+1412	537	1	595		6.00	2	\N	2019-09-18 21:03:51.96727	\N	519	f	\N	f	0
+1415	537	1	596		6.00	2	\N	2019-09-26 15:12:28.765246	\N	522	f	\N	f	0
+1414	536	1	596		10.00	2	\N	2019-09-18 21:15:59.386874	\N	521	f	\N	f	0
 \.
 
 
@@ -2068,6 +2077,16 @@ COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price
 --
 
 COPY public.orderitemstates (orderitemstatesid, orderitemid, stateid, startingtime) FROM stdin;
+2635	1406	1	2019-09-10 16:23:47.974425
+2636	1406	2	2019-09-10 16:23:54.341246
+2639	1411	1	2019-09-18 21:03:34.379382
+2640	1412	1	2019-09-18 21:03:51.96727
+2641	1411	2	2019-09-18 21:03:57.672033
+2642	1412	2	2019-09-18 21:03:58.205324
+2644	1414	1	2019-09-18 21:15:59.386874
+2645	1414	2	2019-09-26 15:10:53.927395
+2646	1415	1	2019-09-26 15:12:28.765246
+2647	1415	2	2019-09-26 15:12:39.500081
 \.
 
 
@@ -2084,6 +2103,11 @@ COPY public.orderitemsubordermapping (orderitemsubordermappingid, orderitemid, s
 --
 
 COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) FROM stdin;
+515	0	594	4
+517	1	594	99
+519	1	595	1
+521	1	596	1
+522	1	596	2
 \.
 
 
@@ -2092,6 +2116,11 @@ COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) F
 --
 
 COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, closingtime, voided, archived, total, adjustedtotal, plaintotalvariation, percentagevariataion, adjustispercentage, adjustisplain, forqruserarchived) FROM stdin;
+598	1		t	176	2019-09-20 11:16:44.904359	\N	f	f	\N	\N	0.00	0.00	f	f	\N
+597	4		t	175	2019-09-18 21:35:55.892354	\N	t	f	\N	\N	0.00	0.00	f	f	\N
+596	4		t	2	2019-09-18 21:15:32.327365	\N	f	f	16.00	16.00	0.00	0.00	f	f	\N
+594	6		t	2	2019-09-10 16:08:49.543923	2019-09-18 21:03:15.364548	f	t	26.00	26.00	0.00	0.00	f	f	\N
+595	6		t	2	2019-09-18 21:03:26.142566	2019-09-18 21:14:04.544522	f	t	16.00	16.00	0.00	0.00	f	f	\N
 \.
 
 
@@ -2100,6 +2129,7 @@ COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, clo
 --
 
 COPY public.paymentitem (paymentid, suborderid, orderid, tendercodesid, amount) FROM stdin;
+127	\N	595	1	16.00
 \.
 
 
@@ -2141,6 +2171,7 @@ COPY public.rejectedorderitems (rejectedorderitemid, courseid, cause, timeofreje
 
 COPY public.roles (roleid, rolename, comment) FROM stdin;
 1	admin	\N
+28	temporary	
 \.
 
 
@@ -2247,6 +2278,8 @@ COPY public.tendercodes (tendercodesid, tendercode, tendername) FROM stdin;
 
 COPY public.users (userid, username, password, enabled, canvoidorders, role, canmanageallorders, creationtime, istemporary, canchangetheprice, "table", consumed, canmanagecourses) FROM stdin;
 2	administrator	4194d1706ed1f408d5e02d672777019f4d5385c766a8c6ca8acba3167d36a7b9	t	t	1	t	\N	f	t	\N	\N	f
+175	IQUBAXWQQJ2Q		t	f	28	f	2019-09-18 21:35:55.768902	t	f	4	\N	f
+176	PAFCEC0RYX2C		t	f	28	f	2019-09-20 11:16:44.773244	t	f	1	\N	f
 \.
 
 
@@ -2263,6 +2296,7 @@ COPY public.variations (variationsid, orderitemid, ingredientid, tipovariazione,
 --
 
 COPY public.voidedorderslogbuffer (voidedorderslogbufferid, voidedtime, orderid, userid) FROM stdin;
+310	2019-09-26 15:12:20.848766	597	2
 \.
 
 
@@ -2280,7 +2314,7 @@ COPY public.waiteractionablestates (waiterwatchablestatesid, userid, stateid) FR
 -- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 283, true);
+SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 285, true);
 
 
 --
@@ -2294,14 +2328,14 @@ SELECT pg_catalog.setval('public.comments_for_course_seq', 4, true);
 -- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.courses_categoryid_seq', 72, true);
+SELECT pg_catalog.setval('public.courses_categoryid_seq', 73, true);
 
 
 --
 -- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.courses_courseid_seq', 537, true);
+SELECT pg_catalog.setval('public.courses_courseid_seq', 538, true);
 
 
 --
@@ -2392,42 +2426,42 @@ SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
 -- Name: orderitem_sub_order_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 10, true);
+SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 47, true);
 
 
 --
 -- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1394, true);
+SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1415, true);
 
 
 --
 -- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2614, true);
+SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2647, true);
 
 
 --
 -- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 507, true);
+SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 522, true);
 
 
 --
 -- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orders_orderid_seq', 592, true);
+SELECT pg_catalog.setval('public.orders_orderid_seq', 598, true);
 
 
 --
 -- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.paymentid_seq', 121, true);
+SELECT pg_catalog.setval('public.paymentid_seq', 127, true);
 
 
 --
@@ -2462,7 +2496,7 @@ SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
 -- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.roles_roleid_seq', 27, true);
+SELECT pg_catalog.setval('public.roles_roleid_seq', 28, true);
 
 
 --
@@ -2511,7 +2545,7 @@ SELECT pg_catalog.setval('public.subcategory_mapping_seq', 1, true);
 -- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.suborderid_seq', 327, true);
+SELECT pg_catalog.setval('public.suborderid_seq', 363, true);
 
 
 --
@@ -2539,7 +2573,7 @@ SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
 -- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_userid_seq', 174, true);
+SELECT pg_catalog.setval('public.users_userid_seq', 176, true);
 
 
 --
@@ -2553,7 +2587,7 @@ SELECT pg_catalog.setval('public.variations_seq', 1082, true);
 -- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 309, true);
+SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 310, true);
 
 
 --
@@ -4017,6 +4051,20 @@ GRANT ALL ON TABLE public.orderitemdetails TO suave;
 
 
 --
+-- Name: TABLE orderitemsubordermapping; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.orderitemsubordermapping TO suave;
+
+
+--
+-- Name: TABLE orderitemdetailsref; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.orderitemdetailsref TO suave;
+
+
+--
 -- Name: SEQUENCE orderitems_orderitemid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -4035,13 +4083,6 @@ GRANT ALL ON TABLE public.orderitemstates TO suave;
 --
 
 GRANT ALL ON SEQUENCE public.orderitemstates_orderitemstates_id_seq TO suave;
-
-
---
--- Name: TABLE orderitemsubordermapping; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.orderitemsubordermapping TO suave;
 
 
 --
