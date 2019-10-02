@@ -284,6 +284,8 @@ let makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx =
     ()
 
 let makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx =
+    log.Debug(sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId) 
+
     let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
     let ingredientOfCourse = Db.getIngredientsOfACourse orderItemDetail.Courseid ctx
     let invisibleIngredients = ingredientOfCourse |> List.filter (fun (x:Db.IngredientOfCourse ) -> (not x.Visibility || not x.Categoryvisibility)) 
@@ -462,6 +464,7 @@ let deleteCourses =
     ]
 
 let emtpy (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
+    log.Debug("empty")
     let ctx = Db.getContext()
     let user = Db.getUserById userLoggedOn.UserId ctx
     View.empty userLoggedOn user |> html
@@ -475,9 +478,10 @@ let controlPanel (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
 )
 
 let userEnabledToSeeWholeDoneOrers userId = 
-    log.Debug("userEnabledToSeeWholeDoneOrers")
+    log.Debug(sprintf "userEnabledToSeeWholeDoneOrers %d" userId)
     let ctx = Db.getContext()
     Db.isUserEnabledToSeeWholeOrders userId ctx
+
 let categoriesManagement (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     log.Debug("categoriesManagement")
     let ctx = Db.getContext()
@@ -1366,7 +1370,7 @@ let addUser =
     ]
 
 let getViableGroupOutIdentifiers orderId =
-    log.Debug("getViableGroupOutIdentifiers")
+    log.Debug(sprintf "getViableGroupOutIdentifiers %d" orderId)
     let ctx = Db.getContext()
     let outGroupsOfOrder = Db.getOutGroupsOfOrder orderId ctx
     let alreadyPrintedGroupsOfOrder = outGroupsOfOrder |> List.filter (fun (x:Db.OrderOutGroup) -> x.Printcount > 0) |> 
@@ -1377,7 +1381,7 @@ let getViableGroupOutIdentifiers orderId =
 
 
 let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:UserLoggedOnSession) =
-    log.Debug("addOrderItemByCategoryForOrdinaryUsers")
+    log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d categoryId%d" orderId categoryId)
 
     let ctx = Db.getContext()
     let anOrder = Db.Orders.tryGetOrder orderId ctx
@@ -1418,7 +1422,7 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
       | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
      
 let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession)=
-    log.Debug("addOrderItemByCategoryForStrippedUsers")
+    log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
 
     let ctx = Db.getContext()
     let anOrder = Db.Orders.tryGetOrder orderId ctx
@@ -1466,7 +1470,7 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
      
 
 let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackUrl (user:UserLoggedOnSession) = 
-    log.Debug("addOrderItemByCategoryPassingUserLoggedOn")
+    log.Debug(sprintf "addOrderItemByCategoryPassingUserLoggedOn orderId:%d categoryId:%d")
     warbler (fun (x:HttpContext) ->
         let ctx = Db.getContext()
         let dbUser = Db.getUserById user.UserId ctx
@@ -1481,7 +1485,7 @@ let deleteOrderItem orderItemId =
     Redirection.FOUND Path.Orders.myOrders
 
 let deleteOrderItemByUser orderItemId encodedBackUrl (user:UserLoggedOnSession) =
-    log.Debug("deleteOrderItemByUser")
+    log.Debug(sprintf "deleteOrderItemByUser orderIteId: %d" orderItemId)
     warbler (fun x ->
         let backUrl = WebUtility.UrlDecode encodedBackUrl
         let ctx = Db.getContext()
@@ -1493,7 +1497,7 @@ let deleteOrderItemByUser orderItemId encodedBackUrl (user:UserLoggedOnSession) 
     )
 
 let setStateAsActionableForTempUserByDefault stateId =
-    log.Debug("setStateAsActionableForTempUserByDefault")
+    log.Debug(sprintf "setStateAsActionableForTempUserByDefault stateId:%d" stateId)
     let ctx = Db.getContext()
     let _ = Db.createTempUserActionableState stateId ctx
     Redirection.FOUND Path.Admin.tempUserDefaultActionableStates
@@ -1505,38 +1509,45 @@ let setStateAsActiobableByDefault stateid =
     Redirection.FOUND Path.Admin.defaultActionableStatesForOrderOwner
 
 let unSetStateAsActiobableByDefault stateid =
+    log.Debug(sprintf "unsetStateAsAciobableByDefault %d" stateid)
     let ctx = Db.getContext()
     let _ = Db.deleteWaiterActionableState stateid ctx
     Redirection.FOUND Path.Admin.defaultActionableStatesForOrderOwner
 
 let unSetStateAsActionableForTempUserByDefault stateid =
+    log.Debug(sprintf "unsetStateAsActionableForTempUserByDefault %d" stateid)
     let ctx = Db.getContext()
     let _ = Db.deleteDefaultTempUserActionableState stateid ctx
     Redirection.FOUND Path.Admin.tempUserDefaultActionableStates
 
 let setStateAsActionableForWaiter userId stateId =
+    log.Debug(sprintf "unsetStateAsActionableForWaiter userId:%d stateId%d" userId stateId)
     let ctx = Db.getContext()
     let _ = Db.createSpecificWaiterAcionableState userId stateId ctx
     let redirection = sprintf Path.Admin.actionableStatesForSpecificOrderOwner userId
     Redirection.FOUND redirection
 
 let unSetStateAsAcionableForWaiter userId stateId =
+    log.Debug(sprintf "unsetStateAsAcionableForWaiter userId:%d stateId%d" userId stateId)
     let ctx = Db.getContext()
     let _ = Db.deleteSpecificWaiterAcionableState userId stateId ctx
     let redirection = sprintf Path.Admin.actionableStatesForSpecificOrderOwner userId
     Redirection.FOUND redirection
 
 let deleteEnablerMapping id =
+    log.Debug(sprintf "deleteEnablerMapping %d" id)
     let ctx = Db.getContext()
     Db.deleteEnabler id ctx
     Redirection.FOUND Path.Admin.roles
 
 let deleteObserverMapping id =
+    log.Debug(sprintf "deleteObserverMapping %d" id)
     let ctx = Db.getContext()
     Db.deleteObserver id ctx
     Redirection.FOUND Path.Admin.roles
 
 let canMoveOrderItemToNextStep (orderItemDetail:Db.OrderItemDetails) (user:UserLoggedOnSession) =
+    log.Debug(sprintf "canMoveOrderItemToNextStep %d" orderItemDetail.Orderitemid)
     let ctx = Db.getContext()
     let stateEnableForUserAsWaiter = Db.listOfEnabledStatesForWaiter user.UserId ctx
     ((   Db.userEnabledByRoletoChangeStateOfThisOrderItem orderItemDetail user.UserId ctx ) ||
@@ -1554,6 +1565,7 @@ let moveOrderItemNextState (orderItemDetail:Db.OrderItemDetails) (user:UserLogge
     | false -> () 
 
 let moveAllOrderItemsInBlockFromInitialState orderId (user:UserLoggedOnSession) =
+    log.Debug(sprintf "moveAllOrderItemsInBlockFromInitialState %d" orderId)
     let ctx = Db.getContext()
     let orderItemsDetails = Db.getOrderItemDetailOfOrderById orderId ctx
     let orderItemsToMove = orderItemsDetails |> 
@@ -1574,8 +1586,7 @@ let removeSpooledFiles() =
 
 
 let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.OrderOutGroupDetail) (plainIngredientsMap:Map<int,string>) (variationsIngredientsMap:Map<int,string>)  =
-
-    log.Debug("makeFileOutForAGroupOfordersForDifferentPrinters")
+    log.Debug(sprintf "makeFileOutForAGroupOfordersForDifferentPrinters %d" orderOutGroupDetail.Ordergroupid)
     let ctx = Db.getContext()
     let _ = removeSpooledFiles()
     let printCount = orderOutGroupDetail.Printcount
@@ -1630,7 +1641,7 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
 
 
 let fileDumpOrderOutGroupForDifferentPrinters (orderOutGroup:Db.OrderOutGroupDetail) =
-    log.Debug("fileDumpOrderOutGroupForDifferentPrinters")
+    log.Debug(sprintf "fileDumpOrderOutGroupForDifferentPrinters %d orderOutGroup.Ordergroupid")
     let ctx = Db.getContext()
     let orderItemMyRoleCanObserve = Db.getOrderDetailsOfGroupDetail orderOutGroup ctx
 
@@ -1662,7 +1673,7 @@ let fileDumpOrderOutGroupForDifferentPrinters (orderOutGroup:Db.OrderOutGroupDet
 
 
 let printOrderOutGroup orderOutGroupId  (order:Db.Order) (orderItemsDetails:Db.OrderItemDetails list) =
-    log.Debug("printOrderOutGroup")
+    log.Debug(sprintf "printOrderOutGroup %d" order.Orderid)
     let ctx = Db.getContext()
     let orderOutGroup = Db.getOutGroup orderOutGroupId ctx
     orderOutGroup.Printcount <- orderOutGroup.Printcount + 1
@@ -1671,7 +1682,7 @@ let printOrderOutGroup orderOutGroupId  (order:Db.Order) (orderItemsDetails:Db.O
     fileDumpOrderOutGroupForDifferentPrinters orderOutGroupDetail
 
 let rePrintOrderOutGroup orderId orderOutGroupId encodedBackUrl (user:UserLoggedOnSession) =
-    log.Debug("rePrintOrderOutGrop")
+    log.Debug(sprintf "rePrintOrderOutGrop %d" orderOutGroupId)
     let ctx = Db.getContext()
     let decodedBackUrl = WebUtility.UrlDecode encodedBackUrl
     let order = Db.Orders.getOrder orderId ctx
@@ -1761,7 +1772,7 @@ let adjustTotalOfOrder orderId =
     Db.setAdjstedTotalOfOrder orderId adjustedTotal ctx
 
 let setOrderToArchivedIfAllorderItemsAreDone  orderId =
-    log.Debug("setOrderToArchivedIfAllorderItemsAreDone")
+    log.Debug(sprintf "setOrderToArchivedIfAllorderItemsAreDone %d" orderId)
     let ctx = Db.getContext()
     let orderItemsOfTheOrder = Db.getAllOrderItemsOfOrder orderId ctx
     let states = Db.States.getOrdinaryStates ctx
@@ -1781,7 +1792,7 @@ let setOrderToArchivedIfAllorderItemsAreDone  orderId =
 // deprecated
 //
 let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
-    log.Debug("moveOrderItemNextStep")
+    log.Debug(sprintf "moveOrderItemNextStep orderItemId:%d userName %s" orderItemId user.Username)
     warbler (fun _ ->
         let ctx = Db.getContext()
         let orderItemDetail = Db.Orders.tryGetOrderItemDetail orderItemId ctx
@@ -1795,6 +1806,7 @@ let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
     )
 
 let moveOrderItemNextStepAndBacktoOrder orderItemId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug(sprintf "moveOrderItemNextStepAndBacktoOrder %d" orderItemId )
     warbler (fun x ->
         let retPath = WebUtility.UrlDecode encodedBackUrl
         let ctx = Db.getContext()
@@ -1807,6 +1819,7 @@ let moveOrderItemNextStepAndBacktoOrder orderItemId encodedBackUrl (user:UserLog
     )
 
 let removeOrderItemThenGoBackToUrl orderItemId encodedBackUrl (user:UserLoggedOnSession ) =
+    log.Debug(sprintf "removeOrderItemThenGoBackToUrl %d" orderItemId)
     warbler (fun x ->
         let retPath = WebUtility.UrlDecode encodedBackUrl
         let ctx = Db.getContext()
@@ -1821,7 +1834,7 @@ let removeOrderItemThenGoBackToUrl orderItemId encodedBackUrl (user:UserLoggedOn
 
 
 let orderItemProgress (user:UserLoggedOnSession) =
-    log.Debug("orderItemProgress")
+    log.Debug(sprintf "orderItemProgress user: %s " user.Username)
     let ctx = Db.getContext()
     let myRoleObservablesIds = 
         Db.getObserversCatgoryStateMappingForRole user.RoleId ctx |> 
@@ -1865,7 +1878,7 @@ let getNextState stateId =
         Db.States.getState nextStateId ctx
 
 let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landingPage  encodedBackUrl  (user:UserLoggedOnSession)=
-    log.Debug(sprintf "editOrderItemByCategoryForStrippedUsers %d" orderItemId)
+    log.Debug(sprintf "editOrderItemByCategoryForStrippedUsers orderItemId: %d categoryId: %d" orderItemId categoryId)
     let ctx = Db.getContext()
     let orderItem = Db.Orders.tryGetOrderItemDetail orderItemId ctx
     let categories = Db.Courses.getActiveCategories ctx
@@ -1943,7 +1956,7 @@ let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landing
     | None -> Redirection.FOUND landingPage
 
 let editOrderItemByCategoryPassingUserLoggedOn (orderItemId:int) categoryId landingPage (encodedBackUrl:string)  (user:UserLoggedOnSession)=
-    log.Debug("editOrderItemByCategoryPassingUserLoggedOn")
+    log.Debug(sprintf "editOrderItemByCategoryPassingUserLoggedOn orderItemId: %d, categoryId:%d " orderItemId categoryId)
     let ctx = Db.getContext()
     let dbUser = Db.getUserById user.UserId ctx
     match dbUser.Canchangetheprice with 
@@ -1951,13 +1964,13 @@ let editOrderItemByCategoryPassingUserLoggedOn (orderItemId:int) categoryId land
     | false -> editOrderItemByCategoryForStrippedUsers  (orderItemId:int) categoryId landingPage encodedBackUrl   (user:UserLoggedOnSession)
 
 let resetVariationThenEditOrderItemByCat (orderItemId:int) categoryId landingPage urlEncodedBackUrl (user:UserLoggedOnSession) =
-    log.Debug("resetVariationThenEditOrderItemByCat")
+    log.Debug(sprintf "resetVariationThenEditOrderItemByCat %d" orderItemId)
     let ctx = Db.getContext()
     let _ = Db.removeAllVariationsOfOrderItem orderItemId ctx
     editOrderItemByCategoryPassingUserLoggedOn orderItemId categoryId landingPage urlEncodedBackUrl user
 
 let createRole (user:UserLoggedOnSession ) =
-    log.Debug("createRole")
+    log.Debug(sprintf "createRole, logged user: %s" user.Username)
     let ctx = Db.getContext() 
     choose [
         GET >=> html (View.createRole user)
@@ -1968,7 +1981,7 @@ let createRole (user:UserLoggedOnSession ) =
     ]
 
 let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
-    log.Debug("createOrderByUserLoggedOn")
+    log.Debug(sprintf "createOrderByUserLoggedOn. Logged user: %s" user.Username)
     let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun _ ->
@@ -1982,7 +1995,7 @@ let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
     ]
 
 let createSingleOrderByUserLoggedOn (user:UserLoggedOnSession) =
-    log.Debug("createSingleOrderByUserLoggedOn")
+    log.Debug(sprintf "createSingleOrderByUserLoggedOn. Logged user %s" user.Username)
     let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun _ ->
@@ -2006,7 +2019,7 @@ type myModel = {name: string; roleidname: indexNameRecord list; categoriesidname
     backurl: string}
 
 let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
-    log.Debug("roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat")
+    log.Debug(sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId: %d, categoryId: %d " roleId categoryId)
     let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun _ ->
@@ -2172,6 +2185,7 @@ let roleEnablerObserverCategoriesByCheckBoxes   =
 type model =  { names: indexNameRecord list; measures: indexUnitMeasureMap list; message: string}
 
 let selectIAllngredientCatForCourse courseId  =
+    log.Debug(sprintf "selectIAllngredientCatForCourse %d" courseId )
 
     let ctx = Db.getContext()
     choose [
@@ -2204,6 +2218,7 @@ let selectIAllngredientCatForCourse courseId  =
 
 
 let selectIngredientCatForCourse courseId categoryId message =
+    log.Debug(sprintf "selectIngredientCatForCourse courseId: %d, categoryId: %d " categoryId)
     let ctx = Db.getContext()
     choose [
 
@@ -2239,7 +2254,7 @@ let selectIngredientCatForCourse courseId categoryId message =
 
 
 let createCourseByCatgory id =
-    log.Debug("createCourseByCatgory")
+    log.Debug( "createCourseByCatgory")
     let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun _ -> 
@@ -2263,6 +2278,7 @@ let createCourseByCatgory id =
 
 
 let archiveOrder id (user:UserLoggedOnSession) =
+    log.Debug(sprintf "archiveOrder %d" id)
     let ctx = Db.getContext()
     let dbUser = Db.getUserById (user.UserId) ctx
     let _ = if (dbUser.Canmanageallorders || user.Role = "admin") then
@@ -2277,6 +2293,7 @@ let unableToCompleteOperation aString    =
     View.cantComplete aString |> html
 
 let voidorder orderId = 
+    log.Debug(sprintf "voidorder %d" orderId)
     let ctx = Db.getContext()
     Db.voidOrder orderId ctx
     Redirection.FOUND Path.home
@@ -2285,7 +2302,7 @@ let voidorder orderId =
 
 
 let voidOrderByUserLoggedOn orderId urlEncodedBackUrl (user: UserLoggedOnSession) =
-    log.Debug("voidOrderByUserLoggedOn")
+    log.Debug(sprintf "voidOrderByUserLoggedOn orderId: %d, user: %s" orderId user.Username)
     let ctx = Db.getContext()
     let order = Db.Orders.tryGetOrder(orderId) ctx
     let dbUser = Db.getUserById(user.UserId) ctx
@@ -2307,7 +2324,7 @@ let askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLog
     View.askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) |> html
 
 let deleteIngredientToCourse courseId ingredientId =
-    log.Debug("deleteIngredientToCourse")
+    log.Debug(sprintf "deleteIngredientToCourse courseId: %d, ingredientId: %d" courseId ingredientId)
     let ctx = Db.getContext()
     let ingredientcourse = Db.tryGetIngredientCourse courseId ingredientId ctx
     match ingredientcourse with 
@@ -2318,6 +2335,7 @@ let deleteIngredientToCourse courseId ingredientId =
 
 
 let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
+    log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrder  %d" orderId)
     let ctx = Db.getContext()
     let orderItems = Db.Orders.getOrderItemsOfOrder orderId ctx
     let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> x.Isinsasuborder)
@@ -2325,6 +2343,7 @@ let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
 
 
 let allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef orderId =
+    log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef  %d" orderId)
     let ctx = Db.getContext()
     let orderItems = Db.Orders.getOrderItemsOfOrder orderId ctx
 //    let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> x.Isinsasuborder)
@@ -2332,6 +2351,7 @@ let allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef orderId =
     (List.length orderItemsBelongingToSubOrder) = (List.length orderItems)
 
 let archiveOrderByUserId orderId  =
+    log.Debug(sprintf "archiveOrderByUserId %d" orderId )
     let ctx = Db.getContext()
     let order = Db.Orders.getOrder orderId ctx
     match order.Archived with
@@ -2341,6 +2361,8 @@ let archiveOrderByUserId orderId  =
                     ()
 
 let archiveOrdersWithAllOrderItemsInPaidSubOrders (orders: (Db.NonArchivedOrderDetail) list)  =
+    // let orderIds 
+    log.Debug("archiveOrdersWithAllOrderItemsInPaidSubOrders" )
     let paidOrders = orders |> List.filter (fun order -> allSubOrdersOfOrderDetailBelongsToAPaidSubOrder order.Orderid )
     let _ = paidOrders |> List.iter (fun x -> archiveOrderByUserId x.Orderid  )
     ()
@@ -3436,24 +3458,25 @@ let qrUserImageGen (user:UserLoggedOnSession) =
         let qrGenerator = new QRCoder.QRCodeGenerator();
         let qrCodeData  = qrGenerator.CreateQrCode(urlToCode,QRCodeGenerator.ECCLevel.Q)
         let qrCode = new QRCode(qrCodeData);
+
+        // this may throw the Unable to load DLL 'libgdiplus' exception:
         let qrCodeImage = qrCode.GetGraphic(20)
-        log.Debug("qrCodeImage")
-        log.Debug(qrCodeImage)
+        // log.Debug("qrCodeImage")
+        // log.Debug(qrCodeImage)
 
-        qrCodeImage.Save("nomefile.bmp")
-        let enc = System.IO.File.ReadAllBytes("nomefile.bmp")
+        // qrCodeImage.Save("nomefile.bmp")
+        // let enc = System.IO.File.ReadAllBytes("nomefile.bmp")
         
-        // let stream = new System.IO.MemoryStream()
+        let stream = new System.IO.MemoryStream()
 
-        // qrCodeImage.Save(stream,qrCodeImage.RawFormat)
-        //qrCodeImage.Save(stream,qrCodeImage.RawFormat)
+        qrCodeImage.Save(stream,qrCodeImage.RawFormat)
 
         //let _ = Async.Start(saveImages)
 
-        // let arrayOfQrCode = stream.ToArray()
+        let arrayOfQrCode = stream.ToArray()
 
-        // let encoded = System.Convert.ToBase64String (arrayOfQrCode)
-        let encoded = System.Convert.ToBase64String (enc)
+        let encoded = System.Convert.ToBase64String (arrayOfQrCode)
+        // let encoded = System.Convert.ToBase64String (enc)
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o
         // readAllBytes
