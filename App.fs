@@ -464,14 +464,14 @@ let deleteCourses =
     ]
 
 let emtpy (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
-    log.Debug("empty")
+    log.Debug(sprintf "empty%s " userLoggedOn.Username)
     let ctx = Db.getContext()
     let user = Db.getUserById userLoggedOn.UserId ctx
     View.empty userLoggedOn user |> html
 )
 
 let controlPanel (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
-    log.Debug("controlPanel")
+    log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
     let ctx = Db.getContext()
     let user = Db.getUserById userLoggedOn.UserId ctx
     View.controlPanel userLoggedOn user |> html
@@ -483,13 +483,13 @@ let userEnabledToSeeWholeDoneOrers userId =
     Db.isUserEnabledToSeeWholeOrders userId ctx
 
 let categoriesManagement (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
-    log.Debug("categoriesManagement")
+    log.Debug(sprintf "categoriesManagement by user%s" userLoggedOn.Username )
     let ctx = Db.getContext()
     let allCategories = Db.Courses.getAllCategories ctx
     View.coursesAndCategoriesManagement  allCategories |> html
 )
 let qrOrder (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
-    log.Debug("qrOrder")
+    log.Debug(sprintf "qrOrder by user: %s" userLoggedOn.Username)
     let ctx = Db.getContext()
     let orders = Db.Orders.getOngoingOrderDetailsByUser userLoggedOn.UserId ctx |> List.filter (fun (x:Db.Orderdetail) ->  x.Forqruserarchived<> true)
     let activeCategories = Db.Courses.getActiveCategories ctx
@@ -506,7 +506,7 @@ let qrOrder (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     View.qrOrder userLoggedOn orders activeCategories orderItemsOfOrders mapOfStates  eventualRejectionsOfOrderItems |> html)
 
 let myOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
-    log.Debug("myOrders")
+    log.Debug(sprintf "myOrders by user:%s " userLoggedOn.Username)
     let ctx = Db.getContext()
     let orders = Db.Orders.getOngoingOrderDetailsByUser userLoggedOn.UserId ctx
     let userView = Db.getUserViewById (userLoggedOn.UserId) ctx
@@ -540,7 +540,7 @@ let myOrdersSingles (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let userView = Db.getUserViewById (userLoggedOn.UserId) ctx
     let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
     let mapOfLinkedStates = Db.getMapOfStates ctx 
-    let backUrl = Path.Orders.myOrders
+    // let backUrl = Path.Orders.myOrders
     let initialStateId = (Db.States.getInitState ctx).Stateid
     let outGroupsOfOrders = myOrders |> List.map (fun (x:Db.Orderdetail) -> 
         (x.Orderid,Db.getOutGroupOfOrdeHavingSomeItemsInInitialState x.Orderid ctx)) |> Map.ofList
@@ -564,7 +564,7 @@ let temporaryUsers  =  warbler (fun _ ->
 
 
 let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =  
-    log.Debug("switchVisbilityOfIngredientCategory")
+    log.Debug(sprintf "switchVisbilityOfIngredientCategory %d" ingredientCatgoryId)
     warbler (fun x ->
         let backUrl = WebUtility.UrlDecode encodedBackUrl
         let ctx = Db.getContext()
@@ -578,7 +578,7 @@ let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =
 
 
 let switchVisbilityOfIngredient ingredientCategoryId ingredientId  =
-    log.Debug("switchVisbilityOfIngredient")
+    log.Debug(sprintf "switchVisbilityOfIngredient %d"  ingredientId)
     let ctx = Db.getContext()
     let ingredient = Db.tryGetIngredientById  ingredientId ctx
     let _ = match ingredient with 
@@ -589,9 +589,11 @@ let switchVisbilityOfIngredient ingredientCategoryId ingredientId  =
     Redirection.FOUND redirTo
 
 type ingredientnamemodel = {ingredientname: string}
+
 let viewIngredientUsage ingredientId pageNumberBack =
-    log.Debug("viewIngredientUsage")
+    log.Debug(sprintf "viewIngredientUsage %d" ingredientId)
     let ctx = Db.getContext()
+
     let ingredient = Db.getIngredientById ingredientId ctx
     choose [
         GET >=> warbler ( fun _ ->
@@ -607,7 +609,7 @@ let viewIngredientUsage ingredientId pageNumberBack =
 
 
 let fillIngredient id pageNumberBack (user:UserLoggedOnSession) =
-    log.Debug("fillIngredient")
+    log.Debug(sprintf "fillIngredient %d" id)
     let ctx = Db.getContext()
     let ingredient = Db.getIngredientById id ctx
     choose [
@@ -635,7 +637,7 @@ let fillIngredient id pageNumberBack (user:UserLoggedOnSession) =
     ]
 
 let editIngredientPrices id =
-    log.Debug("editIngredientPrices")
+    log.Debug(sprintf "editIngredientPrices %d" id)
     let ctx = Db.getContext()
     let ingredient = Db.getIngredientById id ctx
     let ingredientPricesDetails = Db.getIngredientPricesDetails id ctx
@@ -978,7 +980,7 @@ let allOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
 
 
 let createEcrReceiptInstructionForSubOrder subOrderId orderId =
-    log.Debug("createEcrReceiptInstructionForSubOrder")
+    log.Debug(sprintf "createEcrReceiptInstructionForSubOrder subOrderId:%d orderId%d" subOrderId orderId)
     let ctx = Db.getContext()
     let subOrder = Db.Orders.getSubOrder subOrderId ctx
     let paymentItemDetailsOfSubOrder  = Db.Orders.getPaymentItemDetailsOfSubOrder subOrderId ctx
@@ -1008,7 +1010,7 @@ let createEcrReceiptInstructionForSubOrder subOrderId orderId =
     Redirection.found (sprintf Path.Orders.subdivideDoneOrder orderId)
 
 let createEcrReceiptInstructionForOrder  orderId =
-    log.Debug("createEcrReceiptInstructionForSubOrder")
+    log.Debug(sprintf "createEcrReceiptInstructionForSubOrder %d" orderId)
     let ctx = Db.getContext()
     let paymentItemDetailsOfSubOrder  = Db.Orders.getPaymentItemDetailsOfOrder orderId ctx
     let order = Db.Orders.getOrder orderId ctx
@@ -1055,7 +1057,7 @@ let tempUserDefaultActionableStates = warbler (fun _ ->
     View.defaultActionableStatesForTempUser states defaultActionableStatesForTempUser |> html)
 
 let specificActionableStateForOrderOwner id = warbler (fun _ ->
-    log.Debug("specificActionableStateForOrderOwner")
+    log.Debug(sprintf "specificActionableStateForOrderOwner %d" id)
     let ctx = Db.getContext()
     let user = Db.Users.getUser id ctx
 
@@ -1130,7 +1132,7 @@ let manageCategories = warbler (fun _ ->
 
 
 let editCourse id  =
-   log.Debug(sprintf "%s %d ""editCourse" id)
+   log.Debug(sprintf "%s %d " "editCourse" id)
    let ctx = Db.getContext()
    let courseCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun g -> decimal g.Categoryid,g.Name)
    let commentsForCourse = Db.getCommentsForCourseDetails id ctx
@@ -1754,7 +1756,7 @@ let moveInitialStateOrderItemsByOrderOutGroup orderId orderOutGroupId  encodedBa
     Redirection.FOUND decodedBackUrl
 
 let adjustTotalOfOrder orderId =
-    log.Debug("adjustTotalOfOrder")
+    log.Debug(sprintf "adjustTotalOfOrde %d" orderId)
     let ctx = Db.getContext()
 
     let order = Db.Orders.getOrder orderId ctx
@@ -2254,7 +2256,7 @@ let selectIngredientCatForCourse courseId categoryId message =
 
 
 let createCourseByCatgory id =
-    log.Debug( "createCourseByCatgory")
+    log.Debug( sprintf "createCourseByCatgory %d")
     let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun _ -> 
