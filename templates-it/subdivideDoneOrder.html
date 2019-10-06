@@ -20,24 +20,22 @@
         <br>
         <br>
         <br>
-        <h2>Tavolo: {{model.table}}</h2>
-        <h2>conti parziali esistenti:</h2>
+        <h2>Table: {{model.table}}</h2>
+        <h2>existing partial receipts:</h2>
         <table>
         {% for item in model.suborderwrapped %}
             <tr>
                 <td style="background-color:{{item.csscolor}};color: black">
-                    subtotale:  {{item.subtotal}}
+                    subtotal:  {{item.subtotal}}
                 </td>
                 <td style="background-color:{{item.csscolor}};">
                     {% if item.Paid %}
-                    pagato
+                    paid
 
                     <a href ="/orders/setSubOrderAsNotPaid/{{item.suborderid}}/{{model.orderid}}" class="buttonZ"> ripristina </a>
                     {% else %}
                     <a href ="/orders/deleteSubOrder/{{item.suborderid}}/{{model.orderid}}" class="buttonZ"> elimina </a>
                     <a href ="/orders/subOrderPaymentItems/{{item.suborderid}}/{{model.orderid}}" class="buttonZ"> pagamento </a>
-                    <!-- <a href ="/orders/printReceipt/{{item.suborderid}}/{{model.orderid}}" class="buttonZ"> scontrino non fiscale </a> -->
-                    <!-- <a href ="/orders/printSubOrderInvoice/{{item.suborderid}}" class="buttonZ"> fattura </a>  -->
                     {% endif %}
 
 
@@ -55,34 +53,37 @@
 
                     <table>
                         {% for item in model.orderitemdetailswrapped %}
-                        <tr>
+                        <tr style="background-color:{{item.csscolor}}; color:black;">
 
-                            <td style="background-color:{{item.csscolor}}; color:black;">
+                            <!-- <td style="background-color:{{item.csscolor}}; color:black;"> -->
+                            <td>
 
-                                <div>
                                     <a href = "/orders/editDoneOrderItemFromSubSplitting/{{item.orderitemid}}/{{item.categoryid}}/{{item.orderid}}">
-                                    qtà: {{item.quantity}}  {{item.name}} €: {{item.price}} . Totale: {{item.totalprice}}
+                                    qtà: {{item.quantity}}  {{item.name}} €: {{item.price}} . Total: {{item.totalprice}}
                                     </a>
-                                    <a href = "/orders/editOrderItemVariation/{{item.orderitemid}}/{{model.encodedbackurl}}">ingredienti</a>
-                                    <input type ="checkbox"  {% if item.isinasuborder %}  disabled="disabled"  {% endif %}   name  = "orderitem{{item.orderitemid}}"></label>
-                                    {% if item.isinasuborder != true and item.quantity > 1 %} 
-                                    <a href ="/orders/splitOrderItemInToUnitaryOrderItems/{{item.orderitemid}}" class="buttonX"> espandi  </a>
+                                    </td>
+                                    <td>
+                                    <!-- <a href = "/orders/editOrderItemVariation/{{item.orderitemid}}/{{model.encodedbackurl}}">ingredients</a> -->
+                                    <!-- <input type ="checkbox"  {% if item.isinasuborder %}  disabled="disabled"  {% endif %}   name  = "orderitem{{item.orderitemid}}"></label> -->
+                                    <input type ="checkbox"  {% if item.suborderid != 0 %}  disabled="disabled"  {% endif %}   name  = "orderitem{{item.orderitemid}}"></label>
+
+                                    {% if item.suborderid != 0 and item.quantity > 1 %} 
+                                    <a href ="/orders/splitOrderItemInToUnitaryOrderItems/{{item.orderitemid}}" class="buttonX"> expand  </a>
                                     {% endif %}
 
                                     {% if {item.paid} %}
-                                    pagato
+                                    paid
                                     {% endif%}
-                                </div>
                             </td>
                         </tr>
                         {% endfor %} 
                     </table>
-                    <input type="submit" value="Nuovo sottoconto">
+                    <input type="submit" value="New subdivision">
                 </form>
                 <br>
                 <br>
                 <br>
-                <a href ="/orders/seeDoneOrders#order{{model.orderid}}" class="buttonX"> ritorna </a>
+                <a href ="/orders/seeDoneOrders#order{{model.orderid}}" class="buttonX"> back </a>
             </innerp>
         </ul>
     </div>

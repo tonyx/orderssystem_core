@@ -61,8 +61,9 @@
                                     </a>
 			    </td>
                             <td style="background-color:{{item.csscolor}}; color:black;">
-				    <input type ="checkbox"  {% if item.isinasuborder %} disabled="disabled" {% endif %}       name = "orderitem{{item.orderitemid}}"></label>
-                                    {% if item.isinasuborder != true and item.quantity > 1 %} 
+				    <!-- <input type ="checkbox"  {% if item.isinasuborder %} disabled="disabled" {% endif %}       name = "orderitem{{item.orderitemid}}"></label> -->
+				    <input type ="checkbox"  {% if item.suborderid != 0 %} disabled="disabled" {% endif %}       name = "orderitem{{item.orderitemid}}"></label>
+                                    {% if item.suborderid != 0 and item.quantity > 1 %} 
                                     <a href ="/orders/splitOrderItemInToUnitaryOrderItems/{{item.orderitemid}}" class="buttonX"> expand  /a>
                                     {% endif %}
 

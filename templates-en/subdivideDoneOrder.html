@@ -53,24 +53,26 @@
 
                     <table>
                         {% for item in model.orderitemdetailswrapped %}
-                        <tr>
+                        <tr style="background-color:{{item.csscolor}}; color:black;">
 
-                            <td style="background-color:{{item.csscolor}}; color:black;">
+                            <!-- <td style="background-color:{{item.csscolor}}; color:black;"> -->
+                            <td>
 
-                                <div>
                                     <a href = "/orders/editDoneOrderItemFromSubSplitting/{{item.orderitemid}}/{{item.categoryid}}/{{item.orderid}}">
                                     qtà: {{item.quantity}}  {{item.name}} €: {{item.price}} . Total: {{item.totalprice}}
                                     </a>
-                                    <a href = "/orders/editOrderItemVariation/{{item.orderitemid}}/{{model.encodedbackurl}}">ingredients</a>
-                                    <input type ="checkbox"  {% if item.isinasuborder %}  disabled="disabled"  {% endif %}   name  = "orderitem{{item.orderitemid}}"></label>
-                                    {% if item.isinasuborder != true and item.quantity > 1 %} 
+                                    </td>
+                                    <td>
+                                    <!-- <a href = "/orders/editOrderItemVariation/{{item.orderitemid}}/{{model.encodedbackurl}}">ingredients</a> -->
+                                    <!-- <input type ="checkbox"  {% if item.isinasuborder %}  disabled="disabled"  {% endif %}   name  = "orderitem{{item.orderitemid}}"></label> -->
+                                    <input type ="checkbox"  {% if item.suborderid != 0  %}  disabled="disabled"  {% endif %}   name  = "orderitem{{item.orderitemid}}"></label>
+                                    {% if item.suborderid != 0 and item.quantity > 1 %} 
                                     <a href ="/orders/splitOrderItemInToUnitaryOrderItems/{{item.orderitemid}}" class="buttonX"> expand  </a>
                                     {% endif %}
 
                                     {% if {item.paid} %}
                                     paid
                                     {% endif%}
-                                </div>
                             </td>
                         </tr>
                         {% endfor %} 
