@@ -20,8 +20,8 @@ let TPConnectionString =
 let [<Literal>] dbVendor = Common.DatabaseProviderTypes.POSTGRESQL
 let [<Literal>] connexStringName = "DefaultConnectionString"
 
-let [<Literal>] resPath = "/Users/Tonyx/Projects/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql entity framework
-// let [<Literal>] resPath = "C:/Users/pc/programmi_tony/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql entity framework
+let [<Literal>] resPath = "/Users/Tonyx/Projects/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider
+// let [<Literal>] resPath = "C:/Users/pc/programmi_tony/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider
 
 let [<Literal>] indivAmount = 1000
 let [<Literal>] useOptTypes  = false
@@ -105,6 +105,7 @@ type StandardVariationFourCourse = DbContext.``public.standardvariationforcourse
 type StandardVariationItemDetails = DbContext.``public.standardvariationitemdetailsEntity``
 type StandardVariationForCourseDetails = DbContext.``public.standardvariationforcoursedetailsEntity``
 type OrderItemSubOrderMapping = DbContext.``public.orderitemsubordermappingEntity``
+// type OrderItemDetailsRef = DbContext.``public.orderitemdetailsrefEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -498,6 +499,14 @@ module States =
 
 
 module Orders =
+    
+    let getOrderItemDetail orderItemId (ctx: DbContext) =
+        log.Debug(sprintf "getOrderItemDetail %d"  orderItemId )
+        query {
+            for orderItemDetail in ctx.Public.Orderitemdetails do
+                where (orderItemDetail.Orderitemid = orderItemId)
+                select orderItemDetail
+        } |> Seq.head
 
     let getTableOfOrder orderId (ctx:DbContext) =
         log.Debug(sprintf "%s %d" "getTableOfOrder" orderId)
@@ -508,9 +517,9 @@ module Orders =
                 
         } |> Seq.head
         
-    let getOrderItemDetail orderItemId (ctx: DbContext) =
-        log.Debug("getOrderItemDetail")
-        ctx.Public.Orderitemdetails |> Seq.find (fun (x:OrderItemDetails)-> x.Orderitemid = orderItemId)
+    // let getOrderItemDetail orderItemId (ctx: DbContext) =
+    //     log.Debug("getOrderItemDetail")
+    //     ctx.Public.Orderitemdetails |> Seq.find (fun (x:OrderItemDetails)-> x.Orderitemid = orderItemId)
 
     let setOrderAsDone (order: Order) (ctx: DbContext ) =
         log.Debug(sprintf "%s %d" "setOrderAsDone" order.Orderid)
@@ -577,6 +586,17 @@ module Orders =
                 select orderItem
         } |> Seq.toList
 
+    let getOrderItemDetailsOfOrder orderId (ctx: DbContext) =
+        log.Debug(sprintf "getOrderItemDetailsOfOrder %d" orderId)
+        query {
+            for orderItem in ctx.Public.Orderitemdetails do
+                where (orderItem.Orderid = orderId)
+                select orderItem
+        } |> Seq.toList
+            
+        
+
+
     let getOngoingOrdersByUser userId (ctx: DbContext) : Order list =
         log.Debug(sprintf "%s %d" "getOngoingOrdersByUser" userId)
         query {
@@ -621,7 +641,7 @@ module Orders =
                 select order
         } |> Seq.toList 
 
-    let getOrderItemDetailOfOrdegetOrderItemDetailOfOrderr (order: Order) (ctx: DbContext): OrderItemDetails list  =
+    let getOrderItemDetailOfOrder (order: Order) (ctx: DbContext): OrderItemDetails list  =
         log.Debug(sprintf "%s %d" "getOrderItemDetailOfOrder" order.Orderid)
         query {
             for orderItem in ctx.Public.Orderitemdetails do
@@ -653,9 +673,11 @@ module Orders =
         ctx.SubmitUpdates()
         subOrder
 
+
     let getSubOrder subOrderId (ctx:DbContext) =
         log.Debug(sprintf "%s %d" "getSubOrder" subOrderId)
         ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = subOrderId)
+
 
     let setAdjustmentOfSubOrder subOrderId adjustment (ctx:DbContext) =
         log.Debug(sprintf "%s %d %.2f" "setAdjustemtOfSubOrder" subOrderId adjustment)
@@ -718,24 +740,48 @@ module Orders =
         log.Debug(sprintf "%s %d" "getSubOrderItems" subOrderId)
         query {
             for item in ctx.Public.Orderitemdetails do 
-                where (item.Isinsasuborder = true && item.Suborderid = subOrderId) 
+                where (item.Suborderid = subOrderId) 
                 select item
-            
         } 
 
+    // let getOrderItemDetailsOfSubOrderRef (subOrderId:int) (ctx:DbContext) =
+    //     log.Debug(sprintf "%s %d" "getSubOrderItems" subOrderId)
+    //     query {
+    //         for item in ctx.Public.Orderitemdetailsref do 
+    //             where (item.Suborderid = subOrderId) 
+    //             select item
+    //     } 
+
+        
     let getSubOrdersOfOrderById (orderid:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "getSubOrdersOfOrderById" orderid)
         let order = getOrder orderid ctx
         order.``public.suborder by orderid`` |> Seq.toList |> List.sortBy (fun (x:SubOrder) -> x.Creationtime)
 
-    let getOrderItemsOfSubOrder subOrderId (ctx: DbContext) =
+    // let getOrderItemsOfSubOrder subOrderId (ctx: DbContext) =
+    //     log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
+    //     query {
+    //         for orderItem in ctx.Public.Orderitems do
+    //         where (orderItem.Suborderid = subOrderId && orderItem.Isinsasuborder = true)
+    //         select orderItem
+    //     } |> Seq.toList
+
+    // let getOrderItemsOfSubOrderRef subOrderId (ctx: DbContext) =
+    //     log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
+    //     query {
+    //         for orderItem in ctx.Public.Orderitems do
+    //         where (orderItem.Suborderid = subOrderId)
+    //         select orderItem
+    //     } |> Seq.toList
+    
+    let getOrderItemsOfSubOrderRef subOrderId (ctx: DbContext) =
         log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
         query {
             for orderItem in ctx.Public.Orderitems do
-            where (orderItem.Suborderid = subOrderId && orderItem.Isinsasuborder = true)
+            join orderItemSubOrderMapping in ctx.Public.Orderitemsubordermapping on (orderItem.Orderitemid = orderItemSubOrderMapping.Orderitemid )
+            where (orderItemSubOrderMapping.Suborderid = subOrderId)
             select orderItem
         } |> Seq.toList
-
     
     
 
@@ -783,14 +829,14 @@ module Orders =
 
         // let _ = connectedPaymentItems |> Seq.iter (fun (x:PaymentItem) -> x.Delete())
 
-        let orderItems = getOrderItemsOfSubOrder subOrderId ctx
-        let _ = orderItems |> List.iter(fun (x:OrderItem) ->  x.SetColumn("suborderid",null); x.Isinsasuborder <- false) // null
-        ctx.SubmitUpdates()
+        // let orderItems = getOrderItemsOfSubOrder subOrderId ctx
+        // let _ = orderItems |> List.iter(fun (x:OrderItem) ->  x.SetColumn("suborderid",null); x.Isinsasuborder <- false) // null
+        // ctx.SubmitUpdates()
         subOrder.Delete()
         ctx.SubmitUpdates()
 
     let isSubOrderPaid subOrderId (ctx: DbContext) =
-        log.Debug(sprintf "%s %d" "isSubOrderPayed" subOrderId)
+        log.Debug(sprintf "%s %d" "isSubOrderPaied" subOrderId)
         let subOrder = getSubOrder subOrderId ctx
         subOrder.Payed
 
@@ -943,17 +989,18 @@ let safeDeleteSubOrder (subOrderId:int) (ctx: DbContext) =
 
     // let _ = connectedInvoices |> Seq.iter (fun (x:Invoice) -> x.Delete() )
     // let _ = connectedPaymentItems |> Seq.iter (fun (x:PaymentItem) -> x.Delete())
+    subOrder.Delete()
 
     ctx.SubmitUpdates()
 
-    match subOrder.Payed with
-    | false ->
-        let orderItems = Orders.getOrderItemsOfSubOrder subOrderId ctx
-        let _ = orderItems |> List.iter(fun (x:OrderItem) -> x.SetColumn("suborderid",null) ; x.Isinsasuborder <- false) // null
-        ctx.SubmitUpdates()
-        subOrder.Delete()
-        ctx.SubmitUpdates()
-    | _ -> ()
+    // match subOrder.Payed with
+    // | false ->
+    //     let orderItems = Orders.getOrderItemsOfSubOrder subOrderId ctx
+    //     let _ = orderItems |> List.iter(fun (x:OrderItem) -> x.SetColumn("suborderid",null) ; x.Isinsasuborder <- false) // null
+    //     ctx.SubmitUpdates()
+    //     subOrder.Delete()
+    //     ctx.SubmitUpdates()
+    // | _ -> ()
 
 let getIngredientPricesDetails id (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "getIngredientPricesDetails" id)
@@ -1403,6 +1450,20 @@ let createOrGetOutGroup orderId groupOut (ctx:DbContext) =
     ctx.SubmitUpdates()
     newGroup
 
+let getTheOrderItemById orderItemId (ctx: DbContext) =
+    log.Debug(sprintf "%s %d" "getTheOrderItemById" orderItemId)
+    ctx.Public.Orderitems |> Seq.find(fun (x:OrderItem) -> x.Orderitemid = orderItemId )
+
+
+
+let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
+    log.Debug(sprintf "bindOrderItemToSubOrderRef %d %d" orderItemId subOrderId)
+    let orderItem = getTheOrderItemById orderItemId ctx
+     
+    let subOrder = Orders.getSubOrder subOrderId ctx
+    let _ = ctx.Public.Orderitemsubordermapping.``Create(orderitemid, suborderid)``(orderItemId,subOrderId)
+    subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
+    ctx.SubmitUpdates()
 
 let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbContext) =
     log.Debug(sprintf "createPlainUnitaryOrderItemById orderId:%d courseId:%d" orderId courseId)
@@ -1414,14 +1475,17 @@ let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbCo
     let _ = groupDbItem.Printcount <- 1
     let orderItem = ctx.Public.Orderitems.``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` (courseId,false,groupDbItem.Ordergroupid,orderId,1,1,now,finalState.Stateid)
     orderItem.Price <- price
+    ctx.SubmitUpdates()
     let _ = match subGroupIdOption with
-                | Some N -> orderItem.Isinsasuborder <- true; orderItem.Suborderid <- N
+                // | Some N -> orderItem.Isinsasuborder <- true; orderItem.Suborderid <- N ; bindOrderItemToSubOrderRef orderItem.Orderitemid N ctx;
+                // | Some N -> orderItem.Suborderid <- N ; bindOrderItemToSubOrderRef orderItem.Orderitemid N ctx;
+                | Some N -> bindOrderItemToSubOrderRef orderItem.Orderitemid N ctx;
                 | _ -> ()
     ctx.SubmitUpdates()
 
-let getTheOrderItemById orderItemId (ctx: DbContext) =
-    log.Debug(sprintf "%s %d" "getTheOrderItemById" orderItemId)
-    ctx.Public.Orderitems |> Seq.find(fun (x:OrderItem) -> x.Orderitemid = orderItemId )
+// let getTheOrderItemById orderItemId (ctx: DbContext) =
+//     log.Debug(sprintf "%s %d" "getTheOrderItemById" orderItemId)
+//     ctx.Public.Orderitems |> Seq.find(fun (x:OrderItem) -> x.Orderitemid = orderItemId )
 
 let removeExistingCommentToOrderItem id ctx =
     log.Debug(sprintf "removeExistingCommentToOrderItem %d" id)
@@ -1438,8 +1502,13 @@ let addCommentToOrderItemById (comment: string) orderItemId ctx =
 
 let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
     log.Debug("unBoundDifferentSubGroupOfOrderItemsByIs" )
-    let orderItemsInSuborders = ids |> List.map (fun x -> getTheOrderItemById x ctx) |> List.filter (fun x -> x.Isinsasuborder)
+    // let orderItemsInSuborders = ids |> List.map (fun x -> getTheOrderItemById x ctx) |> List.filter (fun x -> Orders.orderItemIsInASubOrder x.Orderitemid ctx)
+    // let differentSubOrdersIds = orderItemsInSuborders |> List.map (fun x -> x.Suborderid) |> Set.ofList
+
+    let orderItemsInSuborders = ids |> List.map (fun x -> Orders.getOrderItemDetail x ctx) |> List.filter (fun x -> Orders.orderItemIsInASubOrder x.Orderitemid ctx)
     let differentSubOrdersIds = orderItemsInSuborders |> List.map (fun x -> x.Suborderid) |> Set.ofList
+
+
     match (Set.count differentSubOrdersIds) with
             | N when (N > 1) -> differentSubOrdersIds |>   Set.iter (fun x -> Orders.forceDeleteSubOrder x ctx); None
             | 1 -> Set.toList differentSubOrdersIds |> List.tryHead
@@ -1493,14 +1562,14 @@ let createRejectedOrderItem orderItemId courseId cause (ctx:DbContext) =
     log.Debug(sprintf "%s %d %d %s" "createRejectedOrderItem" orderItemId courseId cause )
     ctx.Public.Rejectedorderitems.Create(cause,courseId,orderItemId,System.DateTime.Now)
 
-let bindOrderItemToSubOrder orderItemId subOrderId (ctx: DbContext) =
-    log.Debug(sprintf "%s %d %d" "bindOrderItemToSubOrder" orderItemId subOrderId)
-    let orderItem = getTheOrderItemById orderItemId ctx
-    orderItem.Isinsasuborder <- true
-    orderItem.Suborderid <- subOrderId
-    let subOrder = Orders.getSubOrder subOrderId ctx
-    // subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
-    ctx.SubmitUpdates()
+// let bindOrderItemToSubOrder orderItemId subOrderId (ctx: DbContext) =
+//     log.Debug(sprintf "%s %d %d" "bindOrderItemToSubOrder" orderItemId subOrderId)
+//     let orderItem = getTheOrderItemById orderItemId ctx
+//     orderItem.Isinsasuborder <- true
+//     orderItem.Suborderid <- subOrderId
+//     let subOrder = Orders.getSubOrder subOrderId ctx
+//     // subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
+//     ctx.SubmitUpdates()
 
 
 // tonyx
@@ -1513,14 +1582,14 @@ let addOrderItemPriceToSubOrder orderItemId subOrderId  (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 
-let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
-    log.Debug(sprintf "bindOrderItemToSubOrderRef %d %d" orderItemId subOrderId)
-    let orderItem = getTheOrderItemById orderItemId ctx
+// let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
+//     log.Debug(sprintf "bindOrderItemToSubOrderRef %d %d" orderItemId subOrderId)
+//     let orderItem = getTheOrderItemById orderItemId ctx
      
-    let subOrder = Orders.getSubOrder subOrderId ctx
-    let _ = ctx.Public.Orderitemsubordermapping.``Create(orderitemid, suborderid)``(orderItemId,subOrderId)
-    subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
-    ctx.SubmitUpdates()
+//     let subOrder = Orders.getSubOrder subOrderId ctx
+//     let _ = ctx.Public.Orderitemsubordermapping.``Create(orderitemid, suborderid)``(orderItemId,subOrderId)
+//     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
+//     ctx.SubmitUpdates()
     
 
 
@@ -1643,7 +1712,8 @@ let getOrderItemDetailsOfSubOrder subOrderId (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "getOrderItemDetailsOfSubOrder" subOrderId )
     query {
         for orderItemDetail in ctx.Public.Orderitemdetails do
-            where (orderItemDetail.Isinsasuborder = true &&  orderItemDetail.Suborderid = subOrderId)
+            // where (orderItemDetail.Isinsasuborder = true &&  orderItemDetail.Suborderid = subOrderId)
+            where (orderItemDetail.Suborderid = subOrderId)
             sortBy (orderItemDetail.Startingtime)
             select orderItemDetail
     } |> Seq.toList
@@ -1716,6 +1786,14 @@ let getOrderItemsDetailOfOrderByOutGroup outGroupId (ctx: DbContext) =
             sortBy (orderItem.Startingtime)
             select orderItem
         } |> Seq.toList
+
+let getOrderItemDetail orderItemId (ctx: DbContext) =
+    log.Debug(sprintf "getOrderItemDetail %d"  orderItemId )
+    query {
+        for orderItemDetail in ctx.Public.Orderitemdetails do
+            where (orderItemDetail.Orderitemid = orderItemId)
+            select orderItemDetail
+    } |> Seq.head
 
 let getOrderItemsOfOrderByOutGroup outGroupId (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "getOrderItemsOfOrderByOutGroup" outGroupId)
@@ -2713,33 +2791,69 @@ let deleteAnyEmptyOrderOutGroupOfOrder orderId (ctx:DbContext) =
     let _ = orderOutGroups |> Seq.iter (fun (x:OrderOutGroup) -> deleteOrderOutGroupItIsEmpty x ctx)
     ()
 
-let isOrderItemPayed (orderItem: OrderItem) (ctx:DbContext)  =
+    
+// let isOrderItemPayed (orderItem: OrderItem) (ctx:DbContext)  =
+//     log.Debug(sprintf "isOrderItemPayed %d" orderItem.Orderitemid)
+//     match orderItem.Isinsasuborder with
+//         | false -> false 
+//         | true -> let theSubOrder = ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = orderItem.Suborderid)
+//                   theSubOrder.Payed
+
+let isOrderItemPayed (orderItem: OrderItemDetails) (ctx:DbContext)  =
     log.Debug(sprintf "isOrderItemPayed %d" orderItem.Orderitemid)
-    match orderItem.Isinsasuborder with
+    match (Orders.orderItemIsInASubOrder orderItem.Orderitemid ctx)    with
         | false -> false 
         | true -> let theSubOrder = ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = orderItem.Suborderid)
                   theSubOrder.Payed
+
+let isOrderItemPayedRef (orderItemDetail: OrderItemDetails) (ctx:DbContext)  =
+    log.Debug(sprintf "isOrderItemPayed %d" orderItemDetail.Orderitemid)
+    match (Orders.orderItemIsInASubOrder orderItemDetail.Orderitemid ctx)    with
+        | false -> false 
+        | true -> let theSubOrder = ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = orderItemDetail.Suborderid)
+                  theSubOrder.Payed
+
 
 let orderOutGroupsOfOrder (order: Order) (ctx:DbContext) =
     log.Debug(sprintf "orderOutGropusOfOrder %d" order.Orderid)
     let groups = order.``public.orderoutgroup by orderid``
     groups
 
-let movableOrderItems (orderItems: OrderItem list) (ctx:DbContext) =
+let movableOrderItems (orderItems: OrderItemDetails list) (ctx:DbContext) =
     log.Debug("movableOrderItems")
-    orderItems |> List.filter (fun (y:OrderItem) -> not (isOrderItemPayed y ctx))
+    orderItems |> List.filter (fun (y:OrderItemDetails) -> not (isOrderItemPayed y ctx))
+
+let removeOrderItemSubOrderMapping orderItemId (ctx:DbContext) =
+    let orderItemSubOrderMapping =
+        query {
+            for orderItemSubOrderMapping in ctx.Public.Orderitemsubordermapping do
+                where (orderItemSubOrderMapping.Orderitemid = orderItemId)
+        }
+    let element = Seq.tryHead orderItemSubOrderMapping
+    match element with 
+    | Some theElement -> theElement.Delete()
+    | _ -> ()
+
+
+
+// let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
+//     log.Debug(sprintf "unBoundOrderItemFromAnySubGroupIfItIsNotPayed %d" orderItemId)
+//     let orderItem = getTheOrderItemById orderItemId ctx
+//     match isOrderItemPayed orderItem ctx with
+//         | false -> orderItem.Isinsasuborder  <- false; orderItem.SetColumn("suborderid",null); removeOrderItemSubOrderMapping orderItemId;
+//                    ctx.SubmitUpdates()
+//         | true ->()
 
 let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
     log.Debug(sprintf "unBoundOrderItemFromAnySubGroupIfItIsNotPayed %d" orderItemId)
-    let orderItem = getTheOrderItemById orderItemId ctx
+    let orderItem = Orders.getOrderItemDetail orderItemId ctx
     match isOrderItemPayed orderItem ctx with
-        | false -> orderItem.Isinsasuborder <- false
+        | false -> orderItem.SetColumn("suborderid",null); removeOrderItemSubOrderMapping orderItemId;
                    ctx.SubmitUpdates()
         | true ->()
-
 let tryMoveOrderItemToAnOutGroupOfAnotherOrder orderItemId outGroupId (ctx:DbContext) =
     log.Debug(sprintf "tryMoveOrderItemToAnOutGroupfOfanotherOrder %d %d" orderItemId outGroupId )
-    let orderItem = getTheOrderItemById orderItemId ctx
+    let orderItem = Orders.getOrderItemDetail orderItemId ctx
     let outGroup = getOrderOutGroup outGroupId ctx
     let oriOutGroup = getOrderOutGroup orderItem.Ordergroupid ctx
     match isOrderItemPayed orderItem ctx with

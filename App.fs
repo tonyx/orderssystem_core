@@ -978,6 +978,12 @@ let allOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
 
     View.ordersList userView  orders activeCategories orderItemsOfOrders mapOfStates statesEnabledForUser  backUrl  eventualRejectionsOfOrderItems initStateId outGroupsOfOrders |> html)
 
+let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
+    log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef  %d" orderId)
+    let ctx = Db.getContext()
+    let orderItems = Db.Orders.getOrderItemDetailsOfOrder orderId ctx
+    let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItemDetails) -> Db.Orders.orderItemIsInASubOrder x.Orderitemid ctx)  |> List.filter (fun x -> Db.Orders.isSubOrderPaid x.Suborderid ctx) 
+    (List.length orderItemsBelongingToSubOrder) = (List.length orderItems)
 
 let createEcrReceiptInstructionForSubOrder subOrderId orderId =
     log.Debug(sprintf "createEcrReceiptInstructionForSubOrder subOrderId:%d orderId%d" subOrderId orderId)
@@ -1007,6 +1013,11 @@ let createEcrReceiptInstructionForSubOrder subOrderId orderId =
     let _ = paymentItemRows |> List.iter (fun x -> outFile.WriteLine(x))
     let _ = outFile.Close()
     Db.setSubOrderAsPayed subOrderId ctx
+
+    let _ = if (allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId) then (makeOrderArchived orderId) else ()
+
+
+
     Redirection.found (sprintf Path.Orders.subdivideDoneOrder orderId)
 
 let createEcrReceiptInstructionForOrder  orderId =
@@ -1718,8 +1729,8 @@ let twoOrderItemsAreIdentical (orderItem1: Db.OrderItem) (orderItem2: Db.OrderIt
     orderItem1.Courseid = orderItem2.Courseid &&
     orderItem1.Ordergroupid = orderItem2.Ordergroupid &&
     orderItem1.Comment = orderItem2.Comment &&
-    orderItem1.Archived = orderItem2.Archived &&
-    orderItem1.Isinsasuborder = orderItem2.Isinsasuborder 
+    orderItem1.Archived = orderItem2.Archived 
+    // orderItem1.Isinsasuborder = orderItem2.Isinsasuborder 
 
 let rec detectIdenticalOrderItemsAndMakeChunks (orderItems:Db.OrderItem list) =
     log.Debug("detectIdenticalOrderItemsAndMakeChunks")
@@ -2336,21 +2347,26 @@ let deleteIngredientToCourse courseId ingredientId =
     Redirection.FOUND retPath
 
 
-let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
-    log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrder  %d" orderId)
-    let ctx = Db.getContext()
-    let orderItems = Db.Orders.getOrderItemsOfOrder orderId ctx
-    let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> x.Isinsasuborder)
-    (List.length orderItemsBelongingToSubOrder) = (List.length orderItems)
 
 
-let allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef orderId =
-    log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef  %d" orderId)
-    let ctx = Db.getContext()
-    let orderItems = Db.Orders.getOrderItemsOfOrder orderId ctx
-//    let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> x.Isinsasuborder)
-    let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> Db.Orders.orderItemIsInASubOrder x.Orderitemid ctx)
-    (List.length orderItemsBelongingToSubOrder) = (List.length orderItems)
+// let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
+//     log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrder  %d" orderId)
+//     let ctx = Db.getContext()
+//     let orderItems = Db.Orders.getOrderItemsOfOrder orderId ctx
+//     let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> x.Isinsasuborder)
+//     (List.length orderItemsBelongingToSubOrder) = (List.length orderItems)
+
+
+
+
+
+// let allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef orderId =
+//     log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef  %d" orderId)
+//     let ctx = Db.getContext()
+//     let orderItems = Db.Orders.getOrderItemsOfOrder orderId ctx
+// //    let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> x.Isinsasuborder)
+//     let orderItemsBelongingToSubOrder = orderItems |> List.filter(fun (x:Db.OrderItem) -> Db.Orders.orderItemIsInASubOrder x.Orderitemid ctx)  |> List.filter (fun x -> Db.Orders.isSubOrderPaid x.Suborderid ctx) 
+//     (List.length orderItemsBelongingToSubOrder) = (List.length orderItems)
 
 let archiveOrderByUserId orderId  =
     log.Debug(sprintf "archiveOrderByUserId %d" orderId )
@@ -2362,15 +2378,15 @@ let archiveOrderByUserId orderId  =
                     Db.pushArchivedOrdersInLog orderId ctx
                     ()
 
-let archiveOrdersWithAllOrderItemsInPaidSubOrders (orders: (Db.NonArchivedOrderDetail) list)  =
-    // let orderIds 
-    log.Debug("archiveOrdersWithAllOrderItemsInPaidSubOrders" )
-    let paidOrders = orders |> List.filter (fun order -> allSubOrdersOfOrderDetailBelongsToAPaidSubOrder order.Orderid )
-    let _ = paidOrders |> List.iter (fun x -> archiveOrderByUserId x.Orderid  )
-    ()
+// let archiveOrdersWithAllOrderItemsInPaidSubOrders (orders: (Db.NonArchivedOrderDetail) list)  =
+//     // let orderIds 
+//     log.Debug("archiveOrdersWithAllOrderItemsInPaidSubOrders" )
+//     let paidOrders = orders |> List.filter (fun order -> allSubOrdersOfOrderDetailBelongsToAPaidSubOrder order.Orderid )
+//     let _ = paidOrders |> List.iter (fun x -> archiveOrderByUserId x.Orderid  )
+//     ()
 
-let archiveOrdersWithAllOrderItemsInPaidSubOrdersRef (orders: (Db.NonArchivedOrderDetail) list)  =
-    let paidOrders = orders |> List.filter (fun order -> allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef order.Orderid )
+let archiveOrdersWithAllOrderItemsInPaidSubOrders (orders: (Db.NonArchivedOrderDetail) list)  =
+    let paidOrders = orders |> List.filter (fun order -> allSubOrdersOfOrderDetailBelongsToAPaidSubOrder order.Orderid )
     let _ = paidOrders |> List.iter (fun x -> archiveOrderByUserId x.Orderid  )
     ()
 
@@ -2492,6 +2508,14 @@ let viewSingleOrder orderId (user:UserLoggedOnSession)=
     //let activeCategories = Db.Courses.getActiveConcreteCategories ctx
     let activeCategories = Db.Courses.getAllActiveVisibleRootCategories ctx
     let orderItemDetails = Db.getOrderItemDetailOfOrderById orderId ctx
+
+    // log order item details:
+    log.Debug("orderitemetails info:")
+    // let _ = orderItemDetails |> List.map (fun x -> log.Debug(x.Suborderid))
+    let _ = orderItemDetails |> List.map (fun x ->  (if x.GetColumn("suborderid") <> null then log.Debug(x.GetColumn("suborderid").GetType())))
+    log.Debug("orderitemetails info over.")
+
+
     let mapOfLinkedStates = Db.getMapOfStates ctx 
     let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
     let eventualRejectionsOfOrderItems = [ orderDetail ] |>
@@ -3120,7 +3144,7 @@ type LiquidWrapperOrderItemsWithGenericCourses = { orderitemdetailswrapped: Orde
 let recomputeSubOrderTotal (subOrder:Db.SubOrder) =
     log.Debug(sprintf "recomputeSubOrderTotal %d" subOrder.Suborderid)
     let ctx = Db.getContext()
-    let orderItemsSOfSuborder = Db.Orders.getOrderItemsOfSubOrder subOrder.Suborderid ctx
+    let orderItemsSOfSuborder = Db.Orders.getOrderItemsOfSubOrderRef subOrder.Suborderid ctx
     log.Debug(sprintf "list length %d" (List.length orderItemsSOfSuborder))
     let total = orderItemsSOfSuborder |> List.map (fun (x:Db.OrderItem) -> x.Price) |> List.sum
     log.Debug(sprintf "total %.2f" total)
@@ -3155,8 +3179,11 @@ let colapseDoneOrder id (user: UserLoggedOnSession) =
 
             let subOdersColorsMap = wrappedSubOrders |> List.map (fun (x:SubOrderWrapped) -> (x.Suborderid,x.Csscolor)) |> Map.ofList
 
+            // let wrappedOrderItemDetails = 
+            //     List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (x.Isinsasuborder) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
+
             let wrappedOrderItemDetails = 
-                List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (x.Isinsasuborder) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
+                List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (Db.Orders.orderItemIsInASubOrder x.Orderitemid ctx)   then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
 
             let parametersNames = wrappedOrderItemDetails |> 
                 List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string))
@@ -3237,12 +3264,20 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
             let subOrders = 
                 Db.Orders.getSubOrdersOfOrderById id ctx
 
+            log.Debug("subtotals:") 
+            let _ = subOrders |> List.iter (fun x -> log.Debug(x.Subtotal))
+
             let _ = subOrders |> List.iter (fun (x:Db.SubOrder) -> recomputeSubOrderTotal x )
             let colors = Globals.getFirstNColorValues (List.length subOrders)
             let wrappedSubOrders =  List.map2 (fun (x:Db.SubOrder) y -> DbObjectWrapper.WrapSubOrder x y) subOrders colors
             let subOdersColorsMap = wrappedSubOrders |> List.map (fun (x:SubOrderWrapped) -> (x.Suborderid,x.Csscolor)) |> Map.ofList
+            // let wrappedOrderItemDetails = 
+            //     List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (x.Isinsasuborder) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
+
             let wrappedOrderItemDetails = 
-                List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (x.Isinsasuborder) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
+                List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (Db.Orders.orderItemIsInASubOrder x.Orderitemid ctx) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
+
+
             let parametersNames = wrappedOrderItemDetails |> 
                 List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string))
             let parametersFromRequest = parametersNames |> 
@@ -3251,7 +3286,8 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
             if (parametersFromRequest.Length>0) then (
                 let subOrder = Db.Orders.createSubOrderOfOrder id ctx
                 // parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx)
-                parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx; Db.bindOrderItemToSubOrderRef z subOrder.Suborderid ctx)
+                // parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx; Db.bindOrderItemToSubOrderRef z subOrder.Suborderid ctx)
+                parametersFromRequest |> List.iter (fun z ->  Db.bindOrderItemToSubOrderRef z subOrder.Suborderid ctx)
                 Redirection.found (sprintf Path.Orders.subdivideDoneOrder id)
             ) else 
 

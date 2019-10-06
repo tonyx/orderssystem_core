@@ -7,6 +7,7 @@ open System
 
 open System.Globalization
 open ExpressionOptimizer
+let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 type CourseWrapped = {
    CourseName: string;
@@ -42,7 +43,7 @@ type OrderItemDetailsWrapped = {
     Price: decimal;
     Person: string;
     Suborderid: int;
-    Isinasuborder: bool;
+    // Isinasuborder: bool;
     Paid: bool;
     Csscolor: string;
     Totalprice: decimal;
@@ -100,7 +101,7 @@ type DbObjectWrapper =
         Price = orderItemDetail.Price;
         Person= orderItemDetail.Person;
         Suborderid = orderItemDetail.Suborderid;
-        Isinasuborder = orderItemDetail.Isinsasuborder;
+        // Isinasuborder = orderItemDetail.Isinsasuborder;
         Paid = orderItemDetail.Payed;
         Csscolor = cssColor;
         Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price;
@@ -115,17 +116,22 @@ type DbObjectWrapper =
     }
 
     static member WrapSubOrder (subOrder: Db.SubOrder) cssColor =
-    {
-        Suborderid = subOrder.Suborderid;
-        Orderid = subOrder.Orderid;
-        Comment = subOrder.Comment;
-        Subtotal = subOrder.Subtotal;
-        Subtotaladjustment = subOrder.Subtotaladjustment;
-        SubtotalPercentAdjustment = subOrder.Subtotalpercentadjustment;
-        SubtotalAdjustmentFromPercentage = Math.Round(subOrder.Subtotal * (subOrder.Subtotalpercentadjustment/100M),2,MidpointRounding.ToEven);
-        Csscolor = cssColor;
-        Paid = subOrder.Payed
-    }
+        // log.Debug("WrapSubOrer")
+        // log.Debug("subTotal:")
+        // log.Debug(subOrder.Subtotal)
+
+        {
+            Suborderid = subOrder.Suborderid;
+            Orderid = subOrder.Orderid;
+            Comment = subOrder.Comment;
+            Subtotal = subOrder.Subtotal;
+            // Subtotal = 44M;
+            Subtotaladjustment = subOrder.Subtotaladjustment;
+            SubtotalPercentAdjustment = subOrder.Subtotalpercentadjustment;
+            SubtotalAdjustmentFromPercentage = Math.Round(subOrder.Subtotal * (subOrder.Subtotalpercentadjustment/100M),2,MidpointRounding.ToEven);
+            Csscolor = cssColor;
+            Paid = subOrder.Payed
+        }
     
     static member WrapOrder (order: Db.Order) =
     {
