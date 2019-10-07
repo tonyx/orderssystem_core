@@ -105,7 +105,6 @@ type StandardVariationFourCourse = DbContext.``public.standardvariationforcourse
 type StandardVariationItemDetails = DbContext.``public.standardvariationitemdetailsEntity``
 type StandardVariationForCourseDetails = DbContext.``public.standardvariationforcoursedetailsEntity``
 type OrderItemSubOrderMapping = DbContext.``public.orderitemsubordermappingEntity``
-// type OrderItemDetailsRef = DbContext.``public.orderitemdetailsrefEntity``
 
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
@@ -517,9 +516,6 @@ module Orders =
                 
         } |> Seq.head
         
-    // let getOrderItemDetail orderItemId (ctx: DbContext) =
-    //     log.Debug("getOrderItemDetail")
-    //     ctx.Public.Orderitemdetails |> Seq.find (fun (x:OrderItemDetails)-> x.Orderitemid = orderItemId)
 
     let setOrderAsDone (order: Order) (ctx: DbContext ) =
         log.Debug(sprintf "%s %d" "setOrderAsDone" order.Orderid)
@@ -595,8 +591,6 @@ module Orders =
         } |> Seq.toList
             
         
-
-
     let getOngoingOrdersByUser userId (ctx: DbContext) : Order list =
         log.Debug(sprintf "%s %d" "getOngoingOrdersByUser" userId)
         query {
@@ -632,6 +626,7 @@ module Orders =
                 sortByDescending order.Orderid
                 select order
         } |> Seq.toList 
+
     let getOngoingOrderdetails (ctx: DbContext) : Orderdetail list =
         log.Debug("getOngoingOrderdetails")
         query {
@@ -744,37 +739,14 @@ module Orders =
                 select item
         } 
 
-    // let getOrderItemDetailsOfSubOrderRef (subOrderId:int) (ctx:DbContext) =
-    //     log.Debug(sprintf "%s %d" "getSubOrderItems" subOrderId)
-    //     query {
-    //         for item in ctx.Public.Orderitemdetailsref do 
-    //             where (item.Suborderid = subOrderId) 
-    //             select item
-    //     } 
-
         
     let getSubOrdersOfOrderById (orderid:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "getSubOrdersOfOrderById" orderid)
         let order = getOrder orderid ctx
         order.``public.suborder by orderid`` |> Seq.toList |> List.sortBy (fun (x:SubOrder) -> x.Creationtime)
 
-    // let getOrderItemsOfSubOrder subOrderId (ctx: DbContext) =
-    //     log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
-    //     query {
-    //         for orderItem in ctx.Public.Orderitems do
-    //         where (orderItem.Suborderid = subOrderId && orderItem.Isinsasuborder = true)
-    //         select orderItem
-    //     } |> Seq.toList
-
-    // let getOrderItemsOfSubOrderRef subOrderId (ctx: DbContext) =
-    //     log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
-    //     query {
-    //         for orderItem in ctx.Public.Orderitems do
-    //         where (orderItem.Suborderid = subOrderId)
-    //         select orderItem
-    //     } |> Seq.toList
     
-    let getOrderItemsOfSubOrderRef subOrderId (ctx: DbContext) =
+    let getOrderItemsOfSubOrder subOrderId (ctx: DbContext) =
         log.Debug(sprintf "getOrderItemsOfSubOrder %d" subOrderId)
         query {
             for orderItem in ctx.Public.Orderitems do
@@ -821,16 +793,6 @@ module Orders =
     let forceDeleteSubOrder (subOrderId:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "forceDeleteSubOrder" subOrderId)
         let subOrder = getSubOrder subOrderId ctx
-
-        // let connectedPaymentItems = subOrder.``public.paymentitem by suborderid``
-
-        // let connectedInvoices = subOrder.``public.invoices by suborderid``
-        // let _ = connectedInvoices |> Seq.iter (fun (x:Invoice) -> x.Delete() )
-
-        // let _ = connectedPaymentItems |> Seq.iter (fun (x:PaymentItem) -> x.Delete())
-
-        // let orderItems = getOrderItemsOfSubOrder subOrderId ctx
-        // let _ = orderItems |> List.iter(fun (x:OrderItem) ->  x.SetColumn("suborderid",null); x.Isinsasuborder <- false) // null
         // ctx.SubmitUpdates()
         subOrder.Delete()
         ctx.SubmitUpdates()
@@ -866,6 +828,7 @@ module Users =
     let getAllUsers (ctx: DbContext): User list =
         log.Debug("getAllUsers")
         ctx.Public.Users |> Seq.toList
+
     let getAllUsersView (ctx: DbContext): UsersView list =
         log.Debug("getAllUsersView")
         ctx.Public.Usersview |> Seq.toList
@@ -890,7 +853,7 @@ let getStandardComment id (ctx:DbContext) =
 
 let addStandardComment comment (ctx:DbContext) =
     log.Debug(sprintf "addStandardComment %s" comment)
-    ctx.Public.Standardcomments.``Create(comment)``(comment)
+    let _ = ctx.Public.Standardcomments.``Create(comment)``(comment)
     ctx.SubmitUpdates()
 
 let getCommentsForCourseDetails courseId (ctx:DbContext) =
@@ -910,7 +873,7 @@ let removeStandardComment id (ctx:DbContext) =
 
 let addCommentForCourse courseId commentId (ctx:DbContext) =
     log.Debug(sprintf "addcommentForCourse courseid:%d commentId:%d" courseId commentId)
-    ctx.Public.Commentsforcourse.Create(commentId, courseId) 
+    let _ = ctx.Public.Commentsforcourse.Create(commentId, courseId) 
     ctx.SubmitUpdates()
     
 
@@ -942,8 +905,6 @@ let createStandardVariation name (ctx:DbContext) =
     let variation = ctx.Public.Standardvariations.``Create(name)``(name)
     ctx.SubmitUpdates()
     variation
-
-
 
 
 let tryGetStandardVariationByName name (ctx:DbContext) =
@@ -984,23 +945,8 @@ let safeDeleteSubOrder (subOrderId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "safeDeleteSubOrder" subOrderId)
     let subOrder = Orders.getSubOrder subOrderId ctx
 
-    // let connectedInvoices = subOrder.``public.invoices by suborderid``
-    // let connectedPaymentItems = subOrder.``public.paymentitem by suborderid``
-
-    // let _ = connectedInvoices |> Seq.iter (fun (x:Invoice) -> x.Delete() )
-    // let _ = connectedPaymentItems |> Seq.iter (fun (x:PaymentItem) -> x.Delete())
     subOrder.Delete()
-
     ctx.SubmitUpdates()
-
-    // match subOrder.Payed with
-    // | false ->
-    //     let orderItems = Orders.getOrderItemsOfSubOrder subOrderId ctx
-    //     let _ = orderItems |> List.iter(fun (x:OrderItem) -> x.SetColumn("suborderid",null) ; x.Isinsasuborder <- false) // null
-    //     ctx.SubmitUpdates()
-    //     subOrder.Delete()
-    //     ctx.SubmitUpdates()
-    // | _ -> ()
 
 let getIngredientPricesDetails id (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "getIngredientPricesDetails" id)
@@ -1125,10 +1071,6 @@ let getPrinterForReceiptAndInvoice printerId (ctx:DbContext) =
 let safeRemovePrinter printerId (ctx:DbContext) =
     log.Debug("safeRemovePrinter")
     let printer = getPrinter printerId ctx
-    // let printerCourseCatAssociation = getPrinterForCourseCategoryAssociation printerId ctx
-    // let printerReceiptAndInvoiceAssociation = getPrinterForReceiptAndInvoice printerId ctx
-    // printerCourseCatAssociation |> Seq.iter (fun x -> x.Delete())
-    // printerReceiptAndInvoiceAssociation |> Seq.iter (fun x -> x.Delete())
     ctx.SubmitUpdates()
     printer.Delete()
     ctx.SubmitUpdates()
@@ -1202,12 +1144,6 @@ let createInvoiceByOrderIdAndCustomerId orderId customerDataId invoiceText invoi
 
 let safeRemovePrinters (ctx:DbContext) =
     log.Debug("safeRemovePrinters")
-    // ctx.Public.Printerforcategory |> Seq.iter (fun (x:PrinterForCourseCategory) -> x.Delete())
-    // ctx.SubmitUpdates()
-
-    // ctx.Public.Printerforreceiptandinvoice |> Seq.iter (fun (x:PrinterForReceiptAndInvoice) -> x.Delete())
-    // ctx.SubmitUpdates()
-
     ctx.Public.Printers |> Seq.iter (fun (x:Printer) -> x.Delete())
     ctx.SubmitUpdates()
 
@@ -1456,8 +1392,8 @@ let getTheOrderItemById orderItemId (ctx: DbContext) =
 
 
 
-let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
-    log.Debug(sprintf "bindOrderItemToSubOrderRef %d %d" orderItemId subOrderId)
+let bindOrderItemToSubOrder orderItemId subOrderId (ctx:DbContext) =
+    log.Debug(sprintf "bindOrderItemToSubOrder %d %d" orderItemId subOrderId)
     let orderItem = getTheOrderItemById orderItemId ctx
      
     let subOrder = Orders.getSubOrder subOrderId ctx
@@ -1477,15 +1413,10 @@ let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbCo
     orderItem.Price <- price
     ctx.SubmitUpdates()
     let _ = match subGroupIdOption with
-                // | Some N -> orderItem.Isinsasuborder <- true; orderItem.Suborderid <- N ; bindOrderItemToSubOrderRef orderItem.Orderitemid N ctx;
-                // | Some N -> orderItem.Suborderid <- N ; bindOrderItemToSubOrderRef orderItem.Orderitemid N ctx;
-                | Some N -> bindOrderItemToSubOrderRef orderItem.Orderitemid N ctx;
+                | Some N -> bindOrderItemToSubOrder orderItem.Orderitemid N ctx;
                 | _ -> ()
     ctx.SubmitUpdates()
 
-// let getTheOrderItemById orderItemId (ctx: DbContext) =
-//     log.Debug(sprintf "%s %d" "getTheOrderItemById" orderItemId)
-//     ctx.Public.Orderitems |> Seq.find(fun (x:OrderItem) -> x.Orderitemid = orderItemId )
 
 let removeExistingCommentToOrderItem id ctx =
     log.Debug(sprintf "removeExistingCommentToOrderItem %d" id)
@@ -1502,12 +1433,9 @@ let addCommentToOrderItemById (comment: string) orderItemId ctx =
 
 let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
     log.Debug("unBoundDifferentSubGroupOfOrderItemsByIs" )
-    // let orderItemsInSuborders = ids |> List.map (fun x -> getTheOrderItemById x ctx) |> List.filter (fun x -> Orders.orderItemIsInASubOrder x.Orderitemid ctx)
-    // let differentSubOrdersIds = orderItemsInSuborders |> List.map (fun x -> x.Suborderid) |> Set.ofList
 
     let orderItemsInSuborders = ids |> List.map (fun x -> Orders.getOrderItemDetail x ctx) |> List.filter (fun x -> Orders.orderItemIsInASubOrder x.Orderitemid ctx)
     let differentSubOrdersIds = orderItemsInSuborders |> List.map (fun x -> x.Suborderid) |> Set.ofList
-
 
     match (Set.count differentSubOrdersIds) with
             | N when (N > 1) -> differentSubOrdersIds |>   Set.iter (fun x -> Orders.forceDeleteSubOrder x ctx); None
@@ -1562,35 +1490,12 @@ let createRejectedOrderItem orderItemId courseId cause (ctx:DbContext) =
     log.Debug(sprintf "%s %d %d %s" "createRejectedOrderItem" orderItemId courseId cause )
     ctx.Public.Rejectedorderitems.Create(cause,courseId,orderItemId,System.DateTime.Now)
 
-// let bindOrderItemToSubOrder orderItemId subOrderId (ctx: DbContext) =
-//     log.Debug(sprintf "%s %d %d" "bindOrderItemToSubOrder" orderItemId subOrderId)
-//     let orderItem = getTheOrderItemById orderItemId ctx
-//     orderItem.Isinsasuborder <- true
-//     orderItem.Suborderid <- subOrderId
-//     let subOrder = Orders.getSubOrder subOrderId ctx
-//     // subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
-//     ctx.SubmitUpdates()
-
-
-// tonyx
-
 let addOrderItemPriceToSubOrder orderItemId subOrderId  (ctx:DbContext) =
     log.Debug(sprintf "addOrderItemPriceToSubOrder orderItemId: %d subOrderId: %d")
     let orderItem = getTheOrderItemById orderItemId ctx
     let subOrder = Orders.getSubOrder subOrderId ctx
     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
     ctx.SubmitUpdates()
-
-
-// let bindOrderItemToSubOrderRef orderItemId subOrderId (ctx:DbContext) =
-//     log.Debug(sprintf "bindOrderItemToSubOrderRef %d %d" orderItemId subOrderId)
-//     let orderItem = getTheOrderItemById orderItemId ctx
-     
-//     let subOrder = Orders.getSubOrder subOrderId ctx
-//     let _ = ctx.Public.Orderitemsubordermapping.``Create(orderitemid, suborderid)``(orderItemId,subOrderId)
-//     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
-//     ctx.SubmitUpdates()
-    
 
 
 let updatePasswordOfUser idUser passwordHash (ctx:DbContext) =
@@ -1712,7 +1617,6 @@ let getOrderItemDetailsOfSubOrder subOrderId (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "getOrderItemDetailsOfSubOrder" subOrderId )
     query {
         for orderItemDetail in ctx.Public.Orderitemdetails do
-            // where (orderItemDetail.Isinsasuborder = true &&  orderItemDetail.Suborderid = subOrderId)
             where (orderItemDetail.Suborderid = subOrderId)
             sortBy (orderItemDetail.Startingtime)
             select orderItemDetail
@@ -1925,19 +1829,6 @@ let unlinkSonFromFather sonId fatherId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 
-//let moveSubCourseCategoryToFather categoryId (ctx:DbContext) =
-//    let 
-    
-
-
-//let getAllSubCourseCategories categoryId (ctx:DbContext): CourseCategories list =
-//    log.Debug("getAllSubCategories")
-//    query {
-//        for category in ctx.Public.Coursecategories do
-//            join subCategoryMapping in ctx.Public.Subcategorymapping on (category.Categoryid = subCategoryMapping.Fatherid)
-//            where (category.Categoryid = categoryId)
-//            select category 
-//    } |> Seq.toList
 
 
 
@@ -2240,7 +2131,6 @@ let tryMoveOrderItemToNextState (orderItemId: int) userId (ctx: DbContext) =
                   createIngredientDecrementsOfOrderItem theOrderItem userId ctx
                   updateAvailableQuantityOfIngredientsOfOrderItems theOrderItem ctx
                 | false -> ()
-
 
             ctx.SubmitUpdates()
         | None -> ()
@@ -2592,8 +2482,6 @@ let addAddIngredientVariationByName orderItemid ingredientName (quantity:string)
     let ingredient = ctx.Public.Ingredient |> Seq.tryFind  (fun (x:Ingredient) -> x.Name = ingredientName)
     match ingredient with
     | Some theIngredient -> 
-                            // if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASUSERE)) then 
-                            // if (not (Double.TryParse((ReadOnlySpan<char>)(quantity.ToCharArray()),mut)) && not (quantity = Globals.UNITARY_MEASUSERE)) then 
                             if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASUSERE)) then 
                             (
                                 let overWrittenQuantity = match theIngredient.Unitmeasure with 
@@ -2792,12 +2680,6 @@ let deleteAnyEmptyOrderOutGroupOfOrder orderId (ctx:DbContext) =
     ()
 
     
-// let isOrderItemPayed (orderItem: OrderItem) (ctx:DbContext)  =
-//     log.Debug(sprintf "isOrderItemPayed %d" orderItem.Orderitemid)
-//     match orderItem.Isinsasuborder with
-//         | false -> false 
-//         | true -> let theSubOrder = ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = orderItem.Suborderid)
-//                   theSubOrder.Payed
 
 let isOrderItemPayed (orderItem: OrderItemDetails) (ctx:DbContext)  =
     log.Debug(sprintf "isOrderItemPayed %d" orderItem.Orderitemid)
@@ -2836,21 +2718,14 @@ let removeOrderItemSubOrderMapping orderItemId (ctx:DbContext) =
 
 
 
-// let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
-//     log.Debug(sprintf "unBoundOrderItemFromAnySubGroupIfItIsNotPayed %d" orderItemId)
-//     let orderItem = getTheOrderItemById orderItemId ctx
-//     match isOrderItemPayed orderItem ctx with
-//         | false -> orderItem.Isinsasuborder  <- false; orderItem.SetColumn("suborderid",null); removeOrderItemSubOrderMapping orderItemId;
-//                    ctx.SubmitUpdates()
-//         | true ->()
-
 let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
     log.Debug(sprintf "unBoundOrderItemFromAnySubGroupIfItIsNotPayed %d" orderItemId)
     let orderItem = Orders.getOrderItemDetail orderItemId ctx
     match isOrderItemPayed orderItem ctx with
-        | false -> orderItem.SetColumn("suborderid",null); removeOrderItemSubOrderMapping orderItemId;
+        | false -> removeOrderItemSubOrderMapping orderItemId;
                    ctx.SubmitUpdates()
         | true ->()
+
 let tryMoveOrderItemToAnOutGroupOfAnotherOrder orderItemId outGroupId (ctx:DbContext) =
     log.Debug(sprintf "tryMoveOrderItemToAnOutGroupfOfanotherOrder %d %d" orderItemId outGroupId )
     let orderItem = Orders.getOrderItemDetail orderItemId ctx
@@ -2877,7 +2752,6 @@ let deleteOrderItem orderItemid (ctx:DbContext) =
         orderItem.Delete()
         ctx.SubmitUpdates()
         deleteOrderOutGroupByIdIfItIsEmpty orderOutGroupId ctx
-
     | None -> () 
 
 let isObserverRoleCatState (roleId:int) (catId:int)  (stateId:int )  (ctx:DbContext) =
@@ -2912,23 +2786,6 @@ let isEnablerForRoleState (roleId:int) (stateId: int) (ctx:DbContext) =
 let safeRemoveOrderItem orderItemId (ctx:DbContext) =
     log.Debug (sprintf "%s %d" "safeRemoveOrderItem" orderItemId )
     let orderItem = ctx.Public.Orderitems |> Seq.find (fun (x:OrderItem) -> x.Orderitemid = orderItemId )
-
-    // let states = orderItem.``public.orderitemstates by orderitemid``
-    // states |> Seq.iter (fun (x:OrderItemState) -> x.Delete())
-    // ctx.SubmitUpdates()
-
-    // let variations = orderItem.``public.variations by orderitemid``
-    // variations |> Seq.iter (fun (x:Variation) -> x.Delete())
-    // ctx.SubmitUpdates()
-
-    // let ingredientDecrements = orderItem.``public.ingredientdecrement by orderitemid``
-    // ingredientDecrements |> Seq.iter (fun (x:IngredientDecrement) -> x.Delete())
-    // ctx.SubmitUpdates()
-
-    // let rejectedOrderItems = orderItem.``public.rejectedorderitems by orderitemid``
-    // rejectedOrderItems |> Seq.iter (fun (x:RejectedOrderItems) -> x.Delete())
-    // ctx.SubmitUpdates()
-
     orderItem.Delete()
     ctx.SubmitUpdates()
 
@@ -2941,7 +2798,6 @@ let setSubOrderAsPayed subOrderId (ctx:DbContext) =
     log.Debug( sprintf "setSubOrderAsPayed %d" subOrderId)
     let subOrder = Orders.getSubOrder  subOrderId ctx
     let _ = subOrder.Payed <- true
-    
     ctx.SubmitUpdates()
 
 let setOrderAsPayed orderId (ctx:DbContext) =
@@ -2949,9 +2805,9 @@ let setOrderAsPayed orderId (ctx:DbContext) =
     let order = Orders.getOrder  orderId ctx
     let _ = order.Archived <- true
     ctx.SubmitUpdates()
+
 let splitOrderItemInToUnitaryOrderItems id  (ctx:DbContext) =
     log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems" id)
-    // let orderItem = Orders.getOrderItemById id ctx
     let theOrderItem = getTheOrderItemById id ctx
     let connectedOrderItemStates = theOrderItem.``public.orderitemstates by orderitemid`` |> Seq.toList
     let ingredientdecrements = theOrderItem.``public.ingredientdecrement by orderitemid`` |> Seq.toList
@@ -2995,47 +2851,11 @@ let safeRemoveOrder orderId (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "safeRemoveOrder" orderId)
     let order = ctx.Public.Orders |> Seq.find (fun (x:Order) -> x.Orderid = orderId)
 
-    // let orderItems = order.``public.orderitems by orderid`` 
-    
-    // let voidedOrdersList = order.``public.voidedorderslogbuffer by orderid``
-
-    // let archivedOrdersList = order.``public.archivedorderslogbuffer by orderid``
-    // let connectedInvoices  = order.``public.invoices by orderid``
-    // let connectedSuborders = order.``public.suborder by orderid``
-
-    // let connectedPaymentItems = order.``public.paymentitem by orderid``
-
-    // let outGroupOrders = order.``public.orderoutgroup by orderid``
-    
-    // Seq.iter (fun (x:OrderItem) -> safeRemoveOrderItem x.Orderitemid ctx) orderItems
-
-    // Seq.iter (fun (x:PaymentItem) -> x.Delete()) connectedPaymentItems
-    // ctx.SubmitUpdates()
-
-    // Seq.iter (fun (x:VoidedOrdersLogBuffer) -> x.Delete()) voidedOrdersList
-    // ctx.SubmitUpdates()
-
-    // Seq.iter (fun (x:ArchivedorderLogBuffer) -> x.Delete()) archivedOrdersList
-    // ctx.SubmitUpdates()
-
-
-    // Seq.iter (fun (x:SubOrder) ->  Orders.forceDeleteSubOrder x.Suborderid ctx) connectedSuborders
-    // ctx.SubmitUpdates()
-
-    // Seq.iter (fun (x:Invoice) -> x.Delete()) connectedInvoices
-    // ctx.SubmitUpdates()
-
-    // Seq.iter (fun (x:OrderOutGroup) -> x.Delete()) outGroupOrders
-    // ctx.SubmitUpdates()
-
     order.Delete()
     ctx.SubmitUpdates()
 
 let getAllActionableStateOfUser userId (ctx:DbContext) =
     ctx.Public.Waiteractionablestates |> Seq.filter (fun (x:WaiterActionableState) -> x.Userid = userId)
-
-//let getAllCoursesByCourseCategory id (ctx: DbContext) =
-//    ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
 
 
 
@@ -3043,17 +2863,14 @@ let getAllActionableStateOfUser userId (ctx:DbContext) =
 let safeDeleteUser userId (ctx:DbContext) =
     log.Debug(sprintf "safeDeleteUser %d" userId)
     let user = getUserById userId ctx
-    let connectedOrders = getAllOrdersOfUser userId ctx
+    // let connectedOrders = getAllOrdersOfUser userId ctx
 
-    // let connectedIngredientDecrements = user.``public.ingredientdecrement by userid``
-
-    let connectedIngredientIncrements = user.``public.ingredientincrement by userid``
-    Seq.iter (fun (x:Order) -> safeRemoveOrder x.Orderid ctx) connectedOrders
-    let connecteActionableStates = getAllActionableStateOfUser userId ctx
-    Seq.iter (fun (x:WaiterActionableState) -> x.Delete()) connecteActionableStates
-    // Seq.iter (fun (x:IngredientDecrement) ->  x.Delete()) connectedIngredientDecrements
-    Seq.iter (fun (x:IngredientIncrement) ->  x.Delete()) connectedIngredientIncrements
-    ctx.SubmitUpdates()
+    // let connectedIngredientIncrements = user.``public.ingredientincrement by userid``
+    // Seq.iter (fun (x:Order) -> safeRemoveOrder x.Orderid ctx) connectedOrders
+    // let connecteActionableStates = getAllActionableStateOfUser userId ctx
+    // Seq.iter (fun (x:WaiterActionableState) -> x.Delete()) connecteActionableStates
+    // Seq.iter (fun (x:IngredientIncrement) ->  x.Delete()) connectedIngredientIncrements
+    // ctx.SubmitUpdates()
     user.Delete()
     ctx.SubmitUpdates()
 
@@ -3077,14 +2894,14 @@ let safeDeleteRole roleId (ctx:DbContext) =
     log.Debug(sprintf "safeDeleteRole %d" roleId)
     let role = getRole roleId ctx
     if (role.Rolename <> "admin" && role.Rolename <> "powerUser") then
-        let connectedUsers = getAllUsersByRole roleId ctx
-        Seq.iter (fun (x:User) -> (safeDeleteUser x.Userid ctx)) connectedUsers
-        let connectedEnablers = getAllEnablersByRole roleId ctx
-        Seq.iter (fun (x:Enabler) -> x.Delete()) connectedEnablers
-        ctx.SubmitUpdates()
-        let connectedObservers = getAllObserversByRole roleId ctx
-        Seq.iter (fun (x:Observer) -> x.Delete()) connectedObservers
-        ctx.SubmitUpdates()
+        // let connectedUsers = getAllUsersByRole roleId ctx
+        // Seq.iter (fun (x:User) -> (safeDeleteUser x.Userid ctx)) connectedUsers
+        // let connectedEnablers = getAllEnablersByRole roleId ctx
+        // Seq.iter (fun (x:Enabler) -> x.Delete()) connectedEnablers
+        // ctx.SubmitUpdates()
+        // let connectedObservers = getAllObserversByRole roleId ctx
+        // Seq.iter (fun (x:Observer) -> x.Delete()) connectedObservers
+        // ctx.SubmitUpdates()
         role.Delete()
         ctx.SubmitUpdates()
     else ()
@@ -3096,30 +2913,19 @@ let getAllOrderItemsOfCourse courseId (ctx:DbContext) =
 let getAllIngredientCourse courseId (ctx:DbContext) =
     log.Debug(sprintf "getAllIngredientCourse %d" courseId )
     ctx.Public.Ingredientcourse |> Seq.filter  (fun (x:IngredientCourse) -> x.Courseid = courseId )
+
 let getAllRejectedOrderItemOfACourse courseId (ctx:DbContext) =
     ctx.Public.Rejectedorderitems |> Seq.filter (fun (x:RejectedOrderItems) -> x.Courseid = courseId)
 
 let safeDeleteCourse (course:Course) (ctx:DbContext) =
     log.Debug(sprintf "safeDeleteCourse %d " course.Courseid)
-    // let connectedOrderItems = getAllOrderItemsOfCourse course.Courseid ctx
-    // let rejectedOrderItemlist = getAllRejectedOrderItemOfACourse course.Courseid ctx
-
-    // Seq.iter (fun (x:RejectedOrderItems) -> x.Delete()) rejectedOrderItemlist
-    // ctx.SubmitUpdates()
-
-    // Seq.iter (fun (x:OrderItem) -> safeRemoveOrderItem x.Orderitemid ctx ) connectedOrderItems
-    // ctx.SubmitUpdates()
-
-    // let connectedIngredientCourses = getAllIngredientCourse course.Courseid ctx
-    // Seq.iter (fun (x:IngredientCourse) -> x.Delete()) connectedIngredientCourses
-    // ctx.SubmitUpdates()
-
     course.Delete()
     ctx.SubmitUpdates()
 
 let getAllEnablersByCourseCategory id (ctx: DbContext) =
     log.Debug(sprintf "getAllEnablersByCourseCatgory %d" id)
     ctx.Public.Enablers |> Seq.filter (fun (x:Enabler) -> x.Categoryid = id) |> Seq.toList
+
 let getAllObserversByCourseCategory  id (ctx: DbContext) =
     ctx.Public.Observers |> Seq.filter (fun (x:Observer) -> x.Categoryid = id) |> Seq.toList
 
@@ -3136,18 +2942,18 @@ let safeDeleteCourseCategory id (ctx: DbContext) =
     let courseCategory = Courses.tryGetCourseCategory id ctx
     match courseCategory with
     | Some theCourseCategory ->
-        let connectedCourses = Courses.getAllCoursesByCourseCategory id ctx
-        connectedCourses |> List.iter (fun (x:Course) -> safeDeleteCourse x ctx)
-        ctx.SubmitUpdates()
-        let connectedEnablers = getAllEnablersByCourseCategory id ctx
-        connectedEnablers |> List.iter (fun (x:Enabler) -> x.Delete())
-        ctx.SubmitUpdates()
-        let connectedObservers = getAllObserversByCourseCategory id ctx
-        connectedObservers |> List.iter (fun (x:Observer) -> x.Delete())
-        ctx.SubmitUpdates()
-        let connectedPrinterForCategory = getPrinterForCatgoryMappings id ctx
-        connectedPrinterForCategory |> List.iter (fun (x:PrinterForCourseCategory) -> x.Delete())
-        ctx.SubmitUpdates()
+        // let connectedCourses = Courses.getAllCoursesByCourseCategory id ctx
+        // connectedCourses |> List.iter (fun (x:Course) -> safeDeleteCourse x ctx)
+        // ctx.SubmitUpdates()
+        // let connectedEnablers = getAllEnablersByCourseCategory id ctx
+        // connectedEnablers |> List.iter (fun (x:Enabler) -> x.Delete())
+        // ctx.SubmitUpdates()
+        // let connectedObservers = getAllObserversByCourseCategory id ctx
+        // connectedObservers |> List.iter (fun (x:Observer) -> x.Delete())
+        // ctx.SubmitUpdates()
+        // let connectedPrinterForCategory = getPrinterForCatgoryMappings id ctx
+        // connectedPrinterForCategory |> List.iter (fun (x:PrinterForCourseCategory) -> x.Delete())
+        // ctx.SubmitUpdates()
 
         theCourseCategory.Delete()
         ctx.SubmitUpdates()
@@ -3201,21 +3007,21 @@ let tryGetIngredientCourseByCourseIdAndIngredientId courseId ingredientId (ctx:D
 let safeDeleteIngredient ingredientId (ctx: DbContext) =
     log.Debug("safeDeleteIngredient")
     let ingredient = getIngredientById ingredientId ctx
-    let connectedVariations = getVariationByIngredient ingredientId ctx
-    let connectedDecrements = ingredient.``public.ingredientdecrement by ingredientid``
-    let connectedIngredientPrices = ingredient.``public.ingredientprice by ingredientid``
-    connectedIngredientPrices |> Seq.iter (fun (x:IngredientPrice) -> x.Delete())
-    connectedVariations |> Seq.iter (fun (x:Variation) -> x.Delete())
-    connectedDecrements |> Seq.iter (fun (x:IngredientDecrement) -> x.Delete())
-    ctx.SubmitUpdates()
+    // let connectedVariations = getVariationByIngredient ingredientId ctjj
+    // let connectedDecrements = ingredient.``public.ingredientdecrement by ingredientid``
+    // // let connectedIngredientPrices = ingredient.``public.ingredientprice by ingredientid``
+    // // connectedIngredientPrices |> Seq.iter (fun (x:IngredientPrice) -> x.Delete())
+    // connectedVariations |> Seq.iter (fun (x:Variation) -> x.Delete())
+    // connectedDecrements |> Seq.iter (fun (x:IngredientDecrement) -> x.Delete())
+    // ctx.SubmitUpdates()
 
-    let connectedIncrements = ingredient.``public.ingredientincrement by ingredientid``
-    connectedIncrements |> Seq.iter (fun (x:IngredientIncrement) -> x.Delete())
-    ctx.SubmitUpdates()
+    // let connectedIncrements = ingredient.``public.ingredientincrement by ingredientid``
+    // connectedIncrements |> Seq.iter (fun (x:IngredientIncrement) -> x.Delete())
+    // ctx.SubmitUpdates()
 
-    let connectedIngredientCourse = getIngredientCourseByIngredient ingredientId ctx
-    connectedIngredientCourse |> Seq.iter (fun (x:IngredientCourse) -> x.Delete())
-    ctx.SubmitUpdates()
+    // let connectedIngredientCourse = getIngredientCourseByIngredient ingredientId ctx
+    // connectedIngredientCourse |> Seq.iter (fun (x:IngredientCourse) -> x.Delete())
+    // ctx.SubmitUpdates()
     ingredient.Delete()
     ctx.SubmitUpdates()
 

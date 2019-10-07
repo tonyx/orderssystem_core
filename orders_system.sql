@@ -3127,11 +3127,19 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
+-- Name: variations category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.variations
+    ADD CONSTRAINT category_fk FOREIGN KEY (ingredientpriceid) REFERENCES public.ingredientprice(ingredientpriceid) MATCH FULL ON DELETE CASCADE;
+
+
+--
 -- Name: observers category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.observers
-    ADD CONSTRAINT category_fk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL;
+    ADD CONSTRAINT category_fk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3139,15 +3147,7 @@ ALTER TABLE ONLY public.observers
 --
 
 ALTER TABLE ONLY public.enablers
-    ADD CONSTRAINT category_fk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL;
-
-
---
--- Name: variations category_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.variations
-    ADD CONSTRAINT category_fk FOREIGN KEY (ingredientpriceid) REFERENCES public.ingredientprice(ingredientpriceid) MATCH FULL;
+    ADD CONSTRAINT category_fk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3163,7 +3163,7 @@ ALTER TABLE ONLY public.printerforcategory
 --
 
 ALTER TABLE ONLY public.courses
-    ADD CONSTRAINT categoryfk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL;
+    ADD CONSTRAINT categoryfk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3183,6 +3183,14 @@ ALTER TABLE ONLY public.orderitems
 
 
 --
+-- Name: ingredientincrement decrement_ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.ingredientincrement
+    ADD CONSTRAINT decrement_ingredient_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL ON DELETE CASCADE;
+
+
+--
 -- Name: defaultactionablestates defaultactionablestates_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3195,7 +3203,7 @@ ALTER TABLE ONLY public.defaultactionablestates
 --
 
 ALTER TABLE ONLY public.enablers
-    ADD CONSTRAINT enablersrole FOREIGN KEY (roleid) REFERENCES public.roles(roleid) MATCH FULL;
+    ADD CONSTRAINT enablersrole FOREIGN KEY (roleid) REFERENCES public.roles(roleid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3207,19 +3215,11 @@ ALTER TABLE ONLY public.subcategorymapping
 
 
 --
--- Name: ingredientincrement ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ingredientincrement
-    ADD CONSTRAINT ingredient_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL;
-
-
---
 -- Name: ingredientdecrement ingredient_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ingredientdecrement
-    ADD CONSTRAINT ingredient_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL;
+    ADD CONSTRAINT ingredient_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3227,7 +3227,7 @@ ALTER TABLE ONLY public.ingredientdecrement
 --
 
 ALTER TABLE ONLY public.ingredient
-    ADD CONSTRAINT ingredientcategory_fk FOREIGN KEY (ingredientcategoryid) REFERENCES public.ingredientcategory(ingredientcategoryid) MATCH FULL;
+    ADD CONSTRAINT ingredientcategory_fk FOREIGN KEY (ingredientcategoryid) REFERENCES public.ingredientcategory(ingredientcategoryid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3243,7 +3243,7 @@ ALTER TABLE ONLY public.ingredientcourse
 --
 
 ALTER TABLE ONLY public.ingredientcourse
-    ADD CONSTRAINT ingredientcourse_ingredient_fk2 FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL;
+    ADD CONSTRAINT ingredientcourse_ingredient_fk2 FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3251,7 +3251,7 @@ ALTER TABLE ONLY public.ingredientcourse
 --
 
 ALTER TABLE ONLY public.ingredientprice
-    ADD CONSTRAINT ingredientprice_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL;
+    ADD CONSTRAINT ingredientprice_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3371,7 +3371,7 @@ ALTER TABLE ONLY public.ingredientdecrement
 --
 
 ALTER TABLE ONLY public.printerforcategory
-    ADD CONSTRAINT print_category_fk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL;
+    ADD CONSTRAINT print_category_fk FOREIGN KEY (categoryid) REFERENCES public.coursecategories(categoryid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3403,7 +3403,7 @@ ALTER TABLE ONLY public.rejectedorderitems
 --
 
 ALTER TABLE ONLY public.observers
-    ADD CONSTRAINT role1_fk FOREIGN KEY (roleid) REFERENCES public.roles(roleid) MATCH FULL;
+    ADD CONSTRAINT role1_fk FOREIGN KEY (roleid) REFERENCES public.roles(roleid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3411,7 +3411,7 @@ ALTER TABLE ONLY public.observers
 --
 
 ALTER TABLE ONLY public.users
-    ADD CONSTRAINT rolefk FOREIGN KEY (role) REFERENCES public.roles(roleid) MATCH FULL;
+    ADD CONSTRAINT rolefk FOREIGN KEY (role) REFERENCES public.roles(roleid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3451,7 +3451,7 @@ ALTER TABLE ONLY public.standardvariationforcourse
 --
 
 ALTER TABLE ONLY public.observers
-    ADD CONSTRAINT state1_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL;
+    ADD CONSTRAINT state1_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3515,7 +3515,7 @@ ALTER TABLE ONLY public.temp_user_actionable_states
 --
 
 ALTER TABLE ONLY public.temp_user_actionable_states
-    ADD CONSTRAINT tempuser_user_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL;
+    ADD CONSTRAINT tempuser_user_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3539,7 +3539,7 @@ ALTER TABLE ONLY public.ingredientincrement
 --
 
 ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT userfk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL;
+    ADD CONSTRAINT userfk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3547,7 +3547,7 @@ ALTER TABLE ONLY public.orders
 --
 
 ALTER TABLE ONLY public.variations
-    ADD CONSTRAINT variationingredient_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL;
+    ADD CONSTRAINT variationingredient_fk FOREIGN KEY (ingredientid) REFERENCES public.ingredient(ingredientid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3563,7 +3563,7 @@ ALTER TABLE ONLY public.variations
 --
 
 ALTER TABLE ONLY public.voidedorderslogbuffer
-    ADD CONSTRAINT voided_ord_user_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL;
+    ADD CONSTRAINT voided_ord_user_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3579,7 +3579,7 @@ ALTER TABLE ONLY public.voidedorderslogbuffer
 --
 
 ALTER TABLE ONLY public.waiteractionablestates
-    ADD CONSTRAINT waiterstate_state_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL;
+    ADD CONSTRAINT waiterstate_state_fk FOREIGN KEY (stateid) REFERENCES public.states(stateid) MATCH FULL ON DELETE CASCADE;
 
 
 --
@@ -3587,7 +3587,7 @@ ALTER TABLE ONLY public.waiteractionablestates
 --
 
 ALTER TABLE ONLY public.waiteractionablestates
-    ADD CONSTRAINT waiterstateuser_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL;
+    ADD CONSTRAINT waiterstateuser_fk FOREIGN KEY (userid) REFERENCES public.users(userid) MATCH FULL ON DELETE CASCADE;
 
 
 --

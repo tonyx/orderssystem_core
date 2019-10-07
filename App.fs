@@ -3144,7 +3144,7 @@ type LiquidWrapperOrderItemsWithGenericCourses = { orderitemdetailswrapped: Orde
 let recomputeSubOrderTotal (subOrder:Db.SubOrder) =
     log.Debug(sprintf "recomputeSubOrderTotal %d" subOrder.Suborderid)
     let ctx = Db.getContext()
-    let orderItemsSOfSuborder = Db.Orders.getOrderItemsOfSubOrderRef subOrder.Suborderid ctx
+    let orderItemsSOfSuborder = Db.Orders.getOrderItemsOfSubOrder subOrder.Suborderid ctx
     log.Debug(sprintf "list length %d" (List.length orderItemsSOfSuborder))
     let total = orderItemsSOfSuborder |> List.map (fun (x:Db.OrderItem) -> x.Price) |> List.sum
     log.Debug(sprintf "total %.2f" total)
@@ -3209,44 +3209,6 @@ let colapseDoneOrder id (user: UserLoggedOnSession) =
         )
     ]
 
-//let subdivideDoneOrder id (user: UserLoggedOnSession)  = 
-//    log.Debug(sprintf "%s %d" "subdivideDoneOrder" id)
-//    let ctx = Db.getContext()
-//    choose [
-//        GET >=> warbler ( fun (x:HttpContext) ->
-//
-//            let idsOfNonUnitaryOrderItems = Db.getIdsOfNonUnitaryOrderItemsOfOrder id ctx
-//            let _ = idsOfNonUnitaryOrderItems |> Seq.iter (fun x -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
-//            let order = Db.getOrderDetail id ctx
-//            let orderItemsdetailsOfOrder = Db.getOrderItemDetailOfOrderDetailThatAreNotInInitState order ctx
-//            let dbTenderCodes = Db.getAllTenderCodes ctx
-//            let wrappedTenderCodes = dbTenderCodes |> List.map (fun (x:Db.TenderCode) -> DbObjectWrapper.WrapTenderCode x)
-//            let subOrders = 
-//                Db.Orders.getSubOrdersOfOrderById id ctx
-//
-//            let _ = subOrders |> List.iter (fun (x:Db.SubOrder) -> recomputeSubOrderTotal x )
-//            let colors = Globals.getFirstNColorValues (List.length subOrders)
-//            let wrappedSubOrders =  List.map2 (fun (x:Db.SubOrder) y -> DbObjectWrapper.WrapSubOrder x y) subOrders colors
-//            let subOdersColorsMap = wrappedSubOrders |> List.map (fun (x:SubOrderWrapped) -> (x.Suborderid,x.Csscolor)) |> Map.ofList
-//            let wrappedOrderItemDetails = 
-//                List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (x.Isinsasuborder) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
-//            let parametersNames = wrappedOrderItemDetails |> 
-//                List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string))
-//            let parametersFromRequest = parametersNames |> 
-//                List.filter (fun z -> match (x.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false) |>
-//                    List.map (fun z -> z.Substring("orderitem".Length)) |> List.map (fun z -> (int) z)
-//            if (parametersFromRequest.Length>0) then (
-//                let subOrder = Db.Orders.createSubOrderOfOrderItem id ctx
-//                parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx)
-//                Redirection.found (sprintf Path.Orders.subdivideDoneOrder id)
-//            ) else 
-//
-//                let liquidItem = {orderitemdetailswrapped = wrappedOrderItemDetails; suborderwrapped = wrappedSubOrders; orderid=id; table=order.Table; encodedbackurl = WebUtility.UrlEncode (sprintf Path.Orders.subdivideDoneOrder id);tendercodes =  wrappedTenderCodes}
-//                DotLiquid.page("subdivideDoneOrder.html") liquidItem
-//        )
-//    ]
-//
-
 
 
 let subdivideDoneOrderRef id (user: UserLoggedOnSession)  = 
@@ -3271,8 +3233,6 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
             let colors = Globals.getFirstNColorValues (List.length subOrders)
             let wrappedSubOrders =  List.map2 (fun (x:Db.SubOrder) y -> DbObjectWrapper.WrapSubOrder x y) subOrders colors
             let subOdersColorsMap = wrappedSubOrders |> List.map (fun (x:SubOrderWrapped) -> (x.Suborderid,x.Csscolor)) |> Map.ofList
-            // let wrappedOrderItemDetails = 
-            //     List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (x.Isinsasuborder) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
 
             let wrappedOrderItemDetails = 
                 List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails x (if (Db.Orders.orderItemIsInASubOrder x.Orderitemid ctx) then subOdersColorsMap.[x.Suborderid] else "#dee7ed")) orderItemsdetailsOfOrder 
@@ -3285,9 +3245,7 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
                     List.map (fun z -> z.Substring("orderitem".Length)) |> List.map (fun z -> (int) z)
             if (parametersFromRequest.Length>0) then (
                 let subOrder = Db.Orders.createSubOrderOfOrder id ctx
-                // parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx)
-                // parametersFromRequest |> List.iter (fun z -> Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx; Db.bindOrderItemToSubOrderRef z subOrder.Suborderid ctx)
-                parametersFromRequest |> List.iter (fun z ->  Db.bindOrderItemToSubOrderRef z subOrder.Suborderid ctx)
+                parametersFromRequest |> List.iter (fun z ->  Db.bindOrderItemToSubOrder z subOrder.Suborderid ctx)
                 Redirection.found (sprintf Path.Orders.subdivideDoneOrder id)
             ) else 
 
