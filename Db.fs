@@ -551,6 +551,14 @@ module Orders =
                 select orderItem
         } |> Seq.tryHead
 
+    let getTheOrderItemById orderItemId (ctx: DbContext) =
+        log.Debug(sprintf "%s %d" "getOrderItemById" orderItemId)
+        query {
+            for orderItem in ctx.Public.Orderitems do
+                where (orderItem.Orderitemid = orderItemId)
+                select orderItem
+        } |> Seq.head
+
     let tryGetOrder orderId (ctx: DbContext): Order option =
         log.Debug(sprintf "%s %d" "tryGetOrder" orderId)
         query {
@@ -809,6 +817,14 @@ module Orders =
                 where (orderitemsubordermapping.Orderitemid = orderItemId)
                 select orderitemsubordermapping
         } |> Seq.length > 0 
+
+    let tryGetSubOrderOfOrderItem orderItemId (ctx: DbContext) =
+        log.Debug(sprintf "tryGetSubOrderOfOrderItem %d" orderItemId)     
+        query {
+            for orderitemsubordermapping in ctx.Public.Orderitemsubordermapping do
+            join subOrder in ctx.Public.Suborder on (orderitemsubordermapping.Suborderid = subOrder.Suborderid)
+            select subOrder
+        } |> Seq.tryHead
 
 
 
@@ -2696,6 +2712,20 @@ let isOrderItemPayedRef (orderItemDetail: OrderItemDetails) (ctx:DbContext)  =
                   theSubOrder.Payed
 
 
+let isOrderItemPayedByOrderItem (orderItem: OrderItem) (ctx:DbContext)  =
+    log.Debug(sprintf "isOrderItemPayed %d" orderItem.Orderitemid)
+
+    let eventualSubOrder = Orders.tryGetSubOrderOfOrderItem orderItem.Orderitemid ctx
+    match eventualSubOrder with
+        | None -> false
+        | Some X -> X.Payed
+
+    // match (Orders.orderItemIsInASubOrder orderItem.Orderitemid ctx)    with
+    //     | false -> false 
+    //     | true -> let theSubOrder = ctx.Public.Suborder |> Seq.find (fun (x:SubOrder) -> x.Suborderid = orderItem.Suborderid)
+    //               theSubOrder.Payed
+
+
 let orderOutGroupsOfOrder (order: Order) (ctx:DbContext) =
     log.Debug(sprintf "orderOutGropusOfOrder %d" order.Orderid)
     let groups = order.``public.orderoutgroup by orderid``
@@ -2706,15 +2736,19 @@ let movableOrderItems (orderItems: OrderItemDetails list) (ctx:DbContext) =
     orderItems |> List.filter (fun (y:OrderItemDetails) -> not (isOrderItemPayed y ctx))
 
 let removeOrderItemSubOrderMapping orderItemId (ctx:DbContext) =
+    log.Debug(sprintf "removeOrderItemSubOrderMapping %d" orderItemId)
     let orderItemSubOrderMapping =
         query {
             for orderItemSubOrderMapping in ctx.Public.Orderitemsubordermapping do
                 where (orderItemSubOrderMapping.Orderitemid = orderItemId)
         }
+    log.Debug("removeO 2")    
     let element = Seq.tryHead orderItemSubOrderMapping
+    log.Debug("removeO 3")    
     match element with 
-    | Some theElement -> theElement.Delete()
-    | _ -> ()
+    | Some theElement -> log.Debug("removeO 4");    theElement.Delete(); ctx.SubmitUpdates()
+    | _ -> log.Debug("remove0 5")
+
 
 
 
@@ -2722,16 +2756,17 @@ let unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId  (ctx:DbContext) =
     log.Debug(sprintf "unBoundOrderItemFromAnySubGroupIfItIsNotPayed %d" orderItemId)
     let orderItem = Orders.getOrderItemDetail orderItemId ctx
     match isOrderItemPayed orderItem ctx with
-        | false -> removeOrderItemSubOrderMapping orderItemId;
-                   ctx.SubmitUpdates()
+        | false -> removeOrderItemSubOrderMapping orderItemId ctx;
+                //    ctx.SubmitUpdates()
         | true ->()
 
 let tryMoveOrderItemToAnOutGroupOfAnotherOrder orderItemId outGroupId (ctx:DbContext) =
     log.Debug(sprintf "tryMoveOrderItemToAnOutGroupfOfanotherOrder %d %d" orderItemId outGroupId )
-    let orderItem = Orders.getOrderItemDetail orderItemId ctx
+    // let orderItem = Orders.getOrderItemDetail orderItemId ctx
+    let orderItem = Orders.getTheOrderItemById orderItemId ctx
     let outGroup = getOrderOutGroup outGroupId ctx
     let oriOutGroup = getOrderOutGroup orderItem.Ordergroupid ctx
-    match isOrderItemPayed orderItem ctx with
+    match isOrderItemPayedByOrderItem orderItem ctx with
         | true -> ()
         | false -> unBoundOrderItemFromAnySubGroupIfItIsNotPayed orderItemId ctx
                    orderItem.Ordergroupid <- outGroupId

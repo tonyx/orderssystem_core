@@ -69,17 +69,17 @@ open System.Security.Cryptography.X509Certificates
 type stritem = {entry: string}
 
 
-type indexNameRecord = {name: string; index: int}
-type indexNameDataRecord = {index: int; name: string; data: string}
-type nameDataRecord = {name: string; data: string}
-type indexUnitMeasureMap = {index: int; unitmeasure: string}
-type twoindexnamerecord = {index1: int; index2: int; enablers: stritem list;observers: stritem list}
-type perrolecategories = {roleid: int; categories: string list}
-type manyrolescategories = {rolecategories: perrolecategories}
-type ordersLiquidModel = {orders:  OrderWrapped list; targetOrder: OrderWrapped}
-type indexNameRecordList = {indexnameitems: indexNameRecord list }
-type orderandorderitemslist = {order: OrderWrapped; orderitems: OrderItemDetailsWrapped list }
-type orderandsuborderlist = {orderandorderitems: orderandorderitemslist list; targetorder: OrderWrapped}
+type IndexNameRecord = {name: string; index: int}
+type IndexNameDataRecord = {index: int; name: string; data: string}
+type NameDataRecord = {name: string; data: string}
+type IndexUnitMeasureMap = {index: int; unitmeasure: string}
+type TwoIndexNameRecord = {index1: int; index2: int; enablers: stritem list;observers: stritem list}
+type PerRoleCategories = {roleid: int; categories: string list}
+type ManyRolesCategories = {rolecategories: PerRoleCategories}
+type OrdersLiquidModel = {orders:  OrderWrapped list; targetOrder: OrderWrapped}
+type IndexNameRecordList = {indexnameitems: IndexNameRecord list }
+type OrderAndOrderitemslist = {order: OrderWrapped; orderitems: OrderItemDetailsWrapped list }
+type OrderaAdSuborderList = {orderandorderitems: OrderAndOrderitemslist list; targetorder: OrderWrapped}
 
 let tenderCodes = [{index=1;name="CONTANTI"};{index=2;name="CREDITO"};{index=3;name="ASSEGNI"};{index=4;name="BUONI"};{index=5;name="CARTA DI CREDITO"}]
 
@@ -123,7 +123,7 @@ let canManageCourses f_success =
        | UserLoggedOn { Role = "admin" } -> f_success
        | UserLoggedOn { CanManageAllCourses = true} -> f_success
        | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
-       | _ -> UNAUTHORIZED "Not logged in"
+       | _ -> UNAUTHORIZED "Not logged on"
    ))
 
 let canManageIngredients f_success =
@@ -131,7 +131,7 @@ let canManageIngredients f_success =
        | UserLoggedOn { Role = "admin" } -> f_success
        | UserLoggedOn { CanManageAllCourses = true} -> f_success
        | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
-       | _ -> UNAUTHORIZED "Not logged in"
+       | _ -> UNAUTHORIZED "Not logged on"
    ))
 
 let canManageIngredientsPassingUserLoggedOn f_success  =
@@ -193,6 +193,15 @@ let anyUserExceptTemporary f_success =
        | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
        | _ -> UNAUTHORIZED "Not logged in"
    ))
+
+
+let anyUserExceptTemporaryRef f_success =
+   loggedOn (session (function
+       | UserLoggedOn { Temporary=false} ->  f_success
+       | UserLoggedOn _ -> FORBIDDEN "temporary user is not allowed"
+       | _ -> UNAUTHORIZED "Not logged on"
+   ))
+
 
 let anyUserPassingUserLoggedOn f_success =
    let ctx = Db.getContext()
@@ -264,10 +273,10 @@ let html container =
 
     session (function |_ -> result 0 None)
 
-let sendImage bitmap =
-    let result  =
-        OK "ok" >=> Writers.setMimeType "image/bmp"
-    session (function |_ -> bitmap)
+// let sendImage bitmap =
+//     let result  =
+//         OK "ok" >=> Writers.setMimeType "image/bmp"
+//     session (function |_ -> bitmap)
 
 let makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx =
     log.Debug(sprintf "%s orerItemId: %d" "makeOrderItemAsRejectedIfContainsUnavalableIngredients" orderItemId)
@@ -309,7 +318,7 @@ let logonViaQrCode  =
                      match user with
                      | Some theUser ->
                         authenticateUser theUser
-                     | None -> UNAUTHORIZED "not logged in"
+                     | None -> UNAUTHORIZED "not logged on"
                 | Choice2Of2 msg -> BAD_REQUEST msg)
             )
         POST >=> 
@@ -331,6 +340,7 @@ let logon =
                View.logon "Username or password is invalid." |> html
        )
     ]
+
 let deleteObjects = 
     View.objectDeletionPage |> html
 
@@ -463,12 +473,16 @@ let deleteCourses =
         )
     ]
 
-let emtpy (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
-    log.Debug(sprintf "empty%s " userLoggedOn.Username)
-    let ctx = Db.getContext()
-    let user = Db.getUserById userLoggedOn.UserId ctx
-    View.empty userLoggedOn user |> html
-)
+
+let emtpy  = warbler (fun _ ->
+    loggedOn (session (function 
+    | UserLoggedOn userLoggedOn ->
+        log.Debug(sprintf "empty%s " userLoggedOn.Username)
+        let ctx = Db.getContext()
+        let user = Db.getUserById userLoggedOn.UserId ctx
+        View.empty userLoggedOn user |> html
+        )
+    )) 
 
 let controlPanel (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
@@ -476,6 +490,17 @@ let controlPanel (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let user = Db.getUserById userLoggedOn.UserId ctx
     View.controlPanel userLoggedOn user |> html
 )
+
+let controlPanelRef  = warbler (fun _ ->
+    loggedOn (session (function 
+        | UserLoggedOn userLoggedOn ->
+            log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
+            let ctx = Db.getContext()
+            let user = Db.getUserById userLoggedOn.UserId ctx
+            View.controlPanel userLoggedOn user |> html
+        | _ -> FORBIDDEN "not logged on"
+    )
+    ))
 
 let userEnabledToSeeWholeDoneOrers userId = 
     log.Debug(sprintf "userEnabledToSeeWholeDoneOrers %d" userId)
@@ -775,14 +800,14 @@ let visibleingredientCategories =
         )
     ]
 
-type indexstringlist = {index:int; names: string list}
+type IndexStringList = {index:int; names: string list}
 
-type myPrinterModel = {name: string; 
-    coursecategories: indexNameRecord list;
-    catenabledforcurrentprinter: indexNameRecord list;
-    printerforstateenabled: indexNameRecord list;
+type MyPrinterModel = {name: string; 
+    coursecategories: IndexNameRecord list;
+    catenabledforcurrentprinter: IndexNameRecord list;
+    printerforstateenabled: IndexNameRecord list;
     backurl: string;
-    enabledstatesforcategories: indexstringlist list;
+    enabledstatesforcategories: IndexStringList list;
     selectedcategory: int;
     printername: string;
     printerid: int;
@@ -1285,7 +1310,7 @@ let changePassword  (user:UserLoggedOnSession)=
 
 let randomAlphanumericString() =
     let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    let random = new Random(System.DateTime.Now.Millisecond)
+    let random = Random(System.DateTime.Now.Millisecond)
     seq {
         for i in {0..11} do
             yield chars.[random.Next(chars.Length)]
@@ -2027,9 +2052,14 @@ let createSingleOrderByUserLoggedOn (user:UserLoggedOnSession) =
     ]
 
 
-type myModel = {name: string; roleidname: indexNameRecord list; categoriesidname: indexNameRecord list;
-    existingrolestatemapping:  twoindexnamerecord list; selectroleid: string; selectcategoryid: string;
+// type MyModel = {name: string; roleidname: IndexNameRecord list; categoriesidname: IndexNameRecord list;
+//     existingrolestatemapping:  TwoIndexNameRecord list; selectroleid: string; selectcategoryid: string;
+//     backurl: string}
+
+type MyModel = {roleidname: IndexNameRecord list; categoriesidname: IndexNameRecord list;
+    existingrolestatemapping:  TwoIndexNameRecord list; selectroleid: string; selectcategoryid: string;
     backurl: string}
+
 
 let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
     log.Debug(sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId: %d, categoryId: %d " roleId categoryId)
@@ -2051,7 +2081,7 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
                  yield {index1=i;index2=j;enablers = enablers; observers = observers}
             ]
 
-            let o = {name = "15";
+            let o = {
              roleidname = roleIdNameMap|> List.map (fun (ind,value)-> {index=ind;name=value});
              categoriesidname = categoriesIdNameMap |> List.map (fun (ind,value) -> {index=ind;name=value});
              existingrolestatemapping=rolecategoriesCombinations; selectroleid = (roleId|>string) ; selectcategoryid = (categoryId |> string);
@@ -2195,7 +2225,7 @@ let roleEnablerObserverCategoriesByCheckBoxes   =
 
 
 
-type model =  { names: indexNameRecord list; measures: indexUnitMeasureMap list; message: string}
+type Model =  { names: IndexNameRecord list; measures: IndexUnitMeasureMap list; message: string}
 
 let selectIAllngredientCatForCourse courseId  =
     log.Debug(sprintf "selectIAllngredientCatForCourse %d" courseId )
@@ -2493,39 +2523,85 @@ let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingr
      
      else (Redirection.FOUND Path.home)
 
-let viewSingleOrder orderId (user:UserLoggedOnSession)=
-    log.Debug(sprintf "%s %d" "viewSingleOrder" orderId)
-    let ctx = Db.getContext()
-    Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
-
-    let orderDetail = Db.getOrderDetail orderId ctx
-    let myOrdersDetails = Db.Orders.getOngoingOrderDetailsByUser user.UserId ctx // orderDetail.Userid  ctx
-    let othersOrdersDetails = match user.CanManageAllOrders with
-                                | true -> Db.Orders.getOngoingOrderDetailsByAllUserExcept user.UserId ctx // orderDetail.Userid ctx
-                                | _ -> []
-
-    let userView = Db.getUserViewById user.UserId ctx //orderDetail.Userid ctx
-    //let activeCategories = Db.Courses.getActiveConcreteCategories ctx
-    let activeCategories = Db.Courses.getAllActiveVisibleRootCategories ctx
-    let orderItemDetails = Db.getOrderItemDetailOfOrderById orderId ctx
-
-    // log order item details:
-    log.Debug("orderitemetails info:")
-    // let _ = orderItemDetails |> List.map (fun x -> log.Debug(x.Suborderid))
-    let _ = orderItemDetails |> List.map (fun x ->  (if x.GetColumn("suborderid") <> null then log.Debug(x.GetColumn("suborderid").GetType())))
-    log.Debug("orderitemetails info over.")
 
 
-    let mapOfLinkedStates = Db.getMapOfStates ctx 
-    let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
-    let eventualRejectionsOfOrderItems = [ orderDetail ] |>
-         List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
-         |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+let viewSingleOrderRef orderId =
+    loggedOn (session (function 
+        | UserLoggedOn user  ->
+    
+            log.Debug(sprintf "%s %d" "viewSingleOrder" orderId)
+            let ctx = Db.getContext()
+            Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
 
-    let outGroupsOfOrder = Db.getOutGroupsOfOrder orderId ctx
+            let orderDetail = Db.getOrderDetail orderId ctx
+            let myOrdersDetails = Db.Orders.getOngoingOrderDetailsByUser user.UserId ctx // orderDetail.Userid  ctx
+            let othersOrdersDetails = match user.CanManageAllOrders with
+                                        | true -> Db.Orders.getOngoingOrderDetailsByAllUserExcept user.UserId ctx // orderDetail.Userid ctx
+                                        | _ -> []
 
-    (View.viewSingleOrder orderDetail orderItemDetails mapOfLinkedStates statesEnabledForUser 
-        eventualRejectionsOfOrderItems activeCategories userView outGroupsOfOrder myOrdersDetails othersOrdersDetails user) |> html
+            let userView = Db.getUserViewById user.UserId ctx //orderDetail.Userid ctx
+            //let activeCategories = Db.Courses.getActiveConcreteCategories ctx
+            let activeCategories = Db.Courses.getAllActiveVisibleRootCategories ctx
+            let orderItemDetails = Db.getOrderItemDetailOfOrderById orderId ctx
+
+            // log order item details:
+            log.Debug("orderitemetails info:")
+            // let _ = orderItemDetails |> List.map (fun x -> log.Debug(x.Suborderid))
+            let _ = orderItemDetails |> List.map (fun x ->  (if x.GetColumn("suborderid") <> null then log.Debug(x.GetColumn("suborderid").GetType())))
+            log.Debug("orderitemetails info over.")
+
+
+            let mapOfLinkedStates = Db.getMapOfStates ctx 
+            let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
+            let eventualRejectionsOfOrderItems = [ orderDetail ] |>
+                 List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
+                 |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+
+            let outGroupsOfOrder = Db.getOutGroupsOfOrder orderId ctx
+
+            (View.viewSingleOrder orderDetail orderItemDetails mapOfLinkedStates statesEnabledForUser 
+                eventualRejectionsOfOrderItems activeCategories userView outGroupsOfOrder myOrdersDetails othersOrdersDetails user) |> html
+
+        | _ -> UNAUTHORIZED "Not logged on"
+
+    ))
+
+
+
+
+// let viewSingleOrder orderId (user:UserLoggedOnSession)=
+//     log.Debug(sprintf "%s %d" "viewSingleOrder" orderId)
+//     let ctx = Db.getContext()
+//     Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
+
+//     let orderDetail = Db.getOrderDetail orderId ctx
+//     let myOrdersDetails = Db.Orders.getOngoingOrderDetailsByUser user.UserId ctx // orderDetail.Userid  ctx
+//     let othersOrdersDetails = match user.CanManageAllOrders with
+//                                 | true -> Db.Orders.getOngoingOrderDetailsByAllUserExcept user.UserId ctx // orderDetail.Userid ctx
+//                                 | _ -> []
+
+//     let userView = Db.getUserViewById user.UserId ctx //orderDetail.Userid ctx
+//     //let activeCategories = Db.Courses.getActiveConcreteCategories ctx
+//     let activeCategories = Db.Courses.getAllActiveVisibleRootCategories ctx
+//     let orderItemDetails = Db.getOrderItemDetailOfOrderById orderId ctx
+
+//     // log order item details:
+//     log.Debug("orderitemetails info:")
+//     // let _ = orderItemDetails |> List.map (fun x -> log.Debug(x.Suborderid))
+//     let _ = orderItemDetails |> List.map (fun x ->  (if x.GetColumn("suborderid") <> null then log.Debug(x.GetColumn("suborderid").GetType())))
+//     log.Debug("orderitemetails info over.")
+
+
+//     let mapOfLinkedStates = Db.getMapOfStates ctx 
+//     let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
+//     let eventualRejectionsOfOrderItems = [ orderDetail ] |>
+//          List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
+//          |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+
+//     let outGroupsOfOrder = Db.getOutGroupsOfOrder orderId ctx
+
+//     (View.viewSingleOrder orderDetail orderItemDetails mapOfLinkedStates statesEnabledForUser 
+//         eventualRejectionsOfOrderItems activeCategories userView outGroupsOfOrder myOrdersDetails othersOrdersDetails user) |> html
 
 
 
@@ -2714,7 +2790,7 @@ let deleteIngredientCategory id =
 
 type LiquidWrappedOrderItemsForEdit = {orderitemdetailswrapped: OrderItemDetailsWrapped list; suborderwrapped: SubOrderWrapped list; currentsuborderid: int}
 
-type invoiceModel = {daticliente: string; orderitemdetailswrapped: OrderItemDetailsWrapped list; nextavailablenumber: int; idname: indexNameDataRecord list}
+type invoiceModel = {daticliente: string; orderitemdetailswrapped: OrderItemDetailsWrapped list; nextavailablenumber: int; idname: IndexNameDataRecord list}
 let printWholeOrderInvoiceAsWordformat orderId =
     failwith "unimplemented"
 
@@ -2988,7 +3064,7 @@ let printWholeOrderReceipt orderId =
     Redirection.found (Path.Orders.seeDoneOrders)
 
 
-type PaymentItemsLiquidValues = {wrappedSubOrder: DbWrappedEntities.SubOrderWrapped; wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list;   table: string;  wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;tenderCodes: indexNameRecord list;residualPaymentDue: decimal;orderId: int;subOrderId:int}
+type PaymentItemsLiquidValues = {wrappedSubOrder: DbWrappedEntities.SubOrderWrapped; wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list;   table: string;  wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;tenderCodes: IndexNameRecord list;residualPaymentDue: decimal;orderId: int;subOrderId:int}
 
 
 let subOrderPaymentItems subOrderId orderId (user:UserLoggedOnSession) =
@@ -3044,7 +3120,7 @@ let removeAllDiscountOfSubOrder subOrderId =
 
 
 
-type PaymentItemsLiquidValuesForOrder = {wrappedOrder: DbWrappedEntities.OrderWrapped; wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list; table: string; wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;tenderCodes: indexNameRecord list;residualPaymentDue: decimal;orderId: int}
+type PaymentItemsLiquidValuesForOrder = {wrappedOrder: DbWrappedEntities.OrderWrapped; wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list; table: string; wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;tenderCodes: IndexNameRecord list;residualPaymentDue: decimal;orderId: int}
 let wholeOrderPaymentItems  orderId  =
     log.Debug(sprintf "%s %d " "wholeOrderPaymentItems" orderId )
     let ctx = Db.getContext()
@@ -3431,20 +3507,39 @@ let resetDiscount orderId =
     Redirection.FOUND Path.Orders.seeDoneOrders
 
 
-let unVoidLatestVoided backUrl (user:UserLoggedOnSession)  =
-    log.Debug(sprintf "%s\n" "unVoidLatestVoided")
-    let ctx = Db.getContext()
-    let myLatestVoidedOrder = Db.getLatestVoidedOrder user.UserId ctx
-    match myLatestVoidedOrder with
-    | Some theLatestVoideOrderByMe ->
-        let order = Db.Orders.getOrder theLatestVoideOrderByMe.Orderid ctx
-        order.Voided <- false
-        theLatestVoideOrderByMe.Delete()
-        ctx.SubmitUpdates()
-    | _ -> ()
-    Redirection.found (WebUtility.UrlDecode backUrl)
+// let unVoidLatestVoided backUrl (user:UserLoggedOnSession)  =
+//     log.Debug(sprintf "%s\n" "unVoidLatestVoided")
+//     let ctx = Db.getContext()
+//     let myLatestVoidedOrder = Db.getLatestVoidedOrder user.UserId ctx
+//     match myLatestVoidedOrder with
+//     | Some theLatestVoideOrderByMe ->
+//         let order = Db.Orders.getOrder theLatestVoideOrderByMe.Orderid ctx
+//         order.Voided <- false
+//         theLatestVoideOrderByMe.Delete()
+//         ctx.SubmitUpdates()
+//     | _ -> ()
+//     Redirection.found (WebUtility.UrlDecode backUrl)
 
-type mymodel = {content:string;table: string}
+
+let unVoidLatestVoidedRef backUrl   =
+    loggedOn (session (function 
+        | UserLoggedOn user ->
+            log.Debug(sprintf "%s\n" "unVoidLatestVoided")
+            let ctx = Db.getContext()
+            let myLatestVoidedOrder = Db.getLatestVoidedOrder user.UserId ctx
+            match myLatestVoidedOrder with
+            | Some theLatestVoideOrderByMe ->
+                let order = Db.Orders.getOrder theLatestVoideOrderByMe.Orderid ctx
+                order.Voided <- false
+                theLatestVoideOrderByMe.Delete()
+                ctx.SubmitUpdates()
+            | _ -> ()
+            Redirection.found (WebUtility.UrlDecode backUrl)
+        | _ -> UNAUTHORIZED "NOT logged on"
+    ))
+
+
+type Mymodel = {content:string;table: string}
 
 let qrUserImageGen (user:UserLoggedOnSession) = 
     log.Debug("qrUserImageGen")
@@ -3457,26 +3552,34 @@ let qrUserImageGen (user:UserLoggedOnSession) =
 
         // this may throw the Unable to load DLL 'libgdiplus' exception:
         let qrCodeImage = qrCode.GetGraphic(20)
-        // log.Debug("qrCodeImage")
-        // log.Debug(qrCodeImage)
-
-        // qrCodeImage.Save("nomefile.bmp")
-        // let enc = System.IO.File.ReadAllBytes("nomefile.bmp")
-        
         let stream = new System.IO.MemoryStream()
-
         qrCodeImage.Save(stream,qrCodeImage.RawFormat)
-
-        //let _ = Async.Start(saveImages)
-
         let arrayOfQrCode = stream.ToArray()
-
         let encoded = System.Convert.ToBase64String (arrayOfQrCode)
-        // let encoded = System.Convert.ToBase64String (enc)
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o
-        // readAllBytes
     ) 
+
+
+let qrUserImageGenRef  = 
+    log.Debug("qrUserImageGenRef")
+    warbler (fun x -> 
+        let urlToCode = match x.request.queryParam("qrUserLoginUrl") with | Choice1Of2 par -> System.Net.WebUtility.UrlDecode par | _ -> "error"
+        let table = match x.request.queryParam("table") with | Choice1Of2 par -> par | _  -> "" 
+        let qrGenerator = new QRCoder.QRCodeGenerator();
+        let qrCodeData  = qrGenerator.CreateQrCode(urlToCode,QRCodeGenerator.ECCLevel.Q)
+        let qrCode = new QRCode(qrCodeData);
+
+        // this may throw the Unable to load DLL 'libgdiplus' exception:
+        let qrCodeImage = qrCode.GetGraphic(20)
+        let stream = new System.IO.MemoryStream()
+        qrCodeImage.Save(stream,qrCodeImage.RawFormat)
+        let arrayOfQrCode = stream.ToArray()
+        let encoded = System.Convert.ToBase64String (arrayOfQrCode)
+        let o = {content=encoded; table=table}
+        DotLiquid.page("qrCode.html") o
+    ) 
+
 
 
 let removeStandardCommentForCourse commentForCourseId =
@@ -3710,7 +3813,7 @@ let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) 
 
             let liquidTableMergeModel = { orderandorderitems=orderAndOrderItems; targetorder = wrappedTargetOrder  }
 
-            let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:orderandorderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
+            let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:OrderAndOrderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
             let expectedOrderItemsParameterNames = expectedOrderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string) )
 
             let orderItemsIdsToMerge = expectedOrderItemsParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true| _ -> false  ) |> List.map (fun y -> (y.Substring("orderitem".Length) |> int ))
@@ -3733,6 +3836,59 @@ let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) 
 
         )
     ]
+
+
+let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
+    log.Debug("selectOrderFromWhichMoveOrderItems")
+    let ctx = Db.getContext() 
+    let orders = Db.Orders.getAllUnarchivedOrders ctx
+    let wrappedOrders = orders |> List.filter (fun (x:Db.Order) -> x.Orderid <> targetOrderId) |> List.map (fun (x:Db.Order) -> DbWrappedEntities.DbObjectWrapper.WrapOrder x) 
+    let targetOrder = Db.Orders.getOrder targetOrderId ctx
+    let wrappedTargetOrder = DbWrappedEntities.DbObjectWrapper.WrapOrder targetOrder
+    let liquidModel = {orders = wrappedOrders ;  targetOrder = wrappedTargetOrder}
+
+
+
+    choose [
+        GET >=>  warbler (fun (req:HttpContext) ->
+            let expectedOrderParameterNames = wrappedOrders |> List.map (fun (x:OrderWrapped) -> "order" + (x.OrderId|> string)) // form: order999 in querystring
+            let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of orders
+
+            let wrapperOrdersToMerge = wrappedOrders |> List.filter (fun x -> List.contains x.OrderId orderIdsTomerge ) // a wrappedorder format for orders to merge
+
+            let orderAndOrderItems = wrapperOrdersToMerge |> 
+                List.map (fun (x:OrderWrapped) -> {order=x; orderitems =  (Db.getUnpaidOrderItemDetailOfOrderById x.OrderId ctx) |> 
+                    List.map (fun (x:Db.OrderItemDetails) -> (DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails x "0000"))})
+
+            let liquidTableMergeModel = { orderandorderitems=orderAndOrderItems; targetorder = wrappedTargetOrder  }
+
+            let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:OrderAndOrderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
+            let expectedOrderItemsParameterNames = expectedOrderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string) )
+
+            let orderItemsIdsToMerge = expectedOrderItemsParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true| _ -> false  ) |> List.map (fun y -> (y.Substring("orderitem".Length) |> int ))
+
+            let wrappedOrderItemsToMerge = expectedOrderItems |> List.filter (fun x -> List.contains x.Orderitemid orderItemsIdsToMerge )
+
+            let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
+
+            match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 
+                | (_,Y) when (List.length Y > 0) -> 
+
+                                let _ = Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
+                                        let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
+                                        let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
+                                        Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
+                                Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
+
+                | (X,_) when (X > 0) -> DotLiquid.page("selectOrderItemsToMerge.html") liquidTableMergeModel
+                | _ ->  DotLiquid.page("selectOrderToMerge.html") liquidModel
+
+        )
+    ]
+
+
+
+
 
 let noCache = 
   setHeader "Cache-Control" "no-cache, no-store, must-revalidate"
@@ -3763,11 +3919,21 @@ let webPart =
         pathScan Path.Orders.createEcrReceiptInstructionForSubOrder (fun (suborderid,orderid) -> admin (createEcrReceiptInstructionForSubOrder suborderid orderid))
         pathScan Path.Orders.createEcrReceiptInstructionForOrder (fun orderid -> admin (createEcrReceiptInstructionForOrder orderid))
         pathScan Path.Orders.removePaymentItemOfSubOrder (fun (paymentId,subOrderId,orerId) -> adminPassingUserLoggedOn (removePaymentItemOfSubOrder paymentId subOrderId orerId))
-        pathScan Path.Orders.selectOrderFromWhichMoveOrderItems  (fun targetOrerId -> anyUserExceptTemporary   (selectOrderFromWhichMoveOrderItems targetOrerId))
+        // pathScan Path.Orders.selectOrderFromWhichMoveOrderItems  (fun targetOrerId -> anyUserExceptTemporary   (selectOrderFromWhichMoveOrderItems targetOrerId))
+        pathScan Path.Orders.selectOrderFromWhichMoveOrderItems  (fun targetOrerId -> anyUserExceptTemporaryRef   (selectOrderFromWhichMoveOrderItemsRef targetOrerId))
+
+
+
         pathScan Path.Orders.wholeOrderPaymentItems (fun orderId -> admin (wholeOrderPaymentItems orderId))
         pathScan Path.Orders.subOrderPaymentItems (fun (subOrderId,orderId) -> adminPassingUserLoggedOn (subOrderPaymentItems subOrderId orderId))
-        pathScan Path.Orders.viewOrder (fun id -> anyUserPassingUserLoggedOn (viewSingleOrder id))
-        path Path.Extension.qrUserImageGen >=> adminPassingUserLoggedOn qrUserImageGen
+
+        // pathScan Path.Orders.viewOrder (fun id -> anyUserPassingUserLoggedOn (viewSingleOrder id))
+
+        pathScan Path.Orders.viewOrder (fun id ->  (viewSingleOrderRef id))
+
+
+        // path Path.Extension.qrUserImageGen >=> adminPassingUserLoggedOn qrUserImageGen
+        path Path.Extension.qrUserImageGen >=> admin qrUserImageGenRef
         path Path.Extension.qrCodeLogin >=> logonViaQrCode
         path Path.Extension.addQruser >=> admin addQrUser
         pathScan Path.Extension.regenTempUser  (fun id -> admin (regenTempUser id))
@@ -3776,7 +3942,13 @@ let webPart =
         pathScan Path.Orders.rejectOrderItem (fun orderItemId  -> anyUserPassingUserLoggedOn (rejectOrderItem orderItemId))
         pathScan Path.Orders.printWholeOrderReceipt (fun orderId -> admin (printWholeOrderReceipt orderId))
         pathScan Path.Orders.printWholeOrderInvoice (fun orderId -> admin (printWholeOrderInvoice orderId))
-        pathScan Path.Orders.unVoidLatestVoidedOrderOfUser (fun (userId,encodedBackUrl) -> anyUserPassingUserLoggedOn (unVoidLatestVoided encodedBackUrl))
+
+        // pathScan Path.Orders.unVoidLatestVoidedOrderOfUser (fun (userId,encodedBackUrl) -> anyUserPassingUserLoggedOn (unVoidLatestVoided encodedBackUrl))
+
+        pathScan Path.Orders.unVoidLatestVoidedOrderOfUser (fun (userId,encodedBackUrl) ->  (unVoidLatestVoidedRef encodedBackUrl))
+
+
+
         path Path.Orders.dearchiveLatestOrder >=> anyUserPassingUserLoggedOn deArchiveLatestOrder
         pathScan Path.Admin.removePrinter (fun id -> admin (deletePrinter id))
         pathScan Path.Admin.deleteIngredientPrice (fun id -> admin (deleteIngredientPrice id))
