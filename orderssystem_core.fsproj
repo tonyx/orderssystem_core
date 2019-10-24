@@ -20,9 +20,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="Local_it.fs" />
-    <Compile Include="Local.fs" />
-    <Compile Include="Local.fs" />
     <Compile Include="GlobalData.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="Db.fs" />

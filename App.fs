@@ -100,7 +100,7 @@ type FooChoice = XmlProvider<Schema = """
     </xs:schema>""">
 
 
-let _ = printf "PROVA 1 2 3 4 5 6\n"
+// let _ = printf "PROVA 1 2 3 4 5 6\n"
 
 
 // let sampleX = LocalizationX.Parse """

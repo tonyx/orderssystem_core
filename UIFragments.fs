@@ -3,9 +3,15 @@ open Suave.Form
 open Suave.Html
 open System.Net
 open OrdersSystem
+// open FSharp.Data
+
+type LocalizationX = FSharp.Data.XmlProvider<Schema = "Local.xsd">
+
+let local = LocalizationX.Load "Local_it.xml"
+
 // open OrdersSystem.DataProvider
 // let local = Resource.Load ("resources-"+Settings.Localization+".xml")
-// let local = OrdersSystem.Local
+
 let  makePairsOfAlist aList  = 
     let rec listOfElementsToListOfPairs param accumul   = 
         match param with
