@@ -1,6 +1,7 @@
 module OrdersSystem.View
 
 open Suave.Form
+open FSharp.Data
 open Suave.Html
 open OrdersSystem
 open OrdersSystem.Db
@@ -12,7 +13,7 @@ open UIFragments
 open System.Net
 // open OrdersSystem.DataProvider
 
-open OrdersSystem.local
+// open OrdersSystem.local
 
 // let local = Resource.Load ("resources-"+Settings.Localization+".xml")
 
@@ -32,6 +33,10 @@ let visibilityTypeBool = [(true,"VISIBLE");(false,"INVISIBLE")]
 let enabledType = [("ENABLED","ENABLED");("DISABLED","DISABLED")]
 
 let unit_of_measures_drop_box = (Globals.WEIGHT_UNIT_OF_MEASURES @ Globals.LIQUID_UNIT_OF_MEASURES @ UNITARY_MEASURES) |> List.map (fun x -> (x,x))
+
+type LocalizationX = XmlProvider<Schema = "Local.xsd">
+
+let local = LocalizationX.Load "Local_it.xml"
 
 type UserLoggedOnSession = {
     Username : string

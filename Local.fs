@@ -27,7 +27,7 @@ module OrdersSystem.local_en
             let BackToOrder = "back to the order" 
             let FatherCategory = "father category "
             let SubCategories = "subcategories"
-            let LogOn = "Oog On"
+            let LogOn = "Log On"
             let CouldNotFindTheRequestedResource = "Could not find the requested resource"
             let PageNotFound = "Page not found"
             let ModifySelectableStandardVariations = "Modify selectable standard variations"

@@ -37,6 +37,7 @@ open System.Linq
 open Xceed.Words.NET
 open System.Drawing
 // open FSharp.Configuration
+open FSharp.Data
 open Suave
 open Suave.Authentication
 open Suave.Cookie
@@ -59,14 +60,60 @@ open OrdersSystem.DbWrappedEntities
 open System.IO
 open System.Text
 open OrdersSystem.Settings
+open System.Runtime
 
 open System.Drawing;
 open System.Drawing.Printing;
 open System.Security.Cryptography.X509Certificates
 
-// type Settings = AppSettings<"App.config">
+// type SettingsX = AppSettings<"App.config">
 
 type stritem = {entry: string}
+
+
+// type LocalizationX = XmlProvider<Schema = """<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+//       elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+//       <xs:element name="localization">
+//         <xs:complexType>
+//           <xs:sequence>
+//             <xs:element type="xs:string" name="modifyUser"/>
+//             <xs:element type="xs:string" name="userEnabled"/>
+//           </xs:sequence>
+//         </xs:complexType>
+//       </xs:element>
+//       </xs:schema>""">
+
+type LocalizationX = XmlProvider<Schema = "Local.xsd">
+
+type FooChoice = XmlProvider<Schema = """
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+      elementFormDefault="qualified" attributeFormDefault="unqualified">
+        <xs:element name="foo">
+          <xs:complexType>
+            <xs:choice>
+              <xs:element name="bar" type="xs:int" maxOccurs="unbounded" />
+              <xs:element name="baz" type="xs:date" minOccurs="1" />
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+    </xs:schema>""">
+
+
+let _ = printf "PROVA 1 2 3 4 5 6\n"
+
+
+// let sampleX = LocalizationX.Parse """
+//     <localization>
+//         <modifyUser>modifica utente</modifyUser>
+//         <userEnabled>user enabled</userEnabled>
+        
+//     </localization>"""
+
+// let sampleX = LocalizationX.Load "Local.xml"
+
+// printfn "%s " sampleX.ModifyUser
+// printfn "%s " sampleX.UserEnabled
 
 
 type IndexNameRecord = {name: string; index: int}
