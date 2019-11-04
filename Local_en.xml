@@ -20,7 +20,7 @@
         <UserIsNotEnabled>user is not enabled</UserIsNotEnabled>
         <SwitchVisibility>toggle visibility </SwitchVisibility> 
         <SubCategory>subcategory</SubCategory> 
-        <AddSubCategoryOf>add subcategory </AddSubCategoryOf> 
+        <AddSubCategoryOf>new subcategory</AddSubCategoryOf> 
         <Choose>choose</Choose> 
         <StandardVariation>standard variation </StandardVariation> 
         <StandardVariations>variazioni standard </StandardVariations> 
@@ -55,7 +55,7 @@
         <ModifyUser>modify user</ModifyUser> 
         <UserEnabled>user enabled</UserEnabled> 
         <UserCanVoidOrder>user can void order</UserCanVoidOrder> 
-        <UserCanSeeAnyOrder>user can see any order/UserCanSeeAnyOrder> 
+        <UserCanSeeAnyOrder>user can see any order</UserCanSeeAnyOrder> 
         <UserCanChangePrices>user can change the prices</UserCanChangePrices> 
         <UserCanManageCourses>user can manage courses</UserCanManageCourses> 
         <EditCategory>modiry category</EditCategory> 
@@ -92,9 +92,9 @@
         <CanOverWritePrices>  può sovrascrivere i prezzi </CanOverWritePrices>> 
         <Error>error</Error>> 
         <AnErrorOccurred>an error occurre </AnErrorOccurred>> 
-        <ConnectedUser>user is not logged on </ConnectedUser> 
+        <ConnectedUser>user logged on </ConnectedUser> 
         <UserRole>user role </UserRole> 
-        <CourseCategoriesManagement>> manage course categories </CourseCategoriesManagement> 
+        <CourseCategoriesManagement> manage course categories </CourseCategoriesManagement> 
         <AllCourses>all the courses </AllCourses> 
         <Manage>manage </Manage> 
         <Missing>missing</Missing> 
@@ -138,7 +138,7 @@
         <ExitGroup>out group </ExitGroup>
         <Comment>comment</Comment>
         <Person>person</Person>
-        <AddOrder>add order/AddOrder>
+        <AddOrder>add order</AddOrder>
         <ChangeTo>change to </ChangeTo>
         <Update>update</Update>
         <NewCategory>create category</NewCategory>
@@ -154,18 +154,18 @@
         <VisibleCoursesOfCategory>visibile courses of category</VisibleCoursesOfCategory>
         <ClickToChange>click to change</ClickToChange>
         <AllTheItems>all the items</AllTheItems>
-        <VisibleOfCategory>all visible courses of catgeory  </VisibleOfCategory>
+        <VisibleOfCategory>visible courses of category  </VisibleOfCategory>
+        <Visibles>visibles</Visibles>
         <AddNewItem>add new item</AddNewItem>
         <CoursesOfCategory>courses of category</CoursesOfCategory>
-        <AllVisibleCoursesOfCategory>tll visible Courses of category </AllVisibleCoursesOfCategory>
-        <ClickToSeeAllVisibleCoursesOfCategory>click to see all courses of the category</ClickToSeeAllVisibleCoursesOfCategory>
+        <AllVisibleCoursesOfCategory>visibles</AllVisibleCoursesOfCategory>
+        <ClickToSeeAllVisibleCoursesOfCategory>visibles</ClickToSeeAllVisibleCoursesOfCategory>
         <AddQuantityIn>add quantity in </AddQuantityIn>
         <ModifyIngredient>modify ingredient </ModifyIngredient>
         <Allergen>allergen</Allergen>
         <UpdateAvailability>update availability</UpdateAvailability>
         <CheckAvailability>check availability</CheckAvailability>
         <MeasuringSystem>measures system</MeasuringSystem>
-        <All>all</All>
         <NewIngredient>new ingredient </NewIngredient>
         <AvailablQuantity>available quantity</AvailablQuantity>
         <VisibleCategoriesOfIngredients>visible categories of ingredients</VisibleCategoriesOfIngredients>
@@ -196,7 +196,7 @@
         <DeleteIngredients>delete ingredients </DeleteIngredients>
         <DeleteIngredientCategories>delete ingredient categories</DeleteIngredientCategories>
         <Delete>delete</Delete>
-        <Remove>remov</Remove>
+        <Remove>remove</Remove>
         <RoleName>role name</RoleName>
         <CreateRole>create role</CreateRole>
         <AllTheOrders>all the orders</AllTheOrders>
@@ -231,7 +231,7 @@
         <Load>load</Load>
         <AddIngredientPrice>add price for ingredient </AddIngredientPrice>
         <Button>button</Button>
-        <SixToTwentyChars>from six to twenti chars</SixToTwentyChars>
+        <SixToTwentyChars>from six to twenty chars</SixToTwentyChars>
         <IsAbstract>abstract</IsAbstract>
         <ChangeVisibility>toggle visibility</ChangeVisibility>
         <SeeOnlyVisibles>show only 'visible' items</SeeOnlyVisibles>
@@ -258,13 +258,5 @@
         <OfOthers>belonging to others </OfOthers>
         <CoursesOfType>courses of type </CoursesOfType>
         <Find>find</Find>
-       
-
-
-
-
-
-
-
-
+        <InChargeBy>In charge by </InChargeBy>
     </localization>

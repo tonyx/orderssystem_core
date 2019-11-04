@@ -7,10 +7,7 @@ open OrdersSystem
 
 type LocalizationX = FSharp.Data.XmlProvider<Schema = "Local.xsd">
 
-let local = LocalizationX.Load "Local_it.xml"
-
-// open OrdersSystem.DataProvider
-// let local = Resource.Load ("resources-"+Settings.Localization+".xml")
+let local = LocalizationX.Load ("Local_"+Settings.Localization+".xml")
 
 let  makePairsOfAlist aList  = 
     let rec listOfElementsToListOfPairs param accumul   = 
@@ -21,7 +18,6 @@ let  makePairsOfAlist aList  =
          | H::T -> 
             match T with
             | H1::T1 ->  
-            //    listOfElementsToListOfPairs T1 ([Some H;Some H1]::accumul)
                listOfElementsToListOfPairs T1 (accumul@[[Some H;Some H1]])
              | [] -> accumul
     listOfElementsToListOfPairs aList []
@@ -113,14 +109,48 @@ let ordersBar (myOrders:Db.Orderdetail list) (otherOrders:Db.Orderdetail list) =
     [
         Text(local.MyOwn)
         tag "p" [] [
-            for order in myOrders -> ( a (sprintf Path.Orders.viewOrder order.Orderid)  [] [Text (" Tav. " + order.Table)]) 
+            for order in myOrders -> ( a (sprintf Path.Orders.viewOrder order.Orderid)  ["class","buttonX"] [Text (local.Table + " " + order.Table+" ")]) 
         ]
         Text(local.OfOthers)
         tag "p" [] [
-            for order in otherOrders -> ( a (sprintf Path.Orders.viewOrder order.Orderid)  [] [Text (" Tav. " + order.Table)]) 
+            for order in otherOrders -> ( a (sprintf Path.Orders.viewOrder order.Orderid)  ["class","buttonX"] [Text (local.Table+ " " + order.Table+" ")]) 
         ]
-      ]
+    ]
 
+
+//   table [for category in pairOfCategories -> 
+//     tr  [ for subItem in category -> 
+//         match subItem with 
+//         | Some theSubItem  -> 
+//             td [a ((sprintf Path.Orders.addOrderItemByCategory order.Orderid theSubItem.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+//             [Text (" + " + theSubItem.Name + "  ")] ]
+//         | None ->  td []
+//  ]]
+
+
+let ordersBarRef (pairOfOrders:Db.Orderdetail option list list) (pairOfOtherOrders:Db.Orderdetail option list list) =
+    [
+
+        Text(local.MyOwn)
+        table [for orderPair in pairOfOrders ->
+            tr [for order in orderPair ->
+                match order with
+                | Some theOrder ->
+                     td [a (sprintf Path.Orders.viewOrder theOrder.Orderid) ["class","buttonX"] [Text (local.Table + " "+ theOrder.Table+" ")]]
+                | None -> td []
+            ]
+        ]
+
+        Text(local.OfOthers)
+        table [for orderPair in pairOfOtherOrders ->
+            tr [for order in orderPair ->
+                match order with
+                | Some theOrder ->
+                     td [a (sprintf Path.Orders.viewOrder theOrder.Orderid) ["class","buttonX"] [Text (local.Table + " "+ theOrder.Table+" ")]]
+                | None -> td []
+            ]
+        ]
+    ]
 
     
 

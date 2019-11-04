@@ -801,7 +801,6 @@ module Orders =
     let forceDeleteSubOrder (subOrderId:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "forceDeleteSubOrder" subOrderId)
         let subOrder = getSubOrder subOrderId ctx
-        // ctx.SubmitUpdates()
         subOrder.Delete()
         ctx.SubmitUpdates()
 
@@ -2031,7 +2030,7 @@ let createIngredientDecrementsOfOrderItem (orderItem: OrderItem) preparatorId (c
          let extras = variations |> Seq.filter (fun (x:Variation) -> (Seq.contains x.Variationsid idSOfVariationsExtraIngredients))
          extras |> Seq.iter (fun (x:Variation) ->
             match (x.Tipovariazione,x.Plailnumvariation) with
-                | (Globals.UNITARY_MEASUSERE,X) when (X <> 0) -> 
+                | (UNITARY_MEASURE,X) when (X <> 0) -> 
                     let ing = ctx.Public.Ingredientdecrement.``Create(ingredientid, orderitemid, preparatorid, registrationtime, typeofdecrement)``(x.Ingredientid, orderItem.Orderitemid, preparatorId, now, x.Tipovariazione)
                     ing.Presumednormalquantity <- (decimal)X
                     ctx.SubmitUpdates()
@@ -2417,7 +2416,7 @@ let tryGetUnitaryIngredientVariationOfOrderItemAndIngredient orderItemId ingredi
     query {
         for variation in ctx.Public.Variations do
         join ingredient in ctx.Public.Ingredient on (variation.Ingredientid = ingredient.Ingredientid)
-        where (variation.Ingredientid = ingredientId && variation.Orderitemid = orderItemId && ingredient.Unitmeasure = Globals.UNITARY_MEASUSERE)
+        where (variation.Ingredientid = ingredientId && variation.Orderitemid = orderItemId && ingredient.Unitmeasure = Globals.UNITARY_MEASURE)
         select variation
     } |> Seq.tryHead
 
@@ -2455,7 +2454,7 @@ let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) 
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
         | _ -> ()
     let (newVariation:Variation) = ctx.Public.Variations.Create(ingredientId, orderItemId, quantity)
-    let _ = match quantity with | Globals.UNITARY_MEASUSERE -> newVariation.Plailnumvariation <- 1 | _ -> ()    
+    let _ = match quantity with | UNITARY_MEASURE -> newVariation.Plailnumvariation <- 1 | _ -> ()    
     ctx.SubmitUpdates()
 
 let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredientPriceId (ctx:DbContext) =
@@ -2498,10 +2497,10 @@ let addAddIngredientVariationByName orderItemid ingredientName (quantity:string)
     let ingredient = ctx.Public.Ingredient |> Seq.tryFind  (fun (x:Ingredient) -> x.Name = ingredientName)
     match ingredient with
     | Some theIngredient -> 
-                            if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASUSERE)) then 
+                            if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASURE)) then 
                             (
                                 let overWrittenQuantity = match theIngredient.Unitmeasure with 
-                                    | (Globals.UNITARY_MEASUSERE) -> Globals.UNITARY_MEASUSERE 
+                                    | (UNITARY_MEASURE) -> UNITARY_MEASURE 
                                     | _ -> quantity
                                 addAddIngredientVariation orderItemid theIngredient.Ingredientid overWrittenQuantity (ctx:DbContext)
                             ) else
@@ -2547,7 +2546,7 @@ let addAddUnitaryIngredientVariationOrIncreaseByOne orderItemId ingredientId (ct
         ctx.SubmitUpdates()
      | None ->
         removeEventuallyExistingVariation orderItemId ingredientId ctx
-        let newVariation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)`` (ingredientId,orderItemId,Globals.UNITARY_MEASUSERE)
+        let newVariation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)`` (ingredientId,orderItemId,Globals.UNITARY_MEASURE)
         newVariation.Plailnumvariation <- 1
         ctx.SubmitUpdates()
             
@@ -2569,7 +2568,7 @@ let addRemoveUnitaryIngredientVariationOrDecreaseByOne orderItemId ingredientId 
         ctx.SubmitUpdates()
      | None -> 
         removeEventuallyExistingVariation orderItemId ingredientId ctx
-        let newVariation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)`` (ingredientId,orderItemId,Globals.UNITARY_MEASUSERE)
+        let newVariation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)`` (ingredientId,orderItemId,Globals.UNITARY_MEASURE)
         newVariation.Plailnumvariation <- -1
         ctx.SubmitUpdates()
 
@@ -3281,7 +3280,7 @@ module StandardVariations =
         query {
             for variationItem in ctx.Public.Standardvariationitem do
             join ingredient in ctx.Public.Ingredient on (variationItem.Ingredientid = ingredient.Ingredientid)
-            where (variationItem.Ingredientid = ingredientId && variationItem.Standardvariationid = standardVariationId && ingredient.Unitmeasure = Globals.UNITARY_MEASUSERE)
+            where (variationItem.Ingredientid = ingredientId && variationItem.Standardvariationid = standardVariationId && ingredient.Unitmeasure = Globals.UNITARY_MEASURE)
             select variationItem
         } |> Seq.tryHead
      
@@ -3327,7 +3326,7 @@ module StandardVariations =
         let newVariationItem = ctx.Public.Standardvariationitem.Create(ingredientId, standardVariationId, quantity)
         let ingredient = getIngredientById ingredientId ctx
         let _ = match ingredient.Unitmeasure with 
-            | Globals.UNITARY_MEASUSERE -> newVariationItem.Plailnumvariation <- (if (quantity = Globals.SENZA) then -1 else 1)
+            | Globals.UNITARY_MEASURE -> newVariationItem.Plailnumvariation <- (if (quantity = Globals.SENZA) then -1 else 1)
             | _ -> ()    
         let _ = match overwritten with
             | true -> newVariationItem.Ingredientpriceid <- !mut; newVariationItem.Tipovariazione <- ""
@@ -3361,7 +3360,7 @@ module StandardVariations =
             ctx.SubmitUpdates()
          | None -> 
             removeEventuallyExistingStandardVariationItem standardVariationId ingredientId ctx
-            let newVariation = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)`` (ingredientId,standardVariationId,Globals.UNITARY_MEASUSERE)
+            let newVariation = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)`` (ingredientId,standardVariationId,Globals.UNITARY_MEASURE)
             newVariation.Plailnumvariation <- -1
             ctx.SubmitUpdates()
 
@@ -3375,7 +3374,7 @@ module StandardVariations =
             ctx.SubmitUpdates()
          | None ->
             removeEventuallyExistingStandardVariationItem standardVariationId ingredientId ctx
-            let newVariation = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)`` (ingredientId,standardVariationId,Globals.UNITARY_MEASUSERE)
+            let newVariation = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)`` (ingredientId,standardVariationId,Globals.UNITARY_MEASURE)
             newVariation.Plailnumvariation <- 1
             ctx.SubmitUpdates()
 

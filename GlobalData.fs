@@ -84,9 +84,9 @@ module OrdersSystem.Globals
     let LIQUID_UNIT_OF_MEASURES =  ["lt";"cl";"dl"]
 
     [<Literal>]
-    let UNITARY_MEASUSERE = "unità"
+    let UNITARY_MEASURE = "unità"
 
-    let UNITARY_MEASURES = [UNITARY_MEASUSERE]
+    let UNITARY_MEASURES = [UNITARY_MEASURE]
 
 
     [<Measure>] 
@@ -155,19 +155,6 @@ module OrdersSystem.Globals
 
 
 
-    let stylesForSubOrders = [
-      "subordercolorA";
-      "subordercolorB";
-      "subordercolorC";
-      "subordercolorD";
-      "subordercolorE";
-      "subordercolorF";
-      "subordercolorG";
-      "subordercolorH";
-    ]
-
-
-
     let colourValues = [
             "#00FF00"; "#0000FF"; "#FFFF00"; "#FF00FF"; "#00FFFF";  
             "#008000"; "#000080"; "#808000"; "#800080"; "#008080"; "#808080"; 
@@ -182,8 +169,6 @@ module OrdersSystem.Globals
     let getFirstNColorValues (n: int) =
         List.take n colourValues
 
-    module Variations =
-        let a = "b"
 
 
 

@@ -71,7 +71,7 @@ let variationsByStringDescription (listOfVariations:(int*Db.VariationDetail list
     listOfVariations |>
         List.map (fun (id, (variations:Db.VariationDetail list)) -> 
             (id,List.fold (fun y (v:Db.VariationDetail) ->  
-            (if (v.Tipovariazione <> Globals.UNITARY_MEASUSERE && v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE  ) then 
+            (if (v.Tipovariazione <> Globals.UNITARY_MEASURE && v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE  ) then 
                 v.Tipovariazione  // molto poco etc...
               else 
                 ( if (v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE)  then (

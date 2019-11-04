@@ -154,6 +154,7 @@
             <xs:element type="xs:string" name="ClickToChange"/>
             <xs:element type="xs:string" name="AllTheItems"/>
             <xs:element type="xs:string" name="VisibleOfCategory"/>
+            <xs:element type="xs:string" name="Visibles"/>
             <xs:element type="xs:string" name="AddNewItem"/>
             <xs:element type="xs:string" name="CoursesOfCategory"/>
             <xs:element type="xs:string" name="AllVisibleCoursesOfCategory"/>
@@ -257,6 +258,7 @@
             <xs:element type="xs:string" name="OfOthers"/>
             <xs:element type="xs:string" name="CoursesOfType"/>
             <xs:element type="xs:string" name="Find"/>
+            <xs:element type="xs:string" name="InChargeBy"/>
 
 
           </xs:sequence>
