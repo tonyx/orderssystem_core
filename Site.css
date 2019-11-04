@@ -484,6 +484,14 @@ h3
     color: #5E5B54;
 }
 
+#userinfo 
+{
+    color: #5E5B54;
+    text-align: right
+}
+
+
+
 a:link, a:visited
 {
     color: rgb(36, 13, 5);
@@ -1183,7 +1191,16 @@ h3
 #header h1 a, h3 em
 {
     color: #5E5B54;
+    /* color: rgb(139, 20, 236); */
 }
+
+
+#userinfo 
+{
+    color: #5E5B54;
+    text-align: right
+}
+
 
 a:link, a:visited
 {
@@ -1836,6 +1853,12 @@ h3
 #header h1 a, h3 em
 {
     color: #5E5B54;
+}
+
+#userinfo 
+{
+    color: #5E5B54;
+    text-align: right
 }
 
 a:link, a:visited
@@ -2538,6 +2561,11 @@ h3
     color: #5E5B54;
 }
 
+#userinfo 
+{
+    color: #5E5B54;
+    text-align: right
+}
 a:link, a:visited
 {
     color: rgb(36, 13, 5);
