@@ -59,6 +59,8 @@
         <Name>nome</Name> 
         <SaveChanges>registra cambiamenti</SaveChanges> 
         <GoBack>torna</GoBack> 
+        <GoBackTo>torna a</GoBackTo> 
+        <AccountInformation>Informazioni sull'account </AccountInformation>
         <AddIngredientTo>aggiungi ingrediente a </AddIngredientTo> 
         <Ingredient>ingrediente</Ingredient> 
         <NameBySelection>nome da selezione</NameBySelection> 
@@ -148,7 +150,7 @@
         <AddNew>aggiungi nuovo</AddNew>
         <VisibleCoursesOfCategory>piatti visibili della categoria</VisibleCoursesOfCategory>
         <ClickToChange>clicca per modificare</ClickToChange>
-        <AllTheItems>tutti gli item</AllTheItems
+        <AllTheItems>tutti gli item</AllTheItems>
         <VisibleOfCategory> visibili della categoria </VisibleOfCategory>
         <AddNewItem>aggiungi nuovo item</AddNewItem>
         <CoursesOfCategory>piatti della categoria </CoursesOfCategory>
@@ -254,4 +256,6 @@
         <CoursesOfType>piatti di tipo </CoursesOfType>
         <Find>trova</Find>
         <InChargeBy>Resp. </InChargeBy>
+        <ExistingStandardVariation>Variazioni standard esistenti </ExistingStandardVariation>
+        <Prices>prezzi</Prices>
     </localization>

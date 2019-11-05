@@ -44,23 +44,12 @@ let textForWholeOrderReceipt orderId (orderItemsDetails:Db.OrderItemDetails list
 
 let textForSubOrderReceipt  (orderItemsDetails:Db.OrderItemDetails list)  (ctx:Db.DbContext) =
 
-    // let order = Db.getOrder orderId ctx
-
     let total = orderItemsDetails |> List.map (fun (x:Db.OrderItemDetails) -> x.Price) |> List.fold (+) 0.0M
-
-    // let textAboutTotal =   
-    //     match (order.Adjustispercentage,order.Adjustisplain) with
-    //     | (true,false) -> sprintf "sconto percentuale: %.2f%%\n%s %.2f"  order.Percentagevariataion "Totale scontato" order.Adjustedtotal
-    //     | (false,true) -> sprintf "sconto: %.2f\n%s %.2f"  order.Plaintotalvariation  "Totale scontato" order.Adjustedtotal
-    //     | _ -> ""
-
     let now = System.DateTime.Now.ToLocalTime()
 
     let text = "riepilogativo non fiscale:\n\n"+ "data:"+now.ToString()+"\n\n"+
         (orderItemsDetails |> (List.fold (fun y (x:Db.OrderItemDetails) ->  y + 
         (sprintf "%d %-20s %-10.2f\n"   x.Quantity  x.Name  x.Price )) ""))  +  "\nTotale: "+(sprintf "%.2f" total)
-
-        //  (order.Total |> string)+ "\n"+textAboutTotal
 
     text
 

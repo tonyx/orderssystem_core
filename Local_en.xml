@@ -63,6 +63,8 @@
         <Name>name</Name> 
         <SaveChanges>save changes</SaveChanges> 
         <GoBack>go back</GoBack> 
+        <GoBackTo>back to </GoBackTo> 
+        <AccountInformation>Account information </AccountInformation>
         <AddIngredientTo>add ingredient to </AddIngredientTo> 
         <Ingredient>ingreient</Ingredient> 
         <NameBySelection>name by selection</NameBySelection> 
@@ -259,4 +261,6 @@
         <CoursesOfType>courses of type </CoursesOfType>
         <Find>find</Find>
         <InChargeBy>In charge by </InChargeBy>
+        <ExistingStandardVariation>Existing standard variations </ExistingStandardVariation>
+        <Prices>prices</Prices>
     </localization>

@@ -63,6 +63,9 @@
             <xs:element type="xs:string" name="Name"/>
             <xs:element type="xs:string" name="SaveChanges"/>
             <xs:element type="xs:string" name="GoBack"/>
+            <xs:element type="xs:string" name="GoBackTo"/>
+            <xs:element type="xs:string" name="AccountInformation"/>
+
             <xs:element type="xs:string" name="AddIngredientTo"/>
             <xs:element type="xs:string" name="Ingredient"/>
             <xs:element type="xs:string" name="NameBySelection"/>
@@ -259,6 +262,8 @@
             <xs:element type="xs:string" name="CoursesOfType"/>
             <xs:element type="xs:string" name="Find"/>
             <xs:element type="xs:string" name="InChargeBy"/>
+            <xs:element type="xs:string" name="ExistingStandardVariation"/>
+            <xs:element type="xs:string" name="Prices"/>
 
 
           </xs:sequence>

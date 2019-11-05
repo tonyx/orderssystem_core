@@ -56,7 +56,8 @@ module OrdersSystem.Globals
 
     let EXPIRATION_TIME_TEMPORARY_USERS = 8.0
 
-    let ELIMINA_ALLERGENI = " 🚫   😤 🤧"
+    // let ELIMINA_ALLERGENI = " 🚫 😤 🤧"
+    let ELIMINA_ALLERGENI = sprintf "no allergeni"
     let ALT_ELIMINA_ALLERGENI ="ELIMINA ALLERGENI"
     let ELIMINA_INGREDIENTI_INVISIBILI = "elimina ingredienti indisponibili"
     let NUM_DB_ITEMS_IN_A_PAGE = 10 

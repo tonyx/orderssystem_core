@@ -11,11 +11,7 @@ open System.Web
 open System.Net
 open UIFragments
 open System.Net
-// open OrdersSystem.DataProvider
 
-// open OrdersSystem.local
-
-// let local = Resource.Load ("resources-"+Settings.Localization+".xml")
 
 let visibilityType = [("VISIBLE","VISIBLE");("INVISIBLE","INVISIBLE")]
 let abstractType = [("ABSTRACT","ABSTRACT");("CONCRETE","CONCRETE")]
@@ -36,7 +32,6 @@ let unit_of_measures_drop_box = (Globals.WEIGHT_UNIT_OF_MEASURES @ Globals.LIQUI
 
 type LocalizationX = XmlProvider<Schema = "Local.xsd">
 
-// let local = LocalizationX.Load "Local_it.xml"
 let local = LocalizationX.Load ("Local_"+Settings.Localization+".xml")
 
 type UserLoggedOnSession = {
@@ -65,7 +60,7 @@ let editTemporaryUser (user:Db.User) (host:string) =
  let linkImageGen = tag "p" [] [a (Path.Extension.qrUserImageGen+"?qrUserLoginUrl="+System.Net.WebUtility.UrlEncode(qrUserLoginUrl)+"&table="+user.Table)  [("target","_blink");("class","buttonX")] [Text("genera codice di accesso q ")]]
  [
   
-    h2 ("Edit user: " + user.Username)
+    h2 (local.EditUser+": "+user.Username)
     p [("id","myUrl")] [Text(qrUserLoginUrl)]
     tag "copia url" [("id","button");("onclick","copyToClipboard('#myUrl')")] [Text(local.Button)]
 
@@ -83,7 +78,6 @@ let editTemporaryUser (user:Db.User) (host:string) =
 
 let standardComments (comments:Db.StandardComment list) = 
     [
-        //h2 "standard comments"
         h2 local.StandardComments
 
         renderForm 
@@ -102,15 +96,19 @@ let standardComments (comments:Db.StandardComment list) =
              ]
             SubmitText = local.Insert
          }
-        ulAttr ["id","item-list"] [
+
+        br []
+        table [
             for comment in comments ->
-                tag "p" [] [
-                    
+            tr [
+                td [
                     Text (comment.Comment)
+                ]
+                td [
                     a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
                       [Text local.Remove]
                 ]
-                
+            ]
         ]
     ]
     
@@ -268,7 +266,7 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
         for existinIngredient in ingredientsOfTheCourse ->
             tag "p" [] [
                  a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
-                  [Text (existinIngredient.Ingredientname +  (if (existinIngredient.Quantity<> (decimal)0.0) then (sprintf "%s %2f" local.Quantity existinIngredient.Quantity) else "")+  " (rimuovi)")] 
+                  [Text (existinIngredient.Ingredientname +  (if (existinIngredient.Quantity<> (decimal)0.0) then (sprintf "%s %2f" local.Quantity existinIngredient.Quantity) else "")+ " ("+local.Remove+")")] 
 
             ]
    ]
@@ -290,7 +288,6 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
         a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
    ]
 
-   //h2 "commenti standard selezionabili:"
    h2 local.SelectableStandardComments
    ulAttr ["id","item-list"] [
         for commentForCourse in commentsForCourse ->
@@ -300,7 +297,6 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
             ]
    ]
 
-   //a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text ("modifica commenti standard selezionabili")]
    a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardComments)]
    br []
 
@@ -312,7 +308,6 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
             ]
    ]
 
-   //a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text ("modifica variazioni standard selezionabili")]
    a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardVariations)]
    br []
 
@@ -441,7 +436,7 @@ let notFound = [
         Text local.CouldNotFindTheRequestedResource
     ]
     p [] [
-        Text "Back to "
+        Text local.GoBackTo
         a Path.home [] [Text "Home"]
     ]
 ]
@@ -465,7 +460,7 @@ let logon msg = [
     renderForm
         { Form = Form.logon
           Fieldsets = 
-              [ { Legend = "Account Information"
+              [ { Legend = local.AccountInformation
                   Fields = 
                       [ { Label = local.UserName
                           Html = formInput (fun f -> <@ f.Username @>) [] }
@@ -744,9 +739,9 @@ let createCourseCategory msg  = [
                           ] } 
                           
                           ]
-          SubmitText = "Aggiungi categoria" }
+          SubmitText = local.AddCategory } 
     div [] [
-        a Path.home [] [Text "Pagina principale"]
+        a Path.home [] [Text local.MainPage]
     ]
 ]
 
@@ -1013,7 +1008,7 @@ let manageStandardVariations (standardVariations:Db.StandardVariation list) msg 
               SubmitText = local.Add
             }
 
-        h2 "variazioni standard esistenti"
+        h2 local.ExistingStandardVariation 
         div [] [
             for variation in standardVariations ->  
                 tag "p" [] [
@@ -2126,7 +2121,7 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                 tag "a" [local.Name,local.Order+((order.Orderid) |> string)] []
                 br []
                 Text(local.Table+":"+order.Table)
-                Text(", resp:"+order.Username)
+                Text(local.InChargeBy + ": " + order.Username)
 
                 canVoidOrder
                 (a (sprintf Path.Orders.selectOrderFromWhichMoveOrderItems order.Orderid) [] [Text local.Merge])
@@ -2145,7 +2140,7 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                                removeOrderItemLink orderItem canRemoveOrderItem backUrl
 
                                (if (orderItem.Hasbeenrejected && ((eventualRejectionsOfOrderItems.[orderItem.Orderitemid]).IsSome)) then 
-                                (Text("resp:"+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
+                                (Text(local.InChargeBy+": "+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
                            ]
 
                        ]
@@ -2187,8 +2182,8 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
                 tag "a" ["name","order"+((order.Orderid) |> string)] []
                 br []
                 Text(local.Table+order.Table)
-                Text(", resp:"+order.Username)
-                Text(", totale: "+(string)order.Total)
+                Text(local.InChargeBy + ": " + order.Username)
+                Text(local.Total+": "+(string)order.Total)
                 (if (order.Total <> order.Adjustedtotal) then Text(local.TotalDiscounted+":"+(string)order.Adjustedtotal) else Text("") )
                 a (sprintf  Path.Orders.achiveOrder order.Orderid) ["class","buttonX"] [Text(local.Archive)]
                 a (sprintf  Path.Orders.editDoneOrder order.Orderid) ["class","buttonX"] [Text(local.Modify)]
@@ -2287,7 +2282,6 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
                 for standardVariation in standardVariationsForCourseDetails ->
                     
                     tag "p" [] [
-                        //Text(standardVariation.Standardvariationname)
                         a (sprintf Path.Orders.addStandardVariationToOrderItem standardVariation.Standardvariationid orderItemDetail.Orderitemid) ["class","buttonX"] [Text(standardVariation.Standardvariationname)]
                     ]
             ]
@@ -2365,7 +2359,6 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
             ]
         ]
         br []
-//        tag "p" [] [a (encodedBackUrl) ["class","buttonX"] [Text("prosegui")]]
         tag "p" [] [a (sprintf Path.Orders.viewOrder orderItemDetail.Orderid) ["class","buttonX"] [Text("prosegui")]]
         script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
         script ["type","text/javascript"; "src","/autocompleteEditOrderItemIng.js"] []
@@ -2373,7 +2366,6 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
 
 let  askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) =
     [
-        //Text("Sicuro che vuoi annullare l'ordine?")
         Text(local.AreYouSureVoidOrder+"?")
         br []
         a ((sprintf Path.Orders.confirmVoidOrderFromMyOrders orderId encodedBackUrl)) ["class","buttonX"] [Text local.Yes ]
@@ -2400,7 +2392,6 @@ let qrOrder (user:UserLoggedOnSession) (orders: Db.Orderdetail list ) (categorie
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-         //a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode Path.Extension.qrUserOrder))) ["",""] [Text local.Ingredients]
          a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid )) ["",""] [Text local.Ingredients]
         else em ""
 
@@ -2442,8 +2433,8 @@ let qrOrder (user:UserLoggedOnSession) (orders: Db.Orderdetail list ) (categorie
                     Text("ord. n.: "+order.Orderid.ToString())
                     Text(", nome:"+order.Person) 
                     Text(", tav.:"+order.Table)
-                    Text(", resp:"+order.Username)
-                    Text(", totale:"+totalprice.ToString())
+                    Text(local.InChargeBy+": "+order.Username)
+                    Text(local.Total+":"+totalprice.ToString())
                     canVoidOrder
                     br []
                     addItemOfCategory order categories Path.Extension.qrUserOrder
@@ -2461,7 +2452,7 @@ let qrOrder (user:UserLoggedOnSession) (orders: Db.Orderdetail list ) (categorie
 
                        (if (orderItem.Hasbeenrejected && ((eventualRejectionsOfOrderItems.[orderItem.Orderitemid]).IsSome)) then 
 
-                        (Text("resp:"+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
+                        (Text(local.InChargeBy+": "+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
 
                        ]
                       ]
@@ -2557,6 +2548,13 @@ let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.Ingre
                 | (false,true) -> local.IsDefaultSubtractQuantity+" "+local.Remove
                 | (false,false) -> local.Remove
 
+            let textToDisplay2 =       
+                match (isDefaultAdd,isDefaultSubtract) with
+                | (true,true) -> local.IsDefaultAddAndSubtractQuantity
+                | (true,false) -> local.IsDefaultAddQuantity
+                | (false,true) -> local.IsDefaultSubtractQuantity
+                | (false,false) -> "" 
+
             tr [
                 td [
                     Text(sprintf "%s (%s) %.2f" local.Quantity ingredient.Unitmeasure ingredientPrice.Quantity)
@@ -2569,8 +2567,18 @@ let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.Ingre
                 ]
 
                 td [
-                    (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(textToDisplay)]) 
+                    Text(sprintf "%s" textToDisplay2)
                 ]
+
+                // td [
+                //     (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(textToDisplay)]) 
+                // ]
+
+                td [
+                    (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(local.Remove)]) 
+                ]
+
+
             ]
         ]
         br []
@@ -2611,7 +2619,7 @@ let seeIngredientsOfACategoryPaginated (category:Db.IngredientCategory) (allIngr
                    a (sprintf Path.Admin.editIngredient ingredient.Ingredientid pageNumber)  ["class",(if ingredient.Visibility then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
                 ]
                 td [
-                   a (sprintf Path.Admin.editIngredientPrices ingredient.Ingredientid)  ["class","buttonX"] [Text("prezzi")]
+                   a (sprintf Path.Admin.editIngredientPrices ingredient.Ingredientid)  ["class","buttonX"] [Text(local.Prices)]
                 ]
                 td [
                     (if (ingredient.Checkavailabilityflag) then
@@ -2638,18 +2646,6 @@ let seeIngredientsOfACategoryPaginated (category:Db.IngredientCategory) (allIngr
     ]
 
 
-//let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list ) (otherOrders: Db.Orderdetail list)   
-//    (mapOfStates: Map<int,Db.State>) statesEnabledForUser backUrl  initStateId (outGroupsOfOrders: Map<int,Db.OrderOutGroup list>)  =
-
-//   table [for category in pairOfCategories -> 
-//     tr  [ for subItem in category -> 
-//         match subItem with 
-//         | Some theSubItem  -> 
-//             td [a ((sprintf Path.Orders.addOrderItemByCategory order.Orderid theSubItem.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
-//             [Text (" + " + theSubItem.Name + "  ")] ]
-//         | None ->  td []
-//  ]]
-
 let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list )  (otherOrders: Db.Orderdetail list)   
     (mapOfStates: Map<int,Db.State>) statesEnabledForUser initStateId (outGroupsOfOrders: Map<int,Db.OrderOutGroup list>)  =
 
@@ -2667,14 +2663,6 @@ let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list
          a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["",""] [Text local.Ingredients]
 
         else em ""
-
-    // [
-    //     Text (userView.Username+"  ")
-    //     Text local.ActiveOrders
-
-    //     br []
-
-    // ]@
     
     (ordersBarRef myOrdersInPairs otherOrdersInPairs ) @
       [
@@ -2687,11 +2675,10 @@ let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list
 
 let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) =
     
-    let allStandardCommentsIds = allStandardComments |> List.map (fun x -> x.Standardcommentid)
+    // let allStandardCommentsIds = allStandardComments |> List.map (fun x -> x.Standardcommentid)
     let selectableStandardComments = allStandardComments |> List.map (fun x -> ((decimal)x.Standardcommentid,x.Comment))
 
     [
-        //h2 ("aggiungi commenti standard per "+course.Name)
         h2 (local.AddStandardCommentFor+course.Name)
         renderForm 
          {
@@ -2776,22 +2763,6 @@ let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetai
                 ]
         ]
 
-
-
-//        br []
-//        h2 ("variazioni standard aggiungibili:")
-//        ulAttr ["id","item-list"] [
-//            for selectableStandardVariation in selectableStandardVariations ->
-//            tag "p" [] [
-//                Text(selectableStandardVariation.Standardvariationname)
-//                a (sprintf Path.Orders.addStandardVariationToOrderItem selectableStandardVariation.Standardvariationid orderItem.Orderitemid) ["class","buttonX"] [Text("aggiungi")]
-//            ]
-//                
-//        ]
-
-
-
-        //a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid orderEditUrl) ["class","buttonX"] [Text("inserisci variazioni")]
         a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
         br []
         br []
@@ -2815,7 +2786,6 @@ let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list )
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-         //a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid (WebUtility.UrlEncode (backUrl+"#order"+ (orderItem.Orderid |> string ))  ) )) ["",""] [Text local.Ingredients]
          a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["",""] [Text local.Ingredients]
 
         else em ""
@@ -2845,7 +2815,6 @@ let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list )
             for order in orders  ->           
                   let canVoidOrder = voidOrderLink order.Orderid userView backUrl
                   let orderItems = orderItemsOfOrders.[order.Orderid]
-                //   let totalprice = List.fold (fun x (y: Db.OrderItemDetails) -> x + (decimal)y.Quantity*(decimal)y.Price) ((decimal)0) orderItems
 
                   let linksMoveOutGroup = outGroupsOfOrders.[order.Orderid] |> 
                         List.map (fun (x:Db.OrderOutGroup) -> ( if (x.Printcount <= 0) then (
@@ -2882,7 +2851,7 @@ let ordersList (userView: Db.UsersView)  (orders: Db.Orderdetail list )
                                        ingredientsVarOrderItmLink orderItem
 
                                        (if (orderItem.Hasbeenrejected && ((eventualRejectionsOfOrderItems.[orderItem.Orderitemid]).IsSome)) then 
-                                        (Text("resp:"+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
+                                        (Text(local.InChargeBy+": "+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
                                    ]
                               ] 
                      ])
