@@ -940,8 +940,22 @@ let removeStandardVariation id (ctx:DbContext) =
     variation.Delete()
     ctx.SubmitUpdates()
 
+let getStandardVariationForCourse id (ctx:DbContext) =
+    log.Debug(sprintf "getStandardVariationForCourse %d" id)
+    query {
+        for item in ctx.Public.Standardvariationforcourse do
+        where (item.Standardvariationforcourseid = id)
+        select item
+    } |> Seq.head
 
 
+
+let removeStandardVariationForCourse id (ctx:DbContext) =
+    log.Debug(sprintf "removeStandardVariationForCourse %d" id)
+    let standardVariationForCourse = getStandardVariationForCourse id ctx
+    standardVariationForCourse.Delete()
+    ctx.SubmitUpdates()
+    
 
 let tryGetIngredientByName ingredientName (ctx:DbContext) =
     log.Debug(sprintf "tryGetIngredientByName %s" ingredientName)
@@ -3247,7 +3261,6 @@ module StandardVariations =
         log.Debug(sprintf "getStandardVariationItem %d" id)
         ctx.Public.Standardvariationitem |> Seq.find (fun x -> x.Standardvariationitemid = id)
 
-    
 
     let getStandardVariationsForCourseDetails id (ctx:DbContext) =
         log.Debug(sprintf "getAllStandardVariationForCourseDetailsByCourseId %d" id)

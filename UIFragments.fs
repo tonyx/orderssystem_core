@@ -54,6 +54,8 @@ let form x = tag "form" ["method", "POST"] x
 let formInput = Suave.Form.input
 let submitInput value = input ["type", "submit"; "value", value]
 
+let button t x = tag "button" t x
+
 type Field<'a> = {
     Label : string
     Html : Form<'a> -> Suave.Html.Node

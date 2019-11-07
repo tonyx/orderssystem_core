@@ -97,6 +97,7 @@ module Admin =
     let removeStandardVariation: IntPath  =  "/admin/removeStandardVariation/%d"
     let manageStandardVariations = "/admin/manageStandardVariations"
     let removeStandardCommentForCourse: IntPath = "/admin/removeStandardCommentForCourse/%d"
+    let removeStandardVariationForCourse: IntPath2 = "/admin/removeStandarVariationForCourse/%d/%d"
     let standardCommentsForCourse: IntPath  = "/admin/standardCommentsForCourse/%d"
     let standardComments  = "/admin/standardComments"
     let removeStandardComment: IntPath = "/admin/removeStandardComment/%d"

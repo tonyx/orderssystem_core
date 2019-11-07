@@ -1412,7 +1412,7 @@ let getViableGroupOutIdentifiers orderId =
 
 
 let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:UserLoggedOnSession) =
-    log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d categoryId%d" orderId categoryId)
+    log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d categoryId:%d" orderId categoryId)
 
     let ctx = Db.getContext()
     let anOrder = Db.Orders.tryGetOrder orderId ctx
@@ -1440,18 +1440,30 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
 
           POST >=> bindToForm Form.orderItem (fun form ->
             let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
-            let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItem.Courseid ctx
+
+            // let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItem.Courseid ctx
+            // let standardVariationsForThisCourse = Db.StandardVariations.getStandardVariationsForCourseDetails orderItem.Courseid ctx
+
+            // log.Debug(sprintf "XXXXX standard comments length: %d " (List.length standardCommentsForThisCourse))
                              
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
-            
-            match (List.length standardCommentsForThisCourse) with 
-                | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
-                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+
+            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
           )
-       ]
-      | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
-     
+         ]
+      
+    | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+
+    //         match (List.length standardCommentsForThisCourse,List.length standardVariationsForThisCourse) with 
+    //             | (0,0) -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+    //             | (X,_) when (X>0) -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+    //             | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+    //       )
+    //    ]
+    //   | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+    
+
 let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession)=
     log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
 
@@ -1484,13 +1496,15 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
             
             let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
             let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItem.Courseid ctx
+            let standardVariationsForThisCourse = Db.StandardVariations.getStandardVariationsForCourseDetails orderItem.Courseid ctx
 
 
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
 
-            match (List.length standardCommentsForThisCourse) with 
-                | 0 -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+            match (List.length standardCommentsForThisCourse,List.length standardVariationsForThisCourse) with 
+                | (0,0) -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+                | (X,_) when (X>0) -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
                 | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
 
             Redirection.FOUND (backUrl+"#order"+(orderId|> string))
@@ -1500,7 +1514,7 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
      
 
 let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackUrl (user:UserLoggedOnSession) = 
-    log.Debug(sprintf "addOrderItemByCategoryPassingUserLoggedOn orderId:%d categoryId:%d")
+    log.Debug(sprintf "addOrderItemByCategoryPassingUserLoggedOn orderId:%d categoryId:%d" orderId categoryId)
     warbler (fun (x:HttpContext) ->
         let ctx = Db.getContext()
         let dbUser = Db.getUserById user.UserId ctx
@@ -3599,16 +3613,24 @@ let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetai
     stateGroupMapping
 
 let selectStandardCommentsForOrderItem orderItemId =
+    
+
     let ctx = Db.getContext()
     let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
+
+// hack
+    // Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
+
+
+// hack
     let standardCommentsForThisCourse = Db.getCommentsForCourseDetails orderItemDetail.Courseid ctx
     let standardVariationsForThisCourse = Db.StandardVariations.getStandardVariationsForCourseDetails orderItemDetail.Courseid ctx
 
     match (List.length standardCommentsForThisCourse,List.length standardVariationsForThisCourse) with 
           | (0,0) -> Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
-          | _ -> View.selectStandardCommentsAndVariationsForOrderItem orderItemDetail standardCommentsForThisCourse standardVariationsForThisCourse |> html
+          | (X,_) when X>0 ->  View.selectStandardCommentsAndVariationsForOrderItem orderItemDetail standardCommentsForThisCourse standardVariationsForThisCourse |> html
+          | _ -> Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId)
 
-          //Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsForOrderItem orderItem.Orderitemid) 
 
 
 let addStandardCommentToOrderItem commentId orderItemId  =
@@ -3735,6 +3757,7 @@ let removeStandardVariation variationId =
     Redirection.FOUND Path.Admin.manageStandardVariations
 
 let removeStandardVariationItem id =
+    log.Debug(sprintf "removeStandardVariationItem %d " id)
     let ctx = Db.getContext()
     let variationItem = Db.StandardVariations.getStandardVariationItem id ctx
     let standardVariationId = variationItem.Standardvariationid
@@ -3742,6 +3765,15 @@ let removeStandardVariationItem id =
     ctx.SubmitUpdates()
 
     Redirection.FOUND (sprintf Path.Admin.manageStandardVariation standardVariationId)
+
+
+let removeStandardVariationForCourse variationId courseId =
+    log.Debug(sprintf "removeStandardVariationForCourse %d %d" variationId courseId)
+
+    let ctx= Db.getContext()
+    let _ = Db.removeStandardVariationForCourse variationId ctx
+    Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
+
 
 //    log.Debug(sprintf "removeStandardVariationItem %d" id)
 //    let ctx = Db.getContext()
@@ -3858,6 +3890,7 @@ let webPart =
     choose [
         pathScan Path.Admin.standardVariationsForCourse (fun id -> (admin (standardVariationsForCourse id )))
         pathScan Path.Admin.removeStandardVariationItem (fun id -> (admin (removeStandardVariationItem id)))
+        pathScan Path.Admin.removeStandardVariationForCourse (fun (variationId,courseId) -> (loggedOn (removeStandardVariationForCourse variationId courseId)))
 
         pathScan Path.Admin.manageStandardVariationByIngredientCategory (fun (variationId,categoryId) -> (admin (manageStandardVariationByIngredientCategory variationId categoryId)))
         pathScan Path.Admin.manageStandardVariation (fun id -> (admin (manageStandardVariation id)))

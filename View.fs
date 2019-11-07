@@ -106,11 +106,20 @@ let standardComments (comments:Db.StandardComment list) =
                 ]
                 td [
                     a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
+                    // a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) [("onclick","alert('hi');");("class","buttonX")]
                       [Text local.Remove]
                 ]
+                // td [
+                //     button [("type","button");("class","buttonX");("onclick","removeStandardComment("+"\""+(string)(comment.Standardcommentid)+");\"")] [Text "rimuovi"]
+                // ]
             ]
         ]
+        // script [] [Raw("function removeStandardComment(standardCommentid) {
+        //     var confirmed = confirm('confirm removing standard comment');
+        //     if (confirmed) window.location='/admin/removeStandardComment/1;'
+        // }")]
     ]
+
     
 
 let editUser (user:Db.User) = [
@@ -335,7 +344,7 @@ let index container userName =
     (html [] [
         head [] [
             title [] "Orders system"
-            cssLink "/Site.css?XXHysdfasdffXzuyhh"
+            cssLink "/Site.css?XXdfasdffXzuyhh"
         ]
         body [] [
             div ["id", "header"] [ 
@@ -2737,7 +2746,7 @@ let standardVariationsForCourse (course:Db.Course) (standardVariationsForCourseD
         for standardVariationForCourseDetail in standardVariationsForCourseDetails ->
              tag "p" [] [
                 Text(standardVariationForCourseDetail.Standardvariationname)
-                a (sprintf Path.Admin.removeStandardCommentForCourse standardVariationForCourseDetail.Standardvariationforcourseid ) ["class","buttonX"]  [Text (local.Remove)]
+                a (sprintf Path.Admin.removeStandardVariationForCourse standardVariationForCourseDetail.Standardvariationforcourseid course.Courseid) ["class","buttonX"]  [Text (local.Remove)]
              ]
         ]
 
@@ -2746,7 +2755,12 @@ let standardVariationsForCourse (course:Db.Course) (standardVariationsForCourseD
 
 
 let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) (selectableStandardVariations:Db.StandardVariationForCourseDetails list) =
-    let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
+    // let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
+    let linkToContinue = 
+        match (List.length selectableStandardVariations) with
+        | 0 ->   a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
+        | _ ->   a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
+
     [
         h2 (local.CommentsFor+" "+orderItem.Name)
     
@@ -2763,11 +2777,21 @@ let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetai
                 ]
         ]
 
-        a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
+        linkToContinue
+
+        // match (List.length selectableStandardVariations) with
+        // | 0 ->  yield! a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
+        // | _ ->  yield! a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
+
+
+        // match     
+
+
+        // a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
         br []
         br []
 
-        a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
+        // a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
 
     ]
 
