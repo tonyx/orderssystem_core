@@ -1495,19 +1495,15 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
             let course = Db.getCourseDetail ((int)form.CourseId) ctx
             
             let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
-            let standardCommentsForThisCourse = Db.getAllStandardCommentsForCourse orderItem.Courseid ctx
-            let standardVariationsForThisCourse = Db.StandardVariations.getStandardVariationsForCourseDetails orderItem.Courseid ctx
 
 
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
 
-            match (List.length standardCommentsForThisCourse,List.length standardVariationsForThisCourse) with 
-                | (0,0) -> Redirection.FOUND (backUrl+"#order"+(orderId|> string))
-                | (X,_) when (X>0) -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
-                | _ -> Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
 
-            Redirection.FOUND (backUrl+"#order"+(orderId|> string))
+
+            // Redirection.FOUND (backUrl+"#order"+(orderId|> string))
         )
        ]
       | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
@@ -3704,12 +3700,10 @@ let manageStandardVariation id =
         )
 
         POST >=> bindToForm Form.ingredientVariation (fun form -> 
-            Db.StandardVariations.addAddIngredientStandardVariationItem id ((int)form.IngredientBySelect) form.Quantity ctx
+            match form.Quantity with
+            | Globals.SENZA -> Db.StandardVariations.addRemoveIngredientStandardVariationItem id ((int) form.IngredientBySelect) ctx
+            | _ -> Db.StandardVariations.addAddIngredientStandardVariationItem id ((int)form.IngredientBySelect) form.Quantity ctx
             Redirection.FOUND (sprintf Path.Admin.manageStandardVariation id )
-//            match form.Quantity with
-//                |  Globals.ALT_MOLTO -> Redirection.FOUND Path.home
-//                |  "POCO" -> Redirection.FOUND Path.home
-//                | _ -> Redirection.FOUND Path.home
         )
     ]
 

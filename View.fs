@@ -1074,7 +1074,9 @@ let manageStandardVariation (standardVariation:Db.StandardVariation) (standardVa
                         tag "p" [] [(Text(detail.Ingredientname+" - "));
                         (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione))));
                         //(Text("prezzo: "+((string)(detail.Addprice))));
-                        (Text(local.Price + ((string)(detail.Addprice))));
+
+                        (Text(local.AddPrice + ((string)(detail.Addprice))));
+                        (Text(local.SubtractPrice + ((string)(detail.Subtractprice))));
                         (Text(local.Quantity + ((string)(detail.Quantity))));
                         ((a (sprintf Path.Admin.removeStandardVariationItem detail.Standardvariationitemid)) ["class","buttonX"] [Text(local.Remove)])
                        ]

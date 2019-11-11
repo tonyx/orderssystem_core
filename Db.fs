@@ -2481,6 +2481,24 @@ let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredie
     newVariation.Ingredientpriceid <- ingredientPriceId 
     ctx.SubmitUpdates()
 
+let tryGetFirstIngredientPricedDefaultAdd ingredientId (ctx:DbContext) =
+    log.Debug(sprintf "getFirstIngredientPricedDefaultAdd ingredientId:%d" ingredientId)
+    query {
+        for ingredientPrice in ctx.Public.Ingredientprice do
+        where (ingredientPrice.Isdefaultadd && ingredientPrice.Ingredientid = ingredientId)
+        select ingredientPrice
+    } |> Seq.tryHead
+
+let tryGetFirstIngredientPricedDefaultSubtract ingredientId (ctx:DbContext) =
+    log.Debug(sprintf "tryGetFirstIngredientPricedDefaultSubtract ingredientId:%d" ingredientId)
+    query {
+        for ingredientPrice in ctx.Public.Ingredientprice do
+        where (ingredientPrice.Isdefaultsubtract && ingredientPrice.Ingredientid = ingredientId)
+        select ingredientPrice
+    } |> Seq.tryHead
+
+
+
 let getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault ingredientId (ctx:DbContext) =
     log.Debug(sprintf "getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault %d" ingredientId)
     let defaultAdd =
@@ -2492,7 +2510,10 @@ let getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault ingredientId 
     match defaultAdd with
     | Some X -> X.Addprice
     | None -> (decimal)0.0
-    
+
+
+
+
 let getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault ingredientId (ctx:DbContext) =
     log.Debug(sprintf "getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault %d" ingredientId)
     let defaultSubtract =
@@ -3327,8 +3348,27 @@ module StandardVariations =
         let _ = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)``(ingredientId,standardVariationId,Globals.MOLTO)
         ctx.SubmitUpdates()
 
+
+    let addRemoveIngredientStandardVariationItem standardVariationId ingredientId  (ctx: DbContext) =
+        log.Debug(sprintf "addRemoveIngredientStandardVariationItem standardVariationId%d ingredientId %d" ingredientId standardVariationId)
+        let newVariation = ctx.Public.Standardvariationitem.Create(ingredientId,standardVariationId,Globals.SENZA)
+        let defaultRemoveIngredientPrice = tryGetFirstIngredientPricedDefaultSubtract ingredientId ctx
+        let _ = match defaultRemoveIngredientPrice with
+                | Some theDefaultRemoveIngredientPrice -> newVariation.Ingredientpriceid <-  theDefaultRemoveIngredientPrice.Ingredientpriceid
+                | _ -> ()
+        ctx.SubmitUpdates()    
+
+
+
+
+
+
+
+
+
+
     let addAddIngredientStandardVariationItem standardVariationId ingredientId (quantity:string) (ctx:DbContext) =
-        log.Debug("addAddIngredientVariation")
+        log.Debug(sprintf "addAddIngredientVariation standardVariationId:%d  ingredientId:%d quantity:%s " standardVariationId ingredientId quantity)
         let mut: int ref = ref 1
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
         let _ = match existingVariation with   
@@ -3343,9 +3383,13 @@ module StandardVariations =
             | _ -> ()    
         let _ = match overwritten with
             | true -> newVariationItem.Ingredientpriceid <- !mut; newVariationItem.Tipovariazione <- ""
+            | _ ->    let defaultAddPriceForThisIngredient = tryGetFirstIngredientPricedDefaultAdd ingredientId ctx
+                      match defaultAddPriceForThisIngredient with
+                      | Some theDefaultAddPriceForThisIngredient -> newVariationItem.Ingredientpriceid <- theDefaultAddPriceForThisIngredient.Ingredientpriceid
+                      | _ -> ()
+            
             | _ -> ()
         ctx.SubmitUpdates()
-
 
     let addStandardIngredientVariationItemByIngredientPriceRef standardVariationId ingredientId ingredientPriceId (ctx:DbContext) = 
         log.Debug("addIngredientVariationByIngredientPriceRef")
