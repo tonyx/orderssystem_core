@@ -264,6 +264,7 @@
             <xs:element type="xs:string" name="InChargeBy"/>
             <xs:element type="xs:string" name="ExistingStandardVariation"/>
             <xs:element type="xs:string" name="Prices"/>
+            <xs:element type="xs:string" name="Courses"/>
 
 
           </xs:sequence>

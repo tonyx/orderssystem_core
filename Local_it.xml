@@ -77,7 +77,7 @@
         <ExistingIngredients>ingredienti esistenti</ExistingIngredients> 
         <CategoriesOfIngredientsYouCanAdd>categorie di ingredienti aggiugibili</CategoriesOfIngredientsYouCanAdd> 
         <AddAmong>aggiungi tra </AddAmong> 
-        <AddAmongAll>add tra tutti </AddAmongAll> 
+        <AddAmongAll>aggiungi tra tutti </AddAmongAll> 
         <MainPage>pagina principale</MainPage> 
         <ChangePasswordFor>cambia password per </ChangePasswordFor> 
         <ChangePassword>cambia password</ChangePassword> 
@@ -198,9 +198,9 @@
         <AllTheOrders>tutti gli ordini</AllTheOrders>
         <CourseCategories>categorie di piatti</CourseCategories>
         <ManageRoles>gestisci ruoli</ManageRoles>
-        <ManageIngredients>gestisci gli ingredienti</ManageIngredients>
+        <ManageIngredients>ingredienti</ManageIngredients>
         <ManageOrdinaryUsers>gestisci utenti ordinari</ManageOrdinaryUsers>
-        <ManagePayments>gestisci pagamenti</ManagePayments>
+        <ManagePayments>pagamenti</ManagePayments>
         <AddIngredient>aggiungi ingrediente </AddIngredient>
         <OriginalPrice>prezzo originario </OriginalPrice>
         <RecalculatedPrice>prezzo ricalcolato </RecalculatedPrice>
@@ -258,4 +258,5 @@
         <InChargeBy>Resp. </InChargeBy>
         <ExistingStandardVariation>Variazioni standard esistenti </ExistingStandardVariation>
         <Prices>prezzi</Prices>
+        <Courses>piatti</Courses>
     </localization>

@@ -271,14 +271,27 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
    br []
 
    h2 local.ExistingIngredients
-   ulAttr ["id","item-list"] [
+
+
+   table [
         for existinIngredient in ingredientsOfTheCourse ->
-            tag "p" [] [
-                 a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
-                  [Text (existinIngredient.Ingredientname +  (if (existinIngredient.Quantity<> (decimal)0.0) then (sprintf "%s %2f" local.Quantity existinIngredient.Quantity) else "")+ " ("+local.Remove+")")] 
+            tr [
+                td [
+                    Text(existinIngredient.Ingredientname)
+                ]
+                td [
+                    Text(if existinIngredient.Quantity <> (decimal)0.0 then (sprintf "%s %.2f" local.Quantity existinIngredient.Quantity) else "")
+                ]
+
+                td [
+                     a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
+                      [Text (local.Remove)] 
+                ]
 
             ]
    ]
+
+
 
    br []
 
@@ -297,27 +310,34 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
         a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
    ]
 
-   h2 local.SelectableStandardComments
-   ulAttr ["id","item-list"] [
+   h2 local.SelectableComments
+   table [
         for commentForCourse in commentsForCourse ->
-
-            tag "p" [] [
-                Text(commentForCourse.Comment)
+            tr [
+                td [
+                    Text(commentForCourse.Comment)
+                ]
             ]
    ]
+   a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
-   a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardComments)]
+   br []
+
+//    a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardComments)]
    br []
 
    h2 local.SelectableStandardVariations
-   ulAttr ["id","item-list"] [
+   table [
         for standardVariationForCourseDetail in standardVariationForCourseDetails ->
-            tag "p" [] [
-                Text(standardVariationForCourseDetail.Standardvariationname)
+            tr [ 
+                td [
+                    Text(standardVariationForCourseDetail.Standardvariationname)
+                ]
             ]
    ]
+   a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
-   a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardVariations)]
+//    a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardVariations)]
    br []
 
    tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
@@ -1766,7 +1786,7 @@ let allOrdersLink user =
 
 let categoriesLink user = 
     match (user.Role,user.CanManageAllCourses) with 
-    | ("admin",_) | (_,true)  -> tag "p" [] [a Path.Courses.adminCategories  ["class","buttonX"] [Text local.CourseCategories ]]
+    | ("admin",_) | (_,true)  -> tag "p" [] [a Path.Courses.adminCategories  ["class","buttonX"] [Text local.Courses ]]
     | _ -> em ""
 
 let rolesLink user =

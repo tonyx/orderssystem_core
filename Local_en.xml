@@ -263,4 +263,5 @@
         <InChargeBy>In charge by </InChargeBy>
         <ExistingStandardVariation>Existing standard variations </ExistingStandardVariation>
         <Prices>prices</Prices>
+        <Courses>courses</Courses>
     </localization>
