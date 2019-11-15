@@ -1891,7 +1891,7 @@ ALTER TABLE ONLY public.voidedorderslogbuffer ALTER COLUMN voidedorderslogbuffer
 -- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 291, true);
+SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 292, true);
 
 
 --
@@ -1906,7 +1906,7 @@ COPY public.archivedorderslogbuffer (archivedlogbufferid, archivedtime, orderid)
 -- Name: comments_for_course_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.comments_for_course_seq', 4, true);
+SELECT pg_catalog.setval('public.comments_for_course_seq', 5, true);
 
 
 --
@@ -1914,10 +1914,8 @@ SELECT pg_catalog.setval('public.comments_for_course_seq', 4, true);
 --
 
 COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid) FROM stdin;
-1	536	5
-2	536	4
-3	537	7
 4	537	6
+5	539	6
 \.
 
 
@@ -1926,9 +1924,9 @@ COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid)
 --
 
 COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
-72	carne rossa	t	f
 70	secondi	t	f
 71	superalcolici	t	f
+74	bevande	t	f
 73	pranzo	t	t
 \.
 
@@ -1939,8 +1937,9 @@ COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
 
 COPY public.courses (courseid, name, description, price, categoryid, visibility) FROM stdin;
 537	cuba libre		6.00	71	t
-536	bistecca		10.00	72	t
 538	pranzo		10.00	73	f
+536	bistecca		10.00	70	t
+539	cola		3.00	74	t
 \.
 
 
@@ -1948,14 +1947,14 @@ COPY public.courses (courseid, name, description, price, categoryid, visibility)
 -- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.courses_categoryid_seq', 73, true);
+SELECT pg_catalog.setval('public.courses_categoryid_seq', 74, true);
 
 
 --
 -- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.courses_courseid_seq', 538, true);
+SELECT pg_catalog.setval('public.courses_courseid_seq', 539, true);
 
 
 --
@@ -2007,7 +2006,7 @@ SELECT pg_catalog.setval('public.enablers_elablersid_seq', 190, true);
 -- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.incredientdecrementid_seq', 270, true);
+SELECT pg_catalog.setval('public.incredientdecrementid_seq', 273, true);
 
 
 --
@@ -2018,7 +2017,8 @@ COPY public.ingredient (ingredientid, ingredientcategoryid, name, description, v
 180	56	green salad		t	f	f	0.00	f	gr
 181	57	havana 3		t	f	f	0.00	f	cl
 182	57	havana 7		t	f	f	0.00	f	cl
-183	58	coca cola		t	f	f	0.00	f	gr
+184	58	pepsi		t	f	f	0.00	f	cl
+183	58	coca cola		t	f	f	0.00	f	unità
 \.
 
 
@@ -2046,6 +2046,7 @@ COPY public.ingredientcategory (ingredientcategoryid, name, description, visibil
 
 COPY public.ingredientcourse (ingredientcourseid, courseid, ingredientid, quantity) FROM stdin;
 363	537	181	\N
+366	539	183	1.00
 \.
 
 
@@ -2053,7 +2054,7 @@ COPY public.ingredientcourse (ingredientcourseid, courseid, ingredientid, quanti
 -- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.ingredientcourseid_seq', 363, true);
+SELECT pg_catalog.setval('public.ingredientcourseid_seq', 366, true);
 
 
 --
@@ -2068,7 +2069,7 @@ COPY public.ingredientdecrement (ingredientdecrementid, orderitemid, typeofdecre
 -- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.ingredientid_seq', 183, true);
+SELECT pg_catalog.setval('public.ingredientid_seq', 184, true);
 
 
 --
@@ -2091,6 +2092,9 @@ SELECT pg_catalog.setval('public.ingredientincrementid_seq', 32, true);
 --
 
 COPY public.ingredientprice (ingredientpriceid, ingredientid, quantity, isdefaultadd, isdefaultsubtract, addprice, subtractprice) FROM stdin;
+105	182	10.00	t	t	1.00	1.00
+106	184	10.00	t	t	10.00	10.00
+107	183	1.00	t	t	1.00	1.00
 \.
 
 
@@ -2098,7 +2102,7 @@ COPY public.ingredientprice (ingredientpriceid, ingredientid, quantity, isdefaul
 -- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.ingredientpriceid_seq', 98, true);
+SELECT pg_catalog.setval('public.ingredientpriceid_seq', 107, true);
 
 
 --
@@ -2142,7 +2146,7 @@ SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
 -- Name: orderitem_sub_order_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 75, true);
+SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 80, true);
 
 
 --
@@ -2150,8 +2154,9 @@ SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 75, true);
 --
 
 COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price, stateid, archived, startingtime, closingtime, ordergroupid, hasbeenrejected, printcount) FROM stdin;
-1432	536	1	609		10.00	2	\N	2019-10-06 18:36:28.488669	\N	530	f	0
-1433	537	1	609		6.00	2	\N	2019-10-06 18:36:35.095467	\N	530	f	0
+1477	537	1	618		6.00	1	\N	2019-11-10 19:31:07.445218	\N	565	f	0
+1478	539	1	618	, poco ghiaccio	4.00	1	\N	2019-11-11 10:54:49.116651	\N	565	f	0
+1479	539	1	618		2.00	1	\N	2019-11-11 15:52:39.75081	\N	565	f	0
 \.
 
 
@@ -2159,7 +2164,7 @@ COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price
 -- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1433, true);
+SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1479, true);
 
 
 --
@@ -2167,10 +2172,9 @@ SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1433, true);
 --
 
 COPY public.orderitemstates (orderitemstatesid, orderitemid, stateid, startingtime) FROM stdin;
-2678	1432	1	2019-10-06 18:36:28.488669
-2679	1433	1	2019-10-06 18:36:35.095467
-2680	1432	2	2019-10-06 18:36:39.441839
-2681	1433	2	2019-10-06 18:36:39.677421
+2739	1477	1	2019-11-10 19:31:07.445218
+2740	1478	1	2019-11-11 10:54:49.116651
+2741	1479	1	2019-11-11 15:52:39.75081
 \.
 
 
@@ -2178,7 +2182,7 @@ COPY public.orderitemstates (orderitemstatesid, orderitemid, stateid, startingti
 -- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2681, true);
+SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2741, true);
 
 
 --
@@ -2186,7 +2190,6 @@ SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2681, 
 --
 
 COPY public.orderitemsubordermapping (orderitemsubordermappingid, orderitemid, suborderid) FROM stdin;
-75	1433	388
 \.
 
 
@@ -2195,7 +2198,7 @@ COPY public.orderitemsubordermapping (orderitemsubordermappingid, orderitemid, s
 --
 
 COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) FROM stdin;
-530	1	609	1
+565	0	618	1
 \.
 
 
@@ -2203,7 +2206,7 @@ COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) F
 -- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 530, true);
+SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 565, true);
 
 
 --
@@ -2211,7 +2214,7 @@ SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 530, true);
 --
 
 COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, closingtime, voided, archived, total, adjustedtotal, plaintotalvariation, percentagevariataion, adjustispercentage, adjustisplain, forqruserarchived) FROM stdin;
-609	7		t	2	2019-10-06 18:36:24.028195	2019-10-06 18:49:39.969227	f	f	16.00	16.00	0.00	0.00	f	f	\N
+618	1		t	2	2019-11-10 19:30:52.55629	\N	f	f	0.00	0.00	0.00	0.00	f	f	\N
 \.
 
 
@@ -2219,14 +2222,14 @@ COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, clo
 -- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.orders_orderid_seq', 609, true);
+SELECT pg_catalog.setval('public.orders_orderid_seq', 618, true);
 
 
 --
 -- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.paymentid_seq', 145, true);
+SELECT pg_catalog.setval('public.paymentid_seq', 149, true);
 
 
 --
@@ -2234,9 +2237,6 @@ SELECT pg_catalog.setval('public.paymentid_seq', 145, true);
 --
 
 COPY public.paymentitem (paymentid, suborderid, orderid, tendercodesid, amount) FROM stdin;
-139	\N	609	1	10.00
-140	\N	609	2	6.00
-145	388	\N	1	6.00
 \.
 
 
@@ -2275,6 +2275,9 @@ SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 4, true);
 --
 
 COPY public.printers (printerid, name) FROM stdin;
+42	_192_168_1_10
+43	_192_168_1_20
+44	PDFwriter
 \.
 
 
@@ -2282,7 +2285,7 @@ COPY public.printers (printerid, name) FROM stdin;
 -- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.printers_id_seq', 41, true);
+SELECT pg_catalog.setval('public.printers_id_seq', 44, true);
 
 
 --
@@ -2307,6 +2310,7 @@ SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
 COPY public.roles (roleid, rolename, comment) FROM stdin;
 1	admin	\N
 28	temporary	
+29	cameriere	
 \.
 
 
@@ -2314,35 +2318,35 @@ COPY public.roles (roleid, rolename, comment) FROM stdin;
 -- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.roles_roleid_seq', 28, true);
+SELECT pg_catalog.setval('public.roles_roleid_seq', 29, true);
 
 
 --
 -- Name: standard_comments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.standard_comments_seq', 7, true);
+SELECT pg_catalog.setval('public.standard_comments_seq', 11, true);
 
 
 --
 -- Name: standard_variation_for_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 1, true);
+SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 3, true);
 
 
 --
 -- Name: standard_variation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.standard_variation_id_seq', 1, true);
+SELECT pg_catalog.setval('public.standard_variation_id_seq', 5, true);
 
 
 --
 -- Name: standard_variation_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 2, true);
+SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 15, true);
 
 
 --
@@ -2350,10 +2354,10 @@ SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 2, true);
 --
 
 COPY public.standardcomments (standardcommentid, comment) FROM stdin;
-4	ben cotto
-5	al sangue
 6	poco ghiaccio
-7	molto ghiaccio
+9	molto ghiaccio
+10	ben cotta
+11	al sangue
 \.
 
 
@@ -2362,7 +2366,7 @@ COPY public.standardcomments (standardcommentid, comment) FROM stdin;
 --
 
 COPY public.standardvariationforcourse (standardvariationforcourseid, standardvariationid, courseid) FROM stdin;
-1	1	537
+2	3	539
 \.
 
 
@@ -2371,8 +2375,8 @@ COPY public.standardvariationforcourse (standardvariationforcourseid, standardva
 --
 
 COPY public.standardvariationitem (standardvariationitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid, standardvariationid) FROM stdin;
-1	182	👍	\N	\N	1
-2	181	🚫	\N	\N	1
+5	182	👍	\N	\N	4
+15	183	🚫	\N	107	3
 \.
 
 
@@ -2381,7 +2385,8 @@ COPY public.standardvariationitem (standardvariationitemid, ingredientid, tipova
 --
 
 COPY public.standardvariations (standardvariationid, name) FROM stdin;
-1	havana 7
+3	coca cola
+4	havana
 \.
 
 
@@ -2415,7 +2420,6 @@ SELECT pg_catalog.setval('public.subcategory_mapping_seq', 1, true);
 --
 
 COPY public.subcategorymapping (subcategorymappingid, fatherid, sonid) FROM stdin;
-1	70	72
 \.
 
 
@@ -2424,7 +2428,6 @@ COPY public.subcategorymapping (subcategorymappingid, fatherid, sonid) FROM stdi
 --
 
 COPY public.suborder (suborderid, orderid, subtotal, comment, payed, creationtime, tendercodesid, subtotaladjustment, subtotalpercentadjustment) FROM stdin;
-388	609	6.00	\N	t	2019-10-06 18:52:57.187281	\N	0.00	0.00
 \.
 
 
@@ -2432,7 +2435,7 @@ COPY public.suborder (suborderid, orderid, subtotal, comment, payed, creationtim
 -- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.suborderid_seq', 388, true);
+SELECT pg_catalog.setval('public.suborderid_seq', 392, true);
 
 
 --
@@ -2491,8 +2494,7 @@ SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
 
 COPY public.users (userid, username, password, enabled, canvoidorders, role, canmanageallorders, creationtime, istemporary, canchangetheprice, "table", consumed, canmanagecourses) FROM stdin;
 2	administrator	4194d1706ed1f408d5e02d672777019f4d5385c766a8c6ca8acba3167d36a7b9	t	t	1	t	\N	f	t	\N	\N	f
-179	UGIUR90XUBSA		t	f	28	f	2019-10-02 19:46:56.51094	t	f	3	\N	f
-180	RSBHK23AT0SO		t	f	28	f	2019-10-02 20:02:30.071677	t	f	6	\N	f
+183	tonino	87cfad1b5f9782a36c7b8fd877c65a6f7d96e6499149323826ad4bc327bbf37c	t	f	28	t	\N	f	f	\N	\N	f
 \.
 
 
@@ -2500,7 +2502,7 @@ COPY public.users (userid, username, password, enabled, canvoidorders, role, can
 -- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_userid_seq', 180, true);
+SELECT pg_catalog.setval('public.users_userid_seq', 183, true);
 
 
 --
@@ -2508,6 +2510,7 @@ SELECT pg_catalog.setval('public.users_userid_seq', 180, true);
 --
 
 COPY public.variations (variationsid, orderitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid) FROM stdin;
+1144	1479	183	🚫	\N	107
 \.
 
 
@@ -2515,14 +2518,14 @@ COPY public.variations (variationsid, orderitemid, ingredientid, tipovariazione,
 -- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.variations_seq', 1088, true);
+SELECT pg_catalog.setval('public.variations_seq', 1144, true);
 
 
 --
 -- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 310, true);
+SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 313, true);
 
 
 --
@@ -2547,7 +2550,7 @@ COPY public.waiteractionablestates (waiterwatchablestatesid, userid, stateid) FR
 -- Name: waiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.waiteractionablestates_seq', 302, true);
+SELECT pg_catalog.setval('public.waiteractionablestates_seq', 305, true);
 
 
 --
@@ -3444,6 +3447,14 @@ ALTER TABLE ONLY public.standardvariationitem
 
 ALTER TABLE ONLY public.standardvariationforcourse
     ADD CONSTRAINT standardvariation_fk FOREIGN KEY (standardvariationid) REFERENCES public.standardvariations(standardvariationid) MATCH FULL ON DELETE CASCADE;
+
+
+--
+-- Name: standardvariationitem standardvariationitem_ing_price_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.standardvariationitem
+    ADD CONSTRAINT standardvariationitem_ing_price_fk FOREIGN KEY (ingredientpriceid) REFERENCES public.ingredientprice(ingredientpriceid) MATCH FULL ON DELETE SET NULL;
 
 
 --
