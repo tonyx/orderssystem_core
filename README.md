@@ -23,7 +23,7 @@ the package Npgsql version 2.2.1 creating a path like packages\Npgsql.2.2.1\lib\
 edit the in the Db.fs the resPath variable according to the previous path, otherwise it won't compile
 edit the App.fs file and change the home field of the cfg record according to path of sources, otherwise it will not access the css and html liquid templates files
 
-Populate the database with the .sql file.
+Populate the database with the .sql file using the psql command.
 
 Now you can type the commands
 
