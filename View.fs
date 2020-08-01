@@ -106,18 +106,10 @@ let standardComments (comments:Db.StandardComment list) =
                 ]
                 td [
                     a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
-                    // a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) [("onclick","alert('hi');");("class","buttonX")]
                       [Text local.Remove]
                 ]
-                // td [
-                //     button [("type","button");("class","buttonX");("onclick","removeStandardComment("+"\""+(string)(comment.Standardcommentid)+");\"")] [Text "rimuovi"]
-                // ]
             ]
         ]
-        // script [] [Raw("function removeStandardComment(standardCommentid) {
-        //     var confirmed = confirm('confirm removing standard comment');
-        //     if (confirmed) window.location='/admin/removeStandardComment/1;'
-        // }")]
     ]
 
     
@@ -145,7 +137,6 @@ let editUser (user:Db.User) = [
                        { Label = local.UserCanManageCourses
                          Html = selectInput (fun f -> <@ f.CanManageAllCourses  @>)  yesOrNo (if (user.Canmanagecourses) then Some "YES"  else Some "NO" )
                        }
-                       
                      ] 
                 } 
              ]
@@ -182,7 +173,8 @@ let editCourseCategory  (courseCategory: Db.CourseCategories) message = [
                       ] 
                } 
              ]
-         SubmitText = local.SaveChanges }
+         SubmitText = local.SaveChanges 
+      }
          
    br []
    div [] [
@@ -191,44 +183,44 @@ let editCourseCategory  (courseCategory: Db.CourseCategories) message = [
 ]
 
 let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.Course) message = 
- let ingredientsIdNameMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> ((decimal)x.Ingredientid,x.Name))
+    let ingredientsIdNameMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> ((decimal)x.Ingredientid,x.Name))
 
- [
-    h2 (local.AddIngredientTo + course.Name)
+    [
+        h2 (local.AddIngredientTo + course.Name)
 
-    div ["id", "register-message"] [
+        div ["id", "register-message"] [
+            
+                   Text message
+        ]
+
+        renderForm
+           { 
+             Form = Form.ingredientSelector
+             Fieldsets = 
+                 [ { Legend = local.Ingredient
+                     Fields = 
+                         [ 
+                           { Label = local.NameBySelection
+                             Html =  selectInput 
+                                       (fun f -> <@ f.IngredientBySelect  @>) 
+                                        ingredientsIdNameMap (None)}
+                           { Label = local.NameByFreeText
+                             Html =  formInput 
+                                       (fun f -> <@ f.IngredientByText  @>) []}
+
+                           { Label = local.Quantity
+                             Html =  formInput 
+                                       (fun f -> <@ f.Quantity  @>) 
+                                         [] }
+
+                                       ] } 
+                                       ]
+             SubmitText = local.Add }
+
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script ["type","text/javascript"; "src","/autocompleteIng.js"] []
         
-               Text message
     ]
-
-    renderForm
-
-       { Form = Form.ingredientSelector
-         Fieldsets = 
-             [ { Legend = local.Ingredient
-                 Fields = 
-                     [ 
-                       { Label = local.NameBySelection
-                         Html =  selectInput 
-                                   (fun f -> <@ f.IngredientBySelect  @>) 
-                                    ingredientsIdNameMap (None)}
-                       { Label = local.NameByFreeText
-                         Html =  formInput 
-                                   (fun f -> <@ f.IngredientByText  @>) []}
-
-                       { Label = local.Quantity
-                         Html =  formInput 
-                                   (fun f -> <@ f.Quantity  @>) 
-                                     [] }
-
-                                   ] } 
-                                   ]
-         SubmitText = local.Add }
-
-    script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
-    script ["type","text/javascript"; "src","/autocompleteIng.js"] []
-    
-]
                     
 
 
@@ -287,11 +279,8 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
                      a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
                       [Text (local.Remove)] 
                 ]
-
             ]
    ]
-
-
 
    br []
 
@@ -391,7 +380,7 @@ let index container userName =
 
 
 let changePassword message (user:UserLoggedOnSession) =
-        [
+    [
         h2 (local.ChangePasswordFor + user.Username)
         p [] [
             Text local.ChangePassword
@@ -402,7 +391,6 @@ let changePassword message (user:UserLoggedOnSession) =
         ]
 
         renderForm
-
          { Form = Form.changePassword
            Fieldsets = 
                      [ { Legend = local.ChangePassword
@@ -416,9 +404,7 @@ let changePassword message (user:UserLoggedOnSession) =
                                  Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] }
                               ] } ]
            SubmitText = "Confirm" }
-
     ]
-
 
 let register (roles: Db.Role list)   msg = 
    let rolesIdAndNames = List.map (fun (x:Db.Role) -> ((decimal)x.Roleid,x.Rolename)) roles
@@ -595,7 +581,8 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
                               Html = formInput (fun f -> <@ f.Price @>) 
                                [ ] }
                               ] } ]
-              SubmitText = local.Add }
+              SubmitText = local.Add 
+            }
         br []
         br []
         div [] [
@@ -1146,7 +1133,6 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
     
     match category with 
       | Some theCategory -> 
-        
           [
             h2 (theCategory.Name+" ("+local.Visibles+")"); 
             tag "p" [] [ a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid 0) 
@@ -1205,7 +1191,6 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
 
 
 
-//let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backUrl:string) =
 let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backPageNumber:int) =
 
     let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated ingredient.Ingredientcategoryid backPageNumber)
@@ -1237,8 +1222,6 @@ let fillIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: 
         ]
     ]
 
-
-//let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backUrl:string) =
 let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backPageNumber:int) =
     let allIngredientCategoriesIdName = List.map (fun (x:Db.IngredientCategory) -> ((decimal)x.Ingredientcategoryid, x.Name)) allIngredientCategories
     let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated ingredient.Ingredientcategoryid backPageNumber)
@@ -1283,8 +1266,6 @@ let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: 
         ]
     ]
 
-
-
 let ingredientsOfACategory message (category:Db.IngredientCategory) (allIngredientOfCategory: (Db.Ingredient) list)  =
     [
         tag "h1" [] [Text (local.Category+category.Name+ " ("+local.All+")")]
@@ -1317,7 +1298,8 @@ let ingredientsOfACategory message (category:Db.IngredientCategory) (allIngredie
                             { Label = local.CheckAvailability
                               Html = selectInput (fun f -> <@ f.CheckAvailabilityFlag @>) yesOrNo (Some "NO") } 
                               ] } ]
-              SubmitText = local.Submit }
+              SubmitText = local.Submit 
+            }
 
         br []
         div [] [
@@ -1344,7 +1326,8 @@ let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db
                             { Label = local.Visibility 
                               Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") } 
                               ] } ]
-              SubmitText = local.CreateNewCategory }
+              SubmitText = local.CreateNewCategory 
+            }
         br []
         br []
         tag "h2" [] [Text local.VisibleExistingCategories] 
