@@ -20,7 +20,9 @@ let TPConnectionString =
 let [<Literal>] dbVendor = Common.DatabaseProviderTypes.POSTGRESQL
 let [<Literal>] connexStringName = "DefaultConnectionString"
 
-let [<Literal>] resPath = "/Users/Tonyx/Projects/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider
+//let [<Literal>] resPath = "/Users/Tonyx/Projects/orderssystem_core/packages/Npgsql.2.2.1/lib/net45"  // location of a valid Npgsql.dll file used at compile time by sql data provider
+
+let [<Literal>] resPath = "C:/Users/Toni/gitprojects/toni/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider
 // let [<Literal>] resPath = "C:/Users/pc/programmi_tony/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider
 
 let [<Literal>] indivAmount = 1000

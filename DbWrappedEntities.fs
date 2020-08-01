@@ -86,34 +86,34 @@ let wrapMyObject (object: Common.SqlEntity) =
 
 type DbObjectWrapper =
     static member WrapOrderItemDetails(orderItemDetail: Db.OrderItemDetails) cssColor =
-    {
-        Quantity = orderItemDetail.Quantity;
-        Categoryid = orderItemDetail.Categoryid;
-        Closingtime = orderItemDetail.Closingtime;
-        Comment  = orderItemDetail.Comment;
-        Courseid = orderItemDetail.Courseid;
-        Hasbeenrejected = orderItemDetail.Hasbeenrejected;
-        Name = orderItemDetail.Name;
-        Orderid = orderItemDetail.Orderid;
-        Orderitemid = orderItemDetail.Orderitemid;
-        Orderout= orderItemDetail.Groupidentifier;
-        Originalprice=orderItemDetail.Originalprice;
-        Price = orderItemDetail.Price;
-        Person= orderItemDetail.Person;
-        Suborderid = orderItemDetail.Suborderid;
-        // Isinasuborder = orderItemDetail.Isinsasuborder;
-        Paid = orderItemDetail.Payed;
-        Csscolor = cssColor;
-        Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price;
-        Stateid = orderItemDetail.Stateid;
+        {
+            Quantity = orderItemDetail.Quantity;
+            Categoryid = orderItemDetail.Categoryid;
+            Closingtime = orderItemDetail.Closingtime;
+            Comment  = orderItemDetail.Comment;
+            Courseid = orderItemDetail.Courseid;
+            Hasbeenrejected = orderItemDetail.Hasbeenrejected;
+            Name = orderItemDetail.Name;
+            Orderid = orderItemDetail.Orderid;
+            Orderitemid = orderItemDetail.Orderitemid;
+            Orderout= orderItemDetail.Groupidentifier;
+            Originalprice=orderItemDetail.Originalprice;
+            Price = orderItemDetail.Price;
+            Person= orderItemDetail.Person;
+            Suborderid = orderItemDetail.Suborderid;
+            // Isinasuborder = orderItemDetail.Isinsasuborder;
+            Paid = orderItemDetail.Payed;
+            Csscolor = cssColor;
+            Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price;
+            Stateid = orderItemDetail.Stateid;
 
-    }
+        }
 
     static member WrapCourse (course: Db.Course) =
-    {
-        CourseId = course.Courseid
-        CourseName  = course.Name
-    }
+        {
+            CourseId = course.Courseid
+            CourseName  = course.Name
+        }
 
     static member WrapSubOrder (subOrder: Db.SubOrder) cssColor =
         // log.Debug("WrapSubOrer")
@@ -134,29 +134,29 @@ type DbObjectWrapper =
         }
     
     static member WrapOrder (order: Db.Order) =
-    {
-        OrderId=order.Orderid;
-        Tavolo=order.Table;
-        Totale= order.Total;
-        Sconto = order.Total - order.Adjustedtotal;
-        TotaleScontato = order.Adjustedtotal;
-    }
+        {
+            OrderId=order.Orderid;
+            Tavolo=order.Table;
+            Totale= order.Total;
+            Sconto = order.Total - order.Adjustedtotal;
+            TotaleScontato = order.Adjustedtotal;
+        }
 
     static member WrapTenderCode (tenderCode:Db.TenderCode) =
-    {
-        TenderCodeName= tenderCode.Tendername;
-        TenderCodeId=tenderCode.Tendercodesid;
-        TenderCodeIdentifier=tenderCode.Tendercode
-    }
+        { 
+            TenderCodeName= tenderCode.Tendername;
+            TenderCodeId=tenderCode.Tendercodesid;
+            TenderCodeIdentifier=tenderCode.Tendercode
+        }
 
     static member WrapPaymentItem (paymentItem:Db.PaymentItemDetail) =
-    {
-        SubOrderId = paymentItem.Suborderid;
-        Amount = paymentItem.Amount;
-        TenderCodeId= paymentItem.Tendercodesid;
-        TenderName = paymentItem.Tendername;
-        PaymentItemId = paymentItem.Paymentid;
-    }
+        { 
+            SubOrderId = paymentItem.Suborderid;
+            Amount = paymentItem.Amount;
+            TenderCodeId= paymentItem.Tendercodesid;
+            TenderName = paymentItem.Tendername;
+            PaymentItemId = paymentItem.Paymentid;
+        }
 
 
 

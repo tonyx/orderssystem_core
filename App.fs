@@ -4072,7 +4072,11 @@ let cfg =
       bindings = [ HttpBinding.createSimple HTTP "0.0.0.0" 8083  ] 
       
     //   homeFolder= Some @"C:\Users\pc\programmi_tony\orderssystem_core"
-      homeFolder= Some "/Users/Tonyx/Projects/orderssystem_core"
+
+    //   homeFolder= Some "/Users/Tonyx/Projects/orderssystem_core"
+
+      homeFolder= Some @"C:\Users\Toni\gitprojects\toni\orderssystem_core"
+
     //    bindings = [ HttpBinding.createSimple (HTTPS cert) "0.0.0.0" 8443  ] 
   }
 

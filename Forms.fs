@@ -54,11 +54,12 @@ type PriceAdjustment = {
 }
 
 let priceAdjustment: Form<PriceAdjustment> = 
-    Form ([
-        TextProp ((fun f -> <@ f.PercentOrValue  @>), [])
-        TextProp ((fun f -> <@ f.Value  @>), [decimalNumberPattern])
-    ],
-[] )
+    Form 
+        ([
+            TextProp ((fun f -> <@ f.PercentOrValue  @>), [])
+            TextProp ((fun f -> <@ f.Value  @>), [decimalNumberPattern])
+        ],
+        [] )
 
 
 type IngredientPrice = {
@@ -70,11 +71,11 @@ type IngredientPrice = {
 }
 
 let ingredientPrice: Form<IngredientPrice> =
-    Form ([
-            DecimalProp ((fun f -> <@ f.AddPrice @>), [ min 0.01M; step 0.01M ])
+    Form (
+          [ DecimalProp ((fun f -> <@ f.AddPrice @>), [ min 0.01M; step 0.01M ])
             DecimalProp ((fun f -> <@ f.SubtractPrice @>), [ min 0.01M; step 0.01M ])
-          ],
-    [] )
+          ], [] )
+
 // DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ]
 
 type OrderItem = {

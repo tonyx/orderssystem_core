@@ -322,8 +322,6 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
    a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
    br []
-
-//    a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardComments)]
    br []
 
    h2 local.SelectableStandardVariations
@@ -337,7 +335,6 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
    ]
    a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
-//    a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.ModifySelectableStandardVariations)]
    br []
 
    tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
@@ -427,37 +424,39 @@ let register (roles: Db.Role list)   msg =
    let rolesIdAndNames = List.map (fun (x:Db.Role) -> ((decimal)x.Roleid,x.Rolename)) roles
 
    [
-   h2 local.CreateNewAccount
-   p [] [
-       Text local.FillData
-   ]
+       h2 local.CreateNewAccount
+       p [] [
+           Text local.FillData
+       ]
 
-   div ["id", "register-message"] [
-       Text msg
-   ]
+       div ["id", "register-message"] 
+           [
+               Text msg
+           ]
 
-   renderForm
-       { Form = Form.register
-         Fieldsets = 
-             [ { Legend=  local.CreateNewAccount
-                 Fields = 
-                     [ { Label = "User name (max 30 characters)"
-                         Html = formInput (fun f -> <@ f.Username @>) [] }
-                       { Label = local.Role
-                         Html = selectInput (fun f -> <@ f.Role @>) rolesIdAndNames (None) }
-                       { Label = local.CanSeeAllOrders
-                         Html = selectInput (fun f -> <@ f.CanManageAllorders @>) yesOrNo  (Some "No") }
-                       { Label = local.CanOverWritePrices
-                         Html = selectInput (fun f -> <@ f.CanChangeThePrices @>) yesOrNo  (Some "No") }
-                       { Label = local.UserCanChangePrices
-                         Html = selectInput (fun f -> <@ f.CanManageAllCourses @>) yesOrNo  (Some "No") }
-                       { Label = local.SixToTwentyChars 
-                         Html = formInput (fun f -> <@ f.Password @>) [] }
-                       { Label = local.ConfirmPassword
-                         Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] }
-                       ] } ]
-         SubmitText = local.SaveChanges }
-]
+       renderForm
+           { Form = Form.register
+             Fieldsets = 
+                 [ { Legend=  local.CreateNewAccount
+                     Fields = 
+                         [ { Label = "User name (max 30 characters)"
+                             Html = formInput (fun f -> <@ f.Username @>) [] }
+                           { Label = local.Role
+                             Html = selectInput (fun f -> <@ f.Role @>) rolesIdAndNames (None) }
+                           { Label = local.CanSeeAllOrders
+                             Html = selectInput (fun f -> <@ f.CanManageAllorders @>) yesOrNo  (Some "No") }
+                           { Label = local.CanOverWritePrices
+                             Html = selectInput (fun f -> <@ f.CanChangeThePrices @>) yesOrNo  (Some "No") }
+                           { Label = local.UserCanChangePrices
+                             Html = selectInput (fun f -> <@ f.CanManageAllCourses @>) yesOrNo  (Some "No") }
+                           { Label = local.SixToTwentyChars 
+                             Html = formInput (fun f -> <@ f.Password @>) [] }
+                           { Label = local.ConfirmPassword
+                             Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] }
+                           ] } ]
+             SubmitText = local.SaveChanges 
+           }
+    ]
 
 let notFound = [
     h2 local.PageNotFound
@@ -1549,7 +1548,7 @@ let rolesDeletionPage (roles: Db.Role list ) =
         tag "h1" [] [Text local.DeleteRoles ]
         ulAttr ["id ","item-list"] [
             for role in roles ->
-                tag "p" [] [a (sprintf Path.Admin.deleteRole role.Roleid) ["class","buttonX"] [Text (local.Delete+role.Rolename)]] 
+                tag "p" [] [a (sprintf Path.Admin.deleteRole role.Roleid) ["class","buttonX"] [Text (local.Delete+" "+role.Rolename)]] 
         ]
     ]
 
@@ -1558,7 +1557,7 @@ let ingredientsDeletionPage (ingredients: Db.Ingredient list ) =
         tag "h1" [] [Text local.DeleteIngredients]
         ulAttr ["id ","item-list"] [
             for ingredient in ingredients ->
-                tag "p" [] [a (sprintf Path.Admin.deleteIngredient ingredient.Ingredientid) ["class","buttonX"] [Text (local.Delete+ingredient.Name)]] 
+                tag "p" [] [a (sprintf Path.Admin.deleteIngredient ingredient.Ingredientid) ["class","buttonX"] [Text (local.Delete+" "+ingredient.Name)]] 
         ]
     ]
 
@@ -1567,7 +1566,7 @@ let userDeletionPage (users: Db.UsersView list) backUrl =
         tag "h1" [] [Text local.DeleteUsers]
         ulAttr ["id ","item-list"] [
             for user in users ->
-                tag "p" [] [a ((sprintf Path.Admin.deleteUser user.Userid)+"?backUrl="+backUrl) ["class","buttonX"] [Text (local.Delete+user.Username)]] 
+                tag "p" [] [a ((sprintf Path.Admin.deleteUser user.Userid)+"?backUrl="+backUrl) ["class","buttonX"] [Text (local.Delete+" "+user.Username)]] 
         ]
     ]
 let ingredientCategoriesDeletionPage (ingredientCategories: Db.IngredientCategory list) =
@@ -1575,7 +1574,7 @@ let ingredientCategoriesDeletionPage (ingredientCategories: Db.IngredientCategor
         tag "h1" [] [Text local.DeleteIngredientCategories]
         ulAttr ["id ","item-list"] [
             for ingCategory in ingredientCategories ->
-                tag "p" [] [a (sprintf Path.Admin.deleteIngredientCategory ingCategory.Ingredientcategoryid) ["class","buttonX"] [Text (local.Delete+ingCategory.Name)]] 
+                tag "p" [] [a (sprintf Path.Admin.deleteIngredientCategory ingCategory.Ingredientcategoryid) ["class","buttonX"] [Text (local.Delete+" "+ingCategory.Name)]] 
         ]
     ]
 
@@ -1585,7 +1584,7 @@ let courseCategoriesDeletionPage (courseCategories: Db.CourseCategories list) =
         tag "h1" [] [Text local.DeleteCourseCategories]
         ulAttr ["id ","item-list"] [
             for courseCategory in courseCategories ->
-                tag "p" [] [a (sprintf Path.Admin.deleteCourseCategory courseCategory.Categoryid) ["class","buttonX"] [Text (local.Delete+courseCategory.Name)]] 
+                tag "p" [] [a (sprintf Path.Admin.deleteCourseCategory courseCategory.Categoryid) ["class","buttonX"] [Text (local.Delete+" "+courseCategory.Name)]] 
         ]
     ]
 
