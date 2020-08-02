@@ -11,3 +11,5 @@ module OrdersSystem.Settings
     let Localization = "it" 
     // let EcrFilePath = @"C:\Users\pc\programmi_tony\orderssystem_core\ecr.txt"
     let EcrFilePath = "ecr.txt"
+    let HomeFolder = @"C:\Users\Toni\gitprojects\toni\orderssystem_core"
+    let [<Literal>] NpgSqlResPath = "C:/Users/Toni/gitprojects/toni/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider

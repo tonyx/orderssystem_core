@@ -89,7 +89,6 @@ module OrdersSystem.Globals
 
     let UNITARY_MEASURES = [UNITARY_MEASURE]
 
-
     [<Measure>] 
      type kg =
       static member toGr (t: float<kg>) = 1000.0<gr>
@@ -152,9 +151,6 @@ module OrdersSystem.Globals
              static member fromLt = lt.toDl
              static member toCl = cl.fromDl
              static member fromCl = cl.toDl
-
-
-
 
     let colourValues = [
             "#00FF00"; "#0000FF"; "#FFFF00"; "#FF00FF"; "#00FFFF";  
