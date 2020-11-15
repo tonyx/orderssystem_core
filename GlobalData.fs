@@ -15,7 +15,6 @@ module OrdersSystem.Globals
     // let me = 1.0 [kg]
     let ALIQUOTA_IVA_UNICA = 10.0M
 
-
     let NORMAL = "NORMAL"
 
     [<Literal>]
@@ -127,8 +126,6 @@ module OrdersSystem.Globals
         static member fromGr = gr.toDag 
         static member toHg = hg.fromDag     
         static member fromHg = hg.toDag 
-
-
 
     [<Measure>]
       type lt =    

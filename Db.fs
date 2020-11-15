@@ -1,14 +1,9 @@
 module OrdersSystem.Db
 open FSharp.Data.Sql
-// open OrdersSystem
 open System
 open System.Data
 open System.Globalization
-
-// open Microsoft.FSharp.Linq.Nullable
-
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
 
 [<Literal>]
 let TPConnectionString = 
@@ -99,7 +94,6 @@ type StandardVariationItemDetails = DbContext.``public.standardvariationitemdeta
 type StandardVariationForCourseDetails = DbContext.``public.standardvariationforcoursedetailsEntity``
 type OrderItemSubOrderMapping = DbContext.``public.orderitemsubordermappingEntity``
 
-
 let getContext() = Sql.GetDataContext(TPConnectionString)
 
 module Courses = 
@@ -148,12 +142,12 @@ module Courses =
         let startIndex = pageId * Globals.NUM_DB_ITEMS_IN_A_PAGE
         let upperIndex = startIndex + Globals.NUM_DB_ITEMS_IN_A_PAGE 
         query {
-                    for corseDetails in ctx.Public.Coursedetails2  do
-                        where (categoryId = corseDetails.Categoryid && corseDetails.Visibility)
-                        sortBy corseDetails.Name 
-                        skip (pageId*Globals.NUM_DB_ITEMS_IN_A_PAGE)
-                        take (upperIndex - startIndex)
-                        select corseDetails
+            for corseDetails in ctx.Public.Coursedetails2  do
+                where (categoryId = corseDetails.Categoryid && corseDetails.Visibility)
+                sortBy corseDetails.Name 
+                skip (pageId*Globals.NUM_DB_ITEMS_IN_A_PAGE)
+                take (upperIndex - startIndex)
+                select corseDetails
         } |> Seq.toList
 
     let getAllCourseDetails (ctx: DbContext) : Coursedetails list =
@@ -188,10 +182,10 @@ module Courses =
         log.Debug(sprintf "%s %d %d" "getAllCoursesDetailsByCategoryAndPage" categoryId pageId)
         let allCourses =
             query {
-                    for corseDetails in ctx.Public.Coursedetails2  do
-                        where (categoryId = corseDetails.Categoryid)
-                        sortBy corseDetails.Name
-                        select corseDetails
+                for corseDetails in ctx.Public.Coursedetails2  do
+                    where (categoryId = corseDetails.Categoryid)
+                    sortBy corseDetails.Name
+                    select corseDetails
 
             } |> Seq.toArray
         let startIndex = pageId * Globals.NUM_DB_ITEMS_IN_A_PAGE
@@ -575,7 +569,6 @@ module Orders =
                 where (orderItem.Orderid = orderId)
                 select orderItem
         } |> Seq.toList
-            
         
     let getOngoingOrdersByUser userId (ctx: DbContext) : Order list =
         log.Debug(sprintf "%s %d" "getOngoingOrdersByUser" userId)
@@ -2071,11 +2064,11 @@ let tryMoveOrderItemToNextState (orderItemId: int) userId (ctx: DbContext) =
     | None -> failwith (sprintf "%s %d " "unexisting order item with id " orderItemId)
 
 let updateCourseCategory (courseCategory:CourseCategories) name visibility abstractness (ctx: DbContext) =
-        log.Debug(sprintf "%s %d %s" "updateCourseCategory" courseCategory.Categoryid name)
-        courseCategory.Name<-name
-        courseCategory.Visibile<-visibility
-        courseCategory.Abstract <- abstractness
-        ctx.SubmitUpdates()
+    log.Debug(sprintf "%s %d %s" "updateCourseCategory" courseCategory.Categoryid name)
+    courseCategory.Name<-name
+    courseCategory.Visibile<-visibility
+    courseCategory.Abstract <- abstractness
+    ctx.SubmitUpdates()
 
 let voidOrder id (ctx: DbContext) =
     let order = tryGetOrderById id ctx
@@ -2427,17 +2420,17 @@ let addAddIngredientVariationByName orderItemid ingredientName (quantity:string)
     let ingredient = ctx.Public.Ingredient |> Seq.tryFind  (fun (x:Ingredient) -> x.Name = ingredientName)
     match ingredient with
     | Some theIngredient -> 
-                            if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASURE)) then 
-                            (
-                                let overWrittenQuantity = match theIngredient.Unitmeasure with 
-                                    | (UNITARY_MEASURE) -> UNITARY_MEASURE 
-                                    | _ -> quantity
-                                addAddIngredientVariation orderItemid theIngredient.Ingredientid overWrittenQuantity (ctx:DbContext)
-                            ) else
-                            (
-                                let ingredientPriceId = Int32.Parse(quantity)
-                                addIngredientVariationByIngredientPriceRef orderItemid theIngredient.Ingredientid ingredientPriceId ctx
-                            )
+        if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASURE)) then 
+        (
+            let overWrittenQuantity = match theIngredient.Unitmeasure with 
+                | (UNITARY_MEASURE) -> UNITARY_MEASURE 
+                | _ -> quantity
+            addAddIngredientVariation orderItemid theIngredient.Ingredientid overWrittenQuantity (ctx:DbContext)
+        ) else
+        (
+            let ingredientPriceId = Int32.Parse(quantity)
+            addIngredientVariationByIngredientPriceRef orderItemid theIngredient.Ingredientid ingredientPriceId ctx
+        )
     | None -> ()
     ctx.SubmitUpdates()
 
@@ -3235,9 +3228,10 @@ module StandardVariations =
     let addRemoveStandardIngredientVariationItem variationId ingrdientId (ctx:DbContext) =
         log.Debug("addRemoveStandardIngredientVariationItem")
         let existingVariation = tryGetAStandardIngredientVariationItem variationId ingrdientId ctx
-        let _ = match existingVariation with
-                | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
-                | _ -> ()
+        let _ = 
+            match existingVariation with
+            | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+            | _ -> ()
         let _ = ctx.Public.Standardvariationitem.Create(ingrdientId,variationId,Globals.SENZA)
         ctx.SubmitUpdates()
     
@@ -3249,9 +3243,7 @@ module StandardVariations =
         match possibleExistingVariation with
         | None ->
             let variation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)``(standardVariationItem.Ingredientid,orderItemId,standardVariationItem.Tipovariazione)
-
             log.Debug(standardVariationItem.Ingredientpriceid)
-
             let _ = match standardVariationItem.Ingredientpriceid with
                 | 0 -> ()
                 | X -> variation.SetColumn("ingredientpriceid",X)

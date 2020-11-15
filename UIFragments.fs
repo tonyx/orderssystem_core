@@ -119,17 +119,6 @@ let ordersBar (myOrders:Db.Orderdetail list) (otherOrders:Db.Orderdetail list) =
         ]
     ]
 
-
-//   table [for category in pairOfCategories -> 
-//     tr  [ for subItem in category -> 
-//         match subItem with 
-//         | Some theSubItem  -> 
-//             td [a ((sprintf Path.Orders.addOrderItemByCategory order.Orderid theSubItem.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
-//             [Text (" + " + theSubItem.Name + "  ")] ]
-//         | None ->  td []
-//  ]]
-
-
 let ordersBarRef (pairOfOrders:Db.Orderdetail option list list) (pairOfOtherOrders:Db.Orderdetail option list list) =
     [
 
@@ -153,8 +142,6 @@ let ordersBarRef (pairOfOrders:Db.Orderdetail option list list) (pairOfOtherOrde
             ]
         ]
     ]
-
-    
 
 let modifyOrderItemLink (orderItem:Db.OrderItemDetails) (mapOfStates: Map<int,Db.State>) backUrl =
       if (mapOfStates.[orderItem.Stateid].Isinitial) then
@@ -184,8 +171,6 @@ let removeOrderItemLink (orderItem:Db.OrderItemDetails) isEnabled backUrl =
     else 
         em ""
         
-    
-
 let allergeneMarkVariationPrintForIngredientOfCourse (ingredientToPrint:Db.IngredientOfCourse) =
     ingredientToPrint.Ingredientname+(if (ingredientToPrint.Allergen) then "(*)" else "")
 

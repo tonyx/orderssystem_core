@@ -3,10 +3,8 @@ module OrdersSystem.Utils
 open OrdersSystem
 open ExpressionOptimizer
 
-
 let javascriptDecimalStringPairMapConverter (l:(decimal*string) list) =
     "new Map(["+ (l |> List.fold (fun acc (x,y) -> acc + "["+ "\""  + (string)  x+ "\"" +  ","+"\""+ y+ "\"" + "],") "")+"]);"
-
 
 let intPairsMapToJavascriptString l =
     let javascriptListPairs l = l |> List.fold (fun acc (x,y)  -> acc + "["+(string)x+","+(string)y+"],") ""
@@ -39,23 +37,14 @@ let textForWholeOrderReceipt orderId (orderItemsDetails:Db.OrderItemDetails list
 
     text
 
-
-
-
 let textForSubOrderReceipt  (orderItemsDetails:Db.OrderItemDetails list)  (ctx:Db.DbContext) =
-
     let total = orderItemsDetails |> List.map (fun (x:Db.OrderItemDetails) -> x.Price) |> List.fold (+) 0.0M
     let now = System.DateTime.Now.ToLocalTime()
-
     let text = "riepilogativo non fiscale:\n\n"+ "data:"+now.ToString()+"\n\n"+ 
             (orderItemsDetails |> (List.fold (fun y (x:Db.OrderItemDetails) ->  y + 
             (sprintf "%d %-20s %-10.2f\n"   x.Quantity  x.Name  x.Price )) ""))  +  
             "\nTotale: "+(sprintf "%.2f" total)
-
     text
-
-
-
 
 let variationsByStringDescription (listOfVariations:(int*Db.VariationDetail list) list) (ctx:Db.DbContext)= 
     listOfVariations |>

@@ -5,7 +5,6 @@ open Suave.Form
 
 // specific ui form options:
 
-
 [<Literal>]
 let YES = "YES"
 [<Literal>]
@@ -16,10 +15,6 @@ let ABSTRACT = "ABSTRACT"
 
 [<Literal>]
 let VISIBLE = "VISIBLE"
-
-//
-//
-
 
 let pattern = passwordRegex @"(\w){6,20}"
 
@@ -159,9 +154,6 @@ let ingredient:Form<Ingredient> =
     Form ([
         TextProp ((fun f -> <@ f.Name@>), [])
         DecimalProp ((fun f -> <@ f.AvailableQuantity@>), [min 0.0M; step 0.01M])
-
-        // DecimalProp ((fun f -> <@ match f.AvailableQuantity with Some X -> X  @> ), [min 0.00M; step 0.01M])
-
     ],[]
     )
 
@@ -170,20 +162,6 @@ type IngredientSelector = {
     IngredientByText: string
     Quantity: decimal option
 }
-
-
-
-// type CheckBoxSpike = {
-//     Name: string option
-// }
-// let checkBoxSpike:Form<CheckBoxSpike> =
-//     Form ([],[]) 
-
-// type CheckBoxSpike2 = {
-//     Name2: string option
-// }
-// let checkBoxSpike2:Form<CheckBoxSpike2> =
-//     Form ([],[]) 
 
 type EnablersObserverForStateAbilities = {
     CategoryId: decimal
@@ -229,8 +207,6 @@ let ingredientSelector:Form<IngredientSelector> =
     ],[]
     )
 
-
-
 type AddIngredient = {
     IngredientBySelect: decimal
     Quantity: string 
@@ -242,7 +218,6 @@ let addIngredient:Form<AddIngredient> =
         DecimalProp ((fun f -> <@f.IngredientBySelect @> ),[])
     ],[])
 
-
 type IngredientVariation = {
     IngredientBySelect: decimal
     Quantity: string
@@ -252,8 +227,6 @@ let ingredientVariation:Form<IngredientVariation> =
     Form ([
         DecimalProp ((fun f -> <@f.IngredientBySelect @> ),[])
     ],[])
-
-
 
 type IngredientEdit = {
     Name: string
@@ -279,7 +252,6 @@ type IngredientLoad = {
     Comment: string
 }
 
-
 let ingredientLoad:Form<IngredientLoad> =
     Form (
         [
@@ -295,7 +267,6 @@ let date: Form<Date> = (
     Form ([],[])
 )
 
-
 type ChangePassword = {
     OldPassword: Password
     Password: Password
@@ -310,9 +281,7 @@ let changePassword: Form<ChangePassword> =
            PasswordProp ((fun f -> <@ f.OldPassword @>), [  ] )
            PasswordProp ((fun f -> <@ f.Password @>), [ pattern ] )
            PasswordProp ((fun f -> <@ f.ConfirmPassword @>), [ pattern ] )
-
     ],[passwordsMatch2])
-
 
 type Register = {
    Username : string
@@ -419,8 +388,6 @@ let comment: Form<Comment> =
         ], []
     )
 
-
-
 type SubCourseCategory = {
     Name: string
     Visibility: string
@@ -438,7 +405,6 @@ type CommentForCourse = {
     CommentForCourse: decimal
 }
 
-
 let commentForCourse:Form<CommentForCourse>  =
     Form (
         [DecimalProp ((fun f -> <@ f.CommentForCourse @>),[])],[]
@@ -448,12 +414,10 @@ type VariationForCourse = {
     VariationForCourse: decimal
 }
 
-
 let variationForCourse:Form<VariationForCourse>  =
     Form (
         [DecimalProp ((fun f -> <@ f.VariationForCourse @>),[])],[]
     )
-
 
 type StandardVariation = {
     Name: string
@@ -465,7 +429,6 @@ let standardVariation: Form<StandardVariation> =
             TextProp ((fun f -> <@f.Name@>),[])
         ], []
     )
-
 
 type SearchIngredient = {
     Name: string
@@ -523,5 +486,4 @@ let userEdit: Form<UserEdit> =
             TextProp ((fun f -> <@ f.CanManageAllCourses @>), [])
            ],
          [])
-
 

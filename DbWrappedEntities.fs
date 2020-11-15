@@ -70,19 +70,12 @@ type OrderWrapped = {
     TotaleScontato: decimal
 }
 
-
-///
 /// experimental feature
 let wrapMyObject (object: Common.SqlEntity) =
     let table = object.Table
     match table.Name with
     | "orderitemdetails" ->  printf "ok"
     | _ -> printf "not ok"
-
-
-
-
-
 
 type DbObjectWrapper =
     static member WrapOrderItemDetails(orderItemDetail: Db.OrderItemDetails) cssColor =
@@ -101,7 +94,6 @@ type DbObjectWrapper =
             Price = orderItemDetail.Price;
             Person= orderItemDetail.Person;
             Suborderid = orderItemDetail.Suborderid;
-            // Isinasuborder = orderItemDetail.Isinsasuborder;
             Paid = orderItemDetail.Payed;
             Csscolor = cssColor;
             Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price;
@@ -116,16 +108,11 @@ type DbObjectWrapper =
         }
 
     static member WrapSubOrder (subOrder: Db.SubOrder) cssColor =
-        // log.Debug("WrapSubOrer")
-        // log.Debug("subTotal:")
-        // log.Debug(subOrder.Subtotal)
-
         {
             Suborderid = subOrder.Suborderid;
             Orderid = subOrder.Orderid;
             Comment = subOrder.Comment;
             Subtotal = subOrder.Subtotal;
-            // Subtotal = 44M;
             Subtotaladjustment = subOrder.Subtotaladjustment;
             SubtotalPercentAdjustment = subOrder.Subtotalpercentadjustment;
             SubtotalAdjustmentFromPercentage = Math.Round(subOrder.Subtotal * (subOrder.Subtotalpercentadjustment/100M),2,MidpointRounding.ToEven);
