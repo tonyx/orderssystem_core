@@ -2,9 +2,6 @@ module OrdersSystem.Form
 
 open Suave.Form
 
-
-// specific ui form options:
-
 [<Literal>]
 let YES = "YES"
 [<Literal>]
@@ -56,7 +53,6 @@ let priceAdjustment: Form<PriceAdjustment> =
         ],
         [] )
 
-
 type IngredientPrice = {
     AddPrice: decimal
     SubtractPrice: decimal
@@ -71,15 +67,12 @@ let ingredientPrice: Form<IngredientPrice> =
             DecimalProp ((fun f -> <@ f.SubtractPrice @>), [ min 0.01M; step 0.01M ])
           ], [] )
 
-// DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ]
 
 type OrderItem = {
     CourseId: decimal
-    CourseByName: string
     Comment: string option
     Quantity: decimal
     Price: decimal 
-    // GroupOut: decimal option
     GroupOut: decimal 
 }
 
@@ -95,7 +88,6 @@ let orderItemRejection: Form<OrderItemRejection> =
 
 type StrippedOrderItem = {
     CourseId: decimal
-    CourseByName: string
     Comment: string option
     Quantity: decimal
     GroupOut: decimal
@@ -104,15 +96,12 @@ type StrippedOrderItem = {
 let orderItem: Form<OrderItem > =
    Form ([ DecimalProp ((fun f -> <@ f.Quantity @>), [])
            DecimalProp ((fun f -> <@ f.CourseId @>), [])
-           TextProp ((fun f -> <@ f.CourseByName @>), [])
            DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ])
            ],
          [])
-
 let strippedOrderItem: Form<StrippedOrderItem> =
    Form ([ DecimalProp ((fun f -> <@ f.Quantity @>), [])
            DecimalProp ((fun f -> <@ f.CourseId @>), [])
-           TextProp ((fun f -> <@ f.CourseByName @>), [])
            ],
          [])
 
@@ -126,9 +115,7 @@ let order: Form<Order> =
            ],
          [])
 
-
 type IngredientCategory = {
-    // BackUrl: string
     Name: string
     Comment: string option
     Visibility: string
@@ -159,7 +146,7 @@ let ingredient:Form<Ingredient> =
 
 type IngredientSelector = {
     IngredientBySelect: decimal 
-    IngredientByText: string
+//    IngredientByText: string
     Quantity: decimal option
 }
 
@@ -201,16 +188,12 @@ let printerOutGroupForStates:Form<PrinterOutGroupForStates> =
 let ingredientSelector:Form<IngredientSelector> = 
     Form ([
         DecimalProp ((fun f -> <@f.IngredientBySelect@> ),[])
-        // DecimalProp ((fun f -> <@f.Quantity@> ),[min 0.00M; step 0.01M])
-        // TextProp ((fun f -> <@f.Quantity@> ),[decimalNumberPattern])
-        // TextProp ((fun f -> <@f.Quantity@> ),[])
     ],[]
     )
 
 type AddIngredient = {
     IngredientBySelect: decimal
     Quantity: string 
-    IngredientByText: string
 } 
 
 let addIngredient:Form<AddIngredient> = 
@@ -243,7 +226,6 @@ let ingredientEdit:Form<IngredientEdit> =
     Form ([
         TextProp ((fun f -> <@ f.Name@>), [])
         DecimalProp ((fun f -> <@ f.Category @>), [])
-        // DecimalProp ((fun f -> <@ f.AvailableQuantity@>), [min 0.0M; step 0.01M])
     ],[]
     )
 
@@ -292,7 +274,6 @@ type Register = {
    CanManageAllCourses : string
    Role: decimal
 }
-
 
 let passwordsMatch = 
    (fun f -> f.Password = f.ConfirmPassword), "Passwords must match"

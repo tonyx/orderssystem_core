@@ -204,9 +204,10 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
                              Html =  selectInput 
                                        (fun f -> <@ f.IngredientBySelect  @>) 
                                         ingredientsIdNameMap (None)}
-                           { Label = local.NameByFreeText
-                             Html =  formInput 
-                                       (fun f -> <@ f.IngredientByText  @>) []}
+                           
+//                           { Label = local.NameByFreeText
+//                             Html =  formInput 
+//                                       (fun f -> <@ f.IngredientByText  @>) []}
 
                            { Label = local.Quantity
                              Html =  formInput 
@@ -511,8 +512,8 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
                           [ 
                             { Label = local.CourseBySelection
                               Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                            { Label = local.CourseByFreeText
-                              Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
+                            // { Label = local.CourseByFreeText
+                            //   Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
                             { Label = local.Quantity
                               Html = formInput (fun f -> <@ f.Quantity @>) 
                                [ "Value", "1" ] } 
@@ -566,8 +567,10 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
                           [ 
                             { Label = local.CourseBySelection
                               Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                            { Label = local.CourseByFreeText
-                              Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
+
+                            // { Label = local.CourseByFreeText
+                            //   Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
+
                             { Label = local.Quantity
                               Html = formInput (fun f -> <@ f.Quantity @>) 
                                [ "Value", "1" ] } 
@@ -644,8 +647,8 @@ let editOrderItemForStrippedUsers (orderItem:Db.OrderItemDetails) (courses:Db.Co
                             { Label = local.CourseBySelection
                               Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
 
-                            { Label = local.CourseByFreeText
-                              Html = formInput (fun f -> <@ f.CourseByName @>)  []   } 
+                            // { Label = local.CourseByFreeText
+                            //   Html = formInput (fun f -> <@ f.CourseByName @>)  []   } 
 
                             { Label = local.ExitGroup
                               Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier ))  } 
@@ -697,8 +700,8 @@ let editOrderItemForOrdinaryUsers (orderItem:Db.OrderItemDetails)
                             { Label = local.CourseBySelection
                               Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
 
-                            { Label = local.CourseByFreeText
-                              Html = formInput (fun f -> <@ f.CourseByName @>)  []  } 
+                            // { Label = local.CourseByFreeText
+                            //   Html = formInput (fun f -> <@ f.CourseByName @>)  []  } 
 
                             { Label = local.ExitGroup
                               Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier))   } 
@@ -2278,9 +2281,9 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
                                        (fun f -> <@ f.Quantity  @>) 
                                         pocoNormaleMolto (Some Globals.AGGIUNGINORMALE)}
 
-                           { Label = local.NameByFreeText
-                             Html =  formInput 
-                                       (fun f -> <@ f.IngredientByText  @>) []}
+//                           { Label = local.NameByFreeText
+//                             Html =  formInput 
+//                                       (fun f -> <@ f.IngredientByText  @>) []}
 
                                        ] } 
                                        ]

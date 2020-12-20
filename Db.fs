@@ -111,7 +111,6 @@ module Courses =
             for course in ctx.Public.Courses do
                 where (course.Courseid = courseId)
         } |> Seq.head
-        // ctx.Public.Courses |> Seq.find (fun (x:Course) -> x.Courseid = courseId)
 
     let tryGetCourseByName courseName (ctx:DbContext) =
         log.Debug(sprintf "%s tryGetCourseByName " courseName)
@@ -1423,6 +1422,23 @@ let createOrderItemByCourseName courseName orderid quantity comment price (group
     ctx.SubmitUpdates()
     orderItem
 
+let createOrderItemByCourseId courseId orderid quantity comment price (groupOut: decimal) (ctx: DbContext) =
+    log.Debug(sprintf "%s %d %d %.2f" "createOrderItemByCourseId" courseId orderid  price  )
+    // let course = match Courses.tryFindCourseByName courseName ctx with
+    //     | Some X -> X
+    //     | None -> failwith ("unexisting course with name "+ courseName)
+    let initState = States.getInitState ctx
+    let now = System.DateTime.Now
+    let groupDbItem = createOrGetOutGroup orderid ((int)groupOut) ctx
+    let orderItem = ctx.Public.Orderitems.``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` (courseId, false,groupDbItem.Ordergroupid,orderid,0,quantity,now,initState.Stateid)
+    let _ = orderItem.Comment <- match comment with | Some theComment -> theComment | _  -> ""
+    orderItem.Price<-price
+    ctx.SubmitUpdates()
+    let _ = ctx.Public.Orderitemstates.Create(orderItem.Orderitemid,now,initState.Stateid)
+    ctx.SubmitUpdates()
+    orderItem
+
+
 let cloneOrderItemStatesWithNewOrderItemId orderItemId (orderitemstate:OrderItemState) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "cloneOrderItemStatesWithNewOrderItemId" orderItemId)
     let stateId = orderitemstate.Stateid
@@ -2249,6 +2265,9 @@ let addIngredientToCourseByName ingredientName courseId quantity ctx =
         addIngredientToCourse theIngredient.Ingredientid courseId quantity ctx
     | None -> ()
 
+let addIngredientToCourseById ingredientId courseId quantity ctx =
+    log.Debug(sprintf "addIngredientToCourseById %d %d" ingredientId courseId)
+    addIngredientToCourse ingredientId courseId quantity ctx
 let getIngredientPrices ingredientId (ctx:DbContext) =
     log.Debug(sprintf "getIngredientPrices %d" ingredientId)
     query {
@@ -2434,6 +2453,24 @@ let addAddIngredientVariationByName orderItemid ingredientName (quantity:string)
     | None -> ()
     ctx.SubmitUpdates()
 
+
+let addAddIngredientVariationById orderItemid (ingredientId:int) (quantity:string) (ctx:DbContext) =
+    log.Debug(sprintf "addAddIngredientVariationByName %d" orderItemid) 
+    let  mut: float ref = ref 1.1
+    let ingredient = getIngredientById ingredientId ctx
+    if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASURE)) then 
+        (
+            let overWrittenQuantity = match ingredient.Unitmeasure with 
+                | (UNITARY_MEASURE) -> UNITARY_MEASURE 
+                | _ -> quantity
+            addAddIngredientVariation orderItemid ingredientId overWrittenQuantity (ctx:DbContext)
+        ) else
+        (
+            let ingredientPriceId = Int32.Parse(quantity)
+            addIngredientVariationByIngredientPriceRef orderItemid ingredientId ingredientPriceId ctx
+        )
+    ctx.SubmitUpdates()
+
 let addDiminuishIngredientVariattion orderItemId ingredientId (ctx:DbContext) =
     log.Debug("addDiminuishIngredientVariattion")
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
@@ -2531,6 +2568,31 @@ let removeAllVariationsOfOrderItem orderItemId (ctx:DbContext) =
     let variations = getAllVariationsOfOrderItem orderItemId ctx
     let _ = variations |> List.iter (fun (x:Variation) -> x.Delete())
     ctx.SubmitUpdates()
+
+let updateOrderItemAndPriceByCourseId orderItemId courseId quantity comment newPrice (groupOut: decimal ) (ctx: DbContext) =
+    //  log.Debug(sprintf "updateOrderItemAndPriceByCourseName %d %s" orderItemId courseName) 
+    // let tryOrderItem = Orders.getOrderItemById orderItemId ctx
+    let orderItem = Orders.getTheOrderItemById orderItemId ctx
+    let thecomment  = match comment with | Some c -> c | None -> ""
+    //  let course = Courses.tryGetCourseByName courseName ctx
+    //  match (tryOrderItem,course) with
+    //  | (Some orderItem,Some theCourse) -> 
+    let oldCourseId = courseId
+    orderItem.Quantity<-quantity
+    // orderItem.Courseid<-theCourse.Courseid 
+    orderItem.Courseid<-courseId
+    orderItem.Comment<-thecomment 
+    orderItem.Price <- newPrice
+    let orderGroupOut = createOrGetOutGroup orderItem.Orderid ((int)groupOut) ctx
+    orderItem.Ordergroupid <- (int)orderGroupOut.Ordergroupid
+    orderItem.Hasbeenrejected <- false
+    ctx.SubmitUpdates()
+    let x = Orders.updateTotalOfOrder orderItem.Orderid ctx
+    let _ = if (oldCourseId <> courseId) then (removeAllVariationsOfOrderItem orderItemId ctx)  else ()
+    ()
+    //  | _ -> ()
+
+
 
 let updateOrderItemAndPriceByCourseName orderItemId courseName quantity comment newPrice (groupOut: decimal ) (ctx: DbContext) =
      log.Debug(sprintf "updateOrderItemAndPriceByCourseName %d %s" orderItemId courseName) 

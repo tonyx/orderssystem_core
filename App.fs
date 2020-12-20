@@ -1299,7 +1299,8 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
             html (View.addOrderItem  orderId coursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
           )
           POST >=> bindToForm Form.orderItem (fun form ->
-            let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+            // let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+            let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
             Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
@@ -1330,7 +1331,7 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
           )
           POST >=> bindToForm Form.strippedOrderItem (fun form ->
             let course = Db.getCourseDetail ((int)form.CourseId) ctx
-            let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
+            let orderItem = Db.createOrderItemByCourseId ((int)form.CourseId) orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
             Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
@@ -1739,15 +1740,11 @@ let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landing
         POST >=> bindToForm Form.strippedOrderItem (fun form ->
             let course = Db.getCourseDetail ((int)form.CourseId) ctx
             let price = course.Price
-
-            Db.updateOrderItemAndPriceByCourseName  orderItemId (form.CourseByName) ((int)(form.Quantity))  form.Comment price form.GroupOut ctx
-
+            Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)form.CourseId) ((int)(form.Quantity))  form.Comment price form.GroupOut ctx
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx
             Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
-
             Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
-
         )
      ]) else Redirection.FOUND landingPage 
 
@@ -1779,7 +1776,7 @@ let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landing
             html (View.editOrderItemForOrdinaryUsers orderItemExists courses categories ingredients outGroup backUrl viableGroupOutIdsForOrderItem))
 
         POST >=> bindToForm Form.orderItem (fun form ->
-            Db.updateOrderItemAndPriceByCourseName  orderItemId ((form.CourseByName)) ((int)(form.Quantity)) form.Comment form.Price form.GroupOut ctx
+            Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)(form.CourseId)) ((int)(form.Quantity)) form.Comment form.Price form.GroupOut ctx
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId  ctx
             Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
@@ -1869,11 +1866,6 @@ let createSingleOrderByUserLoggedOn (user:UserLoggedOnSession) =
                     Redirection.FOUND (sprintf Path.Orders.viewOrder order.Orderid)
         )
     ]
-
-
-// type MyModel = {name: string; roleidname: IndexNameRecord list; categoriesidname: IndexNameRecord list;
-//     existingrolestatemapping:  TwoIndexNameRecord list; selectroleid: string; selectcategoryid: string;
-//     backurl: string}
 
 type MyModel = {roleidname: IndexNameRecord list; categoriesidname: IndexNameRecord list;
     existingrolestatemapping:  TwoIndexNameRecord list; selectroleid: string; selectcategoryid: string;
@@ -2077,7 +2069,6 @@ let selectIAllngredientCatForCourse courseId  =
  ]
 
 
-
 let selectIngredientCatForCourse courseId categoryId message =
     log.Debug(sprintf "selectIngredientCatForCourse courseId: %d, categoryId: %d " categoryId)
     let ctx = Db.getContext()
@@ -2097,17 +2088,14 @@ let selectIngredientCatForCourse courseId categoryId message =
         )
         POST >=> bindToForm Form.ingredientSelector (fun form ->
             log.Debug("selectIngredientCatForCourse POST")
-            let ingredient = Db.tryGetIngredientByName form.IngredientByText ctx
-            let _ = match ingredient with 
-                | Some theIngredient -> 
-                    let quantity = match (form.Quantity,theIngredient.Unitmeasure) with
+//            let ingredient = Db.tryGetIngredientByName form.IngredientByText ctx
+            let ingredient = Db.getIngredientById ((int)form.IngredientBySelect) ctx
+            let quantity = match (form.Quantity,ingredient.Unitmeasure) with
                                 | (Some X,_) -> Some X
                                 | (None,UNITARY_MEASURE) -> Some ((decimal)1.0)
                                 | _ -> form.Quantity
 
-                    Db.addIngredientToCourseByName (form.IngredientByText) courseId quantity ctx
-                | None -> ()
-
+            Db.addIngredientToCourseByName (ingredient.Name) courseId quantity ctx
             let retPath = sprintf Path.Courses.editCourse courseId 
             Redirection.FOUND retPath
         )
@@ -2299,7 +2287,8 @@ let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingr
 
         POST >=> bindToForm Form.addIngredient (fun form -> 
             let ctx = Db.getContext()
-            let _ = Db.addAddIngredientVariationByName orderItemId (form.IngredientByText) form.Quantity ctx
+//            let _ = Db.addAddIngredientVariationByName orderItemId (form.IngredientByText) form.Quantity ctx
+            let _ = Db.addAddIngredientVariationById orderItemId ((int)(form.IngredientBySelect)) form.Quantity ctx
             let _ = adjustPriceOfOrderItemByVariations orderItemId
             let redirTo = (sprintf Path.Orders.editOrderItemVariation orderItemId )
             Redirection.found (redirTo)
