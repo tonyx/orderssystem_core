@@ -1299,7 +1299,6 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
             html (View.addOrderItem  orderId coursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
           )
           POST >=> bindToForm Form.orderItem (fun form ->
-            // let orderItem = Db.createOrderItemByCourseName form.CourseByName orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
             let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
             makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
             makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
@@ -1637,7 +1636,7 @@ let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
         | Some theOrderItemDetail -> 
             moveOrderItemNextState theOrderItemDetail user
             setOrderToArchivedIfAllorderItemsAreDone  theOrderItemDetail.Orderid
-        | None -> () //   failwith ("no order item with id " + orderItemId.ToString())
+        | None -> () 
         
         Redirection.FOUND returnPath
     )
@@ -2088,7 +2087,6 @@ let selectIngredientCatForCourse courseId categoryId message =
         )
         POST >=> bindToForm Form.ingredientSelector (fun form ->
             log.Debug("selectIngredientCatForCourse POST")
-//            let ingredient = Db.tryGetIngredientByName form.IngredientByText ctx
             let ingredient = Db.getIngredientById ((int)form.IngredientBySelect) ctx
             let quantity = match (form.Quantity,ingredient.Unitmeasure) with
                                 | (Some X,_) -> Some X
@@ -2141,14 +2139,12 @@ let archiveOrder id (user:UserLoggedOnSession) =
 let unableToCompleteOperation aString    =
     View.cantComplete aString |> html
 
-let voidorder orderId = 
+
+let voidorder orderId =
     log.Debug(sprintf "voidorder %d" orderId)
     let ctx = Db.getContext()
     Db.voidOrder orderId ctx
     Redirection.FOUND Path.home
-
-
-
 
 let voidOrderByUserLoggedOn orderId urlEncodedBackUrl (user: UserLoggedOnSession) =
     log.Debug(sprintf "voidOrderByUserLoggedOn orderId: %d, user: %s" orderId user.Username)
@@ -2287,7 +2283,6 @@ let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingr
 
         POST >=> bindToForm Form.addIngredient (fun form -> 
             let ctx = Db.getContext()
-//            let _ = Db.addAddIngredientVariationByName orderItemId (form.IngredientByText) form.Quantity ctx
             let _ = Db.addAddIngredientVariationById orderItemId ((int)(form.IngredientBySelect)) form.Quantity ctx
             let _ = adjustPriceOfOrderItemByVariations orderItemId
             let redirTo = (sprintf Path.Orders.editOrderItemVariation orderItemId )
@@ -2483,92 +2478,6 @@ type LiquidWrappedOrderItemsForEdit = {orderitemdetailswrapped: OrderItemDetails
 type invoiceModel = {daticliente: string; orderitemdetailswrapped: OrderItemDetailsWrapped list; nextavailablenumber: int; idname: IndexNameDataRecord list}
 let printWholeOrderInvoiceAsWordformat orderId =
     failwith "unimplemented"
-
-
-    // log.Debug(sprintf "%s %d " "printWholeOrderInvoiceAsWordformat" orderId)
-    // let ctx = Db.getContext()
-    // let orderItemDetails = Db.getOrderItemDetailOfOrderThatArenotInInitState orderId ctx
-    // let order = Db.Orders.getOrder orderId ctx
-
-    // let allCustomers = Db.getAllCustomers ctx
-    // let idNameCustomers = allCustomers |> List.map (fun (x:Db.CustomerData) -> {index=x.Customerdataid;name=x.Name;data=x.Data})
-
-    // let orderItemDetailsWrappedList = orderItemDetails |> List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails(x) "") //  DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails(orderItemDetails)
-
-    // let orderItemDetailsArray = orderItemDetails |> List.toArray
-
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let datiCliente = {daticliente = "pinco pallo"; orderitemdetailswrapped = orderItemDetailsWrappedList; nextavailablenumber = 1; idname = idNameCustomers  }
-    //         DotLiquid.page("invoiceData.html") datiCliente
-    //     )
-    //     POST >=> bindToForm Form.invoiceForm (
-    //         fun form -> 
-    //             let fileNam()e = sprintf "fattura_%d.docx" System.DateTime.Now.Ticks
-    //             let border = new Border()
-    //             let secondBorder = new Border()
-    //             let _ = secondBorder.Color = Color.Black
-
-    //             let _ = border.Color <- Color.Black
-    //             let doc = DocX.Create(fileName)
-    //             let _ = doc.InsertParagraph(form.Comment)
-    //             let _ = doc.InsertParagraph(" ")
-    //             let _ = doc.InsertParagraph(" ")
-    //             let _ = doc.InsertParagraph(" ")
-
-    //             let headerTable = doc.InsertTable(1,3)
-
-    //             let _ = headerTable.SetBorder(TableBorderType.Top,secondBorder)
-    //             let _ = headerTable.SetBorder(TableBorderType.Bottom,secondBorder)
-    //             let _ = headerTable.SetBorder(TableBorderType.Right,secondBorder)
-    //             let _ = headerTable.SetBorder(TableBorderType.Left,secondBorder)
-
-    //             let _ = headerTable.Rows.[0].Cells.[0].InsertParagraph("Qta")
-    //             let _ = headerTable.Rows.[0].Cells.[1].InsertParagraph("Item")
-    //             let _ = headerTable.Rows.[0].Cells.[2].InsertParagraph("Prezzo")
-
-    //             let itemTable = doc.InsertTable(List.length orderItemDetails,3)
-    //             let _ = itemTable.SetBorder(TableBorderType.Top,border)
-    //             let _ = itemTable.SetBorder(TableBorderType.Bottom,border)
-    //             let _ = itemTable.SetBorder(TableBorderType.Right,border)
-    //             let _ = itemTable.SetBorder(TableBorderType.Left,border)
-
-    //             let _ = [0 .. ((List.length orderItemDetails)-1)] |> List.iter (fun i -> 
-    //                 (itemTable.Rows.[i].Cells.[0].InsertParagraph(orderItemDetailsArray.[i].Quantity |> string) |> ignore;  
-    //                 (itemTable.Rows.[i].Cells.[1].InsertParagraph(orderItemDetailsArray.[i].Name) |> ignore;  ))
-
-    //                 (itemTable.Rows.[i].Cells.[2].InsertParagraph(sprintf "%.2f" (Utils.unbundleVat  (orderItemDetailsArray.[i].Price) Globals.ALIQUOTA_IVA_UNICA)  ) |> ignore;))  
-
-    //             let _ = match (order.Total - order.Adjustedtotal) with
-    //                 | 0M  -> 
-    //                     let itemTablePrice = doc.InsertTable(2,3)
-    //                     let _ = itemTablePrice.Rows.[0].Cells.[2].InsertParagraph("_________")
-    //                     let _ = itemTablePrice.Rows.[1].Cells.[1].InsertParagraph("totale:")
-    //                     let _ = itemTablePrice.Rows.[1].Cells.[2].InsertParagraph(sprintf "%.2f" order.Adjustedtotal)
-    //                     ()
-
-    //                 | _ ->  
-    //                     let itemTablePrice = doc.InsertTable(2,3)
-    //                     let _ = itemTablePrice.Rows.[0].Cells.[2].InsertParagraph("_________")
-
-    //                     let _ = itemTablePrice.Rows.[1].Cells.[1].InsertParagraph("totale lordo:")
-    //                     let _ = itemTablePrice.Rows.[1].Cells.[2].InsertParagraph(sprintf "%.2f" order.Total)
-
-    //                     let itemTablePrice = doc.InsertTable(1,3)
-    //                     let _ = itemTablePrice.Rows.[0].Cells.[1].InsertParagraph("sconto:")
-    //                     let _ = itemTablePrice.Rows.[0].Cells.[2].InsertParagraph(sprintf "%.2f" (order.Total - order.Adjustedtotal))
-
-    //                     let itemTablePrice = doc.InsertTable(2,3)
-    //                     let _ = itemTablePrice.Rows.[0].Cells.[2].InsertParagraph("_________")
-    //                     let _ = itemTablePrice.Rows.[1].Cells.[1].InsertParagraph("totale netto:")
-    //                     let _ = itemTablePrice.Rows.[1].Cells.[2].InsertParagraph(sprintf "%.2f" order.Adjustedtotal)
-    //                     ()
-
-    //             let _ = doc.Save()
-    //             Redirection.found Path.Orders.seeDoneOrders
-    //     )
-
-    // ]
 
 
 let printSubOrderInvoice subOrderId =
@@ -2838,23 +2747,15 @@ let wholeOrderPaymentItems  orderId  =
         DotLiquid.page("wholeOrderPaymentItem.html") liquidModel
     )
 
-
-
 let removePaymentItemOfSubOrder paymentItemId subOrderId orderId   =
     let ctx = Db.getContext()
     Db.Orders.removePaymentItem paymentItemId ctx
     Redirection.found (sprintf Path.Orders.subOrderPaymentItems subOrderId orderId)
 
-
-
-
-
 let removePaymentItemOfOrder paymentItemId  orderId   =
     let ctx = Db.getContext()
     Db.Orders.removePaymentItem paymentItemId ctx
-
     Redirection.found (sprintf Path.Orders.wholeOrderPaymentItems  orderId)
-
 
 let setSubOrderAsPaid subOrderId orderId (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d " "setSubOrderAsPaid" subOrderId)
@@ -2870,12 +2771,9 @@ let printReceipt subOrderId orderId =
     let subOrder = Db.Orders.getSubOrder subOrderId ctx
     let printerForReceipts = Db.getPrintersForReceipts ctx
     let printerNames = printerForReceipts |> List.map (fun (x:Db.Printer) -> x.Name)
-
     let orderItemOfSubOrder = Db.getOrderItemDetailsOfSubOrderThatAreNotInInitState subOrder.Suborderid ctx
     let total = orderItemOfSubOrder |> List.fold (fun accumul (x:Db.OrderItemDetails) -> accumul + (x.Price)) ((decimal)0.0)
-
     let text = Utils.textForSubOrderReceipt orderItemOfSubOrder ctx
-
     let fileName = sprintf "receipt_print%d.txt" System.DateTime.Now.Ticks
     let outFile = new System.IO.StreamWriter(fileName,true,Encoding.UTF8)
     let _ = outFile.WriteLine(text)
@@ -2886,10 +2784,7 @@ let printReceipt subOrderId orderId =
     )
     subOrder.Payed <- true
     ctx.SubmitUpdates()
-
     Redirection.found (sprintf Path.Orders.subdivideDoneOrder orderId)
-
-
 
 let setSubOrderAsNotPaid subOrderId orderId (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d %d"  "setSubOrderAsNotPaid" subOrderId orderId)
@@ -2898,7 +2793,6 @@ let setSubOrderAsNotPaid subOrderId orderId (user:UserLoggedOnSession) =
     let _ = subOrder.Payed <- false
     ctx.SubmitUpdates()
     Redirection.found (sprintf Path.Orders.subdivideDoneOrder orderId)
-
 
 let deleteSubOrder subOrderId orderId (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d %d" "deleteSubOrder" subOrderId orderId)
@@ -2921,7 +2815,6 @@ let recomputeSubOrderTotal (subOrder:Db.SubOrder) =
     log.Debug(sprintf "total %.2f" total)
     subOrder.Subtotal <- total
     ctx.SubmitUpdates()
-
 
 let colapseDoneOrder id (user: UserLoggedOnSession) =
     log.Debug(printf "%s %d" "colapseDoneOrder" id)

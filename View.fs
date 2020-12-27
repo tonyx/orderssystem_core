@@ -512,8 +512,6 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
                           [ 
                             { Label = local.CourseBySelection
                               Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                            // { Label = local.CourseByFreeText
-                            //   Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
                             { Label = local.Quantity
                               Html = formInput (fun f -> <@ f.Quantity @>) 
                                [ "Value", "1" ] } 
@@ -2149,7 +2147,7 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                        [
                            td [ 
                                Text(orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" "+ 
-                                 (if (not (mapOfStates.[orderItem.Stateid].Isinitial)) then  orderItem.Statusname else ""))
+                                 (if (not (mapOfStates.[orderItem.Stateid].Isinitial)) then orderItem.Statusname else "")+" g: "+(orderItem.Groupidentifier.ToString())+" ")
                                modifyOrderItemLink orderItem mapOfStates backUrl
                                deleteOrderItemLink orderItem mapOfStates backUrl
                                ingredientsVarOrderItmLink orderItem
@@ -2158,7 +2156,6 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                                (if (orderItem.Hasbeenrejected && ((eventualRejectionsOfOrderItems.[orderItem.Orderitemid]).IsSome)) then 
                                 (Text(local.InChargeBy+": "+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
                            ]
-
                        ]
                 ]
                 table
@@ -2762,7 +2759,6 @@ let standardVariationsForCourse (course:Db.Course) (standardVariationsForCourseD
 
 
 let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) (selectableStandardVariations:Db.StandardVariationForCourseDetails list) =
-    // let orderEditUrl = (sprintf Path.Orders.viewOrder orderItem.Orderid) 
     let linkToContinue = 
         match (List.length selectableStandardVariations) with
         | 0 ->   a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
