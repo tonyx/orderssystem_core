@@ -2663,7 +2663,17 @@ let printWholeOrderReceipt orderId =
     Redirection.found (Path.Orders.seeDoneOrders)
 
 
-type PaymentItemsLiquidValues = {wrappedSubOrder: DbWrappedEntities.SubOrderWrapped; wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list;   table: string;  wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;tenderCodes: IndexNameRecord list;residualPaymentDue: decimal;orderId: int;subOrderId:int}
+type PaymentItemsLiquidValues = {
+    wrappedSubOrder: DbWrappedEntities.SubOrderWrapped
+    wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list
+    table: string
+    wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;
+    tenderCodes: IndexNameRecord list
+    residualPaymentDue: decimal
+    residualPaymentAsString: string
+    orderId: int
+    subOrderId:int
+}
 
 
 
@@ -2705,7 +2715,17 @@ let subOrderPaymentItems subOrderId orderId  =
 
         let wrappedPaymentItems = paymentItemDetails |> List.map (fun (x:Db.PaymentItemDetail) -> DbWrappedEntities.DbObjectWrapper.WrapPaymentItem(x))
         let wrappedSubOrder = DbWrappedEntities.DbObjectWrapper.WrapSubOrder(subOrder) ""
-        let liquidModel = {wrappedSubOrder = wrappedSubOrder; wrappedOrderItems= wrappedOrderItemDetails; table=table; wrappedPaymentItems = wrappedPaymentItems; tenderCodes = tenderCodesIndexNameList;residualPaymentDue=residual;orderId = orderId;subOrderId=subOrderId }
+        let liquidModel = {
+                                    wrappedSubOrder = wrappedSubOrder
+                                    wrappedOrderItems= wrappedOrderItemDetails
+                                    table=table
+                                    wrappedPaymentItems = wrappedPaymentItems
+                                    tenderCodes = tenderCodesIndexNameList
+                                    residualPaymentDue=residual
+                                    residualPaymentAsString = residual |> string
+                                    orderId = orderId
+                                    subOrderId=subOrderId
+        }
         DotLiquid.page("subOrderPaymentItem.html") liquidModel
     )
 
@@ -2721,7 +2741,15 @@ let removeAllDiscountOfSubOrder subOrderId =
 
 
 
-type PaymentItemsLiquidValuesForOrder = {wrappedOrder: DbWrappedEntities.OrderWrapped; wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list; table: string; wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list;tenderCodes: IndexNameRecord list;residualPaymentDue: decimal;orderId: int}
+type PaymentItemsLiquidValuesForOrder = {
+    wrappedOrder: DbWrappedEntities.OrderWrapped
+    wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list
+    table: string
+    wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list
+    tenderCodes: IndexNameRecord list
+    residualPaymentDue: string
+    orderId: int
+}
 let wholeOrderPaymentItems  orderId  =
     log.Debug(sprintf "%s %d " "wholeOrderPaymentItems" orderId )
     let ctx = Db.getContext()
@@ -2743,7 +2771,15 @@ let wholeOrderPaymentItems  orderId  =
 
         let wrappedPaymentItems = paymentItemDetails |> List.map (fun (x:Db.PaymentItemDetail) -> DbWrappedEntities.DbObjectWrapper.WrapPaymentItem(x))
         let wrappedOrder = DbWrappedEntities.DbObjectWrapper.WrapOrder(order) 
-        let liquidModel = {wrappedOrder = wrappedOrder; table = order.Table ; wrappedOrderItems = wrappedOrderItemsDetails; wrappedPaymentItems = wrappedPaymentItems; tenderCodes = tenderCodesIndexNameList;residualPaymentDue=residual;orderId = orderId}
+        let liquidModel = {
+            wrappedOrder = wrappedOrder
+            table = order.Table
+            wrappedOrderItems = wrappedOrderItemsDetails; 
+            wrappedPaymentItems = wrappedPaymentItems; 
+            tenderCodes = tenderCodesIndexNameList
+            residualPaymentDue = residual |> string
+            orderId = orderId
+        }
         DotLiquid.page("wholeOrderPaymentItem.html") liquidModel
     )
 
