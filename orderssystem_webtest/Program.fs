@@ -26,20 +26,20 @@ lastly
     (
         fun _ ->
             
-//            url Home.home
-//            Home.deleteButton == "cancellazioni"
-//            click Home.deleteButton
-//            Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
-//            click Deletion.eliminateDishesCategoryButton
-//            DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
-//            click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
-//            
-//            url Home.home
-//            click Home.deleteButton
-//            Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
-//            click Deletion.eliminateIngredientCategories
-//            IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
-//            click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+            url Home.home
+            Home.deleteButton == "cancellazioni"
+            click Home.deleteButton
+            Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
+            click Deletion.eliminateDishesCategoryButton
+            DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
+            click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
+            
+            url Home.home
+            click Home.deleteButton
+            Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
+            click Deletion.eliminateIngredientCategories
+            IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
+            click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
             
             ()
             
@@ -48,23 +48,18 @@ lastly
     Home.infoButton == local.Info
     
 "second button is manage printers" &&& fun _ ->
-//    Home.managePrintersButton == "gestisci stampanti"
     Home.managePrintersButton == local.ManagePrinters.Trim()
     
 "third button is ingredients" &&& fun _ ->
-//    Home.ingredientsButton == "ingredienti"
     Home.ingredientsButton == local.Ingredients.Trim()
     
 "forth button is dishes" &&& fun _ ->
-//    Home.dishesButton == "piatti"
     Home.dishesButton == local.Courses.Trim()
     
 "create a new dishes category" &&& fun _ ->
     click Home.dishesButton
-//    Dishes.pageTitle ==  "gestione categorie di piatti"
     Dishes.pageTitle == local.CourseCategoriesManagement.Trim()
     Dishes.createNewCategoryButton |> click
-//    DishesCreationPage.newCategory == "nuova categoria"
     DishesCreationPage.newCategory == local.NewCategory.Trim()
     DishesCreationPage.newCategoryField << "category1"
     DishesCreationPage.submit |> click
@@ -74,7 +69,6 @@ lastly
     click Home.dishesButton
     DishesCreationPage.firstCategory == "category1"
     DishesCreationPage.firstCategory |> click
-//    DishesCreationPage.addNew == "aggiungi nuovo"
     DishesCreationPage.addNew == local.AddNew.Trim()
     DishesCreationPage.addNew |> click
     DishesCreationPage.nameField << "piatto1"
@@ -83,9 +77,7 @@ lastly
     
 "create a new ingredient category "  &&& fun _ ->
    Home.ingredientsButton == local.Ingredients.Trim()
-//   "ingredienti"
    Home.ingredientsButton |> click
-//   IngredientCategories.title == "tutte le categorie di ingredienti"
    IngredientCategories.title == local.AllCategoriesOfIngredients.Trim()
    IngredientCategories.nameField << "ingCategory1"
    IngredientCategories.submit |> click
@@ -139,7 +131,6 @@ lastly
    IngredientPrice.quantity << "10"
    IngredientPrice.submit |> click
    IngredientPrice.existingItem |> displayed
-//   read IngredientPrice.existingItem |> contains "quantità"
    read IngredientPrice.existingItem |> contains (local.Quantity.Trim())
    
 "create a new order adding a dish removing an ingredient, so updating the price automatically" &&& fun _ ->
@@ -154,60 +145,6 @@ lastly
    AddDish.ingredientsOfFirstOrderItemOfFirstOrder == local.Ingredients.Trim()
    AddDish.ingredientsOfFirstOrderItemOfFirstOrder |> click
    
-    
-   
-   
-   
-   
-   
-    
-    
-       
-   
-   
-   
-    
-    
-    
-      
-// /html/body/div[3]/ul/p/
-// a
-   // //*[@id="main"]/form/fieldset/div[2]/input  
-           
-            
-//    textext2 == "cat1"
-    // //*[@id="main"]/table[1]/tbody/tr[3]/td[1]/a 
-//    //go to url
-//    url "http://lefthandedgoat.github.io/canopy/testpages/"
-//
-//    //assert that the element with an id of 'welcome' has
-//    //the text 'Welcome'
-//    "#welcome" == "Welcome"
-//
-//    //assert that the element with an id of 'firstName' has the value 'John'
-//    "#firstName" == "John"
-//
-//    //change the value of element with
-//    //an id of 'firstName' to 'Something Else'
-//    "#firstName" << "Something Else"
-//
-//    //verify another element's value, click a button,
-//    //verify the element is updated
-//    "#button_clicked" == "button not clicked"
-//    click "#button" / 
-//    "#button_clicked" == "button clicked"
-//run all tests
-
-//"find an existing dishe category" &&& fun _ ->
-//    let dishesbutton = xpath  ".//*[@id='main']/p[4]/a"
-//    click dishesbutton
-//    
-//    let textext = read ".//*[@id='main']/table[1]"
-//    printf "%s\n" textext
-//    ".//*[@id='main']/table[1]/trbody" *= "cat1"
-//    textext *="cat1"
-
-
 run()
 
 printfn "press [enter] to exit"
@@ -217,12 +154,3 @@ quit()
 
 
 
-//// Define a function to construct a message to print
-//let from whom =
-//    sprintf "from %s" whom
-//
-//[<EntryPoint>]
-//let main argv =
-//    let message = from "F#" // Call the function
-//    printfn "Hello world %s" message
-//    0 // return an integer exit code
