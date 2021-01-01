@@ -1,0 +1,267 @@
+    <localization>
+
+    
+        <modifyUser>modifica utente</modifyUser>
+        <userEnabled>user enabled</userEnabled>
+
+
+        <SubmitVariations>submit variations</SubmitVariations>
+        <SelectableComments>selectable comments </SelectableComments>
+        <ExistingComment>existing commments </ExistingComment> 
+        <Reset>Reset</Reset> 
+        <CommentsFor>comments for </CommentsFor> 
+        <AddSelectableVariation>add selectable variation</AddSelectableVariation> 
+        <AddSelectableVariationsFor>add selctable stanard vriation for</AddSelectableVariationsFor>
+        <ExistingComments>existing comments</ExistingComments> 
+        <AddSelectableComment>add selectable comment </AddSelectableComment> 
+        <AddStandardCommentFor>add standard comment for</AddStandardCommentFor>
+        <AreYouSureVoidOrder>are you sure you want to void the order</AreYouSureVoidOrder>
+        <OrderItemsInProgress>orderitems in progress</OrderItemsInProgress>
+        <UserIsNotEnabled>user is not enabled</UserIsNotEnabled>
+        <SwitchVisibility>toggle visibility </SwitchVisibility> 
+        <SubCategory>subcategory</SubCategory> 
+        <AddSubCategoryOf>new subcategory</AddSubCategoryOf> 
+        <Choose>choose</Choose> 
+        <StandardVariation>standard variation </StandardVariation> 
+        <StandardVariations>variazioni standard </StandardVariations> 
+        <ExistingSubCategories>existing subcategoris </ExistingSubCategories> 
+        <AddSubCategory>add subcategory </AddSubCategory> 
+        <MergeWithFatherCategory>merge with father category </MergeWithFatherCategory> 
+        <ErrorUnexistingCategory>error: unexisting category</ErrorUnexistingCategory> 
+        <CreateCourse>Create course</CreateCourse> 
+        <BackToOrder>back to the order</BackToOrder> 
+        <FatherCategory>father category </FatherCategory> 
+        <SubCategories>subcategory </SubCategories> 
+        <LogOn>Log on</LogOn> 
+        <CouldNotFindTheRequestedResource>could not find the requested resource </CouldNotFindTheRequestedResource> 
+        <SearchCourse>search course</SearchCourse> 
+        <PageNotFound>page not found</PageNotFound> 
+        <ModifySelectableStandardVariations>modify selectable standard variation</ModifySelectableStandardVariations> 
+        <SelectableStandardVariations>selectable standard variation</SelectableStandardVariations> 
+        <ModifySelectableStandardComments>modify selectable standard comment</ModifySelectableStandardComments> 
+        <SelectableStandardComments>selectable standard commnts</SelectableStandardComments> 
+        <EditUser>modify user</EditUser>
+        <Insert>Insert</Insert> 
+        <NewComment>New comment</NewComment> 
+        <StandardComments>standard comments</StandardComments> 
+        <TimeStamp>date time </TimeStamp> 
+        <ProgressivePrintCounterForThisReceipt>print counter for this order: </ProgressivePrintCounterForThisReceipt> 
+        <CantAddAnotherAdmin>can't add another admin user </CantAddAnotherAdmin> 
+        <UserNameIsTaken>sorry this username is already taken. Try another one </UserNameIsTaken> 
+        <ACategoryNamed>add a category with name </ACategoryNamed> 
+        <ACourseNamed>a course with name</ACourseNamed> 
+        <NameIsUsed>this name is already used</NameIsUsed> 
+        <AlreadyExists>already exists  </AlreadyExists> 
+        <ModifyUser>modify user</ModifyUser> 
+        <UserEnabled>user enabled</UserEnabled> 
+        <UserCanVoidOrder>user can void order</UserCanVoidOrder> 
+        <UserCanSeeAnyOrder>user can see any order</UserCanSeeAnyOrder> 
+        <UserCanChangePrices>user can change the prices</UserCanChangePrices> 
+        <UserCanManageCourses>user can manage courses</UserCanManageCourses> 
+        <EditCategory>modiry category</EditCategory> 
+        <Course>course</Course> 
+        <Name>name</Name> 
+        <SaveChanges>save changes</SaveChanges> 
+        <GoBack>go back</GoBack> 
+        <GoBackTo>back to </GoBackTo> 
+        <AccountInformation>Account information </AccountInformation>
+        <AddIngredientTo>add ingredient to </AddIngredientTo> 
+        <Ingredient>ingreient</Ingredient> 
+        <NameBySelection>name by selection</NameBySelection> 
+        <NameByFreeText>name by free text</NameByFreeText> 
+        <Quantity>quantity </Quantity> 
+        <Add>Add</Add> 
+        <Info>Informations</Info> 
+        <CollapseOrderItems> colapse order items  </CollapseOrderItems> 
+        <Price> price </Price> 
+        <Description> description </Description> 
+        <Visibility> visibility </Visibility> 
+        <Category> category </Category> 
+        <saveChanges>save changes </saveChanges> 
+        <ExistingIngredients> existing ingredients </ExistingIngredients> 
+        <CategoriesOfIngredientsYouCanAdd>categories of ingredients you can add </CategoriesOfIngredientsYouCanAdd> 
+        <AddAmong>add among </AddAmong> 
+        <AddAmongAll>add among all </AddAmongAll> 
+        <MainPage>main page </MainPage> 
+        <ChangePasswordFor>change password for </ChangePasswordFor> 
+        <ChangePassword>change  password</ChangePassword> 
+        <OldPassword>old  password</OldPassword> 
+        <ConfirmPassword>confirm password</ConfirmPassword> 
+        <CreateNewAccount>create a new user</CreateNewAccount> 
+        <FillData>fill data </FillData>> 
+        <Role>role</Role>> 
+        <CanSeeAllOrders>can see any order </CanSeeAllOrders>> 
+        <CanOverWritePrices>  può sovrascrivere i prezzi </CanOverWritePrices>> 
+        <Error>error</Error>> 
+        <AnErrorOccurred>an error occurre </AnErrorOccurred>> 
+        <ConnectedUser>user logged on </ConnectedUser> 
+        <UserRole>user role </UserRole> 
+        <CourseCategoriesManagement> manage course categories </CourseCategoriesManagement> 
+        <AllCourses>all the courses </AllCourses> 
+        <Manage>manage </Manage> 
+        <Missing>missing</Missing> 
+        <Table>table </Table> 
+        <Group>group</Group> 
+        <Receipt>receipt </Receipt> 
+        <Reject>reject</Reject> 
+        <RejectOrderItem>reject order item</RejectOrderItem> 
+        <Motivation>motivation</Motivation> 
+        <Submit>confirm</Submit> 
+        <ActionableStatesForUser>actionable state for user</ActionableStatesForUser> 
+        <Disable>disable</Disable> 
+        <Enable>enable</Enable> 
+        <ActionableStatesForWaiters>actionable states for waiters </ActionableStatesForWaiters> 
+        
+        <ActionableStatesForTemporaryUsers>actionable states for temporary users </ActionableStatesForTemporaryUsers> 
+        <Total>totae</Total>
+        <VariationOverPriceDiscount>variations over price discounts </VariationOverPriceDiscount>
+        <Value>value</Value>
+        <Percentage>percentage</Percentage>
+        <VoidDiscounts>void discounts</VoidDiscounts>
+        <TheEnd>nd</TheEnd>
+        <Ingredients> ingredients  </Ingredients>
+        <ConfirmGroup>confirm group</ConfirmGroup>
+        <PrintGroup>print group</PrintGroup>
+        <ReprintGroup>reprint group</ReprintGroup>
+        <NewOrder>new order</NewOrder>
+        <Order>order</Order>
+        <UnArchiveLatest>unarchive latest</UnArchiveLatest>
+        <TotalDiscounted>total with discounts</TotalDiscounted>
+        <Archive> archive </Archive>
+        <Modify> modify </Modify>
+        <Subdivide> subdivide </Subdivide>
+        <Invoice> invoice </Invoice>
+        <All>all</All>
+        <Variations>variations</Variations>
+        <Variation>variation</Variation>
+        <IngredientToAdd>ingredient to add </IngredientToAdd>
+        <CourseBySelection>course by selection</CourseBySelection>
+        <CourseByFreeText>course by free text</CourseByFreeText>
+        <ExitGroup>out group </ExitGroup>
+        <Comment>comment</Comment>
+        <Person>person</Person>
+        <AddOrder>add order</AddOrder>
+        <ChangeTo>change to </ChangeTo>
+        <Update>update</Update>
+        <NewCategory>create category</NewCategory>
+        <CreateNewCourse>add new course </CreateNewCourse>
+        <ManageCategories>manage categories</ManageCategories>
+        <AddCategory>add category</AddCategory>
+        <StoredCategories>stored categories</StoredCategories>
+        <ManageCourses>manage courses</ManageCourses>
+        <StoredCourses>stored courses</StoredCourses>
+        <ManageVisibleCoursesOfCategory>manage visible courses of a category </ManageVisibleCoursesOfCategory>
+        <SeeAll>see all</SeeAll>
+        <AddNew>add new</AddNew>
+        <VisibleCoursesOfCategory>visibile courses of category</VisibleCoursesOfCategory>
+        <ClickToChange>click to change</ClickToChange>
+        <AllTheItems>all the items</AllTheItems>
+        <VisibleOfCategory>visible courses of category  </VisibleOfCategory>
+        <Visibles>visibles</Visibles>
+        <AddNewItem>add new item</AddNewItem>
+        <CoursesOfCategory>courses of category</CoursesOfCategory>
+        <AllVisibleCoursesOfCategory>visibles</AllVisibleCoursesOfCategory>
+        <ClickToSeeAllVisibleCoursesOfCategory>visibles</ClickToSeeAllVisibleCoursesOfCategory>
+        <AddQuantityIn>add quantity in </AddQuantityIn>
+        <ModifyIngredient>modify ingredient </ModifyIngredient>
+        <Allergen>allergen</Allergen>
+        <UpdateAvailability>update availability</UpdateAvailability>
+        <CheckAvailability>check availability</CheckAvailability>
+        <MeasuringSystem>measures system</MeasuringSystem>
+        <NewIngredient>new ingredient </NewIngredient>
+        <AvailablQuantity>available quantity</AvailablQuantity>
+        <VisibleCategoriesOfIngredients>visible categories of ingredients</VisibleCategoriesOfIngredients>
+        <CreateNewCategory>create new category</CreateNewCategory>
+        <VisibleExistingCategories>visible existing categories </VisibleExistingCategories>
+        <ManagePrinters>manage printers </ManagePrinters>
+        <DeletePrinters>delete printer  </DeletePrinters>
+        <DetectPrinters>detect printers </DetectPrinters>
+        <AllCategoriesOfIngredients>all categories of ingredients </AllCategoriesOfIngredients>
+        <ExistingCategories>existing categories </ExistingCategories>
+        <TemporaryUser>temporary users </TemporaryUser>
+        <CreateTemporaryUsers>create temporary user </CreateTemporaryUsers>
+        <NameOrTable>name or table </NameOrTable>
+        <ManageTemporaryUsers>manage temporary users</ManageTemporaryUsers>
+        <ManageUsers>manage users</ManageUsers>
+        <AddUser>add user </AddUser>
+        <LinkStates>link states</LinkStates>
+        <RegenerateTempUser>regenerate temporary user </RegenerateTempUser>
+        <UserExpired>user expired </UserExpired>
+        <TheName>the name </TheName>
+        <DeletionPage>deletion page </DeletionPage>
+        <WarningDeletion>Warning. All data will be lost</WarningDeletion>
+        <DeleteUsers>delete users </DeleteUsers>
+        <DeleteTemporaryUsers>delete temporary users </DeleteTemporaryUsers>
+        <DeleteCourses>delete courses </DeleteCourses>
+        <DeleteCourseCategories>delete course categories </DeleteCourseCategories>
+        <DeleteRoles>delete roles </DeleteRoles>
+        <DeleteIngredients>delete ingredients </DeleteIngredients>
+        <DeleteIngredientCategories>delete ingredient categories</DeleteIngredientCategories>
+        <Delete>delete</Delete>
+        <Remove>remove</Remove>
+        <RoleName>role name</RoleName>
+        <CreateRole>create role</CreateRole>
+        <AllTheOrders>all the orders</AllTheOrders>
+        <CourseCategories>course categories</CourseCategories>
+        <ManageRoles>manage roles</ManageRoles>
+        <ManageIngredients>manage ingredients</ManageIngredients>
+        <ManageOrdinaryUsers>manage ordinary users</ManageOrdinaryUsers>
+        <ManagePayments>manage payments</ManagePayments>
+        <AddIngredient>add ingredient </AddIngredient>
+        <OriginalPrice>originary price </OriginalPrice>
+        <RecalculatedPrice>recalculated price </RecalculatedPrice>
+        <ExistingVariations>existing variations </ExistingVariations>
+        <VoidIt>void</VoidIt>
+        <PossibleVariations>possibile variations </PossibleVariations>
+        <Confirm>confirm </Confirm>
+        <VoidOrder>void order </VoidOrder>
+        <ActiveOrders>active orders </ActiveOrders>
+        <SeeIngredientUsages>see ingredient usages</SeeIngredientUsages>
+        <OrdinaryQuantity>ordinary  quantity  </OrdinaryQuantity>
+        <SeeComsumptionStartingFrom>see usages starting from </SeeComsumptionStartingFrom>
+        <StartingFrom> starting from </StartingFrom>
+        <Visualize>visualize </Visualize>
+        <PriceForIngredient>price for ingredient </PriceForIngredient>
+        <AddPrice>add price</AddPrice>
+        <SubtractPrice>subtract price</SubtractPrice>
+        <IsDefaultAddQuantity>is the default add quantity </IsDefaultAddQuantity>
+        <IsDefaultSubtractQuantity>is the default subtract quantity </IsDefaultSubtractQuantity>
+        <AllIngredientsOfCategory>all the ingredients of the category </AllIngredientsOfCategory>
+        <SearchByName>search by name </SearchByName>
+        <Search>search</Search>
+        <ViewUsages>see usages</ViewUsages>
+        <Load>load</Load>
+        <AddIngredientPrice>add price for ingredient </AddIngredientPrice>
+        <Button>button</Button>
+        <SixToTwentyChars>from six to twenty chars</SixToTwentyChars>
+        <IsAbstract>abstract</IsAbstract>
+        <ChangeVisibility>toggle visibility</ChangeVisibility>
+        <SeeOnlyVisibles>show only 'visible' items</SeeOnlyVisibles>
+        <UserName>username</UserName>
+        <DefaultStatesForWaiter>default states for waiters </DefaultStatesForWaiter>
+        <DefaultStatesForTemporaryUsers>stati di default per gli utenti temporanei </DefaultStatesForTemporaryUsers>
+        <ListOfExistingRoles>list of existing roles </ListOfExistingRoles>
+        <EnableState>enable state</EnableState>
+        <ViewStates>see states</ViewStates>
+        <AccessRights>access right</AccessRights>
+        <Optimization>optimization</Optimization>
+        <Deletions>deletions</Deletions>
+        <Orders>orders</Orders>
+        <Logoff>log out</Logoff>
+        <OrderItemStates>order items states </OrderItemStates>
+        <Yes>Yes</Yes>
+        <No>No</No>
+        <IsDefaultAddAndSubtractQuantity>Is the default quantity for adding and subtracting </IsDefaultAddAndSubtractQuantity>
+        <AddRole>add role </AddRole>
+        <Merge>merge</Merge>
+        <RollBackLatestVoided>roll back latest voided</RollBackLatestVoided>
+        <allTheOrders>all the orders</allTheOrders>
+        <MyOwn>my own </MyOwn>
+        <OfOthers>belonging to others </OfOthers>
+        <CoursesOfType>courses of type </CoursesOfType>
+        <Find>find</Find>
+        <InChargeBy>In charge by </InChargeBy>
+        <ExistingStandardVariation>Existing standard variations </ExistingStandardVariation>
+        <Prices>prices</Prices>
+        <Courses>courses</Courses>
+    </localization>
