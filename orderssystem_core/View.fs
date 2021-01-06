@@ -2239,9 +2239,6 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
                   x.Ingredientcategoryid )) ["class","buttonX"]
                   [Text (x.Name)]    ])) @ [ td [  a ((sprintf Path.Orders.editOrderItemVariation orderItemDetail.Orderitemid )) ["class","buttonX"] [Text(local.All)] ]]
 
-
-
-
     let triplesOfIngredientsList = makePairsOfAlist flatListOfIngredientButtons
 
     let mappedSpecificCustomAddQuantititesForAddIngredients = 
@@ -2279,28 +2276,27 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
                                        (fun f -> <@ f.Quantity  @>) 
                                         pocoNormaleMolto (Some Globals.AGGIUNGINORMALE)}
 
-//                           { Label = local.NameByFreeText
-//                             Html =  formInput 
-//                                       (fun f -> <@ f.IngredientByText  @>) []}
-
                                        ] } 
                                        ]
              SubmitText = local.Add }
-        Text(sprintf  "%s %.2f." local.OriginalPrice orderItemDetail.Originalprice)
-        Text(sprintf  "%s %.2f." local.RecalculatedPrice orderItemDetail.Price)
-
+           
+        tag "originalprice" [] [
+            Text(sprintf  "%s %.2f." local.OriginalPrice orderItemDetail.Originalprice)
+        ]
+        
+        tag "updatedprice" [] [
+            Text(sprintf  "%s %.2f." local.RecalculatedPrice orderItemDetail.Price)
+        ]
 
         tag "fieldset" [] [
             tag "legend" [] [Text("variazioni applicabili ")]
             ulAttr["id","item-list"] [
                 for standardVariation in standardVariationsForCourseDetails ->
-                    
                     tag "p" [] [
                         a (sprintf Path.Orders.addStandardVariationToOrderItem standardVariation.Standardvariationid orderItemDetail.Orderitemid) ["class","buttonX"] [Text(standardVariation.Standardvariationname)]
                     ]
             ]
         ]
-
 
         tag "fieldset" [] [
             tag "legend" [] [Text(local.ExistingVariations)]
@@ -2375,7 +2371,7 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
         br []
         tag "p" [] [a (sprintf Path.Orders.viewOrder orderItemDetail.Orderid) ["class","buttonX"] [Text("prosegui")]]
         script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
-        script ["type","text/javascript"; "src","/autocompleteEditOrderItemIng.js"] []
+        script ["type","text/javascript"; "src","/autocompleteEditOrderItemIng.js?"] []
     ]
 
 let  askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) =

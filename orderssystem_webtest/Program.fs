@@ -25,21 +25,20 @@ before
 lastly
     (
         fun _ ->
-            
-            url Home.home
-            Home.deleteButton == "cancellazioni"
-            click Home.deleteButton
-            Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
-            click Deletion.eliminateDishesCategoryButton
-            DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
-            click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
-            
-            url Home.home
-            click Home.deleteButton
-            Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
-            click Deletion.eliminateIngredientCategories
-            IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
-            click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+//            url Home.home
+//            Home.deleteButton == "cancellazioni"
+//            click Home.deleteButton
+//            Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
+//            click Deletion.eliminateDishesCategoryButton
+//            DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
+//            click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
+//            
+//            url Home.home
+//            click Home.deleteButton
+//            Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
+//            click Deletion.eliminateIngredientCategories
+//            IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
+//            click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
             
             ()
             
@@ -144,6 +143,8 @@ lastly
    AddDish.submit |> click
    AddDish.ingredientsOfFirstOrderItemOfFirstOrder == local.Ingredients.Trim()
    AddDish.ingredientsOfFirstOrderItemOfFirstOrder |> click
+   IngredientsOfOrderItem.originalPrice !=~ "prezzo originario{ }*5.00"
+   IngredientsOfOrderItem.updatedPrice !=~ "prezzo ricalcolato{ }*5.00"
    
 run()
 

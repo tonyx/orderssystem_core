@@ -35,11 +35,13 @@ module AddDish =
     let modifyIngredientOfFirstOrderItem = ".//*[@id='item-list']/innerp/table[2]/tbody/tr/td/a[1]"
     let ingredientsOfFirstOrderItemOfFirstOrder =  ".//*[@id='item-list']/innerp/table[2]/tbody/tr/td/a[3]"
    
-    
 
 module EditDish =
     let addIngredientAmongTheFirstCategory = "/html/body/div[3]/ul/p/a"
-    
+
+module OrderItemVariations =
+     let priceInfo = "/html/body/div[3]/text()"
+     let mainPage = "//*[@id='main']"
 
 
 module DishesCreationPage =
@@ -96,6 +98,12 @@ module IngredientCategoryDeletion =
 module DishEdit =
     let singleEntryExistingIngredient = "//*[@id='main']/table[1]/tbody/tr/td[1]"
     let tableOfIngredients = ".//*[@id='main']/table[1]/tbody"
+
+module IngredientsOfOrderItem =
+    let main =  ".//*[@id='main']"
+    let firstIngredientsItem = ".//*[@id='main']/fieldset[3]/table/tbody/tr[1]"
+    let originalPrice = ".//*[@id='main']/originalprice"
+    let updatedPrice = ".//*[@id='main']/updatedprice"
 
 module Auth =
     let username = ".//*[@name='Username']"
