@@ -31,7 +31,6 @@ let enabledType = [("ENABLED","ENABLED");("DISABLED","DISABLED")]
 let unit_of_measures_drop_box = (Globals.WEIGHT_UNIT_OF_MEASURES @ Globals.LIQUID_UNIT_OF_MEASURES @ UNITARY_MEASURES) |> List.map (fun x -> (x,x))
 
 type LocalizationX = XmlProvider<Schema = "../orderssystem_core/Local.xsd">
-//type LocalizationX = XmlProvider<Schema = "Local.xsd">
 
 let local = LocalizationX.Load ("Local_"+Settings.Localization+".xml")
 
@@ -205,10 +204,6 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
                              Html =  selectInput 
                                        (fun f -> <@ f.IngredientBySelect  @>) 
                                         ingredientsIdNameMap (None)}
-                           
-//                           { Label = local.NameByFreeText
-//                             Html =  formInput 
-//                                       (fun f -> <@ f.IngredientByText  @>) []}
 
                            { Label = local.Quantity
                              Html =  formInput 
@@ -2580,10 +2575,6 @@ let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.Ingre
                     Text(sprintf "%s" textToDisplay2)
                 ]
 
-                // td [
-                //     (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(textToDisplay)]) 
-                // ]
-
                 td [
                     (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(local.Remove)]) 
                 ]
@@ -2685,7 +2676,6 @@ let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list
 
 let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) =
     
-    // let allStandardCommentsIds = allStandardComments |> List.map (fun x -> x.Standardcommentid)
     let selectableStandardComments = allStandardComments |> List.map (fun x -> ((decimal)x.Standardcommentid,x.Comment))
 
     [
@@ -2724,7 +2714,6 @@ let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.Co
 let standardVariationsForCourse (course:Db.Course) (standardVariationsForCourseDetails:Db.StandardVariationForCourseDetails list) (selectableStandardVariations:Db.StandardVariation list) =
     let selectableStandardVariationsMap = selectableStandardVariations |> List.map (fun x -> (((decimal)x.Standardvariationid), x.Name))
     [
-        //h2 ("aggiungi variazioni standard per "+course.Name)
         h2 (local.AddSelectableVariationsFor+course.Name)
         renderForm 
          {
@@ -2782,12 +2771,9 @@ let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetai
         // match (List.length selectableStandardVariations) with
         // | 0 ->  yield! a (sprintf Path.Orders.viewOrder orderItem.Orderid) ["class","buttonX"] [Text(local.BackToOrder)]
         // | _ ->  yield! a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
-
-
         // match     
-
-
         // a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
+
         br []
         br []
 

@@ -104,6 +104,8 @@ module IngredientsOfOrderItem =
     let firstIngredientsItem = ".//*[@id='main']/fieldset[3]/table/tbody/tr[1]"
     let originalPrice = ".//*[@id='main']/originalprice"
     let updatedPrice = ".//*[@id='main']/updatedprice"
+    let nameOfFirstIngredient = ".//*[@id='main']/fieldset[3]/table/tbody/tr[1]/td[1]"
+    let buttonDeleteFirstIngredient = ".//*[@id='main']/fieldset[3]/table/tbody/tr[1]/td[2]/a"
 
 module Auth =
     let username = ".//*[@name='Username']"

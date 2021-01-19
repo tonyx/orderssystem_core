@@ -143,15 +143,32 @@ lastly
    AddDish.submit |> click
    AddDish.ingredientsOfFirstOrderItemOfFirstOrder == local.Ingredients.Trim()
    AddDish.ingredientsOfFirstOrderItemOfFirstOrder |> click
-   IngredientsOfOrderItem.originalPrice !=~ "prezzo originario{ }*5.00"
-   IngredientsOfOrderItem.updatedPrice !=~ "prezzo ricalcolato{ }*5.00"
-   
+   IngredientsOfOrderItem.originalPrice.Trim() == "prezzo originario 5.00."
+   IngredientsOfOrderItem.updatedPrice.Trim() == "prezzo ricalcolato 5.00."
+   IngredientsOfOrderItem.nameOfFirstIngredient == "ingredient1"
+   IngredientsOfOrderItem.buttonDeleteFirstIngredient |> click
+   IngredientsOfOrderItem.updatedPrice.Trim() == "prezzo ricalcolato 4.00."
+  
+    
+"set a non default add/subtract price for ingredient1" &&& fun _ ->
+   Home.ingredientsButton |> click
+   IngredientCategories.firstExistingCategory == "ingCategory1"
+   IngredientCategories.firstExistingCategory |> click
+   IngredientCategory.priceButtonOfFirstIngredientItem |> click
+   IngredientPrice.priceAddIngredient << "2"
+   IngredientPrice.priceSubtractIngredient << "2"
+   IngredientPrice.isDefaultAddPrice << "NO"
+   IngredientPrice.isDefaultSubtractPrice << "NO"
+   IngredientPrice.quantity << "20"
+   IngredientPrice.submit |> click
+   IngredientPrice.existingItem |> displayed
+   read IngredientPrice.existingItem |> contains (local.Quantity.Trim())
+  
 run()
 
 printfn "press [enter] to exit"
 System.Console.ReadLine() |> ignore
 
 quit()
-
 
 
