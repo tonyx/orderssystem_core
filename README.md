@@ -4,17 +4,15 @@ A system for ordering food and drink in restaurants, pubs, etc...
  
 ## Getting Started
  
-These instructions will get you a copy of the project up and running.
+These instructions will show you how to get you a copy of the project up and running.
  
-Typical users are restaurants, pubs, bars that need to automate the process of collecting orders, printing orders, and delivering fiscal receipts.
+Typical users can be managers, employees and customers of restaurants, pubs, bars that need to automate the process of collecting orders, printing orders, and delivering fiscal receipts.
  
 ## General description.
  
-This program is a web-based application accessible from any device enabled to wifi access and web browsing.
-Users of the program can be employees of a restaurant like waiters, managers, cookers.
+This program is a web-based application accessible from any device enabled for wifi access and web browsing.
 Also customers, with some limitations and a quick mechanism for authorization, can use the app to make orders by themselves.
-The server can access printers and, using a specific proprietary gateway, a cash drawer to provide a valid fiscal receipt.
- 
+The server can access to printers and, using a specific proprietary gateway, a cash drawer to provide a valid fiscal receipt.
 There is an interface for power users allowing them to manage the menu, the ingredients, the composition of the dishes, the prices of the dishes, and, eventually, the prices to be associated with the single ingredient variations like adding of removing them from a dish.
 There is an interface for ordinary users (waiters or, for limited use, customers) to make and monitor orders.
  
@@ -29,7 +27,7 @@ There is an interface for ordinary users (waiters or, for limited use, customers
 - a cloud version
  
 ## Main features:
-1) managing ingredients, and categories of ingredients
+1) managing ingredients and categories of ingredients
 2) managing dishes and categories
 3) managing ingredients composing the dishes (receipts)
 4) collecting orders,
