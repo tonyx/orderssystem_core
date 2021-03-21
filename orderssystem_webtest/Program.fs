@@ -25,23 +25,25 @@ before
 lastly
     (
         fun _ ->
-//            url Home.home
-//            Home.deleteButton == "cancellazioni"
-//            click Home.deleteButton
-//            Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
-//            click Deletion.eliminateDishesCategoryButton
-//            DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
-//            click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
-//            
-//            url Home.home
-//            click Home.deleteButton
-//            Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
-//            click Deletion.eliminateIngredientCategories
-//            IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
-//            click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+           url Home.home
+           Home.deleteButton == "cancellazioni"
+           click Home.deleteButton
+           Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
+           click Deletion.eliminateDishesCategoryButton
+           DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
+           click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
+           
+           url Home.home
+           click Home.deleteButton
+           Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
+           click Deletion.eliminateIngredientCategories
+           IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
+           click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+
+           url Home.home
+
             
-            ()
-            
+           ()
     )
 "first button is information" &&& fun _ ->
     Home.infoButton == local.Info
@@ -80,6 +82,7 @@ lastly
    IngredientCategories.title == local.AllCategoriesOfIngredients.Trim()
    IngredientCategories.nameField << "ingCategory1"
    IngredientCategories.submit |> click
+
  
 "create a new ingredient" &&& fun _ ->
    Home.ingredientsButton |> click
