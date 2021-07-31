@@ -25,24 +25,27 @@ before
 lastly
     (
         fun _ ->
-           url Home.home
-           Home.deleteButton == "cancellazioni"
-           click Home.deleteButton
-           Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
-           click Deletion.eliminateDishesCategoryButton
-           DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
-           click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
+
+        //    url Home.home
+        //    Home.deleteButton == "cancellazioni"
+        //    click Home.deleteButton
+        //    Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
+        //    click Deletion.eliminateDishesCategoryButton
+        //    DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
+        //    click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
            
-           url Home.home
-           click Home.deleteButton
-           Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
-           click Deletion.eliminateIngredientCategories
-           IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
-           click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+        //    url Home.home
+        //    click Home.deleteButton
+        //    Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
+        //    click Deletion.eliminateIngredientCategories
+        //    IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
+        //    click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
 
-           url Home.home
-
-            
+        //    url Home.home
+        //    click Home.ordersButton
+        //    click Orders.firstOrder
+        //    click Orders.voidOrder
+        //    click Confirmation.yes
            ()
     )
 "first button is information" &&& fun _ ->
@@ -76,6 +79,16 @@ lastly
     DishesCreationPage.priceField << "5"
     DishesCreationPage.input |> click
     
+"create a second dish in the new category" &&& fun _ ->
+    click Home.dishesButton
+    DishesCreationPage.firstCategory == "category1"
+    DishesCreationPage.firstCategory |> click
+    DishesCreationPage.addNew == local.AddNew.Trim()
+    DishesCreationPage.addNew |> click
+    DishesCreationPage.nameField << "piatto2"
+    DishesCreationPage.priceField << "4"
+    DishesCreationPage.input |> click
+
 "create a new ingredient category "  &&& fun _ ->
    Home.ingredientsButton == local.Ingredients.Trim()
    Home.ingredientsButton |> click
@@ -134,6 +147,7 @@ lastly
    IngredientPrice.submit |> click
    IngredientPrice.existingItem |> displayed
    read IngredientPrice.existingItem |> contains (local.Quantity.Trim())
+   read IngredientPrice.existingItem |> contains ("10")
    
 "create a new order adding a dish removing an ingredient, so updating the price automatically" &&& fun _ ->
    Home.ordersButton |> click
@@ -166,6 +180,7 @@ lastly
    IngredientPrice.submit |> click
    IngredientPrice.existingItem |> displayed
    read IngredientPrice.existingItem |> contains (local.Quantity.Trim())
+   read IngredientPrice.secondItemText |> contains ("20")
   
 run()
 
