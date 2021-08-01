@@ -533,6 +533,92 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
 
     ]
 
+let addOrderItemByAllCategories orderId coursesIdWithName coursesIdWithPrices  backUrl viableGroupOutIdsForOrderItem = 
+
+    let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
+    [
+        h2 (local.Add)
+        renderForm
+            { Form = Form.orderItem
+              Fieldsets = 
+                  [ { Legend = "Order Item"
+                      Fields = 
+                          [ 
+                            { Label = local.CourseBySelection
+                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
+                            { Label = local.Quantity
+                              Html = formInput (fun f -> <@ f.Quantity @>) 
+                               [ "Value", "1" ] } 
+                            { Label = local.ExitGroup
+                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None }
+
+                            { Label = local.Comment
+                              Html = formInput (fun f -> <@ f.Comment @>) 
+                               [ ] } 
+                            { Label = local.Price
+                              Html = formInput (fun f -> <@ f.Price @>) 
+                               [ ] }
+                              ] } ]
+              SubmitText = local.Add 
+            }
+        br []
+        br []
+        div [] [
+            a Path.home [] [Text local.MainPage]
+            br []
+        ]
+        br []
+        div [] [
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
+            br []
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
+        script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
+    ]
+
+let addOrderItemByAllCategoriesForStrippedUsers orderId coursesIdWithName coursesIdWithPrices  backUrl viableGroupOutIdsForOrderItem = 
+    let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
+    [
+        h2 (local.Add)
+        renderForm
+            { Form = Form.orderItem
+              Fieldsets = 
+                  [ { Legend = "Order Item"
+                      Fields = 
+                          [ 
+                            { Label = local.CourseBySelection
+                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
+                            { Label = local.Quantity
+                              Html = formInput (fun f -> <@ f.Quantity @>) 
+                               [ "Value", "1" ] } 
+                            { Label = local.ExitGroup
+                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None }
+
+                            { Label = local.Comment
+                              Html = formInput (fun f -> <@ f.Comment @>) 
+                               [ ] } 
+                            // { Label = local.Price
+                            //   Html = formInput (fun f -> <@ f.Price @>) 
+                            //    [ ] }
+                              ] } ]
+              SubmitText = local.Add 
+            }
+        br []
+        br []
+        div [] [
+            a Path.home [] [Text local.MainPage]
+            br []
+        ]
+        br []
+        div [] [
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
+            br []
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
+        script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
+    ]
 
 let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
 
@@ -561,10 +647,6 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
                           [ 
                             { Label = local.CourseBySelection
                               Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-
-                            // { Label = local.CourseByFreeText
-                            //   Html = formInput (fun f -> <@ f.CourseByName @>) []  } 
-
                             { Label = local.Quantity
                               Html = formInput (fun f -> <@ f.Quantity @>) 
                                [ "Value", "1" ] } 

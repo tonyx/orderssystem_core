@@ -11,11 +11,18 @@ module Home =
 
 module Orders =
     let newOrder = ".//*[@id='main']/p/a"
-    
+    let firstOrder = ".//*[@id='main']/table[1]/tbody/tr/td[1]/a"
+    let voidOrder = "//*[@id='item-list']/innerp/a[2]"
+
+module Confirmation =
+    let yes = ".//*[@id='main']/a[1]"
+
 module NewOrder =
     let tableNumber = ".//*[@id='main']/form/fieldset/div[2]/input"
     let submit = ".//*[@id='main']/form/input"
     let firstCategoryOfDishesInFirstTable = ".//*[@id='item-list']/innerp/table[1]/tbody/tr/td[1]/a"
+    let firstOrder = "/html/body/div[3]/table[1]/tbody/tr/td[1]/a"
+    let voidFirstOrder = ".//*[@id='item-list']/innerp/a[2]"
     
 module Deletion =
     let eliminateDishesCategoryButton = ".//*[@id='main']/p[4]/a"
@@ -83,6 +90,7 @@ module IngredientPrice =
     let submit = ".//*[@id='main']/form/input"
     let existingItem = ".//*[@id='main']/table/tbody/tr"
     let existingItemText = "//*[@id='main']/table/tbody/tr/td[1]"
+    let secondItemText = "//*[@id='main']/table/tbody/tr[2]/td[1]"
 
 module AddIngredientToDish =
     let name = ".//*[@id='main']/form/fieldset/div[2]/select"
@@ -94,6 +102,7 @@ module DishesCategoryDeletion =
 
 module IngredientCategoryDeletion =
     let eliminateTheOnlyExistingIngredientCategoryButton = ".//*[@id='item-list']/p/a" 
+
 
 module DishEdit =
     let singleEntryExistingIngredient = "//*[@id='main']/table[1]/tbody/tr/td[1]"

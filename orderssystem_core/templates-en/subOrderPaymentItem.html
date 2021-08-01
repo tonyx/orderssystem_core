@@ -96,7 +96,7 @@
                     <form method="GET">
                         Pagamento:    
                         <select name ="tenderid">
-                            {% for paymentmethod in model.tender_codes%}
+                            {% for paymentmethod in model.tender_codes %}
                             <option  value ="{{paymentmethod.index}}"  >{{paymentmethod.name}}</option>
                             {% endfor %}
                         </select>

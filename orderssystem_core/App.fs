@@ -1278,6 +1278,58 @@ let getViableGroupOutIdentifiers orderId =
     availableNumbers |> List.map (fun x -> ((decimal) x,(string)x))
 
 
+let addOrderItemByAllCategoriesForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
+    log.Debug(sprintf "addOrderItemByAllCategoriesForOrdinaryUsers orderId:%d " orderId)
+    let ctx = Db.getContext()
+    let anOrder = Db.Orders.tryGetOrder orderId ctx
+    let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+    match anOrder with
+    | Some theOrder  ->
+         choose [
+          GET >=> warbler (fun x ->
+            let visibleCourses  =
+                Db.Courses.getVisibleCourses ctx
+            let coursesIdWithPrices =
+                visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+            let coursesNames = 
+                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+            html (View.addOrderItemByAllCategories  orderId coursesNames  coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
+          )
+          POST >=> bindToForm Form.orderItem (fun form ->
+            let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+            makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+          )
+         ]
+    | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+
+let addOrderItemByAllCategoriesForStrippedUsers orderId backUrl (user:UserLoggedOnSession) =
+    log.Debug(sprintf "addOrderItemByAllCategoriesForOrdinaryUsers orderId:%d " orderId)
+    let ctx = Db.getContext()
+    let anOrder = Db.Orders.tryGetOrder orderId ctx
+    let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+    match anOrder with
+    | Some theOrder  ->
+         choose [
+          GET >=> warbler (fun x ->
+            let visibleCourses  =
+                Db.Courses.getVisibleCourses ctx
+            let coursesIdWithPrices =
+                visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+            let coursesNames = 
+                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+            html (View.addOrderItemByAllCategoriesForStrippedUsers  orderId coursesNames  coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
+          )
+          POST >=> bindToForm Form.orderItem (fun form ->
+            let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+            makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+          )
+         ]
+    | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+
 let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d categoryId:%d" orderId categoryId)
     let ctx = Db.getContext()
@@ -2302,7 +2354,7 @@ let viewSingleOrderRef orderId =
             let orderDetail = Db.getOrderDetail orderId ctx
             let myOrdersDetails = Db.Orders.getOngoingOrderDetailsByUser user.UserId ctx 
             let othersOrdersDetails = match user.CanManageAllOrders with
-                                        | true -> Db.Orders.getOngoingOrderDetailsByAllUserExcept user.UserId ctx // orderDetail.Userid ctx
+                                        | true -> Db.Orders.getOngoingOrderDetailsByAllUserExcept user.UserId ctx 
                                         | _ -> []
             let userView = Db.getUserViewById user.UserId ctx
             let activeCategories = Db.Courses.getAllActiveVisibleRootCategories ctx
@@ -2748,7 +2800,8 @@ type PaymentItemsLiquidValuesForOrder = {
     table: string
     wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list
     tenderCodes: IndexNameRecord list
-    residualPaymentDue: string
+    residualPaymentDue: decimal
+    residualPaymentDueAsString: string
     orderId: int
 }
 let wholeOrderPaymentItems  orderId  =
@@ -2778,7 +2831,8 @@ let wholeOrderPaymentItems  orderId  =
             wrappedOrderItems = wrappedOrderItemsDetails; 
             wrappedPaymentItems = wrappedPaymentItems; 
             tenderCodes = tenderCodesIndexNameList
-            residualPaymentDue = residual |> string
+            residualPaymentDue = residual
+            residualPaymentDueAsString = residual |> string
             orderId = orderId
         }
         DotLiquid.page("wholeOrderPaymentItem.html") liquidModel

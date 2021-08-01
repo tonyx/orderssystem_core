@@ -50,7 +50,7 @@
             <innerp>
                 <br>
                 <br>
-                {% if model.residual_payment_due >0 %}
+                {% if model.residual_payment_due > 0.00 %}
                     <form method="GET">
                         Pagamento:    
                         <select name ="tenderid">
@@ -58,7 +58,7 @@
                             <option  value ="{{paymentmethod.index}}"  >{{paymentmethod.name}}</option>
                             {% endfor %}
                         </select>
-                        ammontare: <input name= "amount" type = "number" step = "0.01" value = "{{model.residual_payment_due}}"/>
+                        ammontare: <input name= "amount" type = "number" step = "0.01" value = "{{model.residual_payment_due_as_string}}"/>
                         <br>
                         <input type="submit" value="Aggiungi">
                     </form>
@@ -67,7 +67,7 @@
                 <br>
                 <br>
                 <a href ="/orders/seeDoneOrders#order{{model.orderid}}" class="buttonX"> ritorna </a>
-                {% if model.residual_payment_due == 0 %}
+                {% if model.residual_payment_due <= 0.00 %}
                 <a href ="/orders/createEcrReceiptInstructionForOrder/{{model.order_id}}" class="buttonX">conferma</a>
                 {% endif %}
             </innerp>
