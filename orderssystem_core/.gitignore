@@ -1,0 +1,7 @@
+bin/*
+
+.fake
+.ionide
+.idea
+obj/*
+packages
