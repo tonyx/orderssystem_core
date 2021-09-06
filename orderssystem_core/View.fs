@@ -48,9 +48,9 @@ let isUserAdmin(user:UserLoggedOnSession) =
     user.Role = "admin"
 
 type Session = 
-   | NoSession
-   | CartIdOnly of string
-   | UserLoggedOn of UserLoggedOnSession
+    | NoSession
+    | CartIdOnly of string
+    | UserLoggedOn of UserLoggedOnSession
 
 
 let editTemporaryUser (user:Db.User) (host:string) = 
@@ -346,13 +346,17 @@ let index container userName =
  "<!DOCTYPE html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"+
     (html [] [
         head [] [
+            // cssLink "/Site.css?XXdfasdffXzuyhh"
+            cssLink "https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"
+            // cssLink "/Tachyons.css"
             title [] "Orders system"
-            cssLink "/Site.css?XXdfasdffXzuyhh"
         ]
         body [] [
             div ["id", "header"] [ 
                 tag "h1" [] [
-                    a Path.home [] [Text "Orders System"]
+                    a Path.home [("class","i f1 bg-red br4")] [Text "Orders SystemA"]
+                    br []
+                    a Path.home ["class","f6"] [Text "Orders SystemB"]
                     br []
                 ]
             ]
@@ -1837,7 +1841,10 @@ let printersAdminLink user =
 
 let info user = 
         match user.Role with
-        | "admin"   -> tag "p" [] [a Path.Admin.info ["class","buttonX"] [Text local.Info]]
+        // | "admin"   -> tag "p" [] [a Path.Admin.info ["class","buttonX"] [Text local.Info]]
+        // | "admin"   -> tag "p" [] [a Path.Admin.info ["class","ba bw2 br4 bg-light-green grow"] [Text local.Info]]
+        | "admin"   -> tag "p" [] [a Path.Admin.info ["class","ba bw2 br4 bg-light-green b--black grow:hover"] [Text local.Info]]
+        // | "admin"   -> tag "p" [] [a Path.Admin.info ["class","ba grow"] [Text local.Info]]
         | _ -> em ""
 
 let allOrdersLink user = 

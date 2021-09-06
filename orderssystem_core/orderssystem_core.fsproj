@@ -28,6 +28,7 @@
     <Compile Include="App.fs" />
     <None Include="Site.css" />
     <None Include="Site.css" />
+    <None Include="Tachyons.css" />
     <None Include="App.config" />
     <None Include="Local.xsd" />
     <None Include="Local_it.xml" />
