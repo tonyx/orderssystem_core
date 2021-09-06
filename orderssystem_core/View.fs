@@ -54,62 +54,61 @@ type Session =
 
 
 let editTemporaryUser (user:Db.User) (host:string) = 
- let qrUserLoginUrl = "http://"+host+Path.Extension.qrCodeLogin+"?specialCode="+user.Username+"&returnPath="+Path.Extension.qrUserOrder
- 
+    let qrUserLoginUrl = "http://"+host+Path.Extension.qrCodeLogin+"?specialCode="+user.Username+"&returnPath="+Path.Extension.qrUserOrder
 
- let linkImageGen = tag "p" [] [a (Path.Extension.qrUserImageGen+"?qrUserLoginUrl="+System.Net.WebUtility.UrlEncode(qrUserLoginUrl)+"&table="+user.Table)  [("target","_blink");("class","buttonX")] [Text("genera codice di accesso q ")]]
- [
-  
-    h2 (local.EditUser+": "+user.Username)
-    p [("id","myUrl")] [Text(qrUserLoginUrl)]
-    tag "copia url" [("id","button");("onclick","copyToClipboard('#myUrl')")] [Text(local.Button)]
-
-    br []
-    br []
-
-    linkImageGen
-
-    div [] [a (Path.Admin.temporaryUsers)   [] [Text(local.GoBack)]]
-    script ["type","text/javascript"; "src","/jquery-3.1.1.min.js"] []
-
-    script ["type","text/javascript"; "src","/copytoclipboard.js"] []
-
-]
+    let linkImageGen = tag "p" [] [a (Path.Extension.qrUserImageGen+"?qrUserLoginUrl="+System.Net.WebUtility.UrlEncode(qrUserLoginUrl)+"&table="+user.Table)  [("target","_blink");("class","buttonX")] [Text("genera codice di accesso q ")]]
+    [
+        h2 (local.EditUser+": "+user.Username)
+        p [("id","myUrl")] [Text(qrUserLoginUrl)]
+        tag "copia url" [("id","button");("onclick","copyToClipboard('#myUrl')")] [Text(local.Button)]
+        br []
+        br []
+        linkImageGen
+        div [] [a (Path.Admin.temporaryUsers)   [] [Text(local.GoBack)]]
+        script ["type","text/javascript"; "src","/jquery-3.1.1.min.js"] []
+        script ["type","text/javascript"; "src","/copytoclipboard.js"] []
+    ]
 
 let standardComments (comments:Db.StandardComment list) = 
     [
         h2 local.StandardComments
-
         renderForm 
-         {
-            Form = Form.comment
-            Fieldsets =
-             [ { Legend = local.StandardComments
-                 Fields =
-                    [
-                        { Label = local.NewComment
-                          Html = formInput
-                            (fun f -> <@ f.Comment @>) []
+            {
+                Form = Form.comment
+                Fieldsets =
+                    [  
+                        { 
+                            Legend = local.StandardComments
+                            Fields =
+                                [
+                                    { 
+                                        Label = local.NewComment
+                                        Html = formInput
+                                            (fun f -> <@ f.Comment @>) []
+                                    }
+                                ]
                         }
                     ]
-                }
-             ]
-            SubmitText = local.Insert
-         }
+                SubmitText = local.Insert
+            }
 
         br []
-        table [
-            for comment in comments ->
-            tr [
-                td [
-                    Text (comment.Comment)
-                ]
-                td [
-                    a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
-                      [Text local.Remove]
-                ]
+        table 
+            [
+                for comment in comments ->
+                tr 
+                    [
+                        td 
+                            [
+                                Text (comment.Comment)
+                            ]
+                        td 
+                            [
+                                a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
+                                    [Text local.Remove]
+                            ]
+                    ]
             ]
-        ]
     ]
 
     
@@ -117,70 +116,85 @@ let standardComments (comments:Db.StandardComment list) =
 let editUser (user:Db.User) = [
     h2 (local.EditUser + user.Username)
     renderForm 
-       { Form = Form.userEdit
-         Fieldsets = 
-             [ { Legend = local.ModifyUser
-                 Fields = 
-                     [ 
-                       { Label = local.UserEnabled
-                         Html = selectInput (fun f -> <@ f.Enabled  @>)  yesOrNo (if (user.Enabled) then  Some "YES" else Some "NO"  )
-                       }
-                       { Label = local.UserCanVoidOrder
-                         Html = selectInput (fun f -> <@ f.CanVoidOrder  @>)  yesOrNo (if (user.Canvoidorders) then Some "YES"  else Some "NO" )
-                       }
-                       { Label = local.UserCanSeeAnyOrder
-                         Html = selectInput (fun f -> <@ f.CanManageAllorders  @>)  yesOrNo (if (user.Canmanageallorders) then Some "YES"  else Some "NO" )
-                       }
-                       { Label = local.UserCanChangePrices
-                         Html = selectInput (fun f -> <@ f.CanChangeThePrices  @>)  yesOrNo (if (user.Canchangetheprice) then Some "YES"  else Some "NO" )
-                       }
-                       { Label = local.UserCanManageCourses
-                         Html = selectInput (fun f -> <@ f.CanManageAllCourses  @>)  yesOrNo (if (user.Canmanagecourses) then Some "YES"  else Some "NO" )
-                       }
-                     ] 
-                } 
-             ]
-         SubmitText = local.Modify }
+        { 
+            Form = Form.userEdit
+            Fieldsets = 
+                [ 
+                    { 
+                        Legend = local.ModifyUser
+                        Fields = 
+                            [ 
+                                { 
+                                    Label = local.UserEnabled
+                                    Html = selectInput (fun f -> <@ f.Enabled  @>)  yesOrNo (if (user.Enabled) then  Some "YES" else Some "NO"  )
+                                }
+                                { 
+                                    Label = local.UserCanVoidOrder
+                                    Html = selectInput (fun f -> <@ f.CanVoidOrder  @>)  yesOrNo (if (user.Canvoidorders) then Some "YES"  else Some "NO" )
+                                }
+                                { 
+                                    Label = local.UserCanSeeAnyOrder
+                                    Html = selectInput (fun f -> <@ f.CanManageAllorders  @>)  yesOrNo (if (user.Canmanageallorders) then Some "YES"  else Some "NO" )
+                                }
+                                { 
+                                    Label = local.UserCanChangePrices
+                                    Html = selectInput (fun f -> <@ f.CanChangeThePrices  @>)  yesOrNo (if (user.Canchangetheprice) then Some "YES"  else Some "NO" )
+                                }
+                                { 
+                                    Label = local.UserCanManageCourses
+                                    Html = selectInput (fun f -> <@ f.CanManageAllCourses  @>)  yesOrNo (if (user.Canmanagecourses) then Some "YES"  else Some "NO" )
+                                }
+                            ] 
+                    } 
+                ]
+            SubmitText = local.Modify 
+        }
 ]
-
 
 let editCourseCategory  (courseCategory: Db.CourseCategories) message = [
-   h2 local.EditCategory
+    h2 local.EditCategory
 
-   div ["id", "register-message"] [
-               Text message
-   ]
+    div ["id", "register-message"] 
+        [
+            Text message
+        ]
 
-   renderForm
-       { Form = Form.courseCategoryEdit
-         Fieldsets = 
-             [ { Legend = local.Course
-                 Fields = 
-                     [ 
-                       { Label = local.Name
-                         Html =  formInput 
-                                   (fun f -> <@ f.Name  @>) 
-                                   ["value", courseCategory.Name] }
-                       { Label = local.Visibility
-                         Html = Suave.Form.selectInput (fun f -> <@ f.Visibility @>) visibilityType
-                          (match courseCategory.Visibile with true -> Some "VISIBLE" | _ -> Some "INVISIBLE" ) 
-                         } 
-                       { Label = local.IsAbstract
-                         Html = Suave.Form.selectInput (fun f -> <@ f.Abstract @>) abstractType
-                          (match courseCategory.Abstract with true -> Some "ABSTRACT" | _ -> Some "CONCRETE" ) 
-                         } 
-
-                      ] 
-               } 
-             ]
-         SubmitText = local.SaveChanges 
-      }
-         
-   br []
-   div [] [
-       a Path.Courses.adminCategories [] [Text local.GoBack]
-   ]
+    renderForm
+        { 
+            Form = Form.courseCategoryEdit
+            Fieldsets = 
+                [ 
+                    { 
+                        Legend = local.Course
+                        Fields = 
+                            [ 
+                                { 
+                                    Label = local.Name
+                                    Html =  formInput 
+                                        (fun f -> <@ f.Name  @>) 
+                                        ["value", courseCategory.Name] }
+                                { 
+                                    Label = local.Visibility
+                                    Html = Suave.Form.selectInput (fun f -> <@ f.Visibility @>) visibilityType
+                                        (match courseCategory.Visibile with true -> Some "VISIBLE" | _ -> Some "INVISIBLE" ) 
+                                } 
+                                { 
+                                    Label = local.IsAbstract
+                                    Html = Suave.Form.selectInput (fun f -> <@ f.Abstract @>) abstractType
+                                        (match courseCategory.Abstract with true -> Some "ABSTRACT" | _ -> Some "CONCRETE" ) 
+                                } 
+                            ] 
+                    } 
+                ]
+            SubmitText = local.SaveChanges 
+        }
+    br []
+    div [] 
+        [
+            a Path.Courses.adminCategories [] [Text local.GoBack]
+        ]
 ]
+
 
 let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.Course) message = 
     let ingredientsIdNameMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> ((decimal)x.Ingredientid,x.Name))
@@ -188,31 +202,38 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
     [
         h2 (local.AddIngredientTo + course.Name)
 
-        div ["id", "register-message"] [
-            
-                   Text message
-        ]
+        div ["id", "register-message"] 
+            [
+                Text message
+            ]
 
         renderForm
-           { 
-             Form = Form.ingredientSelector
-             Fieldsets = 
-                 [ { Legend = local.Ingredient
-                     Fields = 
-                         [ 
-                           { Label = local.NameBySelection
-                             Html =  selectInput 
-                                       (fun f -> <@ f.IngredientBySelect  @>) 
-                                        ingredientsIdNameMap (None)}
+            { 
+                Form = Form.ingredientSelector
+                Fieldsets = 
+                    [ 
+                        {  
+                            Legend = local.Ingredient
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.NameBySelection
+                                        Html =  selectInput 
+                                            (fun f -> <@ f.IngredientBySelect  @>) 
+                                                ingredientsIdNameMap (None)
+                                    }
 
-                           { Label = local.Quantity
-                             Html =  formInput 
-                                       (fun f -> <@ f.Quantity  @>) 
-                                         [] }
-
-                                       ] } 
-                                       ]
-             SubmitText = local.Add }
+                                    { 
+                                        Label = local.Quantity
+                                        Html =  formInput 
+                                            (fun f -> <@ f.Quantity  @>) 
+                                                [] 
+                                    }
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.Add 
+            }
 
         script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
         script ["type","text/javascript"; "src","/autocompleteIng.js"] []
@@ -222,125 +243,158 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
 
 
 let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.IngredientCategory list) 
-      (ingredientsOfTheCourse:Db.IngredientOfCourse list) (commentsForCourse:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) 
-      (standardVariationForCourseDetails:Db.StandardVariationForCourseDetails list)  message = [ 
+    (ingredientsOfTheCourse:Db.IngredientOfCourse list) (commentsForCourse:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) 
+    (standardVariationForCourseDetails:Db.StandardVariationForCourseDetails list)  message = 
+        [ 
 
-   h2 "Edit"
+            h2 "Edit"
 
-   div ["id", "register-message"] [
-               Text message
-   ]
-
-   renderForm
-       { Form = Form.course
-         Fieldsets = 
-             [ { Legend = local.Course
-                 Fields = 
-                     [ 
-                       { Label = local.Name
-                         Html =  formInput 
-                                   (fun f -> <@ f.Name  @>) 
-                                   ["value", course.Name] }
-                       { Label = local.Price
-                         Html = formInput 
-                                   (fun f -> <@ f.Price @>) 
-                                   ["value", formatDec course.Price ] }
-                       { Label = local.Description
-                         Html = formInput 
-                                   (fun f -> <@ f.Description @>) 
-                                   ["value", course.Description ] } 
-                       { Label = local.Visibility
-                         Html = selectInput (fun f -> <@ f.Visibile @>) visibilityType (Some (if course.Visibility then "VISIBLE" else "INVISIBLE")) } 
-                       { Label = local.Category
-                         Html = selectInput (fun f -> <@ f.CategoryId @>) courseCategories (Some ((decimal)course.Categoryid))  } 
-
-                                   ] } 
-                                   ]
-         SubmitText = local.SaveChanges }
-   br []
-
-   h2 local.ExistingIngredients
-
-
-   table [
-        for existinIngredient in ingredientsOfTheCourse ->
-            tr [
-                td [
-                    Text(existinIngredient.Ingredientname)
-                ]
-                td [
-                    Text(if existinIngredient.Quantity <> (decimal)0.0 then (sprintf "%s %.2f" local.Quantity existinIngredient.Quantity) else "")
+            div ["id", "register-message"] 
+                [
+                    Text message
                 ]
 
-                td [
-                     a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
-                      [Text (local.Remove)] 
+            renderForm
+                { 
+                    Form = Form.course
+                    Fieldsets = 
+                        [  
+                            { 
+                                Legend = local.Course
+                                Fields = 
+                                    [ 
+                                        { 
+                                            Label = local.Name
+                                            Html =  formInput 
+                                                (fun f -> <@ f.Name  @>) 
+                                                ["value", course.Name] 
+                                        }
+                                        { 
+                                            Label = local.Price
+                                            Html = formInput 
+                                                (fun f -> <@ f.Price @>) 
+                                                ["value", formatDec course.Price ] 
+                                        }
+                                        { 
+                                            Label = local.Description
+                                            Html = formInput 
+                                                (fun f -> <@ f.Description @>) 
+                                                ["value", course.Description ] 
+                                        } 
+                                        { 
+                                            Label = local.Visibility
+                                            Html = selectInput 
+                                                (fun f -> <@ f.Visibile @>) visibilityType 
+                                                (Some (if course.Visibility then "VISIBLE" else "INVISIBLE")) 
+                                        } 
+                                        { 
+                                            Label = local.Category
+                                            Html = selectInput 
+                                                (fun f -> <@ f.CategoryId @>) courseCategories 
+                                                (Some ((decimal)course.Categoryid))  
+                                        } 
+                                    ] 
+                            } 
+                        ]
+                    SubmitText = local.SaveChanges 
+                }
+            br []
+
+            h2 local.ExistingIngredients
+            table 
+                [
+                    for existinIngredient in ingredientsOfTheCourse ->
+                        tr 
+                            [
+                                td 
+                                    [
+                                        Text(existinIngredient.Ingredientname)
+                                    ]
+                                td 
+                                    [
+                                        Text(if existinIngredient.Quantity <> (decimal)0.0 then (sprintf "%s %.2f" local.Quantity existinIngredient.Quantity) else "")
+                                    ]
+
+                                td 
+                                    [
+                                        a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
+                                            [Text (local.Remove)] 
+                                    ]
+                            ]
                 ]
-            ]
-   ]
 
-   br []
+            br []
 
-   h2 local.CategoriesOfIngredientsYouCanAdd
-   ulAttr ["id","item-list"] [
-        for ingredientCategory in ingredientCategories ->
-
-                tag "p" [] [
-                    a (sprintf Path.Courses.selectIngredientCategoryForCourseEdit  
-                        course.Courseid ingredientCategory.Ingredientcategoryid) ["class","buttonX"] 
-                        [Text (local.AddAmong+" "+ingredientCategory.Name)] 
+            h2 local.CategoriesOfIngredientsYouCanAdd
+            ulAttr ["id","item-list"] 
+                [
+                    for ingredientCategory in ingredientCategories ->
+                        tag "p" [] 
+                            [
+                                a (sprintf Path.Courses.selectIngredientCategoryForCourseEdit  
+                                    course.Courseid ingredientCategory.Ingredientcategoryid) ["class","buttonX"] 
+                                    [Text (local.AddAmong+" "+ingredientCategory.Name)] 
+                            ]
                 ]
-   ]
 
-   tag "p" [] [
-        a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
-   ]
-
-   h2 local.SelectableComments
-   table [
-        for commentForCourse in commentsForCourse ->
-            tr [
-                td [
-                    Text(commentForCourse.Comment)
+            tag "p" [] 
+                [
+                    a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
                 ]
-            ]
-   ]
-   a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
-   br []
-   br []
-
-   h2 local.SelectableStandardVariations
-   table [
-        for standardVariationForCourseDetail in standardVariationForCourseDetails ->
-            tr [ 
-                td [
-                    Text(standardVariationForCourseDetail.Standardvariationname)
+            h2 local.SelectableComments
+            table 
+                [
+                    for commentForCourse in commentsForCourse ->
+                        tr 
+                            [
+                                td 
+                                    [
+                                        Text(commentForCourse.Comment)
+                                    ]
+                            ]
                 ]
-            ]
-   ]
-   a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
+            a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
-   br []
+            br []
+            br []
 
-   tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+            h2 local.SelectableStandardVariations
+            table 
+                [
+                    for standardVariationForCourseDetail in standardVariationForCourseDetails ->
+                        tr 
+                            [ 
+                                td 
+                                    [
+                                        Text(standardVariationForCourseDetail.Standardvariationname)
+                                    ]
+                            ]
+                ]
+            a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
-   div [] [
-       a Path.home [] [Text local.MainPage ]
-   ]
-   script ["type","text/javascript"; "src","/backbutton.js"] []
-]
+            br []
+
+            tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+
+            div [] 
+                [
+                    a Path.home [] [Text local.MainPage ]
+                ]
+            script ["type","text/javascript"; "src","/backbutton.js"] []
+        ]
 
 
 let partUser (user : string option) = 
-    div ["id", "part-user"] [
-        match user with
-        | Some user -> 
-            yield Text (sprintf "Logged on as %s, " user)
-            yield a Path.Account.logoff [] [Text "Log off"]
-        | None ->
-            yield a Path.Account.logon [] [Text "Log on"]
-    ]
+    div ["id", "part-user"] 
+        [
+            match user with
+            | Some user -> 
+                yield Text (sprintf "Logged on as %s, " user)
+                yield a Path.Account.logoff [] [Text "Log off"]
+            | None ->
+                yield a Path.Account.logon [] [Text "Log on"]
+        ]
 
 let index container userName = 
  "<!DOCTYPE html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"+
@@ -385,62 +439,95 @@ let changePassword message (user:UserLoggedOnSession) =
             Text local.ChangePassword
         ]
 
-        div ["id", "register-message"] [
-               Text message
-        ]
+        div ["id", "register-message"] 
+            [
+                Text message
+            ]
 
         renderForm
-         { Form = Form.changePassword
-           Fieldsets = 
-                     [ { Legend = local.ChangePassword
-                         Fields = 
-                             [ 
-                               { Label = local.OldPassword
-                                 Html = formInput (fun f -> <@ f.OldPassword @>) [] }
-                               { Label = "Password "+local.SixToTwentyChars
-                                 Html = formInput (fun f -> <@ f.Password @>) [] }
-                               { Label = local.ConfirmPassword
-                                 Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] }
-                              ] } ]
-           SubmitText = "Confirm" }
+            {  
+                Form = Form.changePassword
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = local.ChangePassword
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.OldPassword
+                                        Html = formInput (fun f -> <@ f.OldPassword @>) [] 
+                                    }
+                                    { 
+                                        Label = "Password "+local.SixToTwentyChars
+                                        Html = formInput (fun f -> <@ f.Password @>) [] 
+                                    }
+                                    { 
+                                        Label = local.ConfirmPassword
+                                        Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] 
+                                    }
+                                ] 
+                        } 
+                    ]
+                SubmitText = "Confirm" }
     ]
 
-let register (roles: Db.Role list)   msg = 
-   let rolesIdAndNames = List.map (fun (x:Db.Role) -> ((decimal)x.Roleid,x.Rolename)) roles
+let register (roles: Db.Role list) msg = 
+    let rolesIdAndNames = List.map (fun (x:Db.Role) -> ((decimal)x.Roleid,x.Rolename)) roles
 
-   [
-       h2 local.CreateNewAccount
-       p [] [
-           Text local.FillData
-       ]
+    [
+        h2 local.CreateNewAccount
+        p [] 
+            [
+                Text local.FillData
+            ]
 
-       div ["id", "register-message"] 
-           [
-               Text msg
-           ]
+        div ["id", "register-message"] 
+            [
+                Text msg
+            ]
 
-       renderForm
-           { Form = Form.register
-             Fieldsets = 
-                 [ { Legend=  local.CreateNewAccount
-                     Fields = 
-                         [ { Label = "User name (max 30 characters)"
-                             Html = formInput (fun f -> <@ f.Username @>) [] }
-                           { Label = local.Role
-                             Html = selectInput (fun f -> <@ f.Role @>) rolesIdAndNames (None) }
-                           { Label = local.CanSeeAllOrders
-                             Html = selectInput (fun f -> <@ f.CanManageAllorders @>) yesOrNo  (Some "No") }
-                           { Label = local.CanOverWritePrices
-                             Html = selectInput (fun f -> <@ f.CanChangeThePrices @>) yesOrNo  (Some "No") }
-                           { Label = local.UserCanChangePrices
-                             Html = selectInput (fun f -> <@ f.CanManageAllCourses @>) yesOrNo  (Some "No") }
-                           { Label = local.SixToTwentyChars 
-                             Html = formInput (fun f -> <@ f.Password @>) [] }
-                           { Label = local.ConfirmPassword
-                             Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] }
-                           ] } ]
-             SubmitText = local.SaveChanges 
-           }
+        renderForm
+            {
+                Form = Form.register
+                Fieldsets = 
+                    [ 
+                        {  
+                            Legend=  local.CreateNewAccount
+                            Fields = 
+                                [  
+                                    { 
+                                        Label = "User name (max 30 characters)"
+                                        Html = formInput (fun f -> <@ f.Username @>) [] 
+                                    }
+                                    { 
+                                        Label = local.Role
+                                        Html = selectInput (fun f -> <@ f.Role @>) rolesIdAndNames (None) 
+                                    }
+                                    { 
+                                        Label = local.CanSeeAllOrders
+                                        Html = selectInput (fun f -> <@ f.CanManageAllorders @>) yesOrNo  (Some "No") 
+                                    }
+                                    { 
+                                        Label = local.CanOverWritePrices
+                                        Html = selectInput (fun f -> <@ f.CanChangeThePrices @>) yesOrNo  (Some "No") 
+                                    }
+                                    { 
+                                        Label = local.UserCanChangePrices
+                                        Html = selectInput (fun f -> <@ f.CanManageAllCourses @>) yesOrNo  (Some "No") 
+                                    }
+                                    { 
+                                        Label = local.SixToTwentyChars 
+                                        Html = formInput (fun f -> <@ f.Password @>) [] 
+                                    }
+                                    { 
+                                        Label = local.ConfirmPassword
+                                        Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] 
+                                    }
+                                ] 
+                        }   
+                    ]
+                SubmitText = local.SaveChanges 
+            }
     ]
 
 let notFound = [
@@ -467,30 +554,42 @@ let cantComplete msg = [
 
 let logon msg = [
     h2 "Log On"
-    div ["id", "logon-message"] [
-        Text msg
-    ]
+    div ["id", "logon-message"] 
+        [
+            Text msg
+        ]
     renderForm
-        { Form = Form.logon
-          Fieldsets = 
-              [ { Legend = local.AccountInformation
-                  Fields = 
-                      [ { Label = local.UserName
-                          Html = formInput (fun f -> <@ f.Username @>) [] }
-                        { Label = "Password"
-                          Html = formInput (fun f -> <@ f.Password @>) [] } ] } ]
-          SubmitText = local.LogOn
+        { 
+            Form = Form.logon
+            Fieldsets = 
+                [ 
+                    { 
+                        Legend = local.AccountInformation
+                        Fields = 
+                            [ 
+                                { 
+                                    Label = local.UserName
+                                    Html = formInput (fun f -> <@ f.Username @>) [] 
+                                }
+                                { 
+                                    Label = "Password"
+                                    Html = formInput (fun f -> <@ f.Password @>) [] 
+                                } 
+                            ] 
+                    } 
+                ]
+            SubmitText = local.LogOn
         }
 ]
 
 
 let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
-    
     let sonCategoriesLink = match (List.length subCategories) with
         | 0 ->  em ""
-        | X -> div [] [h2 local.SubCategories; div [] [
-                 for category in subCategories ->
-                    a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)]
+        | X -> div [] [h2 local.SubCategories; div [] 
+                [
+                    for category in subCategories ->
+                        a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)]
                 ]
             ]
         
@@ -503,33 +602,44 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
         sonCategoriesLink
         h2 (local.Add+" "+categoryName)
         renderForm
-            { Form = Form.strippedOrderItem
-              Fieldsets = 
-                  [ { Legend = "Order item"
-                      Fields = 
-                          [ 
-                            { Label = local.CourseBySelection
-                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                            { Label = local.Quantity
-                              Html = formInput (fun f -> <@ f.Quantity @>) 
-                               [ "Value", "1" ] } 
-
-                            { Label = local.ExitGroup
-                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None
-                                } 
-
-                            { Label = local.Comment
-                              Html = formInput (fun f -> <@ f.Comment @>) 
-                               [ ] } 
-                              ] } ]
-              SubmitText = local.Add }
-        div [] [
-            a Path.home [] [Text local.MainPage ]
-            br []
-        ]
-        div [] [
-            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
-        ]
+            { 
+                Form = Form.strippedOrderItem
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = "Order item"
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.CourseBySelection
+                                        Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None 
+                                    } 
+                                    { 
+                                        Label = local.Quantity
+                                        Html = formInput (fun f -> <@ f.Quantity @>) 
+                                            [ "Value", "1" ] 
+                                    } 
+                                    { 
+                                        Label = local.ExitGroup
+                                        Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None
+                                    } 
+                                    { 
+                                        Label = local.Comment
+                                        Html = formInput (fun f -> <@ f.Comment @>) [ ] 
+                                    } 
+                                ] 
+                        } 
+                    ] 
+                SubmitText = local.Add }
+        div [] 
+            [
+                a Path.home [] [Text local.MainPage ]
+                br []
+            ]
+        div [] 
+            [
+                a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
+            ]
         script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
         script ["type", "text/javascript"; "src", "/script_options_stripped.js" ] []
 
@@ -541,27 +651,36 @@ let addOrderItemByAllCategories orderId coursesIdWithName coursesIdWithPrices  b
     [
         h2 (local.Add)
         renderForm
-            { Form = Form.orderItem
-              Fieldsets = 
-                  [ { Legend = "Order Item"
-                      Fields = 
-                          [ 
-                            { Label = local.CourseBySelection
-                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                            { Label = local.Quantity
-                              Html = formInput (fun f -> <@ f.Quantity @>) 
-                               [ "Value", "1" ] } 
-                            { Label = local.ExitGroup
-                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None }
-
-                            { Label = local.Comment
-                              Html = formInput (fun f -> <@ f.Comment @>) 
-                               [ ] } 
-                            { Label = local.Price
-                              Html = formInput (fun f -> <@ f.Price @>) 
-                               [ ] }
-                              ] } ]
-              SubmitText = local.Add 
+            {   Form = Form.orderItem
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = "Order Item"
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.CourseBySelection
+                                        Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None 
+                                    } 
+                                    { 
+                                        Label = local.Quantity
+                                        Html = formInput (fun f -> <@ f.Quantity @>) [ "Value", "1" ] 
+                                    } 
+                                    { 
+                                        Label = local.ExitGroup
+                                        Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None
+                                    }
+                                    {   
+                                        Label = local.Comment
+                                        Html = formInput (fun f -> <@ f.Comment @>) [ ] 
+                                    } 
+                                    {   Label = local.Price
+                                        Html = formInput (fun f -> <@ f.Price @>) [ ] 
+                                    }
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.Add 
             }
         br []
         br []
@@ -584,39 +703,46 @@ let addOrderItemByAllCategoriesForStrippedUsers orderId coursesIdWithName course
     [
         h2 (local.Add)
         renderForm
-            { Form = Form.orderItem
-              Fieldsets = 
-                  [ { Legend = "Order Item"
-                      Fields = 
-                          [ 
-                            { Label = local.CourseBySelection
-                              Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None } 
-                            { Label = local.Quantity
-                              Html = formInput (fun f -> <@ f.Quantity @>) 
-                               [ "Value", "1" ] } 
-                            { Label = local.ExitGroup
-                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None }
-
-                            { Label = local.Comment
-                              Html = formInput (fun f -> <@ f.Comment @>) 
-                               [ ] } 
-                            // { Label = local.Price
-                            //   Html = formInput (fun f -> <@ f.Price @>) 
-                            //    [ ] }
-                              ] } ]
-              SubmitText = local.Add 
+            {   
+                Form = Form.orderItem
+                Fieldsets = 
+                    [ 
+                        {   
+                            Legend = "Order Item"
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.CourseBySelection
+                                        Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None 
+                                    } 
+                                    { 
+                                        Label = local.Quantity
+                                        Html = formInput (fun f -> <@ f.Quantity @>) [ "Value", "1" ] 
+                                    } 
+                                    {   Label = local.ExitGroup
+                                        Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None 
+                                    }
+                                    {   Label = local.Comment
+                                        Html = formInput (fun f -> <@ f.Comment @>) [ ] 
+                                    } 
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.Add 
             }
         br []
         br []
-        div [] [
-            a Path.home [] [Text local.MainPage]
-            br []
-        ]
+        div [] 
+            [
+                a Path.home [] [Text local.MainPage]
+                br []
+            ]
         br []
-        div [] [
-            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
-            br []
-        ]
+        div [] 
+            [
+                a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
+                br []
+            ]
         script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
         script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
         script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
@@ -762,42 +888,54 @@ let editOrderItemForOrdinaryUsers (orderItem:Db.OrderItemDetails)
 
     [
         Text(local.ChangeTo)
-        div [] [
-             for category in categories ->
-                a ((sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl))  [] [Text (" "+category.Name)]
-        ]
+        div [] 
+            [
+                for category in categories ->
+                    a ((sprintf Path.Orders.resetVariationsAndEditOrderItemByCategory orderItem.Orderitemid category.Categoryid backUrl))  [] [Text (" "+category.Name)]
+            ]
 
         h2 "Edit"
         renderForm
-            { Form = Form.orderItem
-              Fieldsets = 
-                  [ { Legend = "Order item"
-                      Fields = 
-                          [ 
+            { 
+                Form = Form.orderItem
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = "Order item"
+                            Fields = 
+                                [ 
 
-                            { Label = local.CourseBySelection
-                              Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   } 
+                                    { 
+                                        Label = local.CourseBySelection
+                                        Html = selectInput (fun f -> <@ f.CourseId @>) idCoursesAndNames (Some ((decimal)orderItem.Courseid))   
+                                    } 
 
-                            // { Label = local.CourseByFreeText
-                            //   Html = formInput (fun f -> <@ f.CourseByName @>)  []  } 
+                                    { 
+                                        Label = local.ExitGroup
+                                        Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier)) 
+                                    } 
 
-                            { Label = local.ExitGroup
-                              Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem (Some ((decimal)orderItem.Groupidentifier))   } 
+                                    { 
+                                        Label = local.Quantity
+                                        Html = formInput (fun f -> <@ f.Quantity @>) 
+                                            [ "Value", (orderItem.Quantity.ToString())] 
+                                    } 
 
-                            { Label = local.Quantity
-                              Html = formInput (fun f -> <@ f.Quantity @>) 
-                               [ "Value", (orderItem.Quantity.ToString())] } 
+                                    { 
+                                        Label = local.Comment
+                                        Html = formInput (fun f -> <@ f.Comment @>) 
+                                            [ "Value", (orderItem.Comment) ] } 
 
-                            { Label = local.Comment
-                              Html = formInput (fun f -> <@ f.Comment @>) 
-                               [ "Value", (orderItem.Comment) ] } 
-
-                            { Label = local.Price
-                              Html = formInput (fun f -> <@ f.Price @>) 
-                               [ "Value", formatDec (orderItem.Price) ] } 
-
-                              ] } ]
-              SubmitText = local.Update }
+                                    { 
+                                        Label = local.Price
+                                        Html = formInput (fun f -> <@ f.Price @>) 
+                                            [ "Value", formatDec (orderItem.Price) ] 
+                                    } 
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.Update 
+            }
         br []
         br []
 
