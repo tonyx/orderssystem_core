@@ -52,137 +52,136 @@ let tenderCodes = [{index=1;name="CONTANTI"};{index=2;name="CREDITO"};{index=3;n
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 let reset =
-   unsetPair SessionAuthCookie
-   >=> unsetPair StateCookie
-   >=> Redirection.FOUND Path.home
+    unsetPair SessionAuthCookie
+    >=> unsetPair StateCookie
+    >=> Redirection.FOUND Path.home
 
 let session f = 
-   statefulForSession
-   >=> context (fun x -> 
-       match x |> HttpContext.state with
-       | None -> f NoSession
-       | Some state ->
-            
-           match state.get "cartid", state.get "username", state.get "role", state.get "userid", state.get "roleid",state.get "temporary", state.get "canmanagecourses", state.get "canmanageallorders"  with 
-           | Some cartId, None, None, None,None,None,None,None ->
-               f (CartIdOnly cartId)
-           | _, Some username, Some role, Some userid, Some roleid,Some temporary,Some canmanagecourses,Some canmanageallorders ->
-               f (UserLoggedOn {Username = username; Role = role; UserId = userid;RoleId=roleid;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
-           | _ -> 
-               f NoSession)
+    statefulForSession
+    >=> context (fun x -> 
+        match x |> HttpContext.state with
+        | None -> f NoSession
+        | Some state ->
+            match state.get "cartid", state.get "username", state.get "role", state.get "userid", state.get "roleid",state.get "temporary", state.get "canmanagecourses", state.get "canmanageallorders"  with 
+            | Some cartId, None, None, None,None,None,None,None ->
+                f (CartIdOnly cartId)
+            | _, Some username, Some role, Some userid, Some roleid,Some temporary,Some canmanagecourses,Some canmanageallorders ->
+                f (UserLoggedOn {Username = username; Role = role; UserId = userid;RoleId=roleid;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
+            | _ -> 
+                f NoSession)
 
 let redirectWithReturnPath redirection =
-   request (fun x ->
-       let path = x.url.AbsolutePath
-       Redirection.FOUND (redirection |> Path.withParam ("returnPath", path)))
+    request (fun x ->
+        let path = x.url.AbsolutePath
+        Redirection.FOUND (redirection |> Path.withParam ("returnPath", path)))
 
 let loggedOn f_success =
-   authenticate
-       Cookie.CookieLife.Session
-       false
-       (fun () -> Choice2Of2(redirectWithReturnPath Path.Account.logon))
-       (fun _ -> Choice2Of2 reset)
-       f_success
+    authenticate
+        Cookie.CookieLife.Session
+        false
+        (fun () -> Choice2Of2(redirectWithReturnPath Path.Account.logon))
+        (fun _ -> Choice2Of2 reset)
+        f_success
 
 let canManageCourses f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "admin" } -> f_success
-       | UserLoggedOn { CanManageAllCourses = true} -> f_success
-       | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
-       | _ -> UNAUTHORIZED "Not logged on"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "admin" } -> f_success
+        | UserLoggedOn { CanManageAllCourses = true} -> f_success
+        | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
+        | _ -> UNAUTHORIZED "Not logged on"
+    ))
 
 let canManageIngredients f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "admin" } -> f_success
-       | UserLoggedOn { CanManageAllCourses = true} -> f_success
-       | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
-       | _ -> UNAUTHORIZED "Not logged on"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "admin" } -> f_success
+        | UserLoggedOn { CanManageAllCourses = true} -> f_success
+        | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
+        | _ -> UNAUTHORIZED "Not logged on"
+    ))
 
 let canManageIngredientsPassingUserLoggedOn f_success  =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "admin"; Username=username; UserId = userid; RoleId=roleid; Temporary=false  } -> f_success { CanManageAllCourses = true; Role = "admin"; Username=username; UserId = userid; RoleId=roleid; Temporary=false; CanManageAllOrders = true  }
-       | UserLoggedOn { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false; CanManageAllOrders = canManageAllOrders } -> f_success { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders }
-       | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "admin"; Username=username; UserId = userid; RoleId=roleid; Temporary=false  } -> f_success { CanManageAllCourses = true; Role = "admin"; Username=username; UserId = userid; RoleId=roleid; Temporary=false; CanManageAllOrders = true  }
+        | UserLoggedOn { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false; CanManageAllOrders = canManageAllOrders } -> f_success { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders }
+        | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let admin f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "admin" } -> f_success
-       | UserLoggedOn _ -> FORBIDDEN "Only for admin"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "admin" } -> f_success
+        | UserLoggedOn _ -> FORBIDDEN "Only for admin"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let powerUser f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "powerUser" } -> f_success
-       | UserLoggedOn { Role = "admin" } -> f_success
-       | UserLoggedOn _ -> FORBIDDEN "Only for power users"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "powerUser" } -> f_success
+        | UserLoggedOn { Role = "admin" } -> f_success
+        | UserLoggedOn _ -> FORBIDDEN "Only for power users"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let adminWithUserName f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "admin";Username = X } -> f_success X
-       | UserLoggedOn _ -> FORBIDDEN "Only for admin"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "admin";Username = X } -> f_success X
+        | UserLoggedOn _ -> FORBIDDEN "Only for admin"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let powerUserPassingUserLoggedOn f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "powerUser";Username = username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders} -> f_success {Role="powerUser";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=canManageAllOrders}
-       | UserLoggedOn { Role = "admin";Username = username;UserId=userid;RoleId=roleid;Temporary=false} -> f_success {Role="admin";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=true}
-       | UserLoggedOn _ -> FORBIDDEN "Only for power users"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "powerUser";Username = username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders} -> f_success {Role="powerUser";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=canManageAllOrders}
+        | UserLoggedOn { Role = "admin";Username = username;UserId=userid;RoleId=roleid;Temporary=false} -> f_success {Role="admin";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=true}
+        | UserLoggedOn _ -> FORBIDDEN "Only for power users"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let temporaryUserPassingUserLoggedOn f_success =
     let ctx = Db.getContext()
     loggedOn (session (function
-       | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid} -> 
-        let dbUser = Db.Users.getUser(userid) ctx
-        if (dbUser.Istemporary) then 
+        | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid} -> 
+            let dbUser = Db.Users.getUser(userid) ctx
+            if (dbUser.Istemporary) then 
             f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=true;CanManageAllCourses=false;CanManageAllOrders=false} else FORBIDDEN "user is not enabled"
-       | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+        | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let anyUserExceptTemporary f_success =
-   let ctx = Db.getContext()
-   loggedOn (session (function
-       | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid;Temporary=false} -> 
-        let dbUser = Db.Users.getUser(userid) ctx
-        if (dbUser.Enabled) then f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=dbUser.Canmanagecourses;CanManageAllOrders=dbUser.Canmanageallorders} else 
-            FORBIDDEN "user is not enabled"
-       | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    let ctx = Db.getContext()
+    loggedOn (session (function
+        | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid;Temporary=false} -> 
+            let dbUser = Db.Users.getUser(userid) ctx
+            if (dbUser.Enabled) then f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=dbUser.Canmanagecourses;CanManageAllOrders=dbUser.Canmanageallorders} else 
+                FORBIDDEN "user is not enabled"
+        | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let anyUserExceptTemporaryRef f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Temporary=false} ->  f_success
-       | UserLoggedOn _ -> FORBIDDEN "temporary user is not allowed"
-       | _ -> UNAUTHORIZED "Not logged on"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Temporary=false} ->  f_success
+        | UserLoggedOn _ -> FORBIDDEN "temporary user is not allowed"
+        | _ -> UNAUTHORIZED "Not logged on"
+    ))
 
 let anyUserPassingUserLoggedOn f_success =
-   let ctx = Db.getContext()
-   loggedOn (session (function
-       | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid;Temporary=X} -> 
-        let dbUser = Db.Users.getUser(userid) ctx
-        if (dbUser.Enabled) then f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=X;CanManageAllCourses=dbUser.Canmanagecourses;CanManageAllOrders=dbUser.Canmanageallorders} else FORBIDDEN "user is not enabled"
-       | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    let ctx = Db.getContext()
+    loggedOn (session (function
+        | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid;Temporary=X} -> 
+            let dbUser = Db.Users.getUser(userid) ctx
+            if (dbUser.Enabled) then f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=X;CanManageAllCourses=dbUser.Canmanagecourses;CanManageAllOrders=dbUser.Canmanageallorders} else FORBIDDEN "user is not enabled"
+        | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let adminPassingUserLoggedOn f_success =
-   loggedOn (session (function
-       | UserLoggedOn { Role = "admin";Username = username;UserId=userid;RoleId=roleid} -> f_success {Role="admin";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=true}
-       | UserLoggedOn _ -> FORBIDDEN "Only for admins"
-       | _ -> UNAUTHORIZED "Not logged in"
-   ))
+    loggedOn (session (function
+        | UserLoggedOn { Role = "admin";Username = username;UserId=userid;RoleId=roleid} -> f_success {Role="admin";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=true}
+        | UserLoggedOn _ -> FORBIDDEN "Only for admins"
+        | _ -> UNAUTHORIZED "Not logged in"
+    ))
 
 let passHash (pass: string) =
     use sha = Security.Cryptography.SHA256.Create()
@@ -232,7 +231,7 @@ let authenticateUser (user : Db.UsersView) =
 
 let html container =
     let result cartItems userName = 
-       OK (View.index container userName) >=> Writers.setMimeType "text/html; charset=utf-8" 
+        OK (View.index container userName) >=> Writers.setMimeType "text/html; charset=utf-8" 
     session (function 
         | UserLoggedOn User -> result 0 (Some User.Username)
         | _ -> result 0 None)
@@ -272,11 +271,11 @@ let logonViaQrCode  =
             request (fun r ->
                 match r.queryParam "specialCode" with
                 | Choice1Of2 name -> 
-                     let user = Db.getTemporaryUserViewByName name ctx
-                     match user with
-                     | Some theUser ->
+                    let user = Db.getTemporaryUserViewByName name ctx
+                    match user with
+                    | Some theUser ->
                         authenticateUser theUser
-                     | None -> UNAUTHORIZED "not logged on"
+                    | None -> UNAUTHORIZED "not logged on"
                 | Choice2Of2 msg -> BAD_REQUEST msg)
             )
         POST >=> 
@@ -286,17 +285,17 @@ let logonViaQrCode  =
 let logon =
     log.Debug("logon")
     choose [
-       GET >=>
-           (View.logon "" |> html)
-       POST >=> bindToForm Form.logon (fun form ->
-           let ctx = Db.getContext()
-           let (Password password) = form.Password
-           match Db.Users.validateUser(form.Username, passHash password) ctx with
-           | Some user ->
-                  authenticateUser user
-           | _ ->
-               View.logon "Username or password is invalid." |> html
-       )
+        GET >=>
+            (View.logon "" |> html)
+        POST >=> bindToForm Form.logon (fun form ->
+            let ctx = Db.getContext()
+            let (Password password) = form.Password
+            match Db.Users.validateUser(form.Username, passHash password) ctx with
+            | Some user ->
+                authenticateUser user
+            | _ ->
+                View.logon "Username or password is invalid." |> html
+        )
     ]
 
 let deleteObjects = 
@@ -499,8 +498,8 @@ let myOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let outGroupsOfOrders = orders |> List.map (fun (x:Db.Orderdetail) -> 
         (x.Orderid,Db.getOutGroupsOfOrder x.Orderid ctx)) |> Map.ofList
     let eventualRejectionsOfOrderItems = orders |>
-         List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
-         |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+        List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
+        |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
     View.ordersList userView  orders activeCategories orderItemsOfOrders  mapOfLinkedStates statesEnabledForUser backUrl eventualRejectionsOfOrderItems initialStateId  outGroupsOfOrders |> html)
 
 let myOrdersSingles (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
@@ -539,8 +538,9 @@ let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =
         let ctx = Db.getContext()
         let category = Db.tryGetIngredientCategory ingredientCatgoryId ctx
         let _ = match category with 
-            | Some theCategory -> theCategory.Visibility <- (not theCategory.Visibility)
-                                  ctx.SubmitUpdates()
+            | Some theCategory -> 
+                theCategory.Visibility <- (not theCategory.Visibility)
+                ctx.SubmitUpdates()
             | _ -> ()
         Redirection.FOUND backUrl
     )
@@ -550,8 +550,9 @@ let switchVisbilityOfIngredient ingredientCategoryId ingredientId  =
     let ctx = Db.getContext()
     let ingredient = Db.tryGetIngredientById  ingredientId ctx
     let _ = match ingredient with 
-        | Some theIngredient -> theIngredient.Visibility <- (not theIngredient.Visibility); 
-                                ctx.SubmitUpdates()
+        | Some theIngredient -> 
+            theIngredient.Visibility <- (not theIngredient.Visibility); 
+            ctx.SubmitUpdates()
         | _ -> ()
     let redirTo = sprintf  Path.Admin.editIngredientCategory ingredientCategoryId
     Redirection.FOUND redirTo
@@ -758,7 +759,7 @@ let managePrinter printerId categoryId =
                 List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> {index=x.Categoryid;name=x.Categoryname})
             let categoryStatesForCurrentPrinter = Db.getStatesPrinterMapping printerId ctx 
             let categoriesIds = categoryStatesForCurrentPrinter |> 
-                 List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Categoryid) |> Set.ofList |> Set.toList
+                List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Categoryid) |> Set.ofList |> Set.toList
             let printerForReceiptAndInvoice = Db.tryGetPrinterForReceiptAndInvoice printerId ctx
             let (canPrintReceipt,canPrintInvoice) = match printerForReceiptAndInvoice with    
                 | Some X -> (X.Printreceipt,X.Printinvoice)
@@ -902,8 +903,8 @@ let allOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let outGroupsOfOrders = orders |> List.map (fun (x:Db.Orderdetail) -> 
         (x.Orderid,Db.getOutGroupsOfOrder x.Orderid ctx)) |> Map.ofList
     let eventualRejectionsOfOrderItems = orders |>
-         List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
-         |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+        List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
+        |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
     View.ordersList userView  orders activeCategories orderItemsOfOrders mapOfStates statesEnabledForUser  backUrl  eventualRejectionsOfOrderItems initStateId outGroupsOfOrders |> html)
 
 let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
@@ -920,10 +921,10 @@ let createEcrReceiptInstructionForSubOrder subOrderId orderId =
     let paymentItemDetailsOfSubOrder  = Db.Orders.getPaymentItemDetailsOfSubOrder subOrderId ctx
     let orderItemsOfSubOrder = Db.getOrderItemDetailsOfSubOrder subOrderId ctx
     let orderItemRows = orderItemsOfSubOrder |> List.map (fun (x:Db.OrderItemDetails) -> 
-          (
+        (
             if (x.Quantity>1) then (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_ITEM x.Price x.Quantity x.Name ) 
             else (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_UNITARY_PAYMENT_ITEM x.Price  x.Name ) 
-          )
+        )
         )
     let paymentItemRows = paymentItemDetailsOfSubOrder |> List.map (fun x -> sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_CLOSURE_ITEM ((int)x.Tendercodeidentifier) x.Amount)
     let outFile = new System.IO.StreamWriter(Settings.EcrFilePath,false,Encoding.ASCII)
@@ -950,10 +951,10 @@ let createEcrReceiptInstructionForOrder  orderId =
     let order = Db.Orders.getOrder orderId ctx
     let orderItemsOfSubOrder = Db.getOrderItemDetailsOfOrder orderId ctx
     let orderItemRows = orderItemsOfSubOrder |> List.map (fun (x:Db.OrderItemDetails) -> 
-          (
+        (
             if (x.Quantity>1) then (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_ITEM x.Price x.Quantity x.Name ) 
             else (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_UNITARY_PAYMENT_ITEM x.Price  x.Name ) 
-          )
+        )
         )
 
     let paymentItemRows = paymentItemDetailsOfSubOrder |> List.map (fun x -> sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_CLOSURE_ITEM ((int)x.Tendercodeidentifier) x.Amount)
@@ -1058,65 +1059,66 @@ let manageCategories = warbler (fun _ ->
     View.seeCategories allCategories |> html)
 
 let editCourse id  =
-   log.Debug(sprintf "%s %d " "editCourse" id)
-   let ctx = Db.getContext()
-   let courseCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun g -> decimal g.Categoryid,g.Name)
-   let commentsForCourse = Db.getCommentsForCourseDetails id ctx
-   let allStandardComments = Db.getAllStandardComments ctx
-   let visibleIngredientCategories = Db.getVisibleIngredientCategories ctx
-   let ingredientsOfTheCourse = Db.getIngredientsOfACourse id ctx
-   let course = Db.Courses.getCourse id ctx
-   let standardVariationForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails id ctx
-   choose [
-           GET >=> warbler (fun _ ->
-               html (View.editCourse course courseCategories visibleIngredientCategories 
-                 ingredientsOfTheCourse commentsForCourse allStandardComments standardVariationForCourseDetails ""))
-           POST >=> bindToForm Form.course (fun form ->
-               match (Db.Courses.tryFindCourseByName form.Name ctx) with
-               | Some X when X.Courseid <> course.Courseid -> 
+    log.Debug(sprintf "%s %d " "editCourse" id)
+    let ctx = Db.getContext()
+    let courseCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun g -> decimal g.Categoryid,g.Name)
+    let commentsForCourse = Db.getCommentsForCourseDetails id ctx
+    let allStandardComments = Db.getAllStandardComments ctx
+    let visibleIngredientCategories = Db.getVisibleIngredientCategories ctx
+    let ingredientsOfTheCourse = Db.getIngredientsOfACourse id ctx
+    let course = Db.Courses.getCourse id ctx
+    let standardVariationForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails id ctx
+    choose [
+            GET >=> warbler (fun _ ->
+                html (View.editCourse course courseCategories visibleIngredientCategories 
+                    ingredientsOfTheCourse commentsForCourse allStandardComments standardVariationForCourseDetails ""))
+            POST >=> bindToForm Form.course (fun form ->
+                match (Db.Courses.tryFindCourseByName form.Name ctx) with
+                | Some X when X.Courseid <> course.Courseid -> 
                     local.ACourseNamed + form.Name + local.AlreadyExists |>
                     View.editCourse course courseCategories visibleIngredientCategories 
-                         ingredientsOfTheCourse commentsForCourse allStandardComments standardVariationForCourseDetails |> html
-               | _ ->
-                   let desc = match form.Description with | Some d -> d | _ -> ""
-                   Db.Courses.updateCourse 
-                       course
-                       form.Price 
-                       form.Name 
-                       desc   
-                       (form.Visibile = Form.VISIBLE)
-                       ((int)form.CategoryId) ctx
-                   let retPath = sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated ((int)form.CategoryId) 0
-                   Redirection.FOUND retPath
-               )
+                        ingredientsOfTheCourse commentsForCourse allStandardComments standardVariationForCourseDetails |> html
+                | _ ->
+                    let desc = match form.Description with | Some d -> d | _ -> ""
+                    Db.Courses.updateCourse 
+                        course
+                        form.Price 
+                        form.Name 
+                        desc   
+                        (form.Visibile = Form.VISIBLE)
+                        ((int)form.CategoryId) ctx
+                    let retPath = sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated ((int)form.CategoryId) 0
+                    Redirection.FOUND retPath
+                )
     ]
+    
 
 let editCourseCategory id =
-   log.Debug(sprintf "%s %d " "editCourseCategory" id)
-   let ctx = Db.getContext()
-   match Db.Courses.tryGetCourseCategory id ctx with
-   | Some courseCategory ->
-       choose [
-           GET >=> warbler (fun _ ->
-               html (View.editCourseCategory courseCategory ""))
-           POST >=> bindToForm Form.courseCategoryEdit (fun form ->
-               let categoryExists = Db.Courses.tryGetCourseCategoryByName form.Name ctx
-               match categoryExists with
-               | Some X when  (X.Categoryid <> id) -> 
-                   local.ACategoryNamed + form.Name + local.AlreadyExists |>(View.editCourseCategory courseCategory) |> html
-               | _ ->
-                   let visibility =  (form.Visibility = Form.VISIBLE)
-                   let isAbstract = (form.Abstract = Form.ABSTRACT)
-                   Db.updateCourseCategory 
+    log.Debug(sprintf "%s %d " "editCourseCategory" id)
+    let ctx = Db.getContext()
+    match Db.Courses.tryGetCourseCategory id ctx with
+    | Some courseCategory ->
+        choose [
+            GET >=> warbler (fun _ ->
+                html (View.editCourseCategory courseCategory ""))
+            POST >=> bindToForm Form.courseCategoryEdit (fun form ->
+                let categoryExists = Db.Courses.tryGetCourseCategoryByName form.Name ctx
+                match categoryExists with
+                | Some X when  (X.Categoryid <> id) -> 
+                    local.ACategoryNamed + form.Name + local.AlreadyExists |>(View.editCourseCategory courseCategory) |> html
+                | _ ->
+                    let visibility =  (form.Visibility = Form.VISIBLE)
+                    let isAbstract = (form.Abstract = Form.ABSTRACT)
+                    Db.updateCourseCategory 
                         courseCategory
                         form.Name
                         visibility 
                         isAbstract
                         ctx
-                   Redirection.FOUND Path.Courses.adminCategories)
-       ]
-   | None -> 
-       never
+                    Redirection.FOUND Path.Courses.adminCategories)
+        ]
+    | None -> 
+        never
 
 
 let editUser id   =
@@ -1162,11 +1164,11 @@ let createCategory =
                 |> View.createCourseCategory
                 |> html
             | None ->
-               let categoryName  = form.Name
-               let visibility = (form.Visibility = Form.VISIBLE)
-               let isAbstract = (form.Abstract = Form.ABSTRACT)
-               let _  = Db.newCategory categoryName visibility isAbstract ctx
-               Redirection.FOUND Path.Courses.adminCategories
+                let categoryName  = form.Name
+                let visibility = (form.Visibility = Form.VISIBLE)
+                let isAbstract = (form.Abstract = Form.ABSTRACT)
+                let _  = Db.newCategory categoryName visibility isAbstract ctx
+                Redirection.FOUND Path.Courses.adminCategories
             )
     ]
 
@@ -1253,18 +1255,18 @@ let addUser =
                 |> View.register roles
                 |> html
             | None ->
-               let (Password password) = form.Password
-               let role = form.Role
-               let dbRole = Db.getRole ((int)role) ctx
-               if (dbRole.Rolename = "admin") then failwith local.CantAddAnotherAdmin
-               let defaultEnablingStates = Db.getActionableDefaultStatesForWaiter ctx
-               let canmanageOrders = form.CanManageAllorders = Form.YES 
-               let canChangeThePrices = form.CanChangeThePrices =  Form.YES
-               let canManageAllCourses = form.CanManageAllCourses = Form.YES
-               let user = Db.newUser canChangeThePrices canmanageOrders form.Username  (passHash password) ((int) role) canManageAllCourses ctx
-               let actionablesStatesIds = List.map (fun (x:Db.DefaultActionableState) -> x.Stateid) defaultEnablingStates
-               Db.setEnablerStatesForUser actionablesStatesIds user.Userid ctx
-               Redirection.FOUND Path.Admin.allUsers
+                let (Password password) = form.Password
+                let role = form.Role
+                let dbRole = Db.getRole ((int)role) ctx
+                if (dbRole.Rolename = "admin") then failwith local.CantAddAnotherAdmin
+                let defaultEnablingStates = Db.getActionableDefaultStatesForWaiter ctx
+                let canmanageOrders = form.CanManageAllorders = Form.YES 
+                let canChangeThePrices = form.CanChangeThePrices =  Form.YES
+                let canManageAllCourses = form.CanManageAllCourses = Form.YES
+                let user = Db.newUser canChangeThePrices canmanageOrders form.Username  (passHash password) ((int) role) canManageAllCourses ctx
+                let actionablesStatesIds = List.map (fun (x:Db.DefaultActionableState) -> x.Stateid) defaultEnablingStates
+                Db.setEnablerStatesForUser actionablesStatesIds user.Userid ctx
+                Redirection.FOUND Path.Admin.allUsers
             )
     ]
 
@@ -1285,23 +1287,23 @@ let addOrderItemByAllCategoriesForOrdinaryUsers orderId backUrl (user:UserLogged
     let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
     match anOrder with
     | Some theOrder  ->
-         choose [
-          GET >=> warbler (fun x ->
-            let visibleCourses  =
-                Db.Courses.getVisibleCourses ctx
-            let coursesIdWithPrices =
-                visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
-            let coursesNames = 
-                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
-            html (View.addOrderItemByAllCategories  orderId coursesNames  coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
-          )
-          POST >=> bindToForm Form.orderItem (fun form ->
-            let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
-            makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
-            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
-            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
-          )
-         ]
+        choose [
+            GET >=> warbler (fun x ->
+                let visibleCourses  =
+                    Db.Courses.getVisibleCourses ctx
+                let coursesIdWithPrices =
+                    visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+                let coursesNames = 
+                    visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+                html (View.addOrderItemByAllCategories  orderId coursesNames  coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
+            )
+            POST >=> bindToForm Form.orderItem (fun form ->
+                let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+                Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            )
+        ]
     | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
 let addOrderItemByAllCategoriesForStrippedUsers orderId backUrl (user:UserLoggedOnSession) =
@@ -1311,23 +1313,23 @@ let addOrderItemByAllCategoriesForStrippedUsers orderId backUrl (user:UserLogged
     let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
     match anOrder with
     | Some theOrder  ->
-         choose [
-          GET >=> warbler (fun x ->
-            let visibleCourses  =
-                Db.Courses.getVisibleCourses ctx
-            let coursesIdWithPrices =
-                visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
-            let coursesNames = 
-                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
-            html (View.addOrderItemByAllCategoriesForStrippedUsers  orderId coursesNames  coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
-          )
-          POST >=> bindToForm Form.orderItem (fun form ->
-            let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
-            makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
-            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
-            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
-          )
-         ]
+        choose [
+            GET >=> warbler (fun x ->
+                let visibleCourses  =
+                    Db.Courses.getVisibleCourses ctx
+                let coursesIdWithPrices =
+                    visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+                let coursesNames = 
+                    visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+                html (View.addOrderItemByAllCategoriesForStrippedUsers  orderId coursesNames  coursesIdWithPrices backUrl viableGroupOutIdsForOrderItem)
+            )
+            POST >=> bindToForm Form.orderItem (fun form ->
+                let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+                Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            )
+        ]
     | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
 let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:UserLoggedOnSession) =
@@ -1340,23 +1342,23 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
     let category = Db.Courses.getCourseCategory categoryId ctx
     match anOrder with
     | Some theOrder  ->
-         choose [
-          GET >=> warbler (fun x ->
-            let visibleCourses  =
-                Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
-            let coursesIdWithPrices =
-                visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
-            let coursesNames = 
-                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
-            html (View.addOrderItem  orderId coursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
-          )
-          POST >=> bindToForm Form.orderItem (fun form ->
-            let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
-            makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
-            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
-            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
-          )
-         ]
+        choose [
+            GET >=> warbler (fun x ->
+                let visibleCourses  =
+                    Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
+                let coursesIdWithPrices =
+                    visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+                let coursesNames = 
+                    visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+                html (View.addOrderItem  orderId coursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
+            )
+            POST >=> bindToForm Form.orderItem (fun form ->
+                let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+                Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            )
+        ]
     | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
     
 
@@ -1370,26 +1372,26 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
     let category = Db.Courses.getCourseCategory categoryId ctx
     match anOrder with
     | Some theOrder  ->
-         choose [
-          GET >=> warbler (fun x ->
-            let visibleCourses  =
-                Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
-            let coursesIdWithPrices =
-                visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
-            let coursesNames = 
-                visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
-            html (View.addOrderItemForStrippedUsers orderId  coursesNames coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
-          )
-          POST >=> bindToForm Form.strippedOrderItem (fun form ->
-            let course = Db.getCourseDetail ((int)form.CourseId) ctx
-            let orderItem = Db.createOrderItemByCourseId ((int)form.CourseId) orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
-            makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
-            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
-            Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
-        )
-       ]
-      | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
-     
+        choose [
+            GET >=> warbler (fun x ->
+                let visibleCourses  =
+                    Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
+                let coursesIdWithPrices =
+                    visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+                let coursesNames = 
+                    visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+                html (View.addOrderItemForStrippedUsers orderId  coursesNames coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
+            )
+            POST >=> bindToForm Form.strippedOrderItem (fun form ->
+                let course = Db.getCourseDetail ((int)form.CourseId) ctx
+                let orderItem = Db.createOrderItemByCourseId ((int)form.CourseId) orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+                Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            )
+        ]
+    | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+
 let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackUrl (user:UserLoggedOnSession) = 
     log.Debug(sprintf "addOrderItemByCategoryPassingUserLoggedOn orderId:%d categoryId:%d" orderId categoryId)
     warbler (fun (x:HttpContext) ->
@@ -1413,7 +1415,7 @@ let deleteOrderItemByUser orderItemId encodedBackUrl (user:UserLoggedOnSession) 
         let theOrderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
         let state = Db.States.getState(theOrderItemDetail.Stateid) ctx
         if ((theOrderItemDetail.Userid = user.UserId || user.Role = "admin") && (state.Isinitial))
-                     then Db.deleteOrderItem orderItemId ctx 
+            then Db.deleteOrderItem orderItemId ctx 
         Redirection.FOUND backUrl
     )
 
@@ -1473,7 +1475,7 @@ let canMoveOrderItemToNextStep (orderItemDetail:Db.OrderItemDetails) (user:UserL
     let stateEnableForUserAsWaiter = Db.listOfEnabledStatesForWaiter user.UserId ctx
     ((   Db.userEnabledByRoletoChangeStateOfThisOrderItem orderItemDetail user.UserId ctx ) ||
         (((List.contains orderItemDetail.Stateid stateEnableForUserAsWaiter) &&
-           (not orderItemDetail.Hasbeenrejected) )))
+            (not orderItemDetail.Hasbeenrejected) )))
 let moveOrderItemNextState (orderItemDetail:Db.OrderItemDetails) (user:UserLoggedOnSession)  =
     let ctx = Db.getContext()
     let stateEnableForUserAsWaiter = Db.listOfEnabledStatesForWaiter user.UserId ctx
@@ -1559,8 +1561,8 @@ let fileDumpOrderOutGroupForDifferentPrinters (orderOutGroup:Db.OrderOutGroupDet
             (id,variations |> List.map (fun (v:Db.VariationDetail) -> v.Ingredientid))) |> Map.ofList
     let orderItemIngredientsMap =  orderItemMyRoleCanObserve |> 
         List.map ( fun (x:Db.OrderItemDetails) ->  
-           (x.Orderitemid, (Db.getIngredientsOfACourse x.Courseid ctx) |> List.filter (fun (y:Db.IngredientOfCourse) -> 
-           not (List.contains y.Ingredientid mapOfVariationsWithIngredientsIds.[x.Orderitemid] ))))
+            (x.Orderitemid, (Db.getIngredientsOfACourse x.Courseid ctx) |> List.filter (fun (y:Db.IngredientOfCourse) -> 
+            not (List.contains y.Ingredientid mapOfVariationsWithIngredientsIds.[x.Orderitemid] ))))
     let orderItemIngredientsMapSequence = orderItemIngredientsMap |>
         List.map (fun (orderItemId,(ingredients:Db.IngredientOfCourse list)) -> 
             (orderItemId, List.fold (fun y (x:Db.IngredientOfCourse)  ->   
@@ -1668,13 +1670,13 @@ let setOrderToArchivedIfAllorderItemsAreDone  orderId =
 
     let allOrderItemsAreDone = List.forall (fun (x:Db.OrderItem) -> (x.Stateid = finalState.Stateid)) orderItemsOfTheOrder
     let ret =
-       match allOrderItemsAreDone with
-        | true -> 
-            Db.Orders.setOrderAsDoneById orderId ctx
-            let total = List.fold (fun x  (y:Db.OrderItem) -> x + (y.Price*(decimal)y.Quantity))  ((decimal)0) orderItemsOfTheOrder
-            Db.setTotalOfOrder orderId total ctx
-            Db.setAdjstedTotalOfOrder orderId total ctx
-        | false -> ()  
+        match allOrderItemsAreDone with
+            | true -> 
+                Db.Orders.setOrderAsDoneById orderId ctx
+                let total = List.fold (fun x  (y:Db.OrderItem) -> x + (y.Price*(decimal)y.Quantity))  ((decimal)0) orderItemsOfTheOrder
+                Db.setTotalOfOrder orderId total ctx
+                Db.setAdjstedTotalOfOrder orderId total ctx
+            | false -> ()  
     ret
 
 // deprecated
@@ -1743,8 +1745,8 @@ let orderItemProgress (user:UserLoggedOnSession) =
 
     let orderItemIngredientsMap =  concatenatedOrderItemMyRoleCanObserve |> 
         List.map ( fun (x:Db.OrderItemDetails) ->  
-           (x.Orderitemid, (Db.getIngredientsOfACourse x.Courseid ctx) |> List.filter (fun (y:Db.IngredientOfCourse) -> 
-           not (List.contains y.Ingredientid mapOfVariationsWithIngredientsIds.[x.Orderitemid] ))))
+            (x.Orderitemid, (Db.getIngredientsOfACourse x.Courseid ctx) |> List.filter (fun (y:Db.IngredientOfCourse) -> 
+            not (List.contains y.Ingredientid mapOfVariationsWithIngredientsIds.[x.Orderitemid] ))))
 
     let orderItemIngredientsMapSequence = orderItemIngredientsMap |>
         List.map (fun (orderItemId,(ingredients:Db.IngredientOfCourse list)) -> 
@@ -1772,32 +1774,32 @@ let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landing
 
     match orderItem with
     | Some orderItemExists ->
-     let orderId = orderItemExists.Orderid
-     let order = Db.Orders.getOrder(orderId) ctx
-     let dbUser = Db.getUserById(user.UserId) ctx
-     let ingredients = Db.getIngredientsOfCourse orderItemExists.Courseid ctx
-     let outGroup = orderItemExists.Groupidentifier
+        let orderId = orderItemExists.Orderid
+        let order = Db.Orders.getOrder(orderId) ctx
+        let dbUser = Db.getUserById(user.UserId) ctx
+        let ingredients = Db.getIngredientsOfCourse orderItemExists.Courseid ctx
+        let outGroup = orderItemExists.Groupidentifier
 
-     let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+        let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
 
-     if (user.UserId = order.Userid || dbUser.Canmanageallorders || user.Role = "admin") then
+        if (user.UserId = order.Userid || dbUser.Canmanageallorders || user.Role = "admin") then
 
-     (choose [
-        GET >=> warbler (fun x ->
-            let courses = 
-                Db.Courses.getVisibleCoursesByCategory categoryId  ctx
-            html (View.editOrderItemForStrippedUsers orderItemExists courses categories ingredients outGroup backUrl viableGroupOutIdsForOrderItem))
+        (choose [
+            GET >=> warbler (fun x ->
+                let courses = 
+                    Db.Courses.getVisibleCoursesByCategory categoryId  ctx
+                html (View.editOrderItemForStrippedUsers orderItemExists courses categories ingredients outGroup backUrl viableGroupOutIdsForOrderItem))
 
-        POST >=> bindToForm Form.strippedOrderItem (fun form ->
-            let course = Db.getCourseDetail ((int)form.CourseId) ctx
-            let price = course.Price
-            Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)form.CourseId) ((int)(form.Quantity))  form.Comment price form.GroupOut ctx
-            makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
-            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx
-            Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
-            Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
-        )
-     ]) else Redirection.FOUND landingPage 
+            POST >=> bindToForm Form.strippedOrderItem (fun form ->
+                let course = Db.getCourseDetail ((int)form.CourseId) ctx
+                let price = course.Price
+                Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)form.CourseId) ((int)(form.Quantity))  form.Comment price form.GroupOut ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx
+                Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
+                Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
+            )
+        ]) else Redirection.FOUND landingPage 
 
     | None -> Redirection.FOUND landingPage
 
@@ -1810,30 +1812,28 @@ let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landing
 
     match orderItem with
     | Some orderItemExists ->
-     let orderId = orderItemExists.Orderid
-     let order = Db.Orders.getOrder(orderId) ctx
-     let dbUser = Db.getUserById(user.UserId) ctx
-     let ingredients = Db.getIngredientsOfCourse orderItemExists.Courseid ctx
-     let outGroup = orderItemExists.Groupidentifier
+        let orderId = orderItemExists.Orderid
+        let order = Db.Orders.getOrder(orderId) ctx
+        let dbUser = Db.getUserById(user.UserId) ctx
+        let ingredients = Db.getIngredientsOfCourse orderItemExists.Courseid ctx
+        let outGroup = orderItemExists.Groupidentifier
+        let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+        if (user.UserId = order.Userid || dbUser.Canmanageallorders || user.Role = "admin") then
 
-     let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+        (choose [
+            GET >=> warbler (fun _ ->
+                let courses = 
+                    Db.Courses.getVisibleCoursesByCategory categoryId  ctx
+                html (View.editOrderItemForOrdinaryUsers orderItemExists courses categories ingredients outGroup backUrl viableGroupOutIdsForOrderItem))
 
-     if (user.UserId = order.Userid || dbUser.Canmanageallorders || user.Role = "admin") then
-
-     (choose [
-        GET >=> warbler (fun _ ->
-            let courses = 
-                Db.Courses.getVisibleCoursesByCategory categoryId  ctx
-            html (View.editOrderItemForOrdinaryUsers orderItemExists courses categories ingredients outGroup backUrl viableGroupOutIdsForOrderItem))
-
-        POST >=> bindToForm Form.orderItem (fun form ->
-            Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)(form.CourseId)) ((int)(form.Quantity)) form.Comment form.Price form.GroupOut ctx
-            makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
-            makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId  ctx
-            Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
-            Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
-        )
-     ]) else Redirection.FOUND landingPage 
+            POST >=> bindToForm Form.orderItem (fun form ->
+                Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)(form.CourseId)) ((int)(form.Quantity)) form.Comment form.Price form.GroupOut ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId  ctx
+                Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
+                Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
+            )
+        ]) else Redirection.FOUND landingPage 
 
     | None -> Redirection.FOUND landingPage
 
@@ -1882,7 +1882,7 @@ let createRole (user:UserLoggedOnSession ) =
         POST >=> bindToForm Form.role (fun form ->
             Db.createRole form.Name form.Comment ctx 
             Redirection.FOUND Path.home
-         )
+        )
     ]
 
 let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
@@ -1937,16 +1937,16 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
             let categoriesIdsRef = categoriesIdNameMapRef |> Map.toSeq |> Seq.map (fun (id,_) -> id) |> Seq.toList
 
             let rolecategoriesCombinations = [for i in roleIdsRef do for j in categoriesIdsRef do 
-                 let observers = List.fold (fun acc k ->  (if (Db.isObserverRoleCatState i j k ctx) then ({entry="Observer"+(statesIdNameMapRef.[k])})::acc else acc)) [] statesIdsRef
-                 let enablers = List.fold (fun acc k ->  (if (Db.isEnablerRoleCatState i j k ctx) then ({entry="Enabler"+(statesIdNameMapRef.[k])})::acc else acc)) [] statesIdsRef
-                 yield {index1=i;index2=j;enablers = enablers; observers = observers}
+                let observers = List.fold (fun acc k ->  (if (Db.isObserverRoleCatState i j k ctx) then ({entry="Observer"+(statesIdNameMapRef.[k])})::acc else acc)) [] statesIdsRef
+                let enablers = List.fold (fun acc k ->  (if (Db.isEnablerRoleCatState i j k ctx) then ({entry="Enabler"+(statesIdNameMapRef.[k])})::acc else acc)) [] statesIdsRef
+                yield {index1=i;index2=j;enablers = enablers; observers = observers}
             ]
 
             let o = {
-             roleidname = roleIdNameMap|> List.map (fun (ind,value)-> {index=ind;name=value});
-             categoriesidname = categoriesIdNameMap |> List.map (fun (ind,value) -> {index=ind;name=value});
-             existingrolestatemapping=rolecategoriesCombinations; selectroleid = (roleId|>string) ; selectcategoryid = (categoryId |> string);
-             backurl = Path.Admin.roles
+                roleidname = roleIdNameMap|> List.map (fun (ind,value)-> {index=ind;name=value});
+                categoriesidname = categoriesIdNameMap |> List.map (fun (ind,value) -> {index=ind;name=value});
+                existingrolestatemapping=rolecategoriesCombinations; selectroleid = (roleId|>string) ; selectcategoryid = (categoryId |> string);
+                backurl = Path.Admin.roles
             }
 
             DotLiquid.page("rolesCategoryMappings.html")  o
@@ -2084,8 +2084,6 @@ let roleEnablerObserverCategoriesByCheckBoxes   =
 
     roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat firstRoleId firstCategoryId 
 
-
-
 type Model =  { names: IndexNameRecord list; measures: IndexUnitMeasureMap list; message: string}
 
 let selectIAllngredientCatForCourse courseId  =
@@ -2093,31 +2091,31 @@ let selectIAllngredientCatForCourse courseId  =
 
     let ctx = Db.getContext()
     choose [
-    GET >=> warbler (fun _ ->
-        log.Debug("selectIAllngredientCatForCourse GET")
-        let visibleIngredients = Db.getAllVisibleIngredients  ctx
-        let alreadyTakenIngredients = Db.getIngredientIdsOfACourse courseId ctx
-        let selectableIngredients = visibleIngredients |> List.filter (fun (x:Db.Ingredient) -> not (List.contains x.Ingredientid alreadyTakenIngredients))
-        let myMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> {index=x.Ingredientid;name=x.Name })
+        GET >=> warbler (fun _ ->
+            log.Debug("selectIAllngredientCatForCourse GET")
+            let visibleIngredients = Db.getAllVisibleIngredients  ctx
+            let alreadyTakenIngredients = Db.getIngredientIdsOfACourse courseId ctx
+            let selectableIngredients = visibleIngredients |> List.filter (fun (x:Db.Ingredient) -> not (List.contains x.Ingredientid alreadyTakenIngredients))
+            let myMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> {index=x.Ingredientid;name=x.Name })
 
-        let indexUnitsOfMeasures = List.map (fun (x:Db.Ingredient) -> {index=x.Ingredientid ; unitmeasure = x.Unitmeasure}) selectableIngredients
+            let indexUnitsOfMeasures = List.map (fun (x:Db.Ingredient) -> {index=x.Ingredientid ; unitmeasure = x.Unitmeasure}) selectableIngredients
 
-        let o = {names = myMap; measures=indexUnitsOfMeasures; message = ""}
-        let course = Db.Courses.tryGetCourse courseId ctx
-        match course with
-        | Some theCourse ->
-            DotLiquid.page("ingredientToCourse.html") o
-        | _ ->  Redirection.FOUND Path.home
-    ) 
-    POST >=> bindToForm Form.ingredientSelector (fun form ->
-        log.Debug("selectIAllngredientCatForCourse POST")
-        let decQuantity = form.Quantity 
-        Db.addIngredientToCourse ((int)form.IngredientBySelect) courseId decQuantity ctx
+            let o = {names = myMap; measures=indexUnitsOfMeasures; message = ""}
+            let course = Db.Courses.tryGetCourse courseId ctx
+            match course with
+            | Some theCourse ->
+                DotLiquid.page("ingredientToCourse.html") o
+            | _ ->  Redirection.FOUND Path.home
+        ) 
+        POST >=> bindToForm Form.ingredientSelector (fun form ->
+            log.Debug("selectIAllngredientCatForCourse POST")
+            let decQuantity = form.Quantity 
+            Db.addIngredientToCourse ((int)form.IngredientBySelect) courseId decQuantity ctx
 
-        let retPath = sprintf Path.Courses.editCourse courseId 
-        Redirection.FOUND retPath
-    )
- ]
+            let retPath = sprintf Path.Courses.editCourse courseId 
+            Redirection.FOUND retPath
+        )
+    ]
 
 
 let selectIngredientCatForCourse courseId categoryId message =
@@ -2145,7 +2143,6 @@ let selectIngredientCatForCourse courseId categoryId message =
                                 | (None,UNITARY_MEASURE) -> Some ((decimal)1.0)
                                 | _ -> form.Quantity
 
-//            Db.addIngredientToCourseByName (ingredient.Name) courseId quantity ctx
             Db.addIngredientToCourseById ((int)ingredient.Ingredientid) courseId quantity ctx
             let retPath = sprintf Path.Courses.editCourse courseId 
             Redirection.FOUND retPath
@@ -2237,10 +2234,11 @@ let archiveOrderByUserId orderId  =
     let ctx = Db.getContext()
     let order = Db.Orders.getOrder orderId ctx
     match order.Archived with
-         | true -> ()
-         | false -> Db.archiveOrder orderId ctx
-                    Db.pushArchivedOrdersInLog orderId ctx
-                    ()
+        | true -> ()
+        | false -> 
+            Db.archiveOrder orderId ctx
+            Db.pushArchivedOrdersInLog orderId ctx
+            ()
 
 let archiveOrdersWithAllOrderItemsInPaidSubOrders (orders: (Db.NonArchivedOrderDetail) list)  =
     let paidOrders = orders |> List.filter (fun order -> allSubOrdersOfOrderDetailBelongsToAPaidSubOrder order.Orderid )

@@ -1652,13 +1652,13 @@ let ingredientsOfACategory message (category:Db.IngredientCategory) (allIngredie
                     ]
                 SubmitText = local.Submit 
             }
-
         br []
         div [] 
             [
                 (a (sprintf  Path.Admin.editIngredientCategoryPaginated category.Ingredientcategoryid 0))  [] [Text(local.GoBack)]
             ]
     ]
+
 
 let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list)  =
     [
@@ -1668,16 +1668,26 @@ let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db
             { 
                 Form = Form.ingredientCategory
                 Fieldsets = 
-                    [ { Legend = local.NewCategory 
-                        Fields = 
-                            [ 
-                              { Label = local.Name 
-                                Html = formInput (fun f -> <@ f.Name @>) [] }
-                              { Label = local.Description 
-                                Html = formInput (fun f -> <@ f.Comment @>) [] } 
-                              { Label = local.Visibility 
-                                Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") } 
-                                ] } ]
+                    [ 
+                        { 
+                            Legend = local.NewCategory 
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.Name 
+                                        Html = formInput (fun f -> <@ f.Name @>) [] 
+                                    }
+                                    { 
+                                        Label = local.Description 
+                                        Html = formInput (fun f -> <@ f.Comment @>) [] 
+                                    } 
+                                    { 
+                                        Label = local.Visibility 
+                                        Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
+                                    } 
+                                ] 
+                        } 
+                    ]
                 SubmitText = local.CreateNewCategory 
             }
         br []
@@ -1688,19 +1698,24 @@ let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db
             let visibility = ""
             let viewClass = match ingredientCategory.Visibility with | true -> "buttonEnabled" | _ -> "buttonY"
 
-            tag "p" [] [
-                  a (sprintf Path.Admin.editIngredientCategory ingredientCategory.Ingredientcategoryid) ["class",viewClass] 
-                    [Text (ingredientCategory.Name + " "+visibility  )]
+            tag "p" [] 
+                [
+                    a 
+                        (sprintf Path.Admin.editIngredientCategory ingredientCategory.Ingredientcategoryid) ["class",viewClass] 
+                        [Text (ingredientCategory.Name + " "+visibility  )]
 
-                  a ((sprintf Path.Admin.switchVisibilityOfIngredientCategory
-                    ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.visibleIngredientCategories) ))  ["class","buttonX"] [Text(local.ChangeVisibility)]
+                    a 
+                        ((sprintf Path.Admin.switchVisibilityOfIngredientCategory
+                        ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.visibleIngredientCategories) ))  ["class","buttonX"] 
+                        [Text(local.ChangeVisibility)]
+                ]
+        ]
+        tag "p" [] 
+            [
+                br[]
+                br[]
+                a ((Path.home))  [] [Text(local.GoBack)]
             ]
-        ]
-        tag "p" [] [
-                  br[]
-                  br[]
-                  a ((Path.home))  [] [Text(local.GoBack)]
-        ]
     ]
 
 let about =
@@ -1716,9 +1731,10 @@ let adminPrinters (printers: Db.Printer list)=
 
         ulAttr ["id","item-list"] [
             for printer in printers ->
-            tag "p" [] [
-                 (a (sprintf Path.Admin.managePrinter printer.Printerid -1) ["class","buttonX"] [Text(printer.Name)])
-            ]
+            tag "p" [] 
+                [
+                    (a (sprintf Path.Admin.managePrinter printer.Printerid -1) ["class","buttonX"] [Text(printer.Name)])
+                ]
         ]
     ]
 
@@ -1727,19 +1743,31 @@ let ingredientCatgoriesAdministrationPage  (allIngredientCategories:Db.Ingredien
         tag "h1" [] [Text local.AllCategoriesOfIngredients]
         tag "p" [] [ (a (Path.Admin.visibleIngredientCategories) ["class","buttonX"] [Text(local.SeeOnlyVisibles)])]
         renderForm
-            { Form = Form.ingredientCategory
-              Fieldsets = 
-                  [ { Legend = local.NewCategory
-                      Fields = 
-                          [ 
-                            { Label = local.Name
-                              Html = formInput (fun f -> <@ f.Name @>) [] }
-                            { Label = local.Description 
-                              Html = formInput (fun f -> <@ f.Comment @>) [] } 
-                            { Label = local.Visibility 
-                              Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") } 
-                              ] } ]
-              SubmitText = local.CreateNewCategory }
+            { 
+                Form = Form.ingredientCategory
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = local.NewCategory
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.Name
+                                        Html = formInput (fun f -> <@ f.Name @>) [] 
+                                    }
+                                    { 
+                                        Label = local.Description 
+                                        Html = formInput (fun f -> <@ f.Comment @>) [] 
+                                    } 
+                                    { 
+                                        Label = local.Visibility 
+                                        Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
+                                    } 
+                                ] 
+                        }   
+                    ]
+                SubmitText = local.CreateNewCategory 
+            }
         br []
         br []
 
@@ -1750,108 +1778,129 @@ let ingredientCatgoriesAdministrationPage  (allIngredientCategories:Db.Ingredien
             let visibility = ""
             let buttonClass = match ingredientCategory.Visibility with | true -> "buttonEnabled" | _ ->  "buttonY"
 
-            tag "p" [] [
-                  a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategory.Ingredientcategoryid 0) ["class",buttonClass] 
-                    [Text (ingredientCategory.Name + " "+visibility  )]
-                  a ((sprintf Path.Admin.switchVisibilityOfIngredientCategory
-                    ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories)))  ["class","buttonX"] [Text(local.SwitchVisibility)]
-            ]
+            tag "p" [] 
+                [
+                    a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategory.Ingredientcategoryid 0) ["class",buttonClass] 
+                        [Text (ingredientCategory.Name + " "+visibility  )]
+                    a ((sprintf Path.Admin.switchVisibilityOfIngredientCategory
+                         ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories)))  ["class","buttonX"] [Text(local.SwitchVisibility)]
+                ]
 
         ]
-        tag "p" [] [
-                  br[]
-                  br[]
-                  a ((Path.home))  [] [Text(local.GoBack)]
-        ]
+        tag "p" [] 
+            [
+                br[]
+                br[]
+                a ((Path.home))  [] [Text(local.GoBack)]
+            ]
     ]
 
-let addQrUser = [
-    renderForm
-        { Form = Form.qrUser
-          Fieldsets = 
-              [ { Legend = local.TemporaryUser
-                  Fields = 
-                      [ 
-                        { Label = local.NameOrTable
-                          Html = formInput (fun f -> <@ f.TableName @>) [] }
-                          ] } ]
-          SubmitText = local.Submit }
-]
+let addQrUser = 
+    [
+        renderForm
+            { 
+                Form = Form.qrUser
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = local.TemporaryUser
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.NameOrTable
+                                        Html = formInput (fun f -> <@ f.TableName @>) [] 
+                                    }
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.Submit 
+            }
+    ]
 
-
-let recycleQrUser  = [
-    renderForm
-        { Form = Form.qrUser
-          Fieldsets = 
-              [ { Legend = local.TemporaryUser
-                  Fields = 
-                      [ 
-                        { Label = local.NameOrTable
-                          Html = formInput (fun f -> <@ f.TableName @>) [] }
-                          ] } ]
-          SubmitText = local.RegenerateTempUser }
-]
-
+let recycleQrUser  = 
+    [
+        renderForm
+            { 
+                Form = Form.qrUser
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = local.TemporaryUser
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.NameOrTable
+                                        Html = formInput (fun f -> <@ f.TableName @>) [] 
+                                    }
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.RegenerateTempUser 
+            }
+    ]
 
 let temporaryUsersAdministrationPage  (users: Db.UsersView list) =
-     [
-         tag "h1" [] [Text local.ManageTemporaryUsers];
+    [
+        tag "h1" [] [Text local.ManageTemporaryUsers];
 
-         a Path.Extension.addQruser ["class","buttonX"] [Text local.CreateTemporaryUsers] 
+        a Path.Extension.addQruser ["class","buttonX"] [Text local.CreateTemporaryUsers] 
 
-         ulAttr ["id ","item-list"] [
-             for user in users  -> 
-                let enabledview = match user.Enabled with
-                | true -> "enabled"
-                | false -> "disabled"
+        ulAttr ["id ","item-list"] 
+            [
+                for user in users  -> 
+                    let enabledview = match user.Enabled with
+                    | true -> "enabled"
+                    | false -> "disabled"
 
-                let isExpired = user.Creationtime.AddMinutes(Globals.EXPIRATION_TIME_TEMPORARY_USERS).CompareTo(System.DateTime.Now)<0
-                let regenLink = 
-                    if (isExpired) then (a (sprintf Path.Extension.regenTempUser user.Userid ) [] [Text local.UserExpired])  else em ""
-                tag "p" [] [
-                    a (sprintf Path.Admin.editTemporaryUser user.Userid) [] [Text (user.Username+" "+user.Rolename+" "+enabledview)]
-                    regenLink
-                    br []
-                ]
-         ]
-
-     ]
+                    let isExpired = user.Creationtime.AddMinutes(Globals.EXPIRATION_TIME_TEMPORARY_USERS).CompareTo(System.DateTime.Now)<0
+                    let regenLink = 
+                        if (isExpired) then (a (sprintf Path.Extension.regenTempUser user.Userid ) [] [Text local.UserExpired])  else em ""
+                    tag "p" [] 
+                        [
+                            a (sprintf Path.Admin.editTemporaryUser user.Userid) [] [Text (user.Username+" "+user.Rolename+" "+enabledview)]
+                            regenLink
+                            br []
+                        ]
+            ]
+    ]
 
 
 let userAdministrationPage  (users: Db.UsersView list) =
-     [
-         tag "h1" [] [Text local.ManageUsers ];
-         a Path.Admin.addUser ["class","buttonX"] [Text local.AddUser ] 
+    [
+        tag "h1" [] [Text local.ManageUsers ];
+        a Path.Admin.addUser ["class","buttonX"] [Text local.AddUser ] 
 
-         br []
-         br []
-         table [
-             tr [
-             td [Text(local.UserName)]
-             td [Text(local.Role)]
-             td [Text(local.EnableState)]
-             td [Text(local.ViewStates)]
-             ]
-         ]
-         
-         table [
-             for user in users  -> 
-                let enabledview = match user.Enabled with
-                | true -> "enabled"
-                | false -> "disabled"
+        br []
+        br []
+        table 
+            [
+                tr 
+                    [
+                        td [Text(local.UserName)]
+                        td [Text(local.Role)]
+                        td [Text(local.EnableState)]
+                        td [Text(local.ViewStates)]
+                    ]
+            ]
+        table 
+            [
+                for user in users  -> 
+                    let enabledview = match user.Enabled with
+                    | true -> "enabled"
+                    | false -> "disabled"
 
-                tr [
-                    
-                   td [a (sprintf Path.Admin.editUser user.Userid) [] [Text (user.Username)]]
-                   td [Text (user.Rolename)]
-                   td [Text (enabledview)]
-                   td [a (sprintf Path.Admin.actionableStatesForSpecificOrderOwner user.Userid) ["class","buttonX"] [Text(local.LinkStates)]]
-                ]
-         ]
-     ]
-     
+                    tr 
+                        [
+                            td [a (sprintf Path.Admin.editUser user.Userid) [] [Text (user.Username)]]
+                            td [Text (user.Rolename)]
+                            td [Text (enabledview)]
+                            td [a (sprintf Path.Admin.actionableStatesForSpecificOrderOwner user.Userid) ["class","buttonX"] [Text(local.LinkStates)]]
+                        ]
+            ]
+    ]
+
 let objectDeletionPage = 
- [
+    [
         tag "h1" [] [Text local.DeletionPage] 
         tag "h2" [] [Text local.WarningDeletion]
         tag "p" [] [
@@ -1875,7 +1924,7 @@ let objectDeletionPage =
         tag "p" [] [
             a ( Path.Admin.deleteIngredientCategories ) ["class","buttonX"] [Text local.DeleteIngredientCategories]
         ]
- ]
+    ]
 
 let rolesDeletionPage (roles: Db.Role list ) =
     [
@@ -2935,13 +2984,6 @@ let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.Ingre
             for ingredientPrice in ingredientPrices ->
             let isDefaultAdd = ingredientPrice.Isdefaultadd
             let isDefaultSubtract = ingredientPrice.Isdefaultsubtract
-
-            // let textToDisplay = 
-            //     match (isDefaultAdd,isDefaultSubtract) with
-            //     | (true,true) -> local.IsDefaultAddAndSubtractQuantity+" "+local.Remove 
-            //     | (true,false) -> local.IsDefaultAddQuantity+" "+local.Remove
-            //     | (false,true) -> local.IsDefaultSubtractQuantity+" "+local.Remove
-            //     | (false,false) -> local.Remove
 
             let textToDisplay2 =       
                 match (isDefaultAdd,isDefaultSubtract) with
