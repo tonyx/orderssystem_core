@@ -26,28 +26,29 @@ lastly
     (
         fun _ ->
 
-        //    url Home.home
-        //    Home.deleteButton == "cancellazioni"
-        //    click Home.deleteButton
-        //    Deletion.eliminateDishesCategoryButton == "elimina categorie di piatti"
-        //    click Deletion.eliminateDishesCategoryButton
-        //    DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == "elimina category1"
-        //    click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
-           
-        //    url Home.home
-        //    click Home.deleteButton
-        //    Deletion.eliminateIngredientCategories == "elimina categorie di ingredienti"
-        //    click Deletion.eliminateIngredientCategories
-        //    IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == "elimina ingCategory1"
-        //    click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+           url Home.home
+           Home.deleteButton == local.Deletions
+           click Home.deleteButton
+           Deletion.eliminateDishesCategoryButton == local.DeleteCourseCategories.Trim() // "elimina categorie di piatti"
+           click Deletion.eliminateDishesCategoryButton
+        //    DishesCategoryDeletion.eliminateTheOnlyExistingCategoryDelutton == "delete category1"
+           DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == local.Delete + " " + "category1"
+           click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
 
-        //    url Home.home
-        //    click Home.ordersButton
-        //    click Orders.firstOrder
-        //    click Orders.voidOrder
-        //    click Confirmation.yes
-            ()
-    )
+           url Home.home
+           click Home.deleteButton
+           Deletion.eliminateIngredientCategories == local.DeleteIngredientCategories
+           click Deletion.eliminateIngredientCategories
+           IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == local.Delete + " " + "ingCategory1"
+           click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
+
+           url Home.home
+           click Home.ordersButton
+           click Orders.firstOrder
+           click Orders.voidOrder
+           click Confirmation.yes
+           ()
+    ) 
 
 "first button is information" &&& fun _ ->
     Home.infoButton == local.Info
