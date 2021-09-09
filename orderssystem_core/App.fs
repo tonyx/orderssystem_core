@@ -228,7 +228,6 @@ let authenticateUser (user : Db.UsersView) =
 
     >=> returnPathOrHome
 
-
 let html container =
     let result cartItems userName = 
         OK (View.index container userName) >=> Writers.setMimeType "text/html; charset=utf-8" 
@@ -480,8 +479,8 @@ let qrOrder (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let mapOfStates = Db.getMapOfStates ctx
 
     let eventualRejectionsOfOrderItems = orders |>
-         List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
-         |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+        List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
+        |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
     View.qrOrder userLoggedOn orders activeCategories orderItemsOfOrders mapOfStates  eventualRejectionsOfOrderItems |> html)
 
 let myOrders (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
@@ -703,8 +702,9 @@ let editIngredientCategory (idCategory: int) (user: UserLoggedOnSession) =
                 let _ =
                     match (int) (form.AvailableQuantity) with
                     | 0 -> ()
-                    | _ -> let initialIncrement = Db.createIngredientIncrement newIngredient form.AvailableQuantity unitOfMeasure "inserimento iniziale" user.UserId ctx
-                           ()
+                    | _ -> 
+                        let initialIncrement = Db.createIngredientIncrement newIngredient form.AvailableQuantity unitOfMeasure "inserimento iniziale" user.UserId ctx
+                        ()
                 Redirection.FOUND ((sprintf  Path.Admin.editIngredientCategoryPaginated idCategory 0)) 
             )
     ]
@@ -2359,9 +2359,14 @@ let viewSingleOrderRef orderId =
             let orderItemDetails = Db.getOrderItemDetailOfOrderById orderId ctx
             let mapOfLinkedStates = Db.getMapOfStates ctx 
             let statesEnabledForUser = Db.listOfEnabledStatesForWaiter userView.Userid ctx
-            let eventualRejectionsOfOrderItems = [ orderDetail ] |>
-                 List.map (fun (x:Db.Orderdetail) ->  Db.getOrderItemDetailOfOrderDetail x ctx  ) |> List.fold (@) [] 
-                 |> List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) |> Map.ofList
+            let eventualRejectionsOfOrderItems = 
+                [ orderDetail ] 
+                |> List.map (fun (x:Db.Orderdetail) ->  
+                    Db.getOrderItemDetailOfOrderDetail x ctx  ) 
+                    |> List.fold (@) [] 
+                    |> List.map (fun (x:Db.OrderItemDetails) -> 
+                        (x.Orderitemid,Db.getLatestRejectionOfOrderItem x.Orderitemid ctx)) 
+                        |> Map.ofList
 
             let outGroupsOfOrder = Db.getOutGroupsOfOrder orderId ctx
 
@@ -2462,11 +2467,12 @@ let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user
     let ingredientsMap = Db.getIngredientsOfACourse course.Courseid ctx |> 
         List.map (fun (x:Db.IngredientOfCourse) -> (x.Ingredientid,x)) |> Map.ofList
     let dbUser = Db.getUserById user.UserId ctx
-    let _ = if (orderItemDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
-              (match ingredientsMap.[ingredientId].Unitmeasure with
-              | UNITARY_MEASURE -> Db.addAddUnitaryIngredientVariationOrIncreaseByOne orderItemId ingredientId ctx
-              | _ -> (Db.addIncreaseIngredientVariation orderItemId ingredientId ctx) )
-            else ()
+    let _ = 
+        if (orderItemDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
+            (match ingredientsMap.[ingredientId].Unitmeasure with
+            | UNITARY_MEASURE -> Db.addAddUnitaryIngredientVariationOrIncreaseByOne orderItemId ingredientId ctx
+            | _ -> (Db.addIncreaseIngredientVariation orderItemId ingredientId ctx) )
+        else ()
     let _ = adjustPriceOfOrderItemByVariations orderItemId 
     editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
@@ -2475,8 +2481,10 @@ let removeIngredientVariation variationId orderitemId  encodedBackUrl (user:User
     let ctx = Db.getContext()
     let orderDetail = Db.Orders.getOrderItemDetail orderitemId ctx
     let dbUser = Db.getUserById user.UserId ctx
-    let _ = if (orderDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
-      (Db.removeIngredientVariation  variationId ctx) else ()
+    let _ = 
+        if (orderDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
+            (Db.removeIngredientVariation  variationId ctx) 
+        else ()
     let _ = adjustPriceOfOrderItemByVariations orderitemId
     editOrderItemVariationPassingUserLoggedOn orderitemId  user
 
@@ -2510,8 +2518,8 @@ let deleteUser id  = warbler (fun x ->
     match user.Rolename with
     | "admin" -> Redirection.found backUrl // Path.Admin.deleteObjects
     | _ ->
-         Db.safeDeleteUser id ctx
-         Redirection.found backUrl // Path.Admin.deleteObjects
+        Db.safeDeleteUser id ctx
+        Redirection.found backUrl // Path.Admin.deleteObjects
     )
 
 let deleteCourseCategory id =
@@ -2587,9 +2595,10 @@ let printSubOrderInvoice subOrderId =
                     showDetails + "\n"+(sprintf "%-22s %-40.2f\n" "totale: " totalOfSuborder)+ 
                     "\n\n" + (sprintf "imponibile: %-30.2f"  unBoundledTotal)+"\n\nIVA " + (sprintf "%.0f %%: " Globals.ALIQUOTA_IVA_UNICA) + (sprintf "%.2f" (totalOfSuborder - unBoundledTotal))+ "\n\n"
 
-                let invoice = match customerDataId with
-                      | -1 -> Db.createInvoiceBySubOrderIdWithNoCustomerId subOrderId text ((int)form.InvoiceNumber) ctx
-                      | _ ->  Db.createInvoiceBysubOrderIdAndCustomerId subOrderId customerDataId text ((int)form.InvoiceNumber) ctx                
+                let invoice = 
+                    match customerDataId with
+                    | -1 -> Db.createInvoiceBySubOrderIdWithNoCustomerId subOrderId text ((int)form.InvoiceNumber) ctx
+                    | _ ->  Db.createInvoiceBysubOrderIdAndCustomerId subOrderId customerDataId text ((int)form.InvoiceNumber) ctx                
 
                 let fileName = sprintf "receipt_print%d.txt" System.DateTime.Now.Ticks
                 let outFile = new System.IO.StreamWriter(fileName,true,Encoding.UTF8)
@@ -2667,9 +2676,10 @@ let printWholeOrderInvoice orderId =
                     showDetails + "\nTotale: "+(order.Total |> string)+ "\n"+textAboutTotal +
                     "\n\n" + "imponibile: " + (sprintf "%.2f" unBoundledTotal)+"\n\nIVA " + (sprintf "%.0f %%: " Globals.ALIQUOTA_IVA_UNICA) + (sprintf "%.2f" (order.Adjustedtotal - unBoundledTotal))+ "\n\n"
 
-                let invoice = match customerDataId with
-                              | -1 -> Db.createInvoiceByOrderIdWithNoCustomerId orderId text ((int)form.InvoiceNumber) ctx
-                              | _ ->  Db.createInvoiceByOrderIdAndCustomerId orderId customerDataId text ((int)form.InvoiceNumber) ctx
+                let invoice = 
+                    match customerDataId with
+                        | -1 -> Db.createInvoiceByOrderIdWithNoCustomerId orderId text ((int)form.InvoiceNumber) ctx
+                        | _ ->  Db.createInvoiceByOrderIdAndCustomerId orderId customerDataId text ((int)form.InvoiceNumber) ctx
 
                 let fileName = sprintf "receipt_print%d.txt" System.DateTime.Now.Ticks
                 let outFile = new System.IO.StreamWriter(fileName,true,Encoding.UTF8)
@@ -2685,9 +2695,6 @@ let printWholeOrderInvoice orderId =
         )
     ]
 
-
-
-    
 let printWholeOrderReceipt orderId =
     log.Debug(sprintf "%s %d " "printWholeOrderReceipt" orderId)
     let ctx = Db.getContext()
@@ -2695,11 +2702,8 @@ let printWholeOrderReceipt orderId =
     let orderItemsDetails = Db.getOrderItemDetailOfOrderThatArenotInInitState orderId ctx
     let printerForReceipts = Db.getPrintersForReceipts ctx
     let printerNames = printerForReceipts |> List.map (fun (x:Db.Printer) -> x.Name)
-
     let _ = removeSpooledFiles()
-
     let text = Utils.textForWholeOrderReceipt orderId orderItemsDetails ctx
-
     let fileName = sprintf "receipt_print%d.txt" System.DateTime.Now.Ticks
     let outFile = new System.IO.StreamWriter(fileName,true,Encoding.UTF8)
     let _ = outFile.WriteLine(text)
@@ -2708,11 +2712,8 @@ let printWholeOrderReceipt orderId =
         System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
         File.Copy(fileName,x+fileName.Replace(".txt",".ok"),true)
     )
-
     let _ = archiveOrderByUserId orderId 
-
     Redirection.found (Path.Orders.seeDoneOrders)
-
 
 type PaymentItemsLiquidValues = {
     wrappedSubOrder: DbWrappedEntities.SubOrderWrapped
@@ -2725,9 +2726,6 @@ type PaymentItemsLiquidValues = {
     orderId: int
     subOrderId:int
 }
-
-
-
 
 let subOrderPaymentItems subOrderId orderId  =
     log.Debug(sprintf "%s %d" "subOrderPaymentItems" subOrderId )
@@ -2789,9 +2787,6 @@ let removeAllDiscountOfSubOrder subOrderId =
     ctx.SubmitUpdates()
     Redirection.found (sprintf Path.Orders.subOrderPaymentItems subOrderId subOrder.Orderid)
 
-
-
-
 type PaymentItemsLiquidValuesForOrder = {
     wrappedOrder: DbWrappedEntities.OrderWrapped
     wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list
@@ -2802,25 +2797,22 @@ type PaymentItemsLiquidValuesForOrder = {
     residualPaymentDueAsString: string
     orderId: int
 }
+
 let wholeOrderPaymentItems  orderId  =
     log.Debug(sprintf "%s %d " "wholeOrderPaymentItems" orderId )
     let ctx = Db.getContext()
     warbler (fun x -> 
-
         let _ = match (x.request.queryParam("tenderid"),x.request.queryParam("amount")) with 
-             | (Choice1Of2 tenderid,Choice1Of2 amount) -> Db.addPaymentItemToOrder orderId ((int)tenderid) ((decimal)amount) ctx
-             | _ -> ()
-
+            | (Choice1Of2 tenderid,Choice1Of2 amount) -> Db.addPaymentItemToOrder orderId ((int)tenderid) ((decimal)amount) ctx
+            | _ -> ()
         let orderItemsDetails = Db.getOrderItemDetailsOfOrder orderId ctx
         let wrappedOrderItemsDetails = orderItemsDetails |> Seq.map (fun x -> DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails(x) "") |> Seq.toList;
-
         let order = Db.Orders.getOrder orderId ctx
         let tenderCodes = Db.getAllTenderCodes ctx
         let tenderCodesIndexNameList = tenderCodes |> List.map (fun (x:Db.TenderCode) -> {index=x.Tendercodesid; name=x.Tendername})
         let paymentItems = Db.Orders.getPaymentItemsOfOrder orderId ctx
         let paymentItemDetails = Db.Orders.getPaymentItemDetailsOfOrder orderId ctx
         let residual = order.Adjustedtotal - ((paymentItemDetails |> List.map (fun (x:Db.PaymentItemDetail) -> x.Amount ) |> List.fold (+) 0.0M))
-
         let wrappedPaymentItems = paymentItemDetails |> List.map (fun (x:Db.PaymentItemDetail) -> DbWrappedEntities.DbObjectWrapper.WrapPaymentItem(x))
         let wrappedOrder = DbWrappedEntities.DbObjectWrapper.WrapOrder(order) 
         let liquidModel = {
@@ -2893,7 +2885,7 @@ type LiquidWrappedOrderItems = {orderitemdetailswrapped: OrderItemDetailsWrapped
     suborderwrapped: SubOrderWrapped list; orderid: int; table: string; encodedbackurl: string; tendercodes: TenderCodeWrapped list }
 
 type LiquidWrapperOrderItemsWithGenericCourses = { orderitemdetailswrapped: OrderItemDetailsWrapped list; 
-     suborderwrapped: SubOrderWrapped list; orderid: int; coursewrappedlist: CourseWrapped list; encodedbackurl: string; }
+    suborderwrapped: SubOrderWrapped list; orderid: int; coursewrappedlist: CourseWrapped list; encodedbackurl: string; }
 
 let recomputeSubOrderTotal (subOrder:Db.SubOrder) =
     log.Debug(sprintf "recomputeSubOrderTotal %d" subOrder.Suborderid)
@@ -2908,7 +2900,6 @@ let recomputeSubOrderTotal (subOrder:Db.SubOrder) =
 let colapseDoneOrder id (user: UserLoggedOnSession) =
     log.Debug(printf "%s %d" "colapseDoneOrder" id)
     let ctx = Db.getContext()
-
     choose [
         GET >=> warbler ( fun (x:HttpContext) ->
             let abstractCourses = Db.Courses.getAllAbstractCourses ctx
@@ -2992,13 +2983,36 @@ let splitOrderItemInToUnitaryOrderItems id (user:UserLoggedOnSession) =
     let orderId = theOrderItem.Orderid
     let comment = theOrderItem.Comment
     let outGroupId = theOrderItem.Ordergroupid
-
-    let clonedOrderItems = [1 .. theOrderItem.Quantity] |> List.map (fun _ -> Db.createUnitaryNakedOrderItemByOrderId courseId orderId comment theOrderItem.Price outGroupId ctx) // |> List.fold (@) []
-    
-    let clonedIngredientDecrements = clonedOrderItems  |> List.map (fun (x:Db.OrderItem) -> ingredientdecrements |> List.map (fun (y:Db.IngredientDecrement) -> Db.createClonedIngredientDecrement x.Orderitemid ((decimal) theOrderItem.Quantity)  y ctx)) |> List.fold (@) []
-    let clonedVariations = clonedOrderItems |> List.map (fun (x:Db.OrderItem) -> variations |> List.map  (fun (y:Db.Variation) -> Db.createClonedVariationOfOrderItem x.Orderitemid y.Ingredientid y.Tipovariazione ctx)) |> List.fold (@) []
-    let clonedRejectedOrderItems = clonedOrderItems |> List.map (fun (x:Db.OrderItem) -> rejectOrderItems |> List.map (fun (y:Db.RejectedOrderItems) -> Db.createClonedRejectedOrderItem x.Orderitemid y ctx )) |> List.fold (@) []
-    let clonedOrderItemStates = clonedOrderItems |> List.map (fun (x:Db.OrderItem) -> connectedOrderItemStates |> List.map (fun (y:Db.OrderItemState) -> Db.createClonedOrderItemState x.Orderitemid y ctx)) |> List.fold (@) []
+    let clonedOrderItems = 
+        [1 .. theOrderItem.Quantity] 
+        |> List.map (fun _ -> Db.createUnitaryNakedOrderItemByOrderId courseId orderId comment theOrderItem.Price outGroupId ctx) 
+    let clonedIngredientDecrements = 
+        clonedOrderItems  
+        |> List.map (fun (x:Db.OrderItem) -> 
+            ingredientdecrements 
+            |> List.map (fun (y:Db.IngredientDecrement) -> 
+                Db.createClonedIngredientDecrement x.Orderitemid ((decimal) theOrderItem.Quantity)  y ctx)) 
+                |> List.fold (@) []
+    let clonedVariations = 
+        clonedOrderItems 
+        |> List.map (fun (x:Db.OrderItem) -> 
+            variations 
+            |> List.map  (fun (y:Db.Variation) -> 
+                Db.createClonedVariationOfOrderItem x.Orderitemid y.Ingredientid y.Tipovariazione ctx)) 
+                |> List.fold (@) []
+    let clonedRejectedOrderItems = 
+        clonedOrderItems 
+        |> List.map (fun (x:Db.OrderItem) -> 
+            rejectOrderItems 
+            |> List.map (fun (y:Db.RejectedOrderItems) ->
+             Db.createClonedRejectedOrderItem x.Orderitemid y ctx )) 
+             |> List.fold (@) []
+    let clonedOrderItemStates = 
+        clonedOrderItems 
+        |> List.map (fun (x:Db.OrderItem) -> 
+            connectedOrderItemStates 
+            |> List.map (fun (y:Db.OrderItemState) -> Db.createClonedOrderItemState x.Orderitemid y ctx)) 
+            |> List.fold (@) []
     
     let _ = Db.safeRemoveOrderItem theOrderItem.Orderitemid ctx
     Redirection.FOUND (sprintf Path.Orders.subdivideDoneOrder theOrderItem.Orderid)
@@ -3010,45 +3024,46 @@ let editDoneOrder id (user:UserLoggedOnSession) =
     let dbUser = Db.getUserById user.UserId ctx
     match (dbUser.Canmanageallorders || user.Role = "admin") with
     | true ->
-     choose [
-        GET >=> warbler (fun _ ->
-            let order = Db.Orders.getOrder id ctx
-            let orderItemsdetailsOfOrder = Db.getOrderItemDetailOfOrder order ctx
-            html (View.seeOrder order orderItemsdetailsOfOrder thisUrl) 
-         )
+        choose [
+            GET >=> warbler (fun _ ->
+                let order = Db.Orders.getOrder id ctx
+                let orderItemsdetailsOfOrder = Db.getOrderItemDetailOfOrder order ctx
+                html (View.seeOrder order orderItemsdetailsOfOrder thisUrl) 
+            )
 
-        POST >=> bindToForm Form.priceAdjustment (fun form -> 
-            let order = Db.Orders.getOrder id ctx
+            POST >=> bindToForm Form.priceAdjustment (fun form -> 
+                let order = Db.Orders.getOrder id ctx
 
-            let setPercentageOrPlainPriceVariation =
-                match (form.PercentOrValue,form.Value) with 
-                | (_,X)  when (Decimal.Parse(X)  = (decimal)0) ->
-                
-                                order.Adjustispercentage <- false
-                                order.Adjustisplain <- false
-                                order.Percentagevariataion <- (decimal)0
-                                order.Plaintotalvariation <- (decimal)0
-                                order.Adjustedtotal <- order.Total
-                | ("PERCENTUALE",_) -> 
-                                   order.Adjustispercentage <- true
-                                   order.Adjustisplain<- false 
-                                   order.Plaintotalvariation <- (decimal) 0 
-                                   order.Percentagevariataion <- Decimal.Parse(form.Value)
-                                   order.Adjustedtotal <- order.Total + order.Total * order.Percentagevariataion/(decimal)100
-                | ("VALORE",_) -> order.Adjustispercentage <- false
-                                  order.Adjustisplain <- true
-                                  order.Plaintotalvariation <-  Decimal.Parse(form.Value)
-                                  order.Percentagevariataion <- (decimal)0
-                                  order.Adjustedtotal <- order.Total + (Decimal.Parse(form.Value))
-                | _ -> order.Adjustispercentage <- false
-                       order.Adjustisplain <- false
-                               
-            ctx.SubmitUpdates()
-            let redirTo = Path.Orders.editDoneOrder.Value
-            let redirToTrimmed = redirTo.Substring(0,redirTo.IndexOf("%"))
-            Redirection.FOUND (redirToTrimmed+(id |> string))
-        )
-     ]
+                let setPercentageOrPlainPriceVariation =
+                    match (form.PercentOrValue,form.Value) with 
+                    | (_,X)  when (Decimal.Parse(X)  = (decimal)0) ->
+                    
+                                    order.Adjustispercentage <- false
+                                    order.Adjustisplain <- false
+                                    order.Percentagevariataion <- (decimal)0
+                                    order.Plaintotalvariation <- (decimal)0
+                                    order.Adjustedtotal <- order.Total
+                    | ("PERCENTUALE",_) -> 
+                                    order.Adjustispercentage <- true
+                                    order.Adjustisplain<- false 
+                                    order.Plaintotalvariation <- (decimal) 0 
+                                    order.Percentagevariataion <- Decimal.Parse(form.Value)
+                                    order.Adjustedtotal <- order.Total + order.Total * order.Percentagevariataion/(decimal)100
+                    | ("VALORE",_) -> 
+                                    order.Adjustispercentage <- false
+                                    order.Adjustisplain <- true
+                                    order.Plaintotalvariation <-  Decimal.Parse(form.Value)
+                                    order.Percentagevariataion <- (decimal)0
+                                    order.Adjustedtotal <- order.Total + (Decimal.Parse(form.Value))
+                    | _ -> 
+                        order.Adjustispercentage <- false
+                        order.Adjustisplain <- false
+                ctx.SubmitUpdates()
+                let redirTo = Path.Orders.editDoneOrder.Value
+                let redirToTrimmed = redirTo.Substring(0,redirTo.IndexOf("%"))
+                Redirection.FOUND (redirToTrimmed+(id |> string))
+            )
+        ]
     | _ -> Redirection.FOUND Path.home
 
 let optimizeVoided = warbler (fun _ ->
@@ -3059,25 +3074,23 @@ let optimizeVoided = warbler (fun _ ->
     Redirection.FOUND Path.home
 )
 
-        
 let deArchiveLatestOrder (user:UserLoggedOnSession) =
     log.Debug("deArchiveLatestOrder")
     let ctx = Db.getContext()
     let dbUser = Db.getUserById user.UserId ctx
     let _ = 
         if (user.Role = "admin " || dbUser.Canmanageallorders) then
-             (let latestLogOrder = Db.getLatestLogOrder ctx
-              match latestLogOrder with
-              | Some theLatestOrder ->
+            let latestLogOrder = Db.getLatestLogOrder ctx
+            match latestLogOrder with
+            | Some theLatestOrder ->
                 log.Debug("got an order");
                 let order = Db.Orders.getOrder theLatestOrder.Orderid  ctx
                 order.Archived <- false
                 theLatestOrder.Delete()
                 ctx.SubmitUpdates()
-              | _ -> 
+            | _ -> 
                 log.Debug("got nothing")
                 ()
-             )
     Redirection.found Path.Orders.seeDoneOrders
 
 let switchCourseCategoryVisibility categoryId  =
@@ -3099,18 +3112,17 @@ let rejectOrderItem orderItemId (user:UserLoggedOnSession) =
 
     match Db.isEnablerRoleCatState roleId categoryId stateId ctx with
     | true ->
-      choose [
-        GET >=> warbler (fun x ->
-            // x.request.
-            View.rejectOrderItem theOrderItemDetail |> html
-        )
-        POST >=> bindToForm Form.orderItemRejection (fun form ->
-            let _ = Db.createRejectedOrderItem theOrderItemDetail.Orderitemid theOrderItemDetail.Courseid form.Motivation ctx
-            let _ = Db.setOrderItemAsRejected theOrderItemDetail.Orderitemid ctx
-            let _ = Db.reinitializeOrderItemState theOrderItemDetail.Orderitemid ctx
-            Redirection.FOUND Path.Orders.orderItemsProgress
-        )
-      ]
+        choose [
+            GET >=> warbler (fun x ->
+                View.rejectOrderItem theOrderItemDetail |> html
+            )
+            POST >=> bindToForm Form.orderItemRejection (fun form ->
+                let _ = Db.createRejectedOrderItem theOrderItemDetail.Orderitemid theOrderItemDetail.Courseid form.Motivation ctx
+                let _ = Db.setOrderItemAsRejected theOrderItemDetail.Orderitemid ctx
+                let _ = Db.reinitializeOrderItemState theOrderItemDetail.Orderitemid ctx
+                Redirection.FOUND Path.Orders.orderItemsProgress
+            )
+        ]
     | false -> Redirection.FOUND Path.Orders.orderItemsProgress
 
 
@@ -3165,8 +3177,7 @@ let unVoidLatestVoidedRef backUrl   =
         | _ -> UNAUTHORIZED "NOT logged on"
     ))
 
-
-type Mymodel = {content:string;table: string}
+type Mymodel = {content: string; table: string}
 
 let qrUserImageGen (user:UserLoggedOnSession) = 
     log.Debug("qrUserImageGen")
@@ -3187,7 +3198,6 @@ let qrUserImageGen (user:UserLoggedOnSession) =
         DotLiquid.page("qrCode.html") o
     ) 
 
-
 let qrUserImageGenRef  = 
     log.Debug("qrUserImageGenRef")
     warbler (fun x -> 
@@ -3206,7 +3216,6 @@ let qrUserImageGenRef  =
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o
     ) 
-
 
 let removeStandardCommentForCourse commentForCourseId =
     let ctx = Db.getContext()
@@ -3249,7 +3258,6 @@ let standardVariationsForCourse courseId =
         )
     ]
 
-
 let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetailsWrapped list) =
     let ctx = Db.getContext()
     let differentStates  = orderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> x.Stateid)
@@ -3265,9 +3273,9 @@ let selectStandardCommentsForOrderItem orderItemId =
     let standardCommentsForThisCourse = Db.getCommentsForCourseDetails orderItemDetail.Courseid ctx
     let standardVariationsForThisCourse = Db.StandardVariations.getStandardVariationsForCourseDetails orderItemDetail.Courseid ctx
     match (List.length standardCommentsForThisCourse,List.length standardVariationsForThisCourse) with 
-          | (0,0) -> Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
-          | (X,_) when X>0 ->  View.selectStandardCommentsAndVariationsForOrderItem orderItemDetail standardCommentsForThisCourse standardVariationsForThisCourse |> html
-          | _ -> Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId)
+        | (0,0) -> Redirection.FOUND (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
+        | (X,_) when X>0 ->  View.selectStandardCommentsAndVariationsForOrderItem orderItemDetail standardCommentsForThisCourse standardVariationsForThisCourse |> html
+        | _ -> Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId)
 
 let addStandardCommentToOrderItem commentId orderItemId  =
     let ctx = Db.getContext()
@@ -3286,7 +3294,7 @@ let removeExistingCommentToOrderItem id =
     let ctx = Db.getContext()
     let _ = Db.removeExistingCommentToOrderItem id ctx
     Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem id)
-   
+
 let makeSubCourseCategory id =
     let ctx = Db.getContext()
     let courseCategory = Db.Courses.getCourseCategory id ctx
@@ -3295,14 +3303,14 @@ let makeSubCourseCategory id =
             View.makeSubCourseCategory courseCategory "" |> html
         )
         POST >=> bindToForm Form.subCourseCategory (fun form ->
-             let visibility = (form.Visibility = Form.VISIBLE)
-             match (Db.Courses.tryFindCategoryByName form.Name ctx) with
+            let visibility = (form.Visibility = Form.VISIBLE)
+            match (Db.Courses.tryFindCategoryByName form.Name ctx) with
                 | Some X when X.Categoryid <> courseCategory.Categoryid -> View.makeSubCourseCategory courseCategory "esiste gia'" |> html
-                | _ -> let sonCategory = Db.createSubCourseCategory form.Name  visibility id ctx
-                       Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated sonCategory.Categoryid 0)
+                | _ -> 
+                    let sonCategory = Db.createSubCourseCategory form.Name  visibility id ctx
+                    Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated sonCategory.Categoryid 0)
         )
     ]
-
 
 let mergeSubCourseCategoryToFather categoryId =
     log.Debug("mergeSubCourseCategoryToFather")
@@ -3333,7 +3341,6 @@ let manageStandardVariation id =
             Redirection.FOUND (sprintf Path.Admin.manageStandardVariation id )
         )
     ]
-
 
 let manageStandardVariationByIngredientCategory standardVariationId ingredientCategoryId =
     choose [
@@ -3415,12 +3422,12 @@ let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) 
             let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
             match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 
                 | (_,Y) when (List.length Y > 0) -> 
-                                let _ = Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
-                                        let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
-                                        let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
-                                        Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
-                                Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
-
+                    let _ = 
+                        Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
+                        let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
+                        let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
+                        Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
+                    Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
                 | (X,_) when (X > 0) -> DotLiquid.page("selectOrderItemsToMerge.html") liquidTableMergeModel
                 | _ ->  DotLiquid.page("selectOrderToMerge.html") liquidModel
         )
@@ -3451,22 +3458,20 @@ let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
             let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
             match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 
                 | (_,Y) when (List.length Y > 0) -> 
-
-                                let _ = Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
-                                        let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
-                                        let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
-                                        Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
-                                Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
-
+                    let _ = Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
+                        let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
+                        let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
+                        Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
+                    Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
                 | (X,_) when (X > 0) -> DotLiquid.page("selectOrderItemsToMerge.html") liquidTableMergeModel
                 | _ ->  DotLiquid.page("selectOrderToMerge.html") liquidModel
         )
     ]
 
 let noCache = 
-  setHeader "Cache-Control" "no-cache, no-store, must-revalidate"
-  >=> setHeader "Pragma" "no-cache"
-  >=> setHeader "Expires" "0"
+    setHeader "Cache-Control" "no-cache, no-store, must-revalidate"
+    >=> setHeader "Pragma" "no-cache"
+    >=> setHeader "Expires" "0"
 
 let webPart =
     choose [
@@ -3634,25 +3639,21 @@ let webPart =
         pathScan Path.Orders.setSubOrderAsNotPaid (fun (subOrderId,orderId) -> adminPassingUserLoggedOn (setSubOrderAsNotPaid subOrderId orderId))
         pathRegex "(.*)\.(css|png|gif|js|html)" >=> Files.browseHome
         html View.notFound
-
     ]
-
-
 
 // let cert = new X509Certificate2("certificate.p12","secret")
 
 let cfg =
-  { defaultConfig with
-      bindings = [ HttpBinding.createSimple HTTP "0.0.0.0" 8083  ] 
-      
+    { defaultConfig with
+        bindings = [ HttpBinding.createSimple HTTP "0.0.0.0" 8083  ] 
 
-    //   homeFolder= Some "/Users/Tonyx/Projects/orderssystem_core"
+      //   homeFolder= Some "/Users/Tonyx/Projects/orderssystem_core"
 
-    //   homeFolder= Some @"C:\Users\Toni\gitprojects\toni\orderssystem_core"
-      homeFolder= Some Settings.HomeFolder
+      //   homeFolder= Some @"C:\Users\Toni\gitprojects\toni\orderssystem_core"
+        homeFolder= Some Settings.HomeFolder
 
-    //    bindings = [ HttpBinding.createSimple (HTTPS cert) "0.0.0.0" 8443  ] 
-  }
+      //    bindings = [ HttpBinding.createSimple (HTTPS cert) "0.0.0.0" 8443  ] 
+    }
 
 DotLiquid.setTemplatesDir ("templates-"+Settings.Localization)
 

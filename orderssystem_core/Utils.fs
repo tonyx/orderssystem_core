@@ -49,23 +49,23 @@ let textForSubOrderReceipt  (orderItemsDetails:Db.OrderItemDetails list)  (ctx:D
 let variationsByStringDescription (listOfVariations:(int*Db.VariationDetail list) list) (ctx:Db.DbContext)= 
     listOfVariations |>
         List.map (fun (id, (variations:Db.VariationDetail list)) -> 
-            (id,List.fold (fun y (v:Db.VariationDetail) ->  
-            (if (v.Tipovariazione <> Globals.UNITARY_MEASURE && v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE  ) then 
-                v.Tipovariazione  // molto poco etc...
-              else 
-                ( if (v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE)  then (
-                        ((match (Db.tryGetIngredientCourseByCourseIdAndIngredientId v.Courseid v.Ingredientid ctx) with 
-                            | Some X -> X.Quantity 
-                            | None -> (decimal)0.0 ) 
-                            + ((decimal)v.Plailnumvariation) |> int |> string) 
-                    ) 
-                    else 
-                      let ingredientPrice = Db.getIngredientPrice v.Ingredientpriceid ctx
-                      (string) (ingredientPrice.Quantity)
+            (id, List.fold (fun y (v:Db.VariationDetail) ->  
+                (if (v.Tipovariazione <> Globals.UNITARY_MEASURE && v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE  ) then 
+                    v.Tipovariazione  // molto poco etc...
+                else 
+                    ( if (v.Tipovariazione <> Globals.PER_PREZZO_INGREDIENTE)  then (
+                            ((match (Db.tryGetIngredientCourseByCourseIdAndIngredientId v.Courseid v.Ingredientid ctx) with 
+                                | Some X -> X.Quantity 
+                                | None -> (decimal)0.0 ) 
+                                + ((decimal)v.Plailnumvariation) |> int |> string) 
+                        ) 
+                        else 
+                        let ingredientPrice = Db.getIngredientPrice v.Ingredientpriceid ctx
+                        (string) (ingredientPrice.Quantity)
                     
-                    //   "UNIMPLEMENTED"
-                )
-            ) 
+                        //   "UNIMPLEMENTED"
+                    )
+                ) 
                 + " "+v.Ingredientname + ", " + y) "" variations)
             )
             |> Map.ofList
