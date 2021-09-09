@@ -33,12 +33,12 @@ type Course = {
 }
 
 let course : Form<Course> = 
-   Form ([ 
-           TextProp ((fun f -> <@ f.Name @>), [ maxLength 100 ])
-           DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ])
-           DecimalProp ((fun f -> <@ f.CategoryId @>), [ ])
-           ],
-         [])
+    Form ([ 
+            TextProp ((fun f -> <@ f.Name @>), [ maxLength 100 ])
+            DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ])
+            DecimalProp ((fun f -> <@ f.CategoryId @>), [ ])
+            ],
+        [])
 
 type PriceAdjustment = {
     PercentOrValue: string 
@@ -63,9 +63,10 @@ type IngredientPrice = {
 
 let ingredientPrice: Form<IngredientPrice> =
     Form (
-          [ DecimalProp ((fun f -> <@ f.AddPrice @>), [ min 0.01M; step 0.01M ])
+        [ 
+            DecimalProp ((fun f -> <@ f.AddPrice @>), [ min 0.01M; step 0.01M ])
             DecimalProp ((fun f -> <@ f.SubtractPrice @>), [ min 0.01M; step 0.01M ])
-          ], [] )
+        ], [] )
 
 
 type OrderItem = {
@@ -94,16 +95,18 @@ type StrippedOrderItem = {
 }
 
 let orderItem: Form<OrderItem > =
-   Form ([ DecimalProp ((fun f -> <@ f.Quantity @>), [])
-           DecimalProp ((fun f -> <@ f.CourseId @>), [])
-           DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ])
-           ],
-         [])
+    Form 
+        ([ 
+            DecimalProp ((fun f -> <@ f.Quantity @>), [])
+            DecimalProp ((fun f -> <@ f.CourseId @>), [])
+            DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ])
+            ],
+        [])
 let strippedOrderItem: Form<StrippedOrderItem> =
-   Form ([ DecimalProp ((fun f -> <@ f.Quantity @>), [])
-           DecimalProp ((fun f -> <@ f.CourseId @>), [])
-           ],
-         [])
+    Form ([ DecimalProp ((fun f -> <@ f.Quantity @>), [])
+            DecimalProp ((fun f -> <@ f.CourseId @>), [])
+            ],
+        [])
 
 type Order = {
     Table: string
@@ -111,9 +114,7 @@ type Order = {
 }
 
 let order: Form<Order> =
-   Form ( [ 
-           ],
-         [])
+    Form ( [ ], [])
 
 type IngredientCategory = {
     Name: string
@@ -256,34 +257,38 @@ type ChangePassword = {
 }
 
 let passwordsMatch2 = 
-   (fun f -> f.Password = f.ConfirmPassword), "Passwords must match"
+    (fun f -> f.Password = f.ConfirmPassword), "Passwords must match"
 
 let changePassword: Form<ChangePassword> =
     Form ([
-           PasswordProp ((fun f -> <@ f.OldPassword @>), [  ] )
-           PasswordProp ((fun f -> <@ f.Password @>), [ pattern ] )
-           PasswordProp ((fun f -> <@ f.ConfirmPassword @>), [ pattern ] )
+        PasswordProp ((fun f -> <@ f.OldPassword @>), [  ] )
+        PasswordProp ((fun f -> <@ f.Password @>), [ pattern ] )
+        PasswordProp ((fun f -> <@ f.ConfirmPassword @>), [ pattern ] )
     ],[passwordsMatch2])
 
 type Register = {
-   Username : string
-   Password : Password
-   ConfirmPassword : Password
-   CanManageAllorders : string
-   CanChangeThePrices : string
-   CanManageAllCourses : string
-   Role: decimal
+    Username : string
+    Password : Password
+    ConfirmPassword : Password
+    CanManageAllorders : string
+    CanChangeThePrices : string
+    CanManageAllCourses : string
+    Role: decimal
 }
 
 let passwordsMatch = 
-   (fun f -> f.Password = f.ConfirmPassword), "Passwords must match"
+    (fun f -> f.Password = f.ConfirmPassword), "Passwords must match"
 
 let register : Form<Register> = 
-   Form ([ TextProp ((fun f -> <@ f.Username @>), [ maxLength 30 ] )
-           DecimalProp ((fun f -> <@f.Role @>), [])
-           PasswordProp ((fun f -> <@ f.Password @>), [ pattern ] )
-           PasswordProp ((fun f -> <@ f.ConfirmPassword @>), [ pattern ] )
-           ],[ passwordsMatch ])
+    Form (
+        [  
+            TextProp ((fun f -> <@ f.Username @>), [ maxLength 30 ] )
+            DecimalProp ((fun f -> <@f.Role @>), [])
+            PasswordProp ((fun f -> <@ f.Password @>), [ pattern ] )
+            PasswordProp ((fun f -> <@ f.ConfirmPassword @>), [ pattern ] )
+        ],
+        [ passwordsMatch ]
+        )
 
 type UserEdit = {
     Enabled: string
@@ -300,13 +305,13 @@ type CourseCategory = {
 }
 
 let courseCategoryEdit : Form<CourseCategory> = 
-   Form (
-       [ 
-           TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
-           TextProp ((fun f -> <@ f.Visibility @>), [] )
-           TextProp ((fun f -> <@ f.Abstract @>), [] )
-           ],[ ]
-   )
+    Form (
+        [ 
+            TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
+            TextProp ((fun f -> <@ f.Visibility @>), [] )
+            TextProp ((fun f -> <@ f.Abstract @>), [] )
+            ],[ ]
+    )
 
 type InvoiceForm = {
     CompanyId: decimal
@@ -342,11 +347,11 @@ type Role = {
 }
 
 let role: Form<Role> =
- Form (
-    [ 
-        TextProp ((fun f -> <@ f.Name @>), [])
-    ], []
-)
+    Form (
+        [ 
+            TextProp ((fun f -> <@ f.Name @>), [])
+        ], []
+    )
 
 type SearchCourse = {
     Name: string
@@ -375,12 +380,12 @@ type SubCourseCategory = {
 }
 
 let subCourseCategory : Form<SubCourseCategory> =
-   Form (
-       [
-           TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
-           TextProp ((fun f -> <@ f.Visibility @>), [] )
-           ],[ ]
-   )
+    Form (
+        [
+            TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
+            TextProp ((fun f -> <@ f.Visibility @>), [] )
+        ],[ ]
+    )
 
 type CommentForCourse = {
     CommentForCourse: decimal
@@ -447,7 +452,6 @@ let courseDeletion: Form<CourseDeletion> =
         TextProp ((fun f -> <@ f.CourseName@>),[])
     ], [])
 
-
 type IngredientDeletion = {
     IngredientId: decimal
     IngredientName: string
@@ -459,12 +463,11 @@ let ingredientDeletion: Form<IngredientDeletion> =
         TextProp ((fun f -> <@ f.IngredientName@>),[])
     ], [])
 
-
 let userEdit: Form<UserEdit> =
-   Form ( [ 
+    Form ( [ 
             TextProp ((fun f -> <@ f.Enabled @>), [])
             TextProp ((fun f -> <@ f.CanVoidOrder @>), [])
             TextProp ((fun f -> <@ f.CanManageAllCourses @>), [])
-           ],
-         [])
+        ],
+    [])
 

@@ -2733,20 +2733,20 @@ let subOrderPaymentItems subOrderId orderId  =
     warbler (fun x -> 
 
         let _ = match (x.request.queryParam("tenderid"),x.request.queryParam("amount")) with 
-             | (Choice1Of2 tenderid,Choice1Of2 amount) -> Db.addPaymentItemToSubOrder subOrderId ((int)tenderid) ((decimal)amount) ctx
-             | _ -> ()
+            | (Choice1Of2 tenderid,Choice1Of2 amount) -> Db.addPaymentItemToSubOrder subOrderId ((int)tenderid) ((decimal)amount) ctx
+            | _ -> ()
 
         let _ = match (x.request.queryParam("adjustment")) with
-             | (Choice1Of2 adjustment) -> 
+            | (Choice1Of2 adjustment) -> 
                 Db.Orders.setAdjustmentOfSubOrder ((int)subOrderId) ((decimal)adjustment) ctx
                 Db.Orders.setPercentAdjustmentOfSubOrder ((int)subOrderId) 0M ctx
-             | _ -> ()
+            | _ -> ()
 
         let _ = match (x.request.queryParam("percentadjustment")) with
-             | (Choice1Of2 percentadjustment) ->
-                 Db.Orders.setPercentAdjustmentOfSubOrder ((int)subOrderId) ((decimal)percentadjustment) ctx
-                 Db.Orders.setAdjustmentOfSubOrder ((int)subOrderId) 0M ctx;
-             | _ -> ()
+            | (Choice1Of2 percentadjustment) ->
+                Db.Orders.setPercentAdjustmentOfSubOrder ((int)subOrderId) ((decimal)percentadjustment) ctx
+                Db.Orders.setAdjustmentOfSubOrder ((int)subOrderId) 0M ctx;
+            | _ -> ()
 
         let table = Db.Orders.getTableOfOrder orderId ctx
         let subOrder = Db.Orders.getSubOrder subOrderId ctx
@@ -2764,17 +2764,18 @@ let subOrderPaymentItems subOrderId orderId  =
 
         let wrappedPaymentItems = paymentItemDetails |> List.map (fun (x:Db.PaymentItemDetail) -> DbWrappedEntities.DbObjectWrapper.WrapPaymentItem(x))
         let wrappedSubOrder = DbWrappedEntities.DbObjectWrapper.WrapSubOrder(subOrder) ""
-        let liquidModel = {
-                                    wrappedSubOrder = wrappedSubOrder
-                                    wrappedOrderItems= wrappedOrderItemDetails
-                                    table=table
-                                    wrappedPaymentItems = wrappedPaymentItems
-                                    tenderCodes = tenderCodesIndexNameList
-                                    residualPaymentDue=residual
-                                    residualPaymentAsString = residual |> string
-                                    orderId = orderId
-                                    subOrderId=subOrderId
-        }
+        let liquidModel = 
+            {
+                wrappedSubOrder = wrappedSubOrder
+                wrappedOrderItems= wrappedOrderItemDetails
+                table=table
+                wrappedPaymentItems = wrappedPaymentItems
+                tenderCodes = tenderCodesIndexNameList
+                residualPaymentDue=residual
+                residualPaymentAsString = residual |> string
+                orderId = orderId
+                subOrderId=subOrderId
+            }
         DotLiquid.page("subOrderPaymentItem.html") liquidModel
     )
 
@@ -2787,16 +2788,17 @@ let removeAllDiscountOfSubOrder subOrderId =
     ctx.SubmitUpdates()
     Redirection.found (sprintf Path.Orders.subOrderPaymentItems subOrderId subOrder.Orderid)
 
-type PaymentItemsLiquidValuesForOrder = {
-    wrappedOrder: DbWrappedEntities.OrderWrapped
-    wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list
-    table: string
-    wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list
-    tenderCodes: IndexNameRecord list
-    residualPaymentDue: decimal
-    residualPaymentDueAsString: string
-    orderId: int
-}
+type PaymentItemsLiquidValuesForOrder = 
+    {
+        wrappedOrder: DbWrappedEntities.OrderWrapped
+        wrappedOrderItems: DbWrappedEntities.OrderItemDetailsWrapped list
+        table: string
+        wrappedPaymentItems: DbWrappedEntities.PaymentItemWrapped list
+        tenderCodes: IndexNameRecord list
+        residualPaymentDue: decimal
+        residualPaymentDueAsString: string
+        orderId: int
+    }
 
 let wholeOrderPaymentItems  orderId  =
     log.Debug(sprintf "%s %d " "wholeOrderPaymentItems" orderId )
@@ -3005,8 +3007,8 @@ let splitOrderItemInToUnitaryOrderItems id (user:UserLoggedOnSession) =
         |> List.map (fun (x:Db.OrderItem) -> 
             rejectOrderItems 
             |> List.map (fun (y:Db.RejectedOrderItems) ->
-             Db.createClonedRejectedOrderItem x.Orderitemid y ctx )) 
-             |> List.fold (@) []
+                Db.createClonedRejectedOrderItem x.Orderitemid y ctx )) 
+                |> List.fold (@) []
     let clonedOrderItemStates = 
         clonedOrderItems 
         |> List.map (fun (x:Db.OrderItem) -> 
@@ -3037,24 +3039,23 @@ let editDoneOrder id (user:UserLoggedOnSession) =
                 let setPercentageOrPlainPriceVariation =
                     match (form.PercentOrValue,form.Value) with 
                     | (_,X)  when (Decimal.Parse(X)  = (decimal)0) ->
-                    
-                                    order.Adjustispercentage <- false
-                                    order.Adjustisplain <- false
-                                    order.Percentagevariataion <- (decimal)0
-                                    order.Plaintotalvariation <- (decimal)0
-                                    order.Adjustedtotal <- order.Total
+                        order.Adjustispercentage <- false
+                        order.Adjustisplain <- false
+                        order.Percentagevariataion <- (decimal)0
+                        order.Plaintotalvariation <- (decimal)0
+                        order.Adjustedtotal <- order.Total
                     | ("PERCENTUALE",_) -> 
-                                    order.Adjustispercentage <- true
-                                    order.Adjustisplain<- false 
-                                    order.Plaintotalvariation <- (decimal) 0 
-                                    order.Percentagevariataion <- Decimal.Parse(form.Value)
-                                    order.Adjustedtotal <- order.Total + order.Total * order.Percentagevariataion/(decimal)100
+                        order.Adjustispercentage <- true
+                        order.Adjustisplain<- false 
+                        order.Plaintotalvariation <- (decimal) 0 
+                        order.Percentagevariataion <- Decimal.Parse(form.Value)
+                        order.Adjustedtotal <- order.Total + order.Total * order.Percentagevariataion/(decimal)100
                     | ("VALORE",_) -> 
-                                    order.Adjustispercentage <- false
-                                    order.Adjustisplain <- true
-                                    order.Plaintotalvariation <-  Decimal.Parse(form.Value)
-                                    order.Percentagevariataion <- (decimal)0
-                                    order.Adjustedtotal <- order.Total + (Decimal.Parse(form.Value))
+                        order.Adjustispercentage <- false
+                        order.Adjustisplain <- true
+                        order.Plaintotalvariation <-  Decimal.Parse(form.Value)
+                        order.Percentagevariataion <- (decimal)0
+                        order.Adjustedtotal <- order.Total + (Decimal.Parse(form.Value))
                     | _ -> 
                         order.Adjustispercentage <- false
                         order.Adjustisplain <- false
@@ -3125,7 +3126,6 @@ let rejectOrderItem orderItemId (user:UserLoggedOnSession) =
         ]
     | false -> Redirection.FOUND Path.Orders.orderItemsProgress
 
-
 let standardComments = 
     let ctx = Db.getContext()
     choose [
@@ -3158,7 +3158,6 @@ let resetDiscount orderId =
     order.Adjustedtotal <- recoveredTotal
     ctx.SubmitUpdates()
     Redirection.FOUND Path.Orders.seeDoneOrders
-
 
 let unVoidLatestVoidedRef backUrl   =
     loggedOn (session (function 

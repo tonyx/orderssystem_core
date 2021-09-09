@@ -25,29 +25,27 @@ before
 lastly
     (
         fun _ ->
+            url Home.home
+            Home.deleteButton == local.Deletions
+            click Home.deleteButton
+            Deletion.eliminateDishesCategoryButton == local.DeleteCourseCategories.Trim()
+            click Deletion.eliminateDishesCategoryButton
+            DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == local.Delete + " " + "category1"
+            click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
 
-           url Home.home
-           Home.deleteButton == local.Deletions
-           click Home.deleteButton
-           Deletion.eliminateDishesCategoryButton == local.DeleteCourseCategories.Trim() // "elimina categorie di piatti"
-           click Deletion.eliminateDishesCategoryButton
-        //    DishesCategoryDeletion.eliminateTheOnlyExistingCategoryDelutton == "delete category1"
-           DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton == local.Delete + " " + "category1"
-           click DishesCategoryDeletion.eliminateTheOnlyExistingCategoryButton
+            url Home.home
+            click Home.deleteButton
+            Deletion.eliminateIngredientCategories == local.DeleteIngredientCategories
+            click Deletion.eliminateIngredientCategories
+            IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == local.Delete + " " + "ingCategory1"
+            click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
 
-           url Home.home
-           click Home.deleteButton
-           Deletion.eliminateIngredientCategories == local.DeleteIngredientCategories
-           click Deletion.eliminateIngredientCategories
-           IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton == local.Delete + " " + "ingCategory1"
-           click IngredientCategoryDeletion.eliminateTheOnlyExistingIngredientCategoryButton
-
-           url Home.home
-           click Home.ordersButton
-           click Orders.firstOrder
-           click Orders.voidOrder
-           click Confirmation.yes
-           ()
+            url Home.home
+            click Home.ordersButton
+            click Orders.firstOrder
+            click Orders.voidOrder
+            click Confirmation.yes
+            ()
     ) 
 
 "first button is information" &&& fun _ ->
@@ -57,7 +55,6 @@ lastly
     Home.managePrintersButton == local.ManagePrinters.Trim()
     
 "third button is ingredients" &&& fun _ ->
-    // Home.ingredientsButton == "manage " + local.Ingredients.Trim()
     Home.ingredientsButton == local.Manage + local.Ingredients.Trim()
     
 "forth button is dishes" &&& fun _ ->
@@ -161,12 +158,12 @@ lastly
     AddDish.submit |> click
     AddDish.ingredientsOfFirstOrderItemOfFirstOrder == local.Ingredients.Trim()
     AddDish.ingredientsOfFirstOrderItemOfFirstOrder |> click
-    IngredientsOfOrderItem.originalPrice.Trim() == "originary price 5.00."
+    IngredientsOfOrderItem.originalPrice.Trim() == local.OriginalPrice + "5.00."
 
-    // IngredientsOfOrderItem.updatedPrice.Trim() == "prezzo ricalcolato 5.00."
-    // IngredientsOfOrderItem.nameOfFirstIngredient == "ingredient1"
-    // IngredientsOfOrderItem.buttonDeleteFirstIngredient |> click
-    // IngredientsOfOrderItem.updatedPrice.Trim() == "prezzo ricalcolato 4.00."
+    IngredientsOfOrderItem.updatedPrice.Trim() == local.RecalculatedPrice + "5.00."
+    IngredientsOfOrderItem.nameOfFirstIngredient == "ingredient1"
+    IngredientsOfOrderItem.buttonDeleteFirstIngredient |> click
+    IngredientsOfOrderItem.updatedPrice.Trim() == local.RecalculatedPrice + "4.00."
     
 "set a non default add/subtract price for ingredient1" &&& fun _ ->
     Home.ingredientsButton |> click
@@ -182,7 +179,7 @@ lastly
     IngredientPrice.existingItem |> displayed
     read IngredientPrice.existingItem |> contains (local.Quantity.Trim())
     read IngredientPrice.secondItemText |> contains ("20")
-  
+
 run()
 
 printfn "press [enter] to exit"
