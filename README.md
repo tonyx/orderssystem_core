@@ -58,38 +58,24 @@ Postgres version 9.6 or higher
 git clone git@github.com:tonyx/orderssystem_core.git
 ```
  
- 
-2) install a specific version old version of Npgsql (that will be used only by the Ide, you may have to create the packages directory before doing it)
-```
-nuget install Npgsql -version 2.2.1 -Source %cd% -OutputDirectory packages 
-```
-or
-```
-nuget install Npgsql -version 2.2.1 -Source `pwd` -OutputDirectory packages 
-```
- 3) In th Db.fs file you may want to assign the resPath variable to the full path of the net45 subfolder of Npgsql.2.2.1 containing the Npgsql.dll (i.e. somepath/Npgsql.2.2.1/lib/net45) 
-This will help resolving the db-entity binding at compile-time, and will also help editing with ionide.
- 
- 
- 
-5) access to sql by psql command, and create a suave user:
+2) access to sql by psql command, and create a suave user:
 ```   
 create user suave with encrypted password '1234'
 ```
-6) still in pgsql, create the database orderssystem
+3) still in pgsql, create the database orderssystem
 ```
 create database orderssystem
 ```
-7) in pgsql, grant all privileges to suave user
+4) in pgsql, grant all privileges to suave user
 ```
 grant all privileges on database orderssystem to suave
 ```
-9) load the orders_system.sql schema and data to orderssystem database, you may run the psql again form the command prompt:
+5) load the orders_system.sql schema and data to orderssystem database, you may run the psql again form the command prompt:
 ```
 psql -d ordersystem -f orders_system.sql
 ```
  
-10) In the App.fs source file, change the following line according to the path to the root of the application
+6) In the App.fs source file, change the following line according to the path to the root of the application
 ```
       homeFolder= Some @"C:\Users\username\gitprojects\orderssystem_core"
 ```

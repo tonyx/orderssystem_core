@@ -12,4 +12,4 @@ module OrdersSystem.Settings
     // let EcrFilePath = @"C:\Users\pc\programmi_tony\orderssystem_core\ecr.txt"
     let EcrFilePath = "ecr.txt"
     let HomeFolder = @"C:\Users\Toni\gitprojects\toni\orderssystem_core\orderssystem_core"
-    let [<Literal>] NpgSqlResPath = "C:/Users/Toni/gitprojects/toni/orderssystem_core/orderssystem_core/packages/Npgsql.2.2.1/lib/net45/"  // location of a valid Npgsql.dll file used at compile time by sql data provider
+    let [<Literal>] NpgSqlResPath = "" // after version 5.0 there is no need of a specific assembly anymore
