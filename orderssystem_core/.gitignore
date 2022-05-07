@@ -5,3 +5,6 @@ bin/*
 .idea
 obj/*
 packages
+
+**/bin/*
+

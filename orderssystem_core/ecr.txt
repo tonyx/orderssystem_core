@@ -1,0 +1,3 @@
+vend rep=1,pre=10.00, des='spaghetti alle vongole'
+chius t=5, imp=5.00
+chius t=1, imp=5.00
