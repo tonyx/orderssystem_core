@@ -1,0 +1,6 @@
+﻿tavolo 2
+numero di stampe eseguite per questo ordine: 2
+gruppo di uscita1data orario 17.06.2022 14:11:42
+n. 1 Cuba Libre ing. ricetta:Havana 3, Coca Cola,  var: , molto ghiaccio
+
+

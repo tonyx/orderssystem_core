@@ -1,3 +1,2 @@
-vend rep=1,pre=10.00, des='spaghetti alle vongole'
-chius t=5, imp=5.00
-chius t=1, imp=5.00
+vend rep=1,pre=7.00, des='Cuba Libre'
+chius t=1, imp=7.00
