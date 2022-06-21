@@ -9,33 +9,46 @@ type LocalizationX = FSharp.Data.XmlProvider<Schema = "Local.xsd">
 
 let local = LocalizationX.Load ("Local_"+Settings.Localization+".xml")
 
+let  makePairsOfAlist2 aList  = 
+    let rec listOfElementsToListOfPairs param accumul   = 
+        match param with
+            | [] -> accumul
+            | [A;B] -> accumul@[[A;B]]
+            | [A] -> accumul@[[A]]
+            | H::T -> 
+                match T with
+                | H1::T1 ->  
+                    listOfElementsToListOfPairs T1 (accumul@[[H;H1]])
+                | [] -> accumul
+    listOfElementsToListOfPairs aList []
+
 let  makePairsOfAlist aList  = 
     let rec listOfElementsToListOfPairs param accumul   = 
         match param with
-         | [] -> accumul
-         | [A;B] -> accumul@[[Some A;Some B]]
-         | [A] -> accumul@[[Some A; None]]
-         | H::T -> 
-            match T with
-            | H1::T1 ->  
-               listOfElementsToListOfPairs T1 (accumul@[[Some H;Some H1]])
-             | [] -> accumul
+            | [] -> accumul
+            | [A;B] -> accumul@[[Some A;Some B]]
+            | [A] -> accumul@[[Some A; None]]
+            | H::T -> 
+                match T with
+                | H1::T1 ->  
+                    listOfElementsToListOfPairs T1 (accumul@[[Some H;Some H1]])
+                | [] -> accumul
     listOfElementsToListOfPairs aList []
 
 let  makeTriplesOfAlist2Back aList  = 
     let rec listOfElementsToListOfTriples param accumul   = 
         match param with
-         | [] -> accumul
-         | [A;B;C] -> accumul@[[Some A;Some B;Some C]]
-         | [A;B] -> accumul@[[Some A;Some B; None]]
-         | [A] -> accumul@[[Some A; None; None]]
-         | H::T -> 
-            match T with
-            | H1::T1 ->  
-             match T1 with
-             | H2::T2 -> 
-               listOfElementsToListOfTriples T2 ([Some H;Some H1;Some H2]::accumul)
-             | [] -> accumul
+            | [] -> accumul
+            | [A;B;C] -> accumul@[[Some A;Some B;Some C]]
+            | [A;B] -> accumul@[[Some A;Some B; None]]
+            | [A] -> accumul@[[Some A; None; None]]
+            | H::T -> 
+                match T with
+                | H1::T1 ->  
+                    match T1 with
+                    | H2::T2 -> 
+                        listOfElementsToListOfTriples T2 ([Some H;Some H1;Some H2]::accumul)
+                    | [] -> accumul
     listOfElementsToListOfTriples aList []
 
 let em s = tag "em" [] [Text s]
@@ -73,33 +86,96 @@ type FormLayout<'a> = {
 
 let renderForm (layout : FormLayout<_>) =    
 
-   form [
-       for set in layout.Fieldsets -> 
-           tag "fieldset" [] [
-               yield tag "legend" [] [Text set.Legend]
+    form [
+        for set in layout.Fieldsets -> 
+            tag "fieldset" [] [
+                yield tag "legend" [] [Text set.Legend]
 
-               for field in set.Fields do
-                   yield div ["class", "editor-label"] [
-                       Text field.Label
-                   ]
-                   yield div ["class", "autocomplete"] [
-                       field.Html layout.Form
-                   ]
-           ]
+                for field in set.Fields do
+                    yield div ["class", "editor-label"] [
+                        Text field.Label
+                    ]
+                    yield div ["class", "autocomplete"] [
+                        field.Html layout.Form
+                    ]
+            ]
 
-       yield submitInput layout.SubmitText
-   ]
+        yield submitInput layout.SubmitText
+    ]
+
+
+let  makePairsOfLinks (categories:Db.CourseCategories list) (orderId: int) backUrl (addFromAllLink: Node) = 
+    let rec listOfElementsToListOfPairs (param: Db.CourseCategories list) accumul   = 
+        match param with
+            | [] -> accumul
+            | [A;B] -> 
+                    accumul
+                    @[
+                        [
+                            Some
+                                (td [a ((sprintf Path.Orders.addOrderItemByCategory orderId A.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+                                    [Text (" + " + A.Name + "  ")] ])
+                            Some
+                                (td [a ((sprintf Path.Orders.addOrderItemByCategory orderId B.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+                                    [Text (" + " + B.Name + "  ")] ])
+                        ]
+                    ]
+            | [A] -> 
+                    accumul
+                    @ [
+                        [
+                            Some  
+                                (td [a ((sprintf Path.Orders.addOrderItemByCategory orderId A.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+                                    [Text (" + " + A.Name + "  ")] ])
+                            Some addFromAllLink
+                        ]
+                    ]
+            | H::T -> 
+                match T with
+                | H1::T1 ->  
+                    listOfElementsToListOfPairs T1 
+                                                (accumul@
+                                                        [
+                                                            [   
+                                                                Some 
+                                                                    (td [a ((sprintf Path.Orders.addOrderItemByCategory orderId H.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+                                                                        [Text (" + " + H.Name + "  ")] ])
+                                                                Some 
+                                                                    (td [a ((sprintf Path.Orders.addOrderItemByCategory orderId H1.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+                                                                        [Text (" + " + H1.Name + "  ")] ])
+                                                        ]])
+                | [] -> accumul
+    let result =
+        listOfElementsToListOfPairs categories []
+    let result2 =
+        if ((categories.Length % 2) = 0) then
+            result @ 
+                [
+                    [
+                        Some addFromAllLink
+                        None
+                    ]
+                ]
+        else 
+            result
+    result2
 
 let addItemOfCategory (order:Db.Orderdetail) (categories:Db.CourseCategories list) backUrl = 
-  let pairOfCategories = makePairsOfAlist categories
-  table [for category in pairOfCategories -> 
-    tr  [ for subItem in category -> 
-        match subItem with 
-        | Some theSubItem  -> 
-            td [a ((sprintf Path.Orders.addOrderItemByCategory order.Orderid theSubItem.Categoryid (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
-            [Text (" + " + theSubItem.Name + "  ")] ]
-        | None ->  td []
- ]]
+    let addFromAllLink = 
+                td [a ((sprintf Path.Orders.addOrderItem order.Orderid  (WebUtility.UrlEncode backUrl))) ["class","buttonX"] 
+                   [Text (" + " + local.All + "  ")] ]
+    let pairOfCategories = makePairsOfLinks categories order.Orderid backUrl addFromAllLink
+    let result =
+        table [for category in pairOfCategories -> 
+            tr  [ for subItem in category -> 
+                match subItem with 
+                | Some theSubItem  -> 
+                    theSubItem
+                | None ->  
+                    td []
+                ]
+            ]
+    result
 
 let deleteOrderItemLink (orderItem:Db.OrderItemDetails) (mapOfStates: Map<int,Db.State>) backUrl = 
     if (mapOfStates.[orderItem.Stateid].Isinitial) then
@@ -145,7 +221,7 @@ let ordersBarRef (pairOfOrders:Db.Orderdetail option list list) (pairOfOtherOrde
 
 let modifyOrderItemLink (orderItem:Db.OrderItemDetails) (mapOfStates: Map<int,Db.State>) backUrl =
       if (mapOfStates.[orderItem.Stateid].Isinitial) then
-       a ((sprintf Path.Orders.editOrderItemByCategory orderItem.Orderitemid orderItem.Categoryid (WebUtility.UrlEncode (backUrl+"#order"+(orderItem.Orderid|> string) ) ))) ["",""] [Text local.Modify]
+       a ((sprintf Path.Orders.editOrderItemByCategory orderItem.Orderitemid orderItem.Categoryid (WebUtility.UrlEncode (backUrl+"#order"+(orderItem.Orderid|> string) ) ))) ["class","buttonX"] [Text local.Modify]
       else em ""
 
 let allOrdersLinkForUserView (userView:Db.UsersView) = 

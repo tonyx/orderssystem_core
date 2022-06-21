@@ -136,6 +136,15 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    let getAllVisibleCourses (ctx: DbContext) : Course list =
+        log.Debug("getAllVisibleCourses")
+        query {
+            for course in ctx.Public.Courses do
+                where (course.Visibility = true)
+                sortBy course.Name
+                select course
+        } |> Seq.toList
+
     let getVisibleCoursesDetailsByCategoryAndPage categoryId pageId (ctx: DbContext): Coursedetails list =
         log.Debug(sprintf "%s %d %d" "getVisibleCoursesDetailsByCategoryAndPage" categoryId pageId)
         let startIndex = pageId * Globals.NUM_DB_ITEMS_IN_A_PAGE
@@ -1540,8 +1549,44 @@ let addIngredientToCourse ingredientId courseId (quantity: decimal option) (ctx:
 let getStatesNextStatesPairs (ctx: DbContext) =
     log.Debug(sprintf "%s" "getStatesNextStatesPairs" )
     let states = ctx.Public.States |> Seq.toList
-    let nextStates = List.map (fun (x:State) -> (x.Stateid,  if (x.Isfinal) then x else (States.getState x.Nextstateid ctx) )) states
+    let nextStates = states |> List.map (fun (x:State) -> (x.Stateid,  if (x.Isfinal) then x else (States.getState x.Nextstateid ctx))) 
     nextStates
+
+let getStatesNextStatesPairs' (ctx: DbContext) =
+    log.Debug(sprintf "%s" "getStatesNextStatesPairs'" )
+    let states = ctx.Public.States |> Seq.toList
+    let nextStates = states |> List.map (fun (x:State) -> (x.Stateid,  if (x.Isfinal) then None else (States.getState x.Nextstateid ctx |> Some))) 
+    nextStates
+
+let getNextState (stateId: int) (ctx:DbContext) =
+    log.Debug(sprintf "getNextStateId %d " stateId)
+    let currentState = ctx.Public.States |> Seq.find (fun (x:State) -> x.Stateid = stateId)
+    match currentState.Nextstateid with
+        | stateId -> None
+        | _ -> (States.getState currentState.Nextstateid ctx) |> Some
+
+// let getStatesInSequence (ctx: DbContext) =
+//     let initState = States.getInitState ctx
+
+//     let orderingStates acc state =
+
+
+//         let nextState = States.getNextState state ctx
+//         in case nextState of
+//             | Some nextState -> orderingStates (acc |> List.cons state) nextState
+//             | _ -> acc |> List.cons state
+    
+
+//     let result = 
+//         let rec getStatesInSequence' state =
+//             let nextState = getNextState state ctx
+//             match nextState with
+//             | Some theNextState -> [(States.getState state ctx)] @  (getStatesInSequence' theNextState.Stateid)
+//             | None -> [States.getState state ctx]
+//         in getStatesInSequence' initState.Stateid
+//     result
+//     // let result2 = result |> List.map (fun (x:int) -> States.getState x ctx)
+//     // result2
 
 let getMapOfNextStates (ctx: DbContext) =
     log.Debug(sprintf "%s" "getMapOfNextStates")

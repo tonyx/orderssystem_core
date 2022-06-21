@@ -33,6 +33,7 @@ open System.Runtime
 open System.Drawing;
 open System.Drawing.Printing;
 open System.Security.Cryptography.X509Certificates
+open System
 
 type Stritem = {entry: string}
 type IndexNameRecord = {name: string; index: int}
@@ -250,6 +251,7 @@ let makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx =
     ()
 
 let makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx =
+    // logger.info (eventX (sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId))
     log.Debug(sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId) 
     let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
     let ingredientOfCourse = Db.getIngredientsOfACourse orderItemDetail.Courseid ctx
@@ -263,6 +265,7 @@ let makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx =
     ()
 
 let logonViaQrCode  = 
+    // logger.info (eventX ("logonViaQrCode"))
     log.Debug("logonViaQrCode")
     choose [
         GET >=>
@@ -1360,9 +1363,66 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
             )
         ]
     | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+
+let addOrderItemForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
+    log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d"  orderId )
+    let ctx = Db.getContext()
+    let anOrder = Db.Orders.tryGetOrder orderId ctx
+    let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+    match anOrder with
+    | Some theOrder  ->
+        choose [
+            GET >=> warbler (fun x ->
+                let visibleCourses  =
+                    Db.Courses.getAllVisibleCourses  ctx
+                let coursesIdWithPrices =
+                    visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+                let coursesNames = 
+                    visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+                // html (View.addOrderItem'  orderId cocoursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
+                html (View.addOrderItem'  orderId coursesNames  coursesIdWithPrices  backUrl viableGroupOutIdsForOrderItem)
+            )
+            POST >=> bindToForm Form.orderItem (fun form ->
+                let orderItem = Db.createOrderItemByCourseId ((int)(form.CourseId)) orderId ((int)(form.Quantity))  form.Comment form.Price form.GroupOut  ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+                Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            )
+        ]
+    | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
     
 
 let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession)=
+    log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
+    let ctx = Db.getContext()
+    let anOrder = Db.Orders.tryGetOrder orderId ctx
+    let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
+    let subCategories = Db.Courses.getFatherSonCategoriesDetailsByFatherId categoryId ctx
+    let fatherCategory = Db.Courses.getFatherSonCategoriesDetailsBySonId categoryId ctx
+    let category = Db.Courses.getCourseCategory categoryId ctx
+    match anOrder with
+    | Some theOrder  ->
+        choose [
+            GET >=> warbler (fun x ->
+                let visibleCourses  =
+                    Db.Courses.getVisibleCoursesByCategoryAndSubCategories categoryId ctx
+                let coursesIdWithPrices =
+                    visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
+                let coursesNames = 
+                    visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
+                html (View.addOrderItemForStrippedUsers orderId  coursesNames coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
+            )
+            POST >=> bindToForm Form.strippedOrderItem (fun form ->
+                let course = Db.getCourseDetail ((int)form.CourseId) ctx
+                let orderItem = Db.createOrderItemByCourseId ((int)form.CourseId) orderId ((int)(form.Quantity))  form.Comment course.Price form.GroupOut  ctx
+                makeOrderItemRejectedIfContainsInvisibleIngredients orderItem.Orderitemid ctx
+                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItem.Orderitemid ctx
+                Redirection.FOUND  (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItem.Orderitemid) 
+            )
+        ]
+    | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
+
+let addOrderItemForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession)=
     log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
     let ctx = Db.getContext()
     let anOrder = Db.Orders.tryGetOrder orderId ctx
@@ -1401,6 +1461,17 @@ let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackU
         | true -> addOrderItemByCategoryForOrdinaryUsers orderId categoryId urlEncodedBackUrl (user:UserLoggedOnSession)
         | false -> addOrderItemByCategoryForStrippedUsers orderId categoryId urlEncodedBackUrl  (user:UserLoggedOnSession)
     )
+
+let addOrderItemPassingUserLoggedOn orderId urlEncodedBackUrl (user:UserLoggedOnSession) = 
+    log.Debug(sprintf "addOrderItemPassingUserLoggedOn orderId:%d " orderId )
+    warbler (fun (x:HttpContext) ->
+        let ctx = Db.getContext()
+        let dbUser = Db.getUserById user.UserId ctx
+        match dbUser.Canchangetheprice with
+        | _ -> addOrderItemForOrdinaryUsers orderId urlEncodedBackUrl (user:UserLoggedOnSession)
+        // | false -> addOrderItemForStrippedUsers orderId categoryId urlEncodedBackUrl  (user:UserLoggedOnSession)
+    )
+
 
 let deleteOrderItem orderItemId =
     let ctx = Db.getContext()
@@ -1721,18 +1792,36 @@ let removeOrderItemThenGoBackToUrl orderItemId encodedBackUrl (user:UserLoggedOn
         | None ->   Redirection.FOUND retPath
     )
 
-
 let orderItemProgress (user:UserLoggedOnSession) =
     log.Debug(sprintf "orderItemProgress user: %s " user.Username)
     let ctx = Db.getContext()
     let myRoleObservablesIds = 
         Db.getObserversCatgoryStateMappingForRole user.RoleId ctx |> 
             List.map (fun (x:Db.Observer) -> (x.Stateid, x.Categoryid))
-    let mapOfLinkedStates = Db.getStatesNextStatesPairs ctx |> Map.ofList
+           
+    let mapOfLinkedStates = Db.getStatesNextStatesPairs' ctx |> Map.ofList
+    let initialState = Db.States.getInitState ctx
+    printf "initState: %s\n" (initialState.Statusname)
+    let finalState = Db.States.getFinalState ctx
+
+    let states = Db.States.getAllStates ctx
+    // states |> List.iter (fun x -> printf "next state %d\n" x.Nextstateid )
+
+    let orderedStates =
+        let rec sequenceOfStates (currentState: Db.State) accumul =
+            let nextStateIndex = currentState.Nextstateid
+            match currentState.Isfinal  with
+            | true -> accumul@[currentState]
+            | _ -> 
+                let nextState = Db.States.getState nextStateIndex ctx
+                ((sequenceOfStates nextState (accumul@ [currentState])))
+        sequenceOfStates initialState []
 
     let orderItemMyRoleCanObserve = List.map (fun x -> Db.getOrderItemDetailsOfAParticularStateAndAParticularCategory x ctx) myRoleObservablesIds
     let concatenatedOrderItemMyRoleCanObserve = List.fold (fun x y -> x@y) [] orderItemMyRoleCanObserve  |> 
         List.sortBy (fun (x:Db.OrderItemDetails) -> x.Startingtime)
+
+    let orderItemsPerStates = orderedStates |> List.map (fun x -> (x.Statusname, concatenatedOrderItemMyRoleCanObserve |> List.find (fun y -> y.Stateid = x.Stateid) ))  |> Map.ofList
 
     let listOfVariations = concatenatedOrderItemMyRoleCanObserve |> 
         List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,(Db.getVariationDetailsOfOrderItem x.Orderitemid ctx))) 
@@ -1755,7 +1844,8 @@ let orderItemProgress (user:UserLoggedOnSession) =
 
     let variationsStringDescriptions = Utils.variationsByStringDescription (mapOfVariations |> Map.toList) ctx
 
-    html (View.viewableOrderItems concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
+    // html (View.viewableOrderItemsRef concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
+    html (View.viewableOrderItems orderItemsPerStates concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates orderedStates finalState mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
 
 let getNextState stateId =
     log.Debug(sprintf "getNextState %d" stateId)
@@ -3560,6 +3650,7 @@ let webPart =
         path Path.Orders.addOrder >=> anyUserPassingUserLoggedOn createOrderByUserLoggedOn
         path Path.Orders.addSingleOrder >=> anyUserPassingUserLoggedOn createSingleOrderByUserLoggedOn
         pathScan Path.Orders.addOrderItemByCategory  (fun (idOrder,idCategory, urlEncodedBackUrl) -> anyUserPassingUserLoggedOn (addOrderItemByCategoryPassingUserLoggedOn idOrder idCategory urlEncodedBackUrl))
+        pathScan Path.Orders.addOrderItem  (fun (idOrder, urlEncodedBackUrl) -> anyUserPassingUserLoggedOn (addOrderItemPassingUserLoggedOn idOrder urlEncodedBackUrl))
         
         // pathScan Path.Orders.resetVariationsAndEditOrderItemByCategory (fun (idOrder,idCategory,urlEncodedBackUrl) ->    anyUserPassingUserLoggedOn (resetVariationThenEditOrderItemByCat idOrder idCategory Path.Orders.myOrders urlEncodedBackUrl) )
         pathScan Path.Orders.resetVariationsAndEditOrderItemByCategory (fun (idOrder,idCategory,urlEncodedBackUrl) ->    loggedOn (resetVariationThenEditOrderItemByCatRef idOrder idCategory Path.Orders.myOrders urlEncodedBackUrl) )
@@ -3655,6 +3746,5 @@ let cfg =
     }
 
 DotLiquid.setTemplatesDir ("templates-"+Settings.Localization)
-
 
 startWebServer cfg webPart

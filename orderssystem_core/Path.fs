@@ -51,6 +51,7 @@ module Orders =
     let moveInitialStateOrderItemsByOutGroup: Int2StrPath = "/orders/moveInitialStateOrderItemsByOutGroup/%d/%d/%s"
     let reprintOrderItemsGroup: Int2StrPath = "/orders/reprintOrderItemsGroup/%d/%d/%s"
     let addOrderItemByCategory: Int2StrPath  = "/orders/addOrderItemByCategory/%d/%d/%s" 
+    let addOrderItem: IntStrPath  = "/orders/addOrderItem/%d/%s" 
     let deleteOrderItem: IntStrPath = "/orders/deleteOrderItem/%d/%s"
     let removeAllAllergenicFromOrderItem: IntStrPath = "/order/removeAllergenicFromOrderItem/%d/%s"
     let removeAllUnavailableIngredientsFromOrderItem: IntStrPath = "/order/removeAllUnavailablesFromOrderItem/%d/%s"
