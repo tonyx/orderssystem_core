@@ -8,7 +8,7 @@ let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMe
 [<Literal>]
 let TPConnectionString = 
     "Server=127.0.0.1;"    + 
-    "Database=orderssystem_test;" + 
+    "Database=orderssystem;" + 
     "User Id=suave;"            + 
     "Password=1234;"
 
