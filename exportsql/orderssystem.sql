@@ -1,9 +1,9 @@
---
+﻿--
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.0
--- Dumped by pg_dump version 9.6.8
+-- Dumped from database version 10.13
+-- Dumped by pg_dump version 10.13
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -12,6 +12,7 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
@@ -1050,7 +1051,7 @@ CREATE TABLE public.suborder (
 ALTER TABLE public.suborder OWNER TO postgres;
 
 --
--- Name: orderitemdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: orderitemdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.orderitemdetails AS
@@ -1064,10 +1065,7 @@ CREATE VIEW public.orderitemdetails AS
     b.categoryid,
     b.courseid,
     c.statusname,
-    c.stateid,
-    c.isinitial,
-    c.isfinal,
-    c.nextstateid,
+    a.stateid,
     d.userid,
     a.startingtime,
     a.closingtime,
@@ -1086,13 +1084,10 @@ CREATE VIEW public.orderitemdetails AS
      JOIN public.users e ON ((d.userid = e.userid)))
      JOIN public.orderoutgroup g ON ((a.ordergroupid = g.ordergroupid)))
      LEFT JOIN public.orderitemsubordermapping h ON ((a.orderitemid = h.orderitemid)))
-     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)))
-
-     WHERE NOT (d.archived = true OR d.voided = true);
-     
+     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)));
 
 
-ALTER TABLE public.orderitemdetails OWNER TO "Tonyx";
+ALTER TABLE public.orderitemdetails OWNER TO postgres;
 
 --
 -- Name: orderitems_orderitemid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1894,25 +1889,14 @@ ALTER TABLE ONLY public.voidedorderslogbuffer ALTER COLUMN voidedorderslogbuffer
 
 
 --
--- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 292, true);
-
-
---
 -- Data for Name: archivedorderslogbuffer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.archivedorderslogbuffer (archivedlogbufferid, archivedtime, orderid) FROM stdin;
+293	2020-12-12 16:52:08.669483	621
+294	2020-12-27 18:27:17.02626	620
+295	2020-12-27 18:30:50.040048	622
 \.
-
-
---
--- Name: comments_for_course_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.comments_for_course_seq', 5, true);
 
 
 --
@@ -1921,7 +1905,13 @@ SELECT pg_catalog.setval('public.comments_for_course_seq', 5, true);
 
 COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid) FROM stdin;
 4	537	6
-5	539	6
+7	538	11
+8	538	10
+9	540	11
+10	540	10
+11	541	12
+12	541	13
+13	541	14
 \.
 
 
@@ -1930,10 +1920,13 @@ COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid)
 --
 
 COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
+73	pranzo	t	t
 70	secondi	t	f
 71	superalcolici	t	f
+75	primi	t	f
+76	dessert	t	f
+90	light	t	f
 74	bevande	t	f
-73	pranzo	t	t
 \.
 
 
@@ -1944,23 +1937,13 @@ COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
 COPY public.courses (courseid, name, description, price, categoryid, visibility) FROM stdin;
 537	cuba libre		6.00	71	t
 538	pranzo		10.00	73	f
-536	bistecca		10.00	70	t
-539	cola		3.00	74	t
+540	bistecca di manzo		15.00	70	t
+541	spaghetti allo scoglio		10.00	75	t
+542	polpetta		2.00	70	t
+543	gelato al cioccolato		4.00	76	t
+544	coca cola		4.00	90	t
+545	penne all'arrabiata		8.00	75	t
 \.
-
-
---
--- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.courses_categoryid_seq', 74, true);
-
-
---
--- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.courses_courseid_seq', 539, true);
 
 
 --
@@ -1972,25 +1955,11 @@ COPY public.customerdata (customerdataid, data, name) FROM stdin;
 
 
 --
--- Name: customerdata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.customerdata_id_seq', 12, true);
-
-
---
 -- Data for Name: defaultactionablestates; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.defaultactionablestates (defaultactionablestatesid, stateid) FROM stdin;
 \.
-
-
---
--- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.defaulwaiteractionablestates_seq', 30, true);
 
 
 --
@@ -2002,37 +1971,22 @@ COPY public.enablers (enablersid, roleid, stateid, categoryid) FROM stdin;
 
 
 --
--- Name: enablers_elablersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.enablers_elablersid_seq', 190, true);
-
-
---
--- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.incredientdecrementid_seq', 273, true);
-
-
---
 -- Data for Name: ingredient; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredient (ingredientid, ingredientcategoryid, name, description, visibility, allergen, updateavailabilityflag, availablequantity, checkavailabilityflag, unitmeasure) FROM stdin;
-180	56	green salad		t	f	f	0.00	f	gr
 181	57	havana 3		t	f	f	0.00	f	cl
 182	57	havana 7		t	f	f	0.00	f	cl
+183	58	coca cola		t	f	f	0.00	f	unit├á
+185	58	fanta	classica aranciata	t	f	f	0.00	f	lt
+186	59	manzo		t	f	f	0.00	f	unit├á
+180	56	lattuga		t	f	f	0.00	f	gr
+187	56	pomodoro		t	f	f	0.00	f	gr
 184	58	pepsi		t	f	f	0.00	f	cl
-183	58	coca cola		t	f	f	0.00	f	unità
+188	56	sugo di pomodoro		t	f	f	0.00	f	cl
+189	60	pennette rigate		t	f	f	0.00	f	gr
+190	60	strozzapreti	classica fresca	t	t	f	0.00	f	gr
 \.
-
-
---
--- Name: ingredient_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 58, true);
 
 
 --
@@ -2040,9 +1994,12 @@ SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 58, true);
 --
 
 COPY public.ingredientcategory (ingredientcategoryid, name, description, visibility) FROM stdin;
-56	vegetables		t
-57	superalcolici		t
+59	carni		t
 58	soft drink		t
+57	superalcolici		t
+56	vegetables		t
+60	pasta		t
+61	pro		t
 \.
 
 
@@ -2052,15 +2009,11 @@ COPY public.ingredientcategory (ingredientcategoryid, name, description, visibil
 
 COPY public.ingredientcourse (ingredientcourseid, courseid, ingredientid, quantity) FROM stdin;
 363	537	181	\N
-366	539	183	1.00
+368	540	186	1.00
+369	540	180	50.00
+370	540	187	\N
+372	541	180	\N
 \.
-
-
---
--- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientcourseid_seq', 366, true);
 
 
 --
@@ -2068,14 +2021,14 @@ SELECT pg_catalog.setval('public.ingredientcourseid_seq', 366, true);
 --
 
 COPY public.ingredientdecrement (ingredientdecrementid, orderitemid, typeofdecrement, presumednormalquantity, recordedquantity, preparatorid, registrationtime, ingredientid) FROM stdin;
+275	1485	NORMAL	50.00	\N	2	2020-12-12 15:20:46.439099	180
+276	1485	NORMAL	1.00	\N	2	2020-12-12 15:20:46.439099	186
+284	1492	cl	1.00	\N	2	2020-12-20 14:36:48.009481	184
+286	1498	NORMAL	50.00	\N	2	2020-12-20 14:56:18.181894	180
+287	1498	NORMAL	1.00	\N	2	2020-12-20 14:56:18.181894	186
+288	1502	gr	0.50	0.00	2	2020-12-20 14:36:48.040655	180
+289	1503	gr	0.50	0.00	2	2020-12-20 14:36:48.040655	180
 \.
-
-
---
--- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientid_seq', 184, true);
 
 
 --
@@ -2087,13 +2040,6 @@ COPY public.ingredientincrement (ingredientincrementid, ingredientid, comment, u
 
 
 --
--- Name: ingredientincrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientincrementid_seq', 32, true);
-
-
---
 -- Data for Name: ingredientprice; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2101,14 +2047,9 @@ COPY public.ingredientprice (ingredientpriceid, ingredientid, quantity, isdefaul
 105	182	10.00	t	t	1.00	1.00
 106	184	10.00	t	t	10.00	10.00
 107	183	1.00	t	t	1.00	1.00
+108	186	1.00	t	t	5.00	5.00
+110	180	50.00	t	t	1.00	1.00
 \.
-
-
---
--- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientpriceid_seq', 107, true);
 
 
 --
@@ -2120,13 +2061,6 @@ COPY public.invoices (invoicesid, data, invoicenumber, customerdataid, date, sub
 
 
 --
--- Name: invoicesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.invoicesid_seq', 45, true);
-
-
---
 -- Data for Name: observers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2135,42 +2069,22 @@ COPY public.observers (observersid, stateid, roleid, categoryid) FROM stdin;
 
 
 --
--- Name: observers_observerid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.observers_observerid_seq', 210, true);
-
-
---
--- Name: observers_observersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
-
-
---
--- Name: orderitem_sub_order_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 80, true);
-
-
---
 -- Data for Name: orderitems; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price, stateid, archived, startingtime, closingtime, ordergroupid, hasbeenrejected, printcount) FROM stdin;
-1477	537	1	618		6.00	1	\N	2019-11-10 19:31:07.445218	\N	565	f	0
-1478	539	1	618	, poco ghiaccio	4.00	1	\N	2019-11-11 10:54:49.116651	\N	565	f	0
-1479	539	1	618		2.00	1	\N	2019-11-11 15:52:39.75081	\N	565	f	0
+1490	537	1	622	, poco ghiaccio	6.00	2	\N	2020-12-12 16:52:42.342057	\N	574	f	0
+1485	540	1	621	, ben cotta ma non tantissimo	15.00	2	\N	2020-12-12 15:16:45.657077	\N	571	f	0
+1486	537	1	621	, poco ghiaccio	6.00	2	\N	2020-12-12 15:20:25.989476	\N	571	f	0
+1491	537	1	622		6.00	2	\N	2020-12-12 16:53:07.702446	\N	574	f	0
+1492	541	1	622	, piccante	10.00	2	\N	2020-12-12 16:53:17.61286	\N	574	f	0
+1498	540	1	620	, ben cotta	15.00	2	\N	2020-12-17 21:32:54.45194	\N	577	f	0
+1502	542	1	622		2.00	6	\N	2020-12-27 18:27:22.93189	\N	574	f	1
+1503	542	1	622		2.00	6	\N	2020-12-27 18:27:22.937469	\N	574	f	1
+1488	541	1	621	, piccante	10.00	1	\N	2020-12-12 15:30:24.735806	\N	573	f	0
+1489	540	1	621		15.00	1	\N	2020-12-12 15:32:48.089333	\N	573	f	0
+1505	541	1	625	, al dente, piccante	10.00	2	\N	2020-12-28 09:28:16.548954	\N	581	f	0
 \.
-
-
---
--- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1479, true);
 
 
 --
@@ -2178,17 +2092,27 @@ SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1479, true);
 --
 
 COPY public.orderitemstates (orderitemstatesid, orderitemid, stateid, startingtime) FROM stdin;
-2739	1477	1	2019-11-10 19:31:07.445218
-2740	1478	1	2019-11-11 10:54:49.116651
-2741	1479	1	2019-11-11 15:52:39.75081
+2749	1485	1	2020-12-12 15:16:45.657077
+2750	1486	1	2020-12-12 15:20:25.989476
+2751	1485	2	2020-12-12 15:20:46.422097
+2752	1486	2	2020-12-12 15:20:46.497209
+2754	1488	1	2020-12-12 15:30:24.735806
+2755	1489	1	2020-12-12 15:32:48.089333
+2756	1490	1	2020-12-12 16:52:42.342057
+2757	1491	1	2020-12-12 16:53:07.702446
+2758	1492	1	2020-12-12 16:53:17.61286
+2766	1498	1	2020-12-17 21:32:54.45194
+2774	1490	2	2020-12-20 14:36:47.949345
+2775	1491	2	2020-12-20 14:36:47.989714
+2776	1492	2	2020-12-20 14:36:48.004508
+2778	1498	2	2020-12-20 14:56:18.105431
+2779	1502	1	2020-12-17 20:56:07.771011
+2780	1503	2	2020-12-20 14:36:48.036612
+2781	1502	2	2020-12-20 14:36:48.036612
+2782	1503	1	2020-12-17 20:56:07.771011
+2784	1505	1	2020-12-28 09:28:16.548954
+2785	1505	2	2020-12-28 09:30:31.435428
 \.
-
-
---
--- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2741, true);
 
 
 --
@@ -2196,6 +2120,13 @@ SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2741, 
 --
 
 COPY public.orderitemsubordermapping (orderitemsubordermappingid, orderitemid, suborderid) FROM stdin;
+81	1486	393
+82	1485	394
+83	1490	395
+84	1491	395
+85	1492	395
+86	1502	396
+87	1503	396
 \.
 
 
@@ -2204,15 +2135,13 @@ COPY public.orderitemsubordermapping (orderitemsubordermappingid, orderitemid, s
 --
 
 COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) FROM stdin;
-565	0	618	1
+571	1	621	1
+573	0	621	2
+567	1	620	1
+574	1	622	1
+577	1	620	2
+581	1	625	1
 \.
-
-
---
--- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 565, true);
 
 
 --
@@ -2220,22 +2149,11 @@ SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 565, true);
 --
 
 COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, closingtime, voided, archived, total, adjustedtotal, plaintotalvariation, percentagevariataion, adjustispercentage, adjustisplain, forqruserarchived) FROM stdin;
-618	1		t	2	2019-11-10 19:30:52.55629	\N	f	f	0.00	0.00	0.00	0.00	f	f	\N
+621	7		t	2	2020-12-12 15:14:43.064389	2020-12-12 16:52:08.667352	f	t	21.00	21.00	0.00	0.00	f	f	\N
+625	1		t	2	2020-12-28 09:22:52.242677	\N	f	f	10.00	10.00	0.00	0.00	f	f	\N
+620	6		t	2	2020-08-02 14:46:27.838341	2020-12-27 18:27:17.021548	f	t	15.00	15.00	0.00	0.00	f	f	\N
+622	9		t	2	2020-12-12 16:52:38.462428	2020-12-27 18:30:50.038504	f	t	26.00	26.00	0.00	0.00	f	f	\N
 \.
-
-
---
--- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orders_orderid_seq', 618, true);
-
-
---
--- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.paymentid_seq', 149, true);
 
 
 --
@@ -2243,6 +2161,12 @@ SELECT pg_catalog.setval('public.paymentid_seq', 149, true);
 --
 
 COPY public.paymentitem (paymentid, suborderid, orderid, tendercodesid, amount) FROM stdin;
+150	393	\N	1	6.00
+151	394	\N	1	15.00
+152	\N	620	1	10.00
+153	\N	620	1	5.00
+154	396	\N	1	4.00
+155	395	\N	1	22.00
 \.
 
 
@@ -2251,14 +2175,9 @@ COPY public.paymentitem (paymentid, suborderid, orderid, tendercodesid, amount) 
 --
 
 COPY public.printerforcategory (printerforcategoryid, categoryid, printerid, stateid) FROM stdin;
+60	70	51	2
+61	75	51	2
 \.
-
-
---
--- Name: printerforcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.printerforcategory_id_seq', 55, true);
 
 
 --
@@ -2270,28 +2189,20 @@ COPY public.printerforreceiptandinvoice (printerforcategoryid, printinvoice, pri
 
 
 --
--- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 4, true);
-
-
---
 -- Data for Name: printers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.printers (printerid, name) FROM stdin;
-42	_192_168_1_10
-43	_192_168_1_20
-44	PDFwriter
+50	Fax
+51	Generic
+52	TOSHIBA e-STUDIO18 Printer
+53	OneNote for Windows 10
+54	OneNote (Desktop)
+55	Microsoft XPS Document Writer
+56	Microsoft Print to PDF
+57	GenericTextOnly
+58	Bullzip PDF Printer
 \.
-
-
---
--- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.printers_id_seq', 44, true);
 
 
 --
@@ -2300,13 +2211,6 @@ SELECT pg_catalog.setval('public.printers_id_seq', 44, true);
 
 COPY public.rejectedorderitems (rejectedorderitemid, courseid, cause, timeofrejection, orderitemid) FROM stdin;
 \.
-
-
---
--- Name: rejectedorderitems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
 
 
 --
@@ -2321,41 +2225,6 @@ COPY public.roles (roleid, rolename, comment) FROM stdin;
 
 
 --
--- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.roles_roleid_seq', 29, true);
-
-
---
--- Name: standard_comments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_comments_seq', 11, true);
-
-
---
--- Name: standard_variation_for_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 3, true);
-
-
---
--- Name: standard_variation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_variation_id_seq', 5, true);
-
-
---
--- Name: standard_variation_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 15, true);
-
-
---
 -- Data for Name: standardcomments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2364,6 +2233,9 @@ COPY public.standardcomments (standardcommentid, comment) FROM stdin;
 9	molto ghiaccio
 10	ben cotta
 11	al sangue
+12	piccante
+13	al dente
+14	cottura normale
 \.
 
 
@@ -2372,7 +2244,6 @@ COPY public.standardcomments (standardcommentid, comment) FROM stdin;
 --
 
 COPY public.standardvariationforcourse (standardvariationforcourseid, standardvariationid, courseid) FROM stdin;
-2	3	539
 \.
 
 
@@ -2381,8 +2252,8 @@ COPY public.standardvariationforcourse (standardvariationforcourseid, standardva
 --
 
 COPY public.standardvariationitem (standardvariationitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid, standardvariationid) FROM stdin;
-5	182	👍	\N	\N	4
-15	183	🚫	\N	107	3
+5	182	­ƒæì	\N	\N	4
+15	183	­ƒÜ½	\N	107	3
 \.
 
 
@@ -2408,24 +2279,11 @@ COPY public.states (stateid, isinitial, isfinal, statusname, nextstateid, isexce
 
 
 --
--- Name: states_stateid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.states_stateid_seq', 6, true);
-
-
---
--- Name: subcategory_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.subcategory_mapping_seq', 1, true);
-
-
---
 -- Data for Name: subcategorymapping; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.subcategorymapping (subcategorymappingid, fatherid, sonid) FROM stdin;
+3	74	90
 \.
 
 
@@ -2434,14 +2292,11 @@ COPY public.subcategorymapping (subcategorymappingid, fatherid, sonid) FROM stdi
 --
 
 COPY public.suborder (suborderid, orderid, subtotal, comment, payed, creationtime, tendercodesid, subtotaladjustment, subtotalpercentadjustment) FROM stdin;
+393	621	6.00	\N	t	2020-12-12 15:22:49.654986	\N	0.00	0.00
+394	621	15.00	\N	t	2020-12-12 15:23:00.029612	\N	0.00	0.00
+396	622	4.00	\N	t	2020-12-27 18:27:35.729717	\N	0.00	0.00
+395	622	22.00	\N	t	2020-12-27 18:27:30.590288	\N	0.00	0.00
 \.
-
-
---
--- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.suborderid_seq', 392, true);
 
 
 --
@@ -2453,25 +2308,11 @@ COPY public.temp_user_actionable_states (tempuseractionablestateid, userid, stat
 
 
 --
--- Name: temp_user_actionable_states_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.temp_user_actionable_states_seq', 12, true);
-
-
---
 -- Data for Name: temp_user_default_actionable_states; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.temp_user_default_actionable_states (tempmuseractionablestatesid, stateid) FROM stdin;
 \.
-
-
---
--- Name: tempuseractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.tempuseractionablestates_seq', 1, false);
 
 
 --
@@ -2488,13 +2329,6 @@ COPY public.tendercodes (tendercodesid, tendercode, tendername) FROM stdin;
 
 
 --
--- Name: tendercodesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
-
-
---
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2505,33 +2339,16 @@ COPY public.users (userid, username, password, enabled, canvoidorders, role, can
 
 
 --
--- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.users_userid_seq', 183, true);
-
-
---
 -- Data for Name: variations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.variations (variationsid, orderitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid) FROM stdin;
-1144	1479	183	🚫	\N	107
+1149	1485	187	­ƒÜ½	\N	\N
+1151	1488	180	gr	1	\N
+1152	1492	184	cl	1	\N
+1161	1502	180	gr	\N	\N
+1162	1503	180	gr	\N	\N
 \.
-
-
---
--- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.variations_seq', 1144, true);
-
-
---
--- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 313, true);
 
 
 --
@@ -2550,6 +2367,286 @@ COPY public.waiteractionablestates (waiterwatchablestatesid, userid, stateid) FR
 301	2	1
 302	2	2
 \.
+
+
+--
+-- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 295, true);
+
+
+--
+-- Name: comments_for_course_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.comments_for_course_seq', 13, true);
+
+
+--
+-- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_categoryid_seq', 90, true);
+
+
+--
+-- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_courseid_seq', 545, true);
+
+
+--
+-- Name: customerdata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.customerdata_id_seq', 12, true);
+
+
+--
+-- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.defaulwaiteractionablestates_seq', 30, true);
+
+
+--
+-- Name: enablers_elablersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.enablers_elablersid_seq', 190, true);
+
+
+--
+-- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.incredientdecrementid_seq', 289, true);
+
+
+--
+-- Name: ingredient_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 61, true);
+
+
+--
+-- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientcourseid_seq', 372, true);
+
+
+--
+-- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientid_seq', 190, true);
+
+
+--
+-- Name: ingredientincrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientincrementid_seq', 32, true);
+
+
+--
+-- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientpriceid_seq', 110, true);
+
+
+--
+-- Name: invoicesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.invoicesid_seq', 45, true);
+
+
+--
+-- Name: observers_observerid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.observers_observerid_seq', 210, true);
+
+
+--
+-- Name: observers_observersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
+
+
+--
+-- Name: orderitem_sub_order_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 89, true);
+
+
+--
+-- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1505, true);
+
+
+--
+-- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2785, true);
+
+
+--
+-- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 581, true);
+
+
+--
+-- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orders_orderid_seq', 625, true);
+
+
+--
+-- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.paymentid_seq', 164, true);
+
+
+--
+-- Name: printerforcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printerforcategory_id_seq', 61, true);
+
+
+--
+-- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 4, true);
+
+
+--
+-- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printers_id_seq', 58, true);
+
+
+--
+-- Name: rejectedorderitems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
+
+
+--
+-- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.roles_roleid_seq', 29, true);
+
+
+--
+-- Name: standard_comments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_comments_seq', 14, true);
+
+
+--
+-- Name: standard_variation_for_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 3, true);
+
+
+--
+-- Name: standard_variation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_id_seq', 5, true);
+
+
+--
+-- Name: standard_variation_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 15, true);
+
+
+--
+-- Name: states_stateid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.states_stateid_seq', 6, true);
+
+
+--
+-- Name: subcategory_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.subcategory_mapping_seq', 3, true);
+
+
+--
+-- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.suborderid_seq', 397, true);
+
+
+--
+-- Name: temp_user_actionable_states_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.temp_user_actionable_states_seq', 12, true);
+
+
+--
+-- Name: tempuseractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tempuseractionablestates_seq', 1, false);
+
+
+--
+-- Name: tendercodesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
+
+
+--
+-- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_userid_seq', 183, true);
+
+
+--
+-- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.variations_seq', 1162, true);
+
+
+--
+-- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 317, true);
 
 
 --
@@ -3176,6 +3273,14 @@ ALTER TABLE ONLY public.courses
 
 
 --
+-- Name: commentsforcourse commentsforcourse_course_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.commentsforcourse
+    ADD CONSTRAINT commentsforcourse_course_fk FOREIGN KEY (courseid) REFERENCES public.courses(courseid) MATCH FULL ON DELETE CASCADE;
+
+
+--
 -- Name: commentsforcourse commentsforcourse_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -3608,10 +3713,18 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA public TO compraga_app;
+
+
+--
 -- Name: TABLE archivedorderslogbuffer; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.archivedorderslogbuffer TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.archivedorderslogbuffer TO compraga_app;
 
 
 --
@@ -3633,6 +3746,7 @@ GRANT ALL ON SEQUENCE public.comments_for_course_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.commentsforcourse TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.commentsforcourse TO compraga_app;
 
 
 --
@@ -3647,6 +3761,7 @@ GRANT ALL ON SEQUENCE public.standard_comments_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.standardcomments TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.standardcomments TO compraga_app;
 
 
 --
@@ -3654,6 +3769,7 @@ GRANT ALL ON TABLE public.standardcomments TO suave;
 --
 
 GRANT ALL ON TABLE public.commentsforcoursedetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.commentsforcoursedetails TO compraga_app;
 
 
 --
@@ -3661,6 +3777,7 @@ GRANT ALL ON TABLE public.commentsforcoursedetails TO suave;
 --
 
 GRANT ALL ON TABLE public.coursecategories TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.coursecategories TO compraga_app;
 
 
 --
@@ -3668,6 +3785,7 @@ GRANT ALL ON TABLE public.coursecategories TO suave;
 --
 
 GRANT ALL ON TABLE public.courses TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.courses TO compraga_app;
 
 
 --
@@ -3675,6 +3793,7 @@ GRANT ALL ON TABLE public.courses TO suave;
 --
 
 GRANT ALL ON TABLE public.coursedetails2 TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.coursedetails2 TO compraga_app;
 
 
 --
@@ -3703,6 +3822,7 @@ GRANT ALL ON SEQUENCE public.customerdata_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.customerdata TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.customerdata TO compraga_app;
 
 
 --
@@ -3717,6 +3837,7 @@ GRANT ALL ON SEQUENCE public.defaulwaiteractionablestates_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.defaultactionablestates TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.defaultactionablestates TO compraga_app;
 
 
 --
@@ -3731,6 +3852,7 @@ GRANT ALL ON SEQUENCE public.enablers_elablersid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.enablers TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.enablers TO compraga_app;
 
 
 --
@@ -3738,6 +3860,7 @@ GRANT ALL ON TABLE public.enablers TO suave;
 --
 
 GRANT ALL ON TABLE public.roles TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.roles TO compraga_app;
 
 
 --
@@ -3752,6 +3875,7 @@ GRANT ALL ON SEQUENCE public.states_stateid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.states TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.states TO compraga_app;
 
 
 --
@@ -3759,6 +3883,7 @@ GRANT ALL ON TABLE public.states TO suave;
 --
 
 GRANT ALL ON TABLE public.enablersrolestatuscategories TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.enablersrolestatuscategories TO compraga_app;
 
 
 --
@@ -3773,6 +3898,7 @@ GRANT ALL ON SEQUENCE public.subcategory_mapping_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.subcategorymapping TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.subcategorymapping TO compraga_app;
 
 
 --
@@ -3780,6 +3906,7 @@ GRANT ALL ON TABLE public.subcategorymapping TO suave;
 --
 
 GRANT ALL ON TABLE public.fathersoncategoriesdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.fathersoncategoriesdetails TO compraga_app;
 
 
 --
@@ -3794,6 +3921,7 @@ GRANT ALL ON SEQUENCE public.incredientdecrementid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredient TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredient TO compraga_app;
 
 
 --
@@ -3801,6 +3929,7 @@ GRANT ALL ON TABLE public.ingredient TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientcategory TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientcategory TO compraga_app;
 
 
 --
@@ -3815,6 +3944,7 @@ GRANT ALL ON SEQUENCE public.ingredient_categoryid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientcourse TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientcourse TO compraga_app;
 
 
 --
@@ -3829,6 +3959,7 @@ GRANT ALL ON SEQUENCE public.ingredientcourseid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientdecrement TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientdecrement TO compraga_app;
 
 
 --
@@ -3836,6 +3967,7 @@ GRANT ALL ON TABLE public.ingredientdecrement TO suave;
 --
 
 GRANT ALL ON TABLE public.orderitems TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderitems TO compraga_app;
 
 
 --
@@ -3843,6 +3975,7 @@ GRANT ALL ON TABLE public.orderitems TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientdecrementview TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientdecrementview TO compraga_app;
 
 
 --
@@ -3850,6 +3983,7 @@ GRANT ALL ON TABLE public.ingredientdecrementview TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientdetails TO compraga_app;
 
 
 --
@@ -3871,6 +4005,7 @@ GRANT ALL ON SEQUENCE public.ingredientincrementid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientincrement TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientincrement TO compraga_app;
 
 
 --
@@ -3878,6 +4013,7 @@ GRANT ALL ON TABLE public.ingredientincrement TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientofcourses TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientofcourses TO compraga_app;
 
 
 --
@@ -3892,6 +4028,7 @@ GRANT ALL ON SEQUENCE public.ingredientpriceid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientprice TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientprice TO compraga_app;
 
 
 --
@@ -3899,6 +4036,7 @@ GRANT ALL ON TABLE public.ingredientprice TO suave;
 --
 
 GRANT ALL ON TABLE public.ingredientpricedetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.ingredientpricedetails TO compraga_app;
 
 
 --
@@ -3913,6 +4051,7 @@ GRANT ALL ON SEQUENCE public.invoicesid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.invoices TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.invoices TO compraga_app;
 
 
 --
@@ -3920,6 +4059,7 @@ GRANT ALL ON TABLE public.invoices TO suave;
 --
 
 GRANT ALL ON TABLE public.orders TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orders TO compraga_app;
 
 
 --
@@ -3927,6 +4067,7 @@ GRANT ALL ON TABLE public.orders TO suave;
 --
 
 GRANT ALL ON TABLE public.users TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.users TO compraga_app;
 
 
 --
@@ -3934,6 +4075,7 @@ GRANT ALL ON TABLE public.users TO suave;
 --
 
 GRANT ALL ON TABLE public.nonarchivedorderdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.nonarchivedorderdetails TO compraga_app;
 
 
 --
@@ -3941,6 +4083,7 @@ GRANT ALL ON TABLE public.nonarchivedorderdetails TO suave;
 --
 
 GRANT ALL ON TABLE public.nonemptyorderdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.nonemptyorderdetails TO compraga_app;
 
 
 --
@@ -3955,6 +4098,7 @@ GRANT ALL ON SEQUENCE public.observers_observerid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.observers TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.observers TO compraga_app;
 
 
 --
@@ -3969,6 +4113,7 @@ GRANT ALL ON SEQUENCE public.observers_observersid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.observersrolestatuscategories TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.observersrolestatuscategories TO compraga_app;
 
 
 --
@@ -3976,6 +4121,7 @@ GRANT ALL ON TABLE public.observersrolestatuscategories TO suave;
 --
 
 GRANT ALL ON TABLE public.orderdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderdetails TO compraga_app;
 
 
 --
@@ -3990,6 +4136,7 @@ GRANT ALL ON SEQUENCE public.orderitem_sub_order_mapping_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.orderitemsubordermapping TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderitemsubordermapping TO compraga_app;
 
 
 --
@@ -4004,10 +4151,11 @@ GRANT ALL ON SEQUENCE public.orderoutgroup_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.orderoutgroup TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderoutgroup TO compraga_app;
 
 
 --
--- Name: SEQUENCE suborderid_seq; Type: ACL; RefSchema: public; Owner: postgres
+-- Name: SEQUENCE suborderid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.suborderid_seq TO suave;
@@ -4018,13 +4166,15 @@ GRANT ALL ON SEQUENCE public.suborderid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.suborder TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.suborder TO compraga_app;
 
 
 --
--- Name: TABLE orderitemdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderitemdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderitemdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderitemdetails TO compraga_app;
 
 
 --
@@ -4039,6 +4189,7 @@ GRANT ALL ON SEQUENCE public.orderitems_orderitemid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.orderitemstates TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderitemstates TO compraga_app;
 
 
 --
@@ -4053,6 +4204,7 @@ GRANT ALL ON SEQUENCE public.orderitemstates_orderitemstates_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.orderoutgroupdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.orderoutgroupdetails TO compraga_app;
 
 
 --
@@ -4074,6 +4226,7 @@ GRANT ALL ON SEQUENCE public.paymentid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.paymentitem TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.paymentitem TO compraga_app;
 
 
 --
@@ -4088,6 +4241,7 @@ GRANT ALL ON SEQUENCE public.tendercodesid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.tendercodes TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.tendercodes TO compraga_app;
 
 
 --
@@ -4095,6 +4249,7 @@ GRANT ALL ON TABLE public.tendercodes TO suave;
 --
 
 GRANT ALL ON TABLE public.paymentitemdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.paymentitemdetails TO compraga_app;
 
 
 --
@@ -4109,6 +4264,7 @@ GRANT ALL ON SEQUENCE public.printerforcategory_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.printerforcategory TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.printerforcategory TO compraga_app;
 
 
 --
@@ -4123,6 +4279,7 @@ GRANT ALL ON SEQUENCE public.printers_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.printers TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.printers TO compraga_app;
 
 
 --
@@ -4130,6 +4287,7 @@ GRANT ALL ON TABLE public.printers TO suave;
 --
 
 GRANT ALL ON TABLE public.printerforcategorydetail TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.printerforcategorydetail TO compraga_app;
 
 
 --
@@ -4144,6 +4302,7 @@ GRANT ALL ON SEQUENCE public.printerforreceiptandinvoice_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.printerforreceiptandinvoice TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.printerforreceiptandinvoice TO compraga_app;
 
 
 --
@@ -4158,6 +4317,7 @@ GRANT ALL ON SEQUENCE public.rejectedorderitems_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.rejectedorderitems TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.rejectedorderitems TO compraga_app;
 
 
 --
@@ -4172,6 +4332,7 @@ GRANT ALL ON SEQUENCE public.roles_roleid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.standardvariationforcourse TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.standardvariationforcourse TO compraga_app;
 
 
 --
@@ -4186,6 +4347,7 @@ GRANT ALL ON SEQUENCE public.standard_variation_for_course_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.standardvariations TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.standardvariations TO compraga_app;
 
 
 --
@@ -4200,6 +4362,7 @@ GRANT ALL ON SEQUENCE public.standard_variation_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.standardvariationitem TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.standardvariationitem TO compraga_app;
 
 
 --
@@ -4214,6 +4377,7 @@ GRANT ALL ON SEQUENCE public.standard_variation_item_id_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.standardvariationforcoursedetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.standardvariationforcoursedetails TO compraga_app;
 
 
 --
@@ -4221,6 +4385,7 @@ GRANT ALL ON TABLE public.standardvariationforcoursedetails TO suave;
 --
 
 GRANT ALL ON TABLE public.standardvariationitemdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.standardvariationitemdetails TO compraga_app;
 
 
 --
@@ -4235,6 +4400,7 @@ GRANT ALL ON SEQUENCE public.tempuseractionablestates_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.temp_user_actionable_states TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.temp_user_actionable_states TO compraga_app;
 
 
 --
@@ -4249,6 +4415,7 @@ GRANT ALL ON SEQUENCE public.temp_user_actionable_states_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.temp_user_default_actionable_states TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.temp_user_default_actionable_states TO compraga_app;
 
 
 --
@@ -4263,6 +4430,7 @@ GRANT ALL ON SEQUENCE public.users_userid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.usersview TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.usersview TO compraga_app;
 
 
 --
@@ -4270,6 +4438,7 @@ GRANT ALL ON TABLE public.usersview TO suave;
 --
 
 GRANT ALL ON TABLE public.variations TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.variations TO compraga_app;
 
 
 --
@@ -4277,6 +4446,7 @@ GRANT ALL ON TABLE public.variations TO suave;
 --
 
 GRANT ALL ON TABLE public.variationdetails TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.variationdetails TO compraga_app;
 
 
 --
@@ -4291,6 +4461,7 @@ GRANT ALL ON SEQUENCE public.variations_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.voidedorderslogbuffer TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.voidedorderslogbuffer TO compraga_app;
 
 
 --
@@ -4312,6 +4483,7 @@ GRANT ALL ON SEQUENCE public.waiteractionablestates_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.waiteractionablestates TO suave;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.waiteractionablestates TO compraga_app;
 
 
 --
