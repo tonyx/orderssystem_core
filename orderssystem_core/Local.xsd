@@ -104,6 +104,7 @@
             <xs:element type="xs:string" name="Table"/>
             <xs:element type="xs:string" name="Group"/>
             <xs:element type="xs:string" name="Receipt"/>
+            <xs:element type="xs:string" name="Bill"/>
             <xs:element type="xs:string" name="Reject"/>
             <xs:element type="xs:string" name="RejectOrderItem"/>
             <xs:element type="xs:string" name="Motivation"/>

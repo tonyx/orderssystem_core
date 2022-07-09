@@ -2347,46 +2347,106 @@ let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
         tag "innerp" [] [for category in categories -> tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategory category.Categoryid) ["class","buttonX"] [Text (local.Manage + category.Name + " ")] ]]
     ]
 
-let viewableOrderItems (orderItemsPerStates:Map<string, OrderItemDetails>) (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>) (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+// let viewableOrderItems (orderItemsPerStates (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+    // let states = orderItemsPerStates.Keys
+    let states = orderedStates
+    
     [
-    h2  local.OrderItemsInProgress
+        h2  local.OrderItemsInProgress
+        br []
+        for st in states do
 
-    h2 ("COLLECTING")
+            h2 st.Statusname
 
-    tag "p" []  [
-        table  
-            [
-                for orderItem in orderItems  -> 
-                let variationsDesc = "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
-                let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
-                p [] 
+            let ordItOfThisState = 
+                orderItemsPerStates.[st.Statusname]
+                |> List.sortBy (fun x -> x.Table)
+
+            tag "p" []  [
+                table  
                     [
-                        tr 
-                            [ 
-                                td 
-                                    [
-                                        br []
-                                        Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
-                                            orderItem.Statusname+ (local.InChargeBy + orderItem.Username + " cli.: " + orderItem.Person)
-                                            + local.Group  + (sprintf "%d" orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
-                                        br []
-                                        Text(variationsDesc)
-                                        br []
-                                        if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
-                                            a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
-                                                [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
-                                        if (orderItem.Stateid <> finalState.Stateid) then
-                                            a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
-                                                [Text local.Reject]
+                        for orderItem in ordItOfThisState  -> 
+                        let variationsDesc = 
+                            if ((variationsStringDescriptions.[orderItem.Orderitemid]).Trim()) = ""
+                                then ""
+                            else 
+                                "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
+                        
+                        let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
+                        p [] 
+                            [
+                                tr 
+                                    [ 
+                                        td 
+                                            [
+                                                br []
+                                                let clientName = (if (orderItem.Person.Trim() <> "") then " cli. "+ orderItem.Person + " " else "")
+                                                Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
+                                                    (local.InChargeBy + orderItem.Username + " " + clientName)
+                                                    + local.Group  + (sprintf "%d " orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
+                                                br []
+                                                Text(variationsDesc)
+                                                br []
+                                                if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
+                                                    a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
+                                                        [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
+                                                if (orderItem.Stateid <> finalState.Stateid) then
+                                                    a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
+                                                        [Text local.Reject]
 
-                                        br []
+                                                br []
+                                            ]
                                     ]
                             ]
                     ]
             ]
-    ]
-    script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
-] 
+            script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
+    ] 
+
+
+
+
+
+//     [
+//     h2  local.OrderItemsInProgress
+
+//     h2 ("COLLECTING")
+
+//     tag "p" []  [
+//         table  
+//             [
+//                 for orderItem in orderItems  -> 
+//                 let variationsDesc = "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
+//                 let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
+//                 p [] 
+//                     [
+//                         tr 
+//                             [ 
+//                                 td 
+//                                     [
+//                                         br []
+//                                         Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
+//                                             orderItem.Statusname+ (local.InChargeBy + orderItem.Username + " cli.: " + orderItem.Person)
+//                                             + local.Group  + (sprintf "%d" orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
+//                                         br []
+//                                         Text(variationsDesc)
+//                                         br []
+//                                         if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
+//                                             a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
+//                                                 [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
+//                                         if (orderItem.Stateid <> finalState.Stateid) then
+//                                             a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
+//                                                 [Text local.Reject]
+
+//                                         br []
+//                                     ]
+//                             ]
+//                     ]
+//             ]
+//     ]
+//     script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
+// ] 
 
 let viewableOrderItemsRef (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,State>) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
     [
@@ -2737,7 +2797,7 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
                     a (sprintf  Path.Orders.subdivideDoneOrder order.Orderid) ["class","buttonX"] [Text(local.Subdivide)]
                     a (sprintf  Path.Orders.colapseDoneOrder order.Orderid) ["class","buttonX"] [Text(local.CollapseOrderItems)]
 
-                    (if (not ordersHavingSubOrdersMap.[order.Orderid]) then (a (sprintf  Path.Orders.wholeOrderPaymentItems order.Orderid) ["class","buttonX"] [Text(local.Receipt)]) else (Text "")  )
+                    (if (not ordersHavingSubOrdersMap.[order.Orderid]) then (a (sprintf  Path.Orders.wholeOrderPaymentItems order.Orderid) ["class","buttonX"] [Text(local.Bill)]) else (Text "")  )
 
                     br []
                     table [

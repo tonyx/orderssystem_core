@@ -62,8 +62,6 @@ let variationsByStringDescription (listOfVariations:(int*Db.VariationDetail list
                         else 
                         let ingredientPrice = Db.getIngredientPrice v.Ingredientpriceid ctx
                         (string) (ingredientPrice.Quantity)
-                    
-                        //   "UNIMPLEMENTED"
                     )
                 ) 
                 + " "+v.Ingredientname + ", " + y) "" variations)

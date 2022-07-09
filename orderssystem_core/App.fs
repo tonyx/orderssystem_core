@@ -1817,11 +1817,14 @@ let orderItemProgress (user:UserLoggedOnSession) =
                 ((sequenceOfStates nextState (accumul@ [currentState])))
         sequenceOfStates initialState []
 
+
+    orderedStates |> List.iter (fun x -> printf  "%s\n" (x.Statusname))
+
     let orderItemMyRoleCanObserve = List.map (fun x -> Db.getOrderItemDetailsOfAParticularStateAndAParticularCategory x ctx) myRoleObservablesIds
     let concatenatedOrderItemMyRoleCanObserve = List.fold (fun x y -> x@y) [] orderItemMyRoleCanObserve  |> 
         List.sortBy (fun (x:Db.OrderItemDetails) -> x.Startingtime)
 
-    let orderItemsPerStates = orderedStates |> List.map (fun x -> (x.Statusname, concatenatedOrderItemMyRoleCanObserve |> List.find (fun y -> y.Stateid = x.Stateid) ))  |> Map.ofList
+    let orderItemsPerStates = orderedStates |> List.map (fun x -> (x.Statusname, concatenatedOrderItemMyRoleCanObserve |> List.filter (fun y -> y.Stateid = x.Stateid) )) |> Map.ofList
 
     let listOfVariations = concatenatedOrderItemMyRoleCanObserve |> 
         List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,(Db.getVariationDetailsOfOrderItem x.Orderitemid ctx))) 
