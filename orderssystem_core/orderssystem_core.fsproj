@@ -56,8 +56,8 @@
     <PackageReference Include="runtime.osx.10.10-x64.CoreCompat.System.Drawing" Version="1.0.1-beta004" />
     <PackageReference Include="SharpYaml" Version="1.6.5" />
     <PackageReference Include="SqlProvider" Version="1.2.11" />
-    <PackageReference Include="suave" Version="2.5.6" />
-    <PackageReference Include="Suave.Dotliquid" Version="2.5.5" />
+    <PackageReference Include="suave" Version="2.6.2" />
+    <PackageReference Include="Suave.DotLiquid" Version="2.6.2" />
     <PackageReference Include="Suave.Experimental" Version="2.5.5" />
     <PackageReference Include="Suave.OpenSSL" Version="2.2.1" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
