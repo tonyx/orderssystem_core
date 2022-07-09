@@ -826,6 +826,83 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
         script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
     ]
 
+let addOrderItem' orderId coursesIdWithName coursesIdWithPrices  backUrl viableGroupOutIdsForOrderItem = 
+
+    let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
+    // let sonCategoriesLink = match (List.length subCategories) with
+    //     | 0 ->  em ""
+    //     | X -> 
+    //         div [] 
+    //             [
+    //                 h2 "sottocategorie:"; div [] 
+    //                     [
+    //                         for category in subCategories ->
+    //                             a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)] 
+    //                     ]
+    //             ]
+    // let fatherCategoryLink = match fatherCategory with
+    //     | Some theFather -> 
+    //         div [] 
+    //             [
+    //                 h2 local.FatherCategory
+    //                 a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]
+    //             ]
+    //     | None -> em ""
+
+    [
+        // fatherCategoryLink
+        // sonCategoriesLink
+
+        h2 (local.Add)
+        renderForm
+            { 
+                Form = Form.orderItem
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = "Order Item"
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.CourseBySelection
+                                        Html = selectInput (fun f -> <@ f.CourseId @>) coursesIdWithName None 
+                                    } 
+                                    { 
+                                        Label = local.Quantity
+                                        Html = formInput (fun f -> <@ f.Quantity @>) 
+                                            [ "Value", "1" ] } 
+                                    { 
+                                        Label = local.ExitGroup
+                                        Html = selectInput (fun f -> <@ f.GroupOut @>) viableGroupOutIdsForOrderItem None 
+                                    }
+                                    { 
+                                        Label = local.Comment
+                                        Html = formInput (fun f -> <@ f.Comment @>) [] 
+                                    } 
+                                    { 
+                                        Label = local.Price
+                                        Html = formInput (fun f -> <@ f.Price @>) [ ] 
+                                    }
+                                ] 
+                        } 
+                    ]
+                SubmitText = local.Add 
+            }
+        br []
+        br []
+        div [] [
+            a Path.home [] [Text local.MainPage]
+            br []
+        ]
+        br []
+        div [] [
+            a (sprintf Path.Orders.viewOrder orderId) ["class","buttonX"] [Text local.BackToOrder]
+            br []
+        ]
+        script ["type", "text/javascript"; "src", "/jquery-3.1.1.min.js" ] []
+        script [] [Raw("var pricesForCourses = "+jsPricesForCourses)]
+        script ["type","text/javascript"; "src","/script_options_add_order_item.js"] []
+    ]
 
 let createOrder message  = [
     h2 message
@@ -2270,7 +2347,108 @@ let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
         tag "innerp" [] [for category in categories -> tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategory category.Categoryid) ["class","buttonX"] [Text (local.Manage + category.Name + " ")] ]]
     ]
 
-let viewableOrderItems (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,State>) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>) (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+// let viewableOrderItems (orderItemsPerStates (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+    // let states = orderItemsPerStates.Keys
+    let states = orderedStates
+    
+    [
+        h2  local.OrderItemsInProgress
+        br []
+        for st in states do
+
+            h2 st.Statusname
+
+            let ordItOfThisState = 
+                orderItemsPerStates.[st.Statusname]
+                |> List.sortBy (fun x -> x.Table)
+
+            tag "p" []  [
+                table  
+                    [
+                        for orderItem in ordItOfThisState  -> 
+                        let variationsDesc = 
+                            if ((variationsStringDescriptions.[orderItem.Orderitemid]).Trim()) = ""
+                                then ""
+                            else 
+                                "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
+                        
+                        let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
+                        p [] 
+                            [
+                                tr 
+                                    [ 
+                                        td 
+                                            [
+                                                br []
+                                                let clientName = (if (orderItem.Person.Trim() <> "") then " cli. "+ orderItem.Person + " " else "")
+                                                Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
+                                                    (local.InChargeBy + orderItem.Username + " " + clientName)
+                                                    + local.Group  + (sprintf "%d " orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
+                                                br []
+                                                Text(variationsDesc)
+                                                br []
+                                                if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
+                                                    a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
+                                                        [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
+                                                if (orderItem.Stateid <> finalState.Stateid) then
+                                                    a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
+                                                        [Text local.Reject]
+
+                                                br []
+                                            ]
+                                    ]
+                            ]
+                    ]
+            ]
+            script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
+    ] 
+
+
+
+
+
+//     [
+//     h2  local.OrderItemsInProgress
+
+//     h2 ("COLLECTING")
+
+//     tag "p" []  [
+//         table  
+//             [
+//                 for orderItem in orderItems  -> 
+//                 let variationsDesc = "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
+//                 let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
+//                 p [] 
+//                     [
+//                         tr 
+//                             [ 
+//                                 td 
+//                                     [
+//                                         br []
+//                                         Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
+//                                             orderItem.Statusname+ (local.InChargeBy + orderItem.Username + " cli.: " + orderItem.Person)
+//                                             + local.Group  + (sprintf "%d" orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
+//                                         br []
+//                                         Text(variationsDesc)
+//                                         br []
+//                                         if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
+//                                             a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
+//                                                 [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
+//                                         if (orderItem.Stateid <> finalState.Stateid) then
+//                                             a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
+//                                                 [Text local.Reject]
+
+//                                         br []
+//                                     ]
+//                             ]
+//                     ]
+//             ]
+//     ]
+//     script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
+// ] 
+
+let viewableOrderItemsRef (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,State>) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
     [
     h2  local.OrderItemsInProgress
     tag "p" []  [
@@ -2513,7 +2691,7 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
-            a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["",""] [Text local.Ingredients]
+            a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["class","buttonX"] [Text local.Ingredients]
         else em ""
 
     let linksMoveOutGroup = outGroupsOfOrder |> 
@@ -2563,7 +2741,6 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                                                 Text(orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" "+ 
                                                     (if (not (mapOfStates.[orderItem.Stateid].Isinitial)) then orderItem.Statusname else "")+" g: "+(orderItem.Groupidentifier.ToString())+" ")
                                                 modifyOrderItemLink orderItem mapOfStates backUrl
-                                                deleteOrderItemLink orderItem mapOfStates backUrl
                                                 ingredientsVarOrderItmLink orderItem
                                                 removeOrderItemLink orderItem canRemoveOrderItem backUrl
 
@@ -2620,7 +2797,7 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
                     a (sprintf  Path.Orders.subdivideDoneOrder order.Orderid) ["class","buttonX"] [Text(local.Subdivide)]
                     a (sprintf  Path.Orders.colapseDoneOrder order.Orderid) ["class","buttonX"] [Text(local.CollapseOrderItems)]
 
-                    (if (not ordersHavingSubOrdersMap.[order.Orderid]) then (a (sprintf  Path.Orders.wholeOrderPaymentItems order.Orderid) ["class","buttonX"] [Text(local.Receipt)]) else (Text "")  )
+                    (if (not ordersHavingSubOrdersMap.[order.Orderid]) then (a (sprintf  Path.Orders.wholeOrderPaymentItems order.Orderid) ["class","buttonX"] [Text(local.Bill)]) else (Text "")  )
 
                     br []
                     table [
@@ -2639,21 +2816,12 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
         ]
     ]
 
-
 let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: Db.IngredientOfCourse list)  
     (existingVariations: Db.VariationDetail list) (ingredientCategories: Db.IngredientCategory list) 
     (ingredientsYouCanAdd: Db.IngredientDetail list) (specificCustomAddQuantitiesForIngredients: Map<int,Db.IngredientPrice list>) 
     (standardVariationsForCourseDetails: Db.StandardVariationForCourseDetails list) encodedBackUrlX  =
 
     let encodedBackUrl = WebUtility.UrlEncode (sprintf Path.Orders.viewOrder orderItemDetail.Orderid)
-
-    // let flatListOfIngredientButtons = 
-    //     (ingredientCategories |> List.map (fun (x:Db.IngredientCategory) -> 
-    //         td [ 
-    //             a ((sprintf Path.Orders.editOrderItemVariationByIngredientCategory orderItemDetail.Orderitemid 
-    //                   x.Ingredientcategoryid )) ["class","buttonX"]
-    //                   [Text (x.Name)]    ])) 
-    //                   @ [ td [  a ((sprintf Path.Orders.editOrderItemVariation orderItemDetail.Orderitemid )) ["class","buttonX"] [Text(local.All)] ]]
 
     let flatListOfIngredientButtons = 
         (ingredientCategories 

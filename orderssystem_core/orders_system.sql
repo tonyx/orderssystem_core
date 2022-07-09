@@ -1064,7 +1064,10 @@ CREATE VIEW public.orderitemdetails AS
     b.categoryid,
     b.courseid,
     c.statusname,
-    a.stateid,
+    c.stateid,
+    c.isinitial,
+    c.isfinal,
+    c.nextstateid,
     d.userid,
     a.startingtime,
     a.closingtime,
@@ -1083,7 +1086,10 @@ CREATE VIEW public.orderitemdetails AS
      JOIN public.users e ON ((d.userid = e.userid)))
      JOIN public.orderoutgroup g ON ((a.ordergroupid = g.ordergroupid)))
      LEFT JOIN public.orderitemsubordermapping h ON ((a.orderitemid = h.orderitemid)))
-     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)));
+     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)))
+
+     WHERE NOT (d.archived = true OR d.voided = true);
+     
 
 
 ALTER TABLE public.orderitemdetails OWNER TO "Tonyx";
@@ -4001,7 +4007,7 @@ GRANT ALL ON TABLE public.orderoutgroup TO suave;
 
 
 --
--- Name: SEQUENCE suborderid_seq; Type: ACL; Schema: public; Owner: postgres
+-- Name: SEQUENCE suborderid_seq; Type: ACL; RefSchema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.suborderid_seq TO suave;

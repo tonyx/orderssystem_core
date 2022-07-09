@@ -98,7 +98,8 @@
         <Missing>mancante</Missing> 
         <Table>tavolo </Table> 
         <Group>gruppo</Group> 
-        <Receipt>scontrino </Receipt> 
+        <Receipt>ricetta </Receipt> 
+        <Bill>scontrino </Bill> 
         <Reject>respingi</Reject> 
         <RejectOrderItem>respingi order item</RejectOrderItem> 
         <Motivation>motivo</Motivation> 
@@ -114,7 +115,7 @@
         <Percentage>percentuale</Percentage>
         <VoidDiscounts>annulla sconti</VoidDiscounts>
         <TheEnd>fine</TheEnd>
-        <Ingredients> ingredienti </Ingredients>
+        <Ingredients> ingr. </Ingredients>
         <ConfirmGroup>conferma gruppo</ConfirmGroup>
         <PrintGroup>stampa gruppo</PrintGroup>
         <ReprintGroup>ristampa gruppo</ReprintGroup>
@@ -123,7 +124,7 @@
         <UnArchiveLatest>dearchivia ultimo</UnArchiveLatest>
         <TotalDiscounted>totlae scontato</TotalDiscounted>
         <Archive> archivia </Archive>
-        <Modify> modifica </Modify>
+        <Modify> mod. </Modify>
         <Subdivide> suddividi </Subdivide>
         <Invoice> fattura </Invoice>
         <All>tutti</All>

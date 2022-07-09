@@ -103,6 +103,7 @@
         <Table>table </Table> 
         <Group>group</Group> 
         <Receipt>receipt </Receipt> 
+        <Bill>bill </Bill> 
         <Reject>reject</Reject> 
         <RejectOrderItem>reject order item</RejectOrderItem> 
         <Motivation>motivation</Motivation> 
