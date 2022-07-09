@@ -18,4 +18,4 @@ packages
 .*~
 */**/*~
 */**/GenericTextOnly*.txt
- 
+*/**/*.swp 
