@@ -11,6 +11,6 @@ module OrdersSystem.Settings
     let Localization = "it" 
     // let EcrFilePath = @"C:\Users\pc\programmi_tony\orderssystem_core\ecr.txt"
     let EcrFilePath = "ecr.txt"
-    // let HomeFolder = @"C:\Users\Toni\gitprojects\toni\orderssystem_core\orderssystem_core"
-    let HomeFolder = "/Users/antoniolucca/github/orders_system/orderssystem_core/orderssystem_core"
+    let HomeFolder = @"C:\Users\Toni\gitprojects\toni\orderssystem_core\orderssystem_core"
+    // let HomeFolder = "/Users/antoniolucca/github/orders_system/orderssystem_core/orderssystem_core"
     let [<Literal>] NpgSqlResPath = "" // after version 5.0 there is no need of a specific assembly anymore
