@@ -2263,6 +2263,10 @@ let getLatestVoidedOrder userId (ctx:DbContext) =
         select voidedOrder
     } |> Seq.tryHead
 
+// todo: in an unpreditable way here we get the error "System.Exception: Unchanged entity encountered in update list - this should not be possible!"
+// this happened mainly after an ingredient category has been deleted (delete has a cascade effect)
+// I suspect that every time there is a SubmitUpdate we may want to 
+// detect any runtime exception, log it, and restore the connection
 let newIngredientCatgory name visibility description (ctx: DbContext) = 
     log.Debug(sprintf "newIngredientCatgory %s" name)
     let newIngredient = ctx.Public.Ingredientcategory.``Create(name, visibility)``(name, visibility)
@@ -3008,7 +3012,7 @@ let safeDeleteIngredient ingredientId (ctx: DbContext) =
 let safeDeleteIngredientCategory id (ctx: DbContext) =
     let ingredientCategory = getIngredientCatgory id ctx
     let connectedIngredients = getIngredientsByCategory id ctx
-    connectedIngredients |> Seq.iter (fun (x:Ingredient) -> safeDeleteIngredient x.Ingredientid ctx)
+    // connectedIngredients |> Seq.iter (fun (x:Ingredient) -> safeDeleteIngredient x.Ingredientid ctx)
     ingredientCategory.Delete()
     ctx.SubmitUpdates()
 
@@ -3176,7 +3180,7 @@ let getStatesPrinterMapping printerId (ctx:DbContext) =
 let getIngredientDecrementsStartingFromDate ingredientId date (ctx: DbContext): IngredientDecrementView list =
     log.Debug("getIngredientDecrementsStartingFromDate")
     let myDate = System.DateTime.Parse(date,CultureInfo.CreateSpecificCulture("en-US"))
-    ctx.Public.Ingredientdecrementview |> Seq.filter (fun (x:IngredientDecrementView) -> (x.Ingredientid = ingredientId && System.DateTime.Compare(x.Closingtime,myDate)>0)) |> Seq.toList
+    ctx.Public.Ingredientdecrementview |> Seq.filter (fun (x:IngredientDecrementView) -> (x.Ingredientid = ingredientId) && System.DateTime.Compare(x.Closingtime,myDate)>0) |> Seq.toList
 
 let addAmountOfingredientAvailability (ingredient:Ingredient) (amount:decimal) (ctx:DbContext) =
     log.Debug(sprintf "%s ingredientid: %d, quantity: %d " "addAmountOfingredientAvailability" ingredient.Ingredientid ((int)amount))

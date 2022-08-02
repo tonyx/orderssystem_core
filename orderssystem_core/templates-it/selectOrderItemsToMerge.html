@@ -24,7 +24,7 @@
       <br>
 
       {%for orderitem in item.orderitems %}
-      <input type ="checkbox" name="orderitem{{orderitem.orderitemid}}">  {{orderitem.Name}}</input>
+      <input type ="checkbox" name="orderitem{{orderitem.orderitemid}}">  {{orderitem.Name}} {{orderitem.Comment}}</input>
       <br>
 
       {% endfor %}
