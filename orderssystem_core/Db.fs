@@ -3,6 +3,7 @@ open FSharp.Data.Sql
 open System
 open System.Data
 open System.Globalization
+
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 [<Literal>]
