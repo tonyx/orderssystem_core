@@ -144,7 +144,17 @@ let temporaryUserPassingUserLoggedOn f_success =
         | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid} -> 
             let dbUser = Db.Users.getUser(userid) ctx
             if (dbUser.Istemporary) then 
-            f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=true;CanManageAllCourses=false;CanManageAllOrders=false} else FORBIDDEN "user is not enabled"
+                f_success 
+                    {
+                        Role=role;
+                        Username=username;
+                        UserId=userid;
+                        RoleId=roleid;
+                        Temporary=true;
+                        CanManageAllCourses=false;
+                        CanManageAllOrders=false
+                    } else 
+                FORBIDDEN "user is not enabled"
         | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
         | _ -> UNAUTHORIZED "Not logged in"
     ))
@@ -251,7 +261,6 @@ let makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx =
     ()
 
 let makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx =
-    // logger.info (eventX (sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId))
     log.Debug(sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId) 
     let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
     let ingredientOfCourse = Db.getIngredientsOfACourse orderItemDetail.Courseid ctx
@@ -265,7 +274,6 @@ let makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx =
     ()
 
 let logonViaQrCode  = 
-    // logger.info (eventX ("logonViaQrCode"))
     log.Debug("logonViaQrCode")
     choose [
         GET >=>
@@ -340,7 +348,6 @@ let alignAllPricesOfAnOrder orderId =
     order.Total <- plainTotal
     order.Adjustedtotal <- discountedPrice
 
-
 let deleteIngredientsBySelection =
     log.Debug("deleteIngredientsBySelection")
     choose [
@@ -359,7 +366,7 @@ let deleteIngredientsBySelection =
                 Redirection.FOUND Path.Admin.deleteIngredients
             | _ ->  Redirection.FOUND Path.Admin.deleteIngredients
         )
-        ]
+    ]
 
 let deleteIngredients = warbler (fun _ ->
     log.Debug("deleteIngredients")
@@ -430,7 +437,7 @@ let deleteCourses =
         )
     ]
 
-let emtpy  = warbler (fun _ ->
+let emtpy = warbler (fun _ ->
     loggedOn (session (function 
     | UserLoggedOn userLoggedOn ->
         log.Debug(sprintf "empty%s " userLoggedOn.Username)
@@ -470,6 +477,7 @@ let categoriesManagement (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     let allCategories = Db.Courses.getAllCategories ctx
     View.coursesAndCategoriesManagement  allCategories |> html
 )
+
 let qrOrder (userLoggedOn:UserLoggedOnSession) = warbler (fun _ ->
     log.Debug(sprintf "qrOrder by user: %s" userLoggedOn.Username)
     let ctx = Db.getContext()
@@ -526,7 +534,7 @@ let ordinaryUsers  = warbler (fun _ ->
     let allUsers = Db.Users.getOrdinaryUsersView ctx
     View.userAdministrationPage  allUsers |> html)
 
-let temporaryUsers  =  warbler (fun _ ->
+let temporaryUsers = warbler (fun _ ->
     log.Debug("temporaryUsers")
     let ctx = Db.getContext()
     let temporaryUsers = Db.Users.getTemporaryUsersView ctx |> List.sortBy (fun (x:Db.UsersView) -> (x.Creationtime))
@@ -729,7 +737,6 @@ let visibleingredientCategories =
     ]
 
 type IndexStringList = {index:int; names: string list}
-
 type MyPrinterModel = 
     {
         name: string; 
@@ -756,34 +763,46 @@ let managePrinter printerId categoryId =
             let printerForCategories = Db.getPrinterForCategoriesDetails printerId ctx
             let stateMappingForPrinter = Db.getStatesPrinterMapping printerId ctx |>
                 List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> {index=x.Stateid;name = x.Statename})
-            let idAndCategories = courseCategories |> 
-                List.map (fun (x:Db.CourseCategories) -> {index=x.Categoryid;name=x.Name})
-            let idAndEnabledCategories = printerForCategories |> 
-                List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> {index=x.Categoryid;name=x.Categoryname})
+            let idAndCategories = 
+                courseCategories 
+                |> List.map (fun (x:Db.CourseCategories) -> {index=x.Categoryid;name=x.Name})
+            let idAndEnabledCategories = 
+                printerForCategories 
+                |> List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> {index=x.Categoryid;name=x.Categoryname})
             let categoryStatesForCurrentPrinter = Db.getStatesPrinterMapping printerId ctx 
-            let categoriesIds = categoryStatesForCurrentPrinter |> 
-                List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Categoryid) |> Set.ofList |> Set.toList
+            let categoriesIds = 
+                categoryStatesForCurrentPrinter 
+                |> List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Categoryid) |> Set.ofList |> Set.toList
             let printerForReceiptAndInvoice = Db.tryGetPrinterForReceiptAndInvoice printerId ctx
             let (canPrintReceipt,canPrintInvoice) = match printerForReceiptAndInvoice with    
                 | Some X -> (X.Printreceipt,X.Printinvoice)
                 | None -> (false,false)
-            let mapOfEnabledStatesForCategories = categoriesIds |> 
-                List.map (fun i -> (i, categoryStatesForCurrentPrinter |> 
-                    List.filter (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Categoryid = i) |> 
-                    List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Statename) ))
-                    |> List.map (fun (i,j) -> {index=i;names=j})
+            let mapOfEnabledStatesForCategories = 
+                categoriesIds 
+                |>  List.map 
+                    (fun i -> 
+                        (
+                            i, 
+                            categoryStatesForCurrentPrinter 
+                            |> List.filter (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Categoryid = i) 
+                            |> List.map (fun (x:Db.PrinterForCourseCategoryDetail) -> x.Statename) ))
+                        |> List.map (fun (i,j) -> {index=i;names=j}
+                    )
             let selectedCategory = categoryId
-            let o = {name = printer.Name;coursecategories = idAndCategories;
-                catenabledforcurrentprinter=idAndEnabledCategories;
-                printerforstateenabled = stateMappingForPrinter;
-                backurl = Path.Admin.printers;
-                enabledstatesforcategories = mapOfEnabledStatesForCategories;
-                selectedcategory = selectedCategory;
-                printername = printer.Name ;
-                printerid = printer.Printerid;
-                isenabledforprintinginvoices = canPrintInvoice;
-                isenabledforprintingreceipts = canPrintReceipt
-            }
+            let o = 
+                {
+                    name = printer.Name
+                    coursecategories = idAndCategories
+                    catenabledforcurrentprinter=idAndEnabledCategories
+                    printerforstateenabled = stateMappingForPrinter
+                    backurl = Path.Admin.printers
+                    enabledstatesforcategories = mapOfEnabledStatesForCategories
+                    selectedcategory = selectedCategory
+                    printername = printer.Name 
+                    printerid = printer.Printerid
+                    isenabledforprintinginvoices = canPrintInvoice
+                    isenabledforprintingreceipts = canPrintReceipt
+                }
             DotLiquid.page("printerStateCategoryMapping.html") o
         )
         POST >=> bindToForm Form.printerOutGroupForStates (fun form ->
@@ -923,11 +942,13 @@ let createEcrReceiptInstructionForSubOrder subOrderId orderId =
     let subOrder = Db.Orders.getSubOrder subOrderId ctx
     let paymentItemDetailsOfSubOrder  = Db.Orders.getPaymentItemDetailsOfSubOrder subOrderId ctx
     let orderItemsOfSubOrder = Db.getOrderItemDetailsOfSubOrder subOrderId ctx
-    let orderItemRows = orderItemsOfSubOrder |> List.map (fun (x:Db.OrderItemDetails) -> 
-        (
-            if (x.Quantity>1) then (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_ITEM x.Price x.Quantity x.Name ) 
-            else (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_UNITARY_PAYMENT_ITEM x.Price  x.Name ) 
-        )
+    let orderItemRows = 
+        orderItemsOfSubOrder 
+        |> List.map (fun (x:Db.OrderItemDetails) -> 
+            (
+                if (x.Quantity>1) then (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_ITEM x.Price x.Quantity x.Name ) 
+                else (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_UNITARY_PAYMENT_ITEM x.Price  x.Name ) 
+            )
         )
     let paymentItemRows = paymentItemDetailsOfSubOrder |> List.map (fun x -> sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_CLOSURE_ITEM ((int)x.Tendercodeidentifier) x.Amount)
     let outFile = new System.IO.StreamWriter(Settings.EcrFilePath,false,Encoding.ASCII)
@@ -953,24 +974,27 @@ let createEcrReceiptInstructionForOrder  orderId =
     let paymentItemDetailsOfSubOrder  = Db.Orders.getPaymentItemDetailsOfOrder orderId ctx
     let order = Db.Orders.getOrder orderId ctx
     let orderItemsOfSubOrder = Db.getOrderItemDetailsOfOrder orderId ctx
-    let orderItemRows = orderItemsOfSubOrder |> List.map (fun (x:Db.OrderItemDetails) -> 
-        (
-            if (x.Quantity>1) then (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_ITEM x.Price x.Quantity x.Name ) 
-            else (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_UNITARY_PAYMENT_ITEM x.Price  x.Name ) 
-        )
+    let orderItemRows = 
+        orderItemsOfSubOrder 
+        |> List.map (fun (x:Db.OrderItemDetails) -> 
+            (
+                if (x.Quantity>1) then (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_ITEM x.Price x.Quantity x.Name ) 
+                else (sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_UNITARY_PAYMENT_ITEM x.Price  x.Name ) 
+            )
         )
 
     let paymentItemRows = paymentItemDetailsOfSubOrder |> List.map (fun x -> sprintf Globals.ITALIAN_TEMPLATE_ROW_FOR_PAYMENT_CLOSURE_ITEM ((int)x.Tendercodeidentifier) x.Amount)
     let outFile = new System.IO.StreamWriter(Settings.EcrFilePath,false,Encoding.ASCII)
     let _ = orderItemRows |> List.iter (fun x -> outFile.WriteLine(x))
-    let _ = match order.Total - order.Adjustedtotal with
-                | X   when X > 0M  -> 
-                    outFile.WriteLine("SUBTOT")
-                    outFile.WriteLine(sprintf "%s %.2f" "SCONT val=" (order.Total - order.Adjustedtotal))
-                | X   when X < 0M  -> 
-                    outFile.WriteLine("SUBTOT")
-                    outFile.WriteLine(sprintf "%s %.2f, term=34" "inp num=" (order.Adjustedtotal - order.Total))
-                | _ -> ()
+    let _ = 
+        match order.Total - order.Adjustedtotal with
+            | X   when X > 0M  -> 
+                outFile.WriteLine("SUBTOT")
+                outFile.WriteLine(sprintf "%s %.2f" "SCONT val=" (order.Total - order.Adjustedtotal))
+            | X   when X < 0M  -> 
+                outFile.WriteLine("SUBTOT")
+                outFile.WriteLine(sprintf "%s %.2f, term=34" "inp num=" (order.Adjustedtotal - order.Total))
+            | _ -> ()
     let _ = paymentItemRows |> List.iter (fun x -> outFile.WriteLine(x))
     let _ = outFile.Close()
     makeOrderArchived orderId 
@@ -1095,7 +1119,6 @@ let editCourse id  =
                 )
     ]
     
-
 let editCourseCategory id =
     log.Debug(sprintf "%s %d " "editCourseCategory" id)
     let ctx = Db.getContext()
@@ -1122,7 +1145,6 @@ let editCourseCategory id =
         ]
     | None -> 
         never
-
 
 let editUser id   =
     log.Debug(sprintf "%s %d " "editUser" id)
@@ -1242,8 +1264,6 @@ let addQrUser =
             Redirection.FOUND Path.Admin.temporaryUsers)
     ]
 
-
-
 let addUser = 
     log.Debug("addUser")
     let ctx = Db.getContext()
@@ -1281,7 +1301,6 @@ let getViableGroupOutIdentifiers orderId =
         List.map  (fun (x:Db.OrderOutGroup) -> x.Groupidentifier)
     let availableNumbers = [1..13] |> List.filter (fun i -> not (List.contains i alreadyPrintedGroupsOfOrder))
     availableNumbers |> List.map (fun x -> ((decimal) x,(string)x))
-
 
 let addOrderItemByAllCategoriesForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "addOrderItemByAllCategoriesForOrdinaryUsers orderId:%d " orderId)
@@ -1391,7 +1410,6 @@ let addOrderItemForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
         ]
     | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
     
-
 let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession)=
     log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
     let ctx = Db.getContext()
@@ -1472,7 +1490,6 @@ let addOrderItemPassingUserLoggedOn orderId urlEncodedBackUrl (user:UserLoggedOn
         // | false -> addOrderItemForStrippedUsers orderId categoryId urlEncodedBackUrl  (user:UserLoggedOnSession)
     )
 
-
 let deleteOrderItem orderItemId =
     let ctx = Db.getContext()
     Db.deleteOrderItem orderItemId ctx
@@ -1547,6 +1564,7 @@ let canMoveOrderItemToNextStep (orderItemDetail:Db.OrderItemDetails) (user:UserL
     ((   Db.userEnabledByRoletoChangeStateOfThisOrderItem orderItemDetail user.UserId ctx ) ||
         (((List.contains orderItemDetail.Stateid stateEnableForUserAsWaiter) &&
             (not orderItemDetail.Hasbeenrejected) )))
+
 let moveOrderItemNextState (orderItemDetail:Db.OrderItemDetails) (user:UserLoggedOnSession)  =
     let ctx = Db.getContext()
     let stateEnableForUserAsWaiter = Db.listOfEnabledStatesForWaiter user.UserId ctx
@@ -1618,7 +1636,6 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
         File.Copy(y,y.Replace(".txt",".ok"))
     )
     ()
-
 
 let fileDumpOrderOutGroupForDifferentPrinters (orderOutGroup:Db.OrderOutGroupDetail) =
     log.Debug(sprintf "fileDumpOrderOutGroupForDifferentPrinters %d orderOutGroup.Ordergroupid")
@@ -1692,7 +1709,7 @@ let rec detectIdenticalOrderItemsAndMakeChunks (orderItems:Db.OrderItem list) =
     log.Debug("detectIdenticalOrderItemsAndMakeChunks")
     match orderItems with
     | [] -> []
-    | H::T -> [H::(List.filter (fun (x:Db.OrderItem) -> twoOrderItemsAreIdentical x  H) T )] @ detectIdenticalOrderItemsAndMakeChunks ((List.filter (fun (x:Db.OrderItem) -> not (twoOrderItemsAreIdentical x  H)) T))
+    | H::T -> [H::(List.filter (fun (x: Db.OrderItem) -> twoOrderItemsAreIdentical x  H) T )] @ detectIdenticalOrderItemsAndMakeChunks ((List.filter (fun (x:Db.OrderItem) -> not (twoOrderItemsAreIdentical x  H)) T))
 
 let moveInitialStateOrderItemsByOrderOutGroup orderId orderOutGroupId  encodedBackUrl (user:UserLoggedOnSession)  =
     log.Debug(sprintf "%s orderId %d orderOutGroupId %d" "moveInitialStateOrderItemsByOrderOutGroup" orderId orderOutGroupId)
@@ -1712,10 +1729,13 @@ let moveInitialStateOrderItemsByOrderOutGroup orderId orderOutGroupId  encodedBa
     let _ = match orderItemsToMove.Length with
         | X when (X>0 && Settings.Print ) -> printOrderOutGroup orderOutGroupId order orderItemsDetails
         | _ -> ()
-    let _ = orderItemsToMove |> Seq.iter (fun (x:Db.OrderItemDetails) -> 
-        match (canMoveOrderItemToNextStep x user) with
-        | true -> Db.tryMoveOrderItemToNextState x.Orderitemid user.UserId ctx
-        | false -> ())
+    let _ = 
+        orderItemsToMove 
+        |> Seq.iter (fun (x:Db.OrderItemDetails) -> 
+            match (canMoveOrderItemToNextStep x user) with
+            | true -> Db.tryMoveOrderItemToNextState x.Orderitemid user.UserId ctx
+            | false -> ()
+        )
     Redirection.FOUND decodedBackUrl
 
 let adjustTotalOfOrder orderId =
@@ -1750,7 +1770,7 @@ let setOrderToArchivedIfAllorderItemsAreDone  orderId =
             | false -> ()  
     ret
 
-// deprecated
+// deprecated (or not?)
 //
 let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
     log.Debug(sprintf "moveOrderItemNextStep orderItemId:%d userName %s" orderItemId user.Username)
@@ -1805,7 +1825,6 @@ let orderItemProgress (user:UserLoggedOnSession) =
     let finalState = Db.States.getFinalState ctx
 
     let states = Db.States.getAllStates ctx
-    // states |> List.iter (fun x -> printf "next state %d\n" x.Nextstateid )
 
     let orderedStates =
         let rec sequenceOfStates (currentState: Db.State) accumul =
@@ -1816,7 +1835,6 @@ let orderItemProgress (user:UserLoggedOnSession) =
                 let nextState = Db.States.getState nextStateIndex ctx
                 ((sequenceOfStates nextState (accumul@ [currentState])))
         sequenceOfStates initialState []
-
 
     orderedStates |> List.iter (fun x -> printf  "%s\n" (x.Statusname))
 
@@ -1847,7 +1865,6 @@ let orderItemProgress (user:UserLoggedOnSession) =
 
     let variationsStringDescriptions = Utils.variationsByStringDescription (mapOfVariations |> Map.toList) ctx
 
-    // html (View.viewableOrderItemsRef concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
     html (View.viewableOrderItems orderItemsPerStates concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates orderedStates finalState mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
 
 let getNextState stateId =
@@ -1876,7 +1893,6 @@ let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landing
         let viableGroupOutIdsForOrderItem = getViableGroupOutIdentifiers orderId
 
         if (user.UserId = order.Userid || dbUser.Canmanageallorders || user.Role = "admin") then
-
         (choose [
             GET >=> warbler (fun x ->
                 let courses = 
@@ -1884,16 +1900,17 @@ let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landing
                 html (View.editOrderItemForStrippedUsers orderItemExists courses categories ingredients outGroup backUrl viableGroupOutIdsForOrderItem))
 
             POST >=> bindToForm Form.strippedOrderItem (fun form ->
-                let course = Db.getCourseDetail ((int)form.CourseId) ctx
-                let price = course.Price
-                Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)form.CourseId) ((int)(form.Quantity))  form.Comment price form.GroupOut ctx
-                makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
-                makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx
-                Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
-                Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
-            )
-        ]) else Redirection.FOUND landingPage 
-
+                    let course = Db.getCourseDetail ((int)form.CourseId) ctx
+                    let price = course.Price
+                    Db.updateOrderItemAndPriceByCourseId  orderItemId ((int)form.CourseId) ((int)(form.Quantity))  form.Comment price form.GroupOut ctx
+                    makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx
+                    makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx
+                    Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
+                    Redirection.FOUND (backUrl+"#order"+(orderItemExists.Orderid |> string))
+                )
+            ]) 
+            else 
+                Redirection.FOUND landingPage 
     | None -> Redirection.FOUND landingPage
 
 let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landingPage encodedBackUrl  (user:UserLoggedOnSession)=
@@ -2011,9 +2028,15 @@ let createSingleOrderByUserLoggedOn (user:UserLoggedOnSession) =
         )
     ]
 
-type MyModel = {roleidname: IndexNameRecord list; categoriesidname: IndexNameRecord list;
-    existingrolestatemapping:  TwoIndexNameRecord list; selectroleid: string; selectcategoryid: string;
-    backurl: string}
+type MyModel = 
+    {
+        roleidname: IndexNameRecord list
+        categoriesidname: IndexNameRecord list
+        existingrolestatemapping:  TwoIndexNameRecord list
+        selectroleid: string
+        selectcategoryid: string
+        backurl: string
+    }
 
 let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
     log.Debug(sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId: %d, categoryId: %d " roleId categoryId)
@@ -2093,8 +2116,6 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
                 | _ -> 
                     let _ = Db.tryRemoveRoleStateCategoryEnablerByStateName ((int)form.RoleId) "DONE" ((int)form.CategoryId) ctx
                     ()
-
-
             let _ = 
                 match form.ObserverCOLLECTING with
                 | Some X -> 
@@ -2210,7 +2231,6 @@ let selectIAllngredientCatForCourse courseId  =
         )
     ]
 
-
 let selectIngredientCatForCourse courseId categoryId message =
     log.Debug(sprintf "selectIngredientCatForCourse courseId: %d, categoryId: %d " categoryId)
     let ctx = Db.getContext()
@@ -2235,7 +2255,6 @@ let selectIngredientCatForCourse courseId categoryId message =
                                 | (Some X,_) -> Some X
                                 | (None,UNITARY_MEASURE) -> Some ((decimal)1.0)
                                 | _ -> form.Quantity
-
             Db.addIngredientToCourseById ((int)ingredient.Ingredientid) courseId quantity ctx
             let retPath = sprintf Path.Courses.editCourse courseId 
             Redirection.FOUND retPath
@@ -2265,8 +2284,6 @@ let createCourseByCatgory id =
         )
     ]
 
-
-
 let archiveOrder id (user:UserLoggedOnSession) =
     log.Debug(sprintf "archiveOrder %d" id)
     let ctx = Db.getContext()
@@ -2277,11 +2294,8 @@ let archiveOrder id (user:UserLoggedOnSession) =
             else ()
     Redirection.FOUND Path.Orders.seeDoneOrders
 
-
-
 let unableToCompleteOperation aString    =
     View.cantComplete aString |> html
-
 
 let voidorder orderId =
     log.Debug(sprintf "voidorder %d" orderId)
@@ -2306,7 +2320,6 @@ let voidOrderByUserLoggedOn orderId urlEncodedBackUrl (user: UserLoggedOnSession
                 Redirection.FOUND backUrl)
     | _ -> Redirection.FOUND Path.home 
     
-
 let askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) =
     log.Debug(sprintf "%s order: %d  user: %s" "askConfirmationVoidOrderByUserLoggedOn" orderId user.Username)
     View.askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) |> html
@@ -2320,7 +2333,6 @@ let deleteIngredientToCourse courseId ingredientId =
     | None -> ()
     let retPath = sprintf Path.Courses.editCourse courseId 
     Redirection.FOUND retPath
-
 
 let archiveOrderByUserId orderId  =
     log.Debug(sprintf "archiveOrderByUserId %d" orderId )
@@ -2372,11 +2384,19 @@ let adjustPriceOfOrderItemByVariations orderItemId =
 
     let variations = orderItem.``public.variations by orderitemid`` |> Seq.toList
 
-    let addVariations = variations |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = Globals.AGGIUNGIMOLTO || 
-            x.Tipovariazione = Globals.AGGIUNGINORMALE || x.Tipovariazione = Globals.AGGIUNGIPOCO )
+    let addVariations = 
+        variations 
+        |> List.filter 
+            (fun (x:Db.Variation) -> 
+                x.Tipovariazione = 
+                    Globals.AGGIUNGIMOLTO 
+                    || x.Tipovariazione = Globals.AGGIUNGINORMALE 
+                    || x.Tipovariazione = Globals.AGGIUNGIPOCO 
+            )
 
-    let subtractVariations = variations |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = Globals.SENZA) 
-
+    let subtractVariations = 
+        variations 
+        |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = Globals.SENZA) 
     let unitaryAddOrSubtractVariations = variations |> List.filter (fun (x:Db.Variation) -> x.Tipovariazione = UNITARY_MEASURE)
     let unitaryAddOrSubtract = unitaryAddOrSubtractVariations |> List.map (fun (x:Db.Variation) -> ((decimal)x.Plailnumvariation) * (Db.getFirstPriceVariationForIngredientAddVariatonFlaggedAsDefault x.Ingredientid ctx )) |>
         List.fold (+) ((decimal)0.0)
@@ -2389,18 +2409,13 @@ let adjustPriceOfOrderItemByVariations orderItemId =
                                             | false -> (decimal)0.0
 
     let amountToSubtractToPriceBeacuseOfSubtractions = match Settings.InAddIngredientAdjustPrice with 
-                                            | true ->  subtractVariations |> List.map (fun (x:Db.Variation) -> 
-                                                Db.getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault x.Ingredientid ctx) |> List.fold (+) ((decimal)0.0)
-                                            | false -> (decimal)0.0
-
+            | true ->  subtractVariations |> List.map (fun (x:Db.Variation) -> 
+                Db.getFirstPriceVariationForIngredientSubtractVariatonFlaggedAsDefault x.Ingredientid ctx) |> List.fold (+) ((decimal)0.0)
+            | false -> (decimal)0.0
     let pricesGivenToTheIngredientPrices = specificIngredientPriceBasedVariations |> List.map (fun (x:Db.Variation) -> (Db.getIngredientPrice x.Ingredientpriceid ctx)) |> 
         List.map (fun (x:Db.IngredientPrice) -> x.Addprice ) |> List.fold (+) ((decimal)0)
-
     let _ = orderItem.Price <- originalPrice + amountToAddToPriceBeacuseOfAddings - amountToSubtractToPriceBeacuseOfSubtractions + unitaryAddOrSubtract + pricesGivenToTheIngredientPrices
-
     ctx.SubmitUpdates()
-
-
 
 let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingredientsYouCanAdd: Db.IngredientDetail list) encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d " "editOrderItemVariationPassingUserLoggedOnAndIngredientList" orderItemId)
@@ -2513,7 +2528,7 @@ let addWithoutIngredientVariation orderItemId ingredientId encodedBackUrl  (user
                 | UNITARY_MEASURE  -> Db.addRemoveUnitaryIngredientVariationOrDecreaseByOne orderItemId ingredientId ctx
                 | _ -> (Db.addRemoveIngredientVariation orderItemId ingredientId ctx)) 
             else 
-            ()
+                ()
     let _ = adjustPriceOfOrderItemByVariations orderItemId 
     editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
@@ -2522,12 +2537,12 @@ let removeAllInvisibleIngredients orderItemId encodedBackUrl (user:UserLoggedOnS
     let ctx = Db.getContext()
     let orderItem = Db.Orders.getOrderItemById orderItemId ctx
     match orderItem with
-    | Some theOrderItem ->    
-        let course = Db.Courses.getCourse theOrderItem.Courseid ctx   
-        let ingredientsOfTheCourse = Db.getIngredientsOfCourse course.Courseid ctx
-        let unavailables = ingredientsOfTheCourse |> List.filter (fun (x:Db.IngredientOfCourse) -> ( not x.Visibility))
-        unavailables |> List.iter (fun (x:Db.IngredientOfCourse) -> Db.addRemoveIngredientVariation orderItemId x.Ingredientid ctx) 
-    | _ -> ()
+        | Some theOrderItem ->    
+            let course = Db.Courses.getCourse theOrderItem.Courseid ctx   
+            let ingredientsOfTheCourse = Db.getIngredientsOfCourse course.Courseid ctx
+            let unavailables = ingredientsOfTheCourse |> List.filter (fun (x:Db.IngredientOfCourse) -> ( not x.Visibility))
+            unavailables |> List.iter (fun (x:Db.IngredientOfCourse) -> Db.addRemoveIngredientVariation orderItemId x.Ingredientid ctx) 
+        | _ -> ()
     editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeAllAllergenic orderItemId  encodedBackUrl (user:UserLoggedOnSession) =
@@ -2535,12 +2550,12 @@ let removeAllAllergenic orderItemId  encodedBackUrl (user:UserLoggedOnSession) =
     let ctx = Db.getContext()
     let orderItem = Db.Orders.getOrderItemById orderItemId ctx
     match orderItem with 
-    | Some theOrderItem ->
-        let course = Db.Courses.getCourse theOrderItem.Courseid ctx
-        let ingredientsOfTheCourse = Db.getIngredientsOfCourse course.Courseid ctx
-        let allergenics = ingredientsOfTheCourse |> List.filter (fun (x:Db.IngredientOfCourse) -> x.Allergen)
-        allergenics |> List.iter (fun (x:Db.IngredientOfCourse) -> Db.addRemoveIngredientVariation orderItemId x.Ingredientid ctx)
-    | _ -> ()
+        | Some theOrderItem ->
+            let course = Db.Courses.getCourse theOrderItem.Courseid ctx
+            let ingredientsOfTheCourse = Db.getIngredientsOfCourse course.Courseid ctx
+            let allergenics = ingredientsOfTheCourse |> List.filter (fun (x:Db.IngredientOfCourse) -> x.Allergen)
+            allergenics |> List.iter (fun (x:Db.IngredientOfCourse) -> Db.addRemoveIngredientVariation orderItemId x.Ingredientid ctx)
+        | _ -> ()
     editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let addDiminuishIngredientVariation orderItemId ingredientId encodedBackUrl (user:UserLoggedOnSession)=
@@ -2548,8 +2563,17 @@ let addDiminuishIngredientVariation orderItemId ingredientId encodedBackUrl (use
     let ctx = Db.getContext()
     let orderDetail = Db.Orders.getOrderItemDetail orderItemId ctx
     let dbUser = Db.getUserById user.UserId ctx
-    let _ = if (orderDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
-        (Db.addDiminuishIngredientVariattion orderItemId ingredientId ctx) else ()
+    let _ = 
+        if 
+            (
+                orderDetail.Userid = user.UserId 
+                || user.Role = "admin" 
+                || dbUser.Canmanageallorders
+            )
+        then 
+            (Db.addDiminuishIngredientVariattion orderItemId ingredientId ctx) 
+        else 
+            ()
     editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user:UserLoggedOnSession)=
@@ -2561,11 +2585,16 @@ let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user
         List.map (fun (x:Db.IngredientOfCourse) -> (x.Ingredientid,x)) |> Map.ofList
     let dbUser = Db.getUserById user.UserId ctx
     let _ = 
-        if (orderItemDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
-            (match ingredientsMap.[ingredientId].Unitmeasure with
+        if 
+            orderItemDetail.Userid = user.UserId 
+            || user.Role = "admin" 
+            || dbUser.Canmanageallorders
+        then 
+            match ingredientsMap.[ingredientId].Unitmeasure with
             | UNITARY_MEASURE -> Db.addAddUnitaryIngredientVariationOrIncreaseByOne orderItemId ingredientId ctx
-            | _ -> (Db.addIncreaseIngredientVariation orderItemId ingredientId ctx) )
-        else ()
+            | _ -> (Db.addIncreaseIngredientVariation orderItemId ingredientId ctx) 
+        else 
+            ()
     let _ = adjustPriceOfOrderItemByVariations orderItemId 
     editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
@@ -2575,8 +2604,12 @@ let removeIngredientVariation variationId orderitemId  encodedBackUrl (user:User
     let orderDetail = Db.Orders.getOrderItemDetail orderitemId ctx
     let dbUser = Db.getUserById user.UserId ctx
     let _ = 
-        if (orderDetail.Userid = user.UserId || user.Role = "admin" || dbUser.Canmanageallorders) then 
-            (Db.removeIngredientVariation  variationId ctx) 
+        if 
+            orderDetail.Userid = user.UserId 
+            || user.Role = "admin" 
+            || dbUser.Canmanageallorders
+        then 
+            Db.removeIngredientVariation  variationId ctx
         else ()
     let _ = adjustPriceOfOrderItemByVariations orderitemId
     editOrderItemVariationPassingUserLoggedOn orderitemId  user
@@ -3489,44 +3522,6 @@ let removeStandardVariationForCourse variationId courseId =
     let _ = Db.removeStandardVariationForCourse variationId ctx
     Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
 
-// let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
-//     log.Debug("selectOrderFromWhichMoveOrderItems")
-//     let ctx = Db.getContext() 
-//     let orders = Db.Orders.getAllUnarchivedOrders ctx
-//     let wrappedOrders = orders |> List.filter (fun (x:Db.Order) -> x.Orderid <> targetOrderId) |> List.map (fun (x:Db.Order) -> DbWrappedEntities.DbObjectWrapper.WrapOrder x) 
-//     let targetOrder = Db.Orders.getOrder targetOrderId ctx
-//     let wrappedTargetOrder = DbWrappedEntities.DbObjectWrapper.WrapOrder targetOrder
-//     let liquidModel = {orders = wrappedOrders ;  targetOrder = wrappedTargetOrder}
-
-//     choose [
-//         GET >=>  warbler (fun (req:HttpContext) ->
-//             // let idsOfNonUnitaryOrderItems = Db.getIdsOfNonUnitaryOrderItemsOfOrder targetOrderId ctx
-//             // let _ = idsOfNonUnitaryOrderItems |> Seq.iter (fun x -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
-//             let expectedOrderParameterNames = wrappedOrders |> List.map (fun (x:OrderWrapped) -> "order" + (x.OrderId|> string)) // form: order999 in querystring
-//             let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of orders
-//             let wrapperOrdersToMerge = wrappedOrders |> List.filter (fun x -> List.contains x.OrderId orderIdsTomerge ) // a wrappedorder format for orders to merge
-//             let orderAndOrderItems = wrapperOrdersToMerge |> 
-//                 List.map (fun (x:OrderWrapped) -> {order=x; orderitems =  (Db.getUnpaidOrderItemDetailOfOrderById x.OrderId ctx) |> 
-//                     List.map (fun (x:Db.OrderItemDetails) -> (DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails x "0000"))})
-//             let liquidTableMergeModel = { orderandorderitems=orderAndOrderItems; targetorder = wrappedTargetOrder  }
-//             let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:OrderAndOrderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
-//             let expectedOrderItemsParameterNames = expectedOrderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string) )
-//             let orderItemsIdsToMerge = expectedOrderItemsParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true| _ -> false  ) |> List.map (fun y -> (y.Substring("orderitem".Length) |> int ))
-//             let wrappedOrderItemsToMerge = expectedOrderItems |> List.filter (fun x -> List.contains x.Orderitemid orderItemsIdsToMerge )
-//             let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
-//             match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 
-//                 | (_,Y) when (List.length Y > 0) -> 
-//                     let _ = 
-//                         Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
-//                         let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
-//                         let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
-//                         Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
-//                     Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
-//                 | (X,_) when (X > 0) -> DotLiquid.page("selectOrderItemsToMerge.html") liquidTableMergeModel
-//                 | _ ->  DotLiquid.page("selectOrderToMerge.html") liquidModel
-//         )
-//     ]
-
 let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
     log.Debug("selectOrderFromWhichMoveOrderItemsRef")
     let ctx = Db.getContext() 
@@ -3538,8 +3533,6 @@ let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
 
     choose [
         GET >=>  warbler (fun (req:HttpContext) ->
-//             // let idsOfNonUnitaryOrderItems = Db.getIdsOfNonUnitaryOrderItemsOfOrder targetOrderId ctx
-//             // let _ = idsOfNonUnitaryOrderItems |> Seq.iter (fun x -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
             let expectedOrderParameterNames = wrappedOrders |> List.map (fun (x:OrderWrapped) -> "order" + (x.OrderId|> string)) // form: order999 in querystring
             let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of ordersI
 
