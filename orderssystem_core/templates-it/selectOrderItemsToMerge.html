@@ -4,11 +4,7 @@
 
 <div id="header"><h1><a href="/">Orders System</a><br><br></h1></div>
 
-
-
-
 <html>
-
 <head>
   <title>Order System</title>
   <link href="/Site.css" rel="stylesheet" type="text/css" />
@@ -19,26 +15,25 @@
     <fieldset>
       <legend>per ogni tavolo, seleziona gli order item da unire a {{model.targetorder.tavolo}}</legend>
       {% for item in model.orderandorderitems %}
-      <input type ="checkbox" name="order{{item.order.order_id}}"> tavolo: {{item.order.tavolo}}</input>
-      <input type ="hidden" name="order{{item.order.order_id}}"value="on"/>
-      <br>
-
-      {%for orderitem in item.orderitems %}
-      <input type ="checkbox" name="orderitem{{orderitem.orderitemid}}">  {{orderitem.Name}} {{orderitem.Comment}}</input>
-      <br>
-
-      {% endfor %}
-
-      <br>
+        <input type ="checkbox" name="order{{item.order.order_id}}"> tavolo: {{item.order.tavolo}}</input>
+        <input type ="hidden" name="order{{item.order.order_id}}"value="on"/>
+        <br>
+            {%for orderitem in item.orderitems %}
+              <input type ="checkbox" name="orderitem{{orderitem.orderitemid}}">  {{orderitem.Name}} {{orderitem.Comment}},
+                  {%for variation in orderitem.variations %}
+                    {{variation.Tipo_variazione}} {{variation.Ingredient_name}} 
+                      {% if variation.quantity != 0%}
+                        {{variation.quantity}}
+                      {% endif %},
+                  {% endfor %}
+              </input>
+              <br>
+            {% endfor %}
+        <br>
       {% endfor%}
-
-
-
       <input type="submit" value="Invia">
     </fieldset>
   </form>
-
-
 
   <br/>
   <br/>

@@ -20,21 +20,20 @@
       <input type ="checkbox" name="order{{item.order.order_id}}"> tavolo: {{item.order.tavolo}}</input>
       <input type ="hidden" name="order{{item.order.order_id}}"value="on"/>
       <br>
-
-      {%for orderitem in item.orderitems %}
-      <input type ="checkbox" name="orderitem{{orderitem.orderitemid}}">  {{orderitem.Name}} {{orderitem.Comment}}</input>
-      <br>
-
-      {% endfor %}
-
-      <br>
-      {% endfor%}
-
+        {% for orderitem in item.orderitems %}
+          <input type ="checkbox" name="orderitem{{orderitem.orderitemid}}">  {{orderitem.Name}} {{orderitem.Comment}},
+              {%for variation in orderitem.variations %}
+                {{variation.Tipo_variazione}} {{variation.Ingredient_name}} 
+                  {% if variation.quantity != 0%}
+                    {{variation.quantity}}
+                  {% endif %},
+              {% endfor %}
+          </input>
+        <br>
+        {% endfor %}
       <input type="submit" value="Invia">
     </fieldset>
   </form>
-
-
 
   <br/>
   <br/>

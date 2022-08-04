@@ -10,8 +10,8 @@ open ExpressionOptimizer
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 type CourseWrapped = {
-   CourseName: string;
-   CourseId: int;
+    CourseName: string;
+    CourseId: int;
 }
 
 type PaymentItemWrapped = {
@@ -20,6 +20,18 @@ type PaymentItemWrapped = {
     TenderCodeId: int;
     PaymentItemId: int;
     SubOrderId: int;
+}
+
+type OrderitemVariatonWrapped = {
+    TipoVariazione: string; 
+    IngredientName: string;
+    Quantity: int;
+}
+
+let makeOrderitemVariationWrapped (x: Db.VariationDetail) = {
+    TipoVariazione = x.Tipovariazione
+    IngredientName = x.Ingredientname
+    Quantity = (int)x.Quantity
 }
 
 type TenderCodeWrapped = {
@@ -47,7 +59,8 @@ type OrderItemDetailsWrapped = {
     Paid: bool;
     Csscolor: string;
     Totalprice: decimal;
-    Stateid: int
+    Stateid: int;
+    Variations: List<OrderitemVariatonWrapped>;
 }
 
 type SubOrderWrapped = {
@@ -78,6 +91,29 @@ let wrapMyObject (object: Common.SqlEntity) =
     | _ -> printf "not ok"
 
 type DbObjectWrapper =
+    static member WrapOrderItemDetailsIncldingVariations(orderItemDetail: Db.OrderItemDetails) (orderItemDetailVariations:  List<Db.VariationDetail>) cssColor =
+        {
+            Quantity = orderItemDetail.Quantity;
+            Categoryid = orderItemDetail.Categoryid;
+            Closingtime = orderItemDetail.Closingtime;
+            Comment  = orderItemDetail.Comment;
+            Courseid = orderItemDetail.Courseid;
+            Hasbeenrejected = orderItemDetail.Hasbeenrejected;
+            Name = orderItemDetail.Name;
+            Orderid = orderItemDetail.Orderid;
+            Orderitemid = orderItemDetail.Orderitemid;
+            Orderout= orderItemDetail.Groupidentifier;
+            Originalprice=orderItemDetail.Originalprice;
+            Price = orderItemDetail.Price;
+            Person= orderItemDetail.Person;
+            Suborderid = orderItemDetail.Suborderid;
+            Paid = orderItemDetail.Payed;
+            Csscolor = cssColor;
+            Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price;
+            Stateid = orderItemDetail.Stateid;
+            Variations = orderItemDetailVariations |> List.map (fun x -> makeOrderitemVariationWrapped x)
+        }
+
     static member WrapOrderItemDetails(orderItemDetail: Db.OrderItemDetails) cssColor =
         {
             Quantity = orderItemDetail.Quantity;
@@ -98,7 +134,7 @@ type DbObjectWrapper =
             Csscolor = cssColor;
             Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price;
             Stateid = orderItemDetail.Stateid;
-
+            Variations = []
         }
 
     static member WrapCourse (course: Db.Course) =

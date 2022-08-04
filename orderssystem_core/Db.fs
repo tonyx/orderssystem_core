@@ -2824,7 +2824,7 @@ let isEnablerForRoleState (roleId:int) (stateId: int) (ctx:DbContext) =
 
 let safeRemoveOrderItem orderItemId (ctx:DbContext) =
     log.Debug (sprintf "%s %d" "safeRemoveOrderItem" orderItemId )
-    let orderItem =  Orders.getTheOrderItemById orderItemId ctx //  ctx.Public.Orderitems |> Seq.find (fun (x:OrderItem) -> x.Orderitemid = orderItemId )
+    let orderItem =  Orders.getTheOrderItemById orderItemId ctx
     orderItem.Delete()
     ctx.SubmitUpdates()
 
@@ -2856,11 +2856,49 @@ let splitOrderItemInToUnitaryOrderItems id  (ctx:DbContext) =
     let orderId = theOrderItem.Orderid
     let comment = theOrderItem.Comment
     let outGroupId = theOrderItem.Ordergroupid
-    let clonedOrderItems = [1 .. theOrderItem.Quantity] |> List.map (fun _ -> createUnitaryNakedOrderItemByOrderId courseId orderId comment theOrderItem.Price outGroupId ctx) // |> List.fold (@) []
-    let do_cloneIngredientDecrements = clonedOrderItems  |> List.map (fun (x:OrderItem) -> ingredientdecrements |> List.map (fun (y:IngredientDecrement) -> createClonedIngredientDecrement x.Orderitemid ((decimal) theOrderItem.Quantity)  y ctx)) |> List.fold (@) []
-    let do_cloneVariations = clonedOrderItems |> List.map (fun (x:OrderItem) -> variations |> List.map  (fun (y:Variation) -> createClonedVariationOfOrderItem x.Orderitemid y.Ingredientid y.Tipovariazione ctx)) |> List.fold (@) []
-    let do_cloneRejectedOrderItems = clonedOrderItems |> List.map (fun (x:OrderItem) -> rejectOrderItems |> List.map (fun (y:RejectedOrderItems) -> createClonedRejectedOrderItem x.Orderitemid y ctx )) |> List.fold (@) []
-    let do_cloneOrderItemStates = clonedOrderItems |> List.map (fun (x:OrderItem) -> connectedOrderItemStates |> List.map (fun (y:OrderItemState) -> createClonedOrderItemState x.Orderitemid y ctx)) |> List.fold (@) []
+    let clonedOrderItems = 
+        [1 .. theOrderItem.Quantity] 
+        |> List.map 
+            (fun _ -> 
+                createUnitaryNakedOrderItemByOrderId 
+                    courseId orderId comment theOrderItem.Price outGroupId ctx
+            ) 
+    let do_cloneIngredientDecrements = 
+        clonedOrderItems 
+        |> List.map 
+            (fun (x:OrderItem) 
+                -> ingredientdecrements 
+                    |> List.map 
+                        (fun (y:IngredientDecrement) -> 
+                            createClonedIngredientDecrement x.Orderitemid ((decimal) theOrderItem.Quantity)  y ctx)) 
+            |> List.fold (@) []
+    let do_cloneVariations = 
+        clonedOrderItems 
+        |> List.map 
+            (fun (x:OrderItem) -> 
+                variations 
+                |> List.map  
+                    (fun (y:Variation) -> 
+                        createClonedVariationOfOrderItem x.Orderitemid y.Ingredientid y.Tipovariazione ctx)) 
+            |> List.fold (@) []
+    let do_cloneRejectedOrderItems = 
+        clonedOrderItems 
+        |> List.map 
+            (fun (x:OrderItem) -> 
+                rejectOrderItems 
+                |> List.map 
+                    (fun (y:RejectedOrderItems) -> 
+                        createClonedRejectedOrderItem x.Orderitemid y ctx )) 
+            |> List.fold (@) []
+    let do_cloneOrderItemStates = 
+        clonedOrderItems 
+        |> List.map 
+            (fun (x:OrderItem) -> 
+                connectedOrderItemStates 
+                |> List.map 
+                    (fun (y:OrderItemState) 
+                        -> createClonedOrderItemState x.Orderitemid y ctx)) 
+            |> List.fold (@) []
     safeRemoveOrderItem theOrderItem.Orderitemid ctx
 
 let getUserViewById userId (ctx:DbContext):UsersView =

@@ -2439,7 +2439,7 @@ let editOrderItemVariationPassingUserLoggedOnAndIngredientList orderItemId (ingr
 let viewSingleOrderRef orderId =
     loggedOn (session (function 
         | UserLoggedOn user  ->
-            log.Debug(sprintf "%s %d" "viewSingleOrder" orderId)
+            log.Debug(sprintf "%s %d" "viewSingleOrderRef" orderId)
             let ctx = Db.getContext()
             Db.deleteAnyEmptyOrderOutGroupOfOrder orderId ctx
             let orderDetail = Db.getOrderDetail orderId ctx
@@ -2646,7 +2646,7 @@ let printSubOrderInvoice subOrderId =
         | Some N -> N + 1
         | None -> 1
 
-    let orderItemDetailsWrappedList = orderItemsDetails |> List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails(x) "") 
+    let orderItemDetailsWrappedList = orderItemsDetails |> List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails(x)  "") 
 
     let totalOfSuborder = orderItemsDetails |> List.map (fun (x:Db.OrderItemDetails) -> x.Price) |> List.fold (+) 0M
 
@@ -3030,7 +3030,7 @@ let colapseDoneOrder id (user: UserLoggedOnSession) =
     ]
 
 let subdivideDoneOrderRef id (user: UserLoggedOnSession)  = 
-    log.Debug(sprintf "%s %d" "subdivideDoneOrder" id)
+    log.Debug(sprintf "%s %d" "subdivideDoneOrderRef" id)
     let ctx = Db.getContext()
     choose [
         GET >=> warbler ( fun (x:HttpContext) ->
@@ -3489,44 +3489,46 @@ let removeStandardVariationForCourse variationId courseId =
     let _ = Db.removeStandardVariationForCourse variationId ctx
     Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
 
-let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
-    log.Debug("selectOrderFromWhichMoveOrderItems")
-    let ctx = Db.getContext() 
-    let orders = Db.Orders.getAllUnarchivedOrders ctx
-    let wrappedOrders = orders |> List.filter (fun (x:Db.Order) -> x.Orderid <> targetOrderId) |> List.map (fun (x:Db.Order) -> DbWrappedEntities.DbObjectWrapper.WrapOrder x) 
-    let targetOrder = Db.Orders.getOrder targetOrderId ctx
-    let wrappedTargetOrder = DbWrappedEntities.DbObjectWrapper.WrapOrder targetOrder
-    let liquidModel = {orders = wrappedOrders ;  targetOrder = wrappedTargetOrder}
+// let selectOrderFromWhichMoveOrderItems targetOrderId (user:UserLoggedOnSession) =
+//     log.Debug("selectOrderFromWhichMoveOrderItems")
+//     let ctx = Db.getContext() 
+//     let orders = Db.Orders.getAllUnarchivedOrders ctx
+//     let wrappedOrders = orders |> List.filter (fun (x:Db.Order) -> x.Orderid <> targetOrderId) |> List.map (fun (x:Db.Order) -> DbWrappedEntities.DbObjectWrapper.WrapOrder x) 
+//     let targetOrder = Db.Orders.getOrder targetOrderId ctx
+//     let wrappedTargetOrder = DbWrappedEntities.DbObjectWrapper.WrapOrder targetOrder
+//     let liquidModel = {orders = wrappedOrders ;  targetOrder = wrappedTargetOrder}
 
-    choose [
-        GET >=>  warbler (fun (req:HttpContext) ->
-            let expectedOrderParameterNames = wrappedOrders |> List.map (fun (x:OrderWrapped) -> "order" + (x.OrderId|> string)) // form: order999 in querystring
-            let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of orders
-            let wrapperOrdersToMerge = wrappedOrders |> List.filter (fun x -> List.contains x.OrderId orderIdsTomerge ) // a wrappedorder format for orders to merge
-            let orderAndOrderItems = wrapperOrdersToMerge |> 
-                List.map (fun (x:OrderWrapped) -> {order=x; orderitems =  (Db.getUnpaidOrderItemDetailOfOrderById x.OrderId ctx) |> 
-                    List.map (fun (x:Db.OrderItemDetails) -> (DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails x "0000"))})
-            let liquidTableMergeModel = { orderandorderitems=orderAndOrderItems; targetorder = wrappedTargetOrder  }
-            let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:OrderAndOrderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
-            let expectedOrderItemsParameterNames = expectedOrderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string) )
-            let orderItemsIdsToMerge = expectedOrderItemsParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true| _ -> false  ) |> List.map (fun y -> (y.Substring("orderitem".Length) |> int ))
-            let wrappedOrderItemsToMerge = expectedOrderItems |> List.filter (fun x -> List.contains x.Orderitemid orderItemsIdsToMerge )
-            let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
-            match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 
-                | (_,Y) when (List.length Y > 0) -> 
-                    let _ = 
-                        Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
-                        let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
-                        let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
-                        Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
-                    Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
-                | (X,_) when (X > 0) -> DotLiquid.page("selectOrderItemsToMerge.html") liquidTableMergeModel
-                | _ ->  DotLiquid.page("selectOrderToMerge.html") liquidModel
-        )
-    ]
+//     choose [
+//         GET >=>  warbler (fun (req:HttpContext) ->
+//             // let idsOfNonUnitaryOrderItems = Db.getIdsOfNonUnitaryOrderItemsOfOrder targetOrderId ctx
+//             // let _ = idsOfNonUnitaryOrderItems |> Seq.iter (fun x -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
+//             let expectedOrderParameterNames = wrappedOrders |> List.map (fun (x:OrderWrapped) -> "order" + (x.OrderId|> string)) // form: order999 in querystring
+//             let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of orders
+//             let wrapperOrdersToMerge = wrappedOrders |> List.filter (fun x -> List.contains x.OrderId orderIdsTomerge ) // a wrappedorder format for orders to merge
+//             let orderAndOrderItems = wrapperOrdersToMerge |> 
+//                 List.map (fun (x:OrderWrapped) -> {order=x; orderitems =  (Db.getUnpaidOrderItemDetailOfOrderById x.OrderId ctx) |> 
+//                     List.map (fun (x:Db.OrderItemDetails) -> (DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails x "0000"))})
+//             let liquidTableMergeModel = { orderandorderitems=orderAndOrderItems; targetorder = wrappedTargetOrder  }
+//             let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:OrderAndOrderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
+//             let expectedOrderItemsParameterNames = expectedOrderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string) )
+//             let orderItemsIdsToMerge = expectedOrderItemsParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true| _ -> false  ) |> List.map (fun y -> (y.Substring("orderitem".Length) |> int ))
+//             let wrappedOrderItemsToMerge = expectedOrderItems |> List.filter (fun x -> List.contains x.Orderitemid orderItemsIdsToMerge )
+//             let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
+//             match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 
+//                 | (_,Y) when (List.length Y > 0) -> 
+//                     let _ = 
+//                         Y |> List.iter (fun (x:OrderItemDetailsWrapped) -> 
+//                         let outGroup = Db.createOrGetOutGroup targetOrderId (stateNewTargetGroupsMapping.[x.Stateid]) ctx
+//                         let _ = if (not (Db.isInitialState x.Stateid ctx)) then outGroup.Printcount <- outGroup.Printcount + 1
+//                         Db.tryMoveOrderItemToAnOutGroupOfAnotherOrder x.Orderitemid outGroup.Ordergroupid ctx )
+//                     Redirection.found (sprintf Path.Orders.viewOrder targetOrderId)
+//                 | (X,_) when (X > 0) -> DotLiquid.page("selectOrderItemsToMerge.html") liquidTableMergeModel
+//                 | _ ->  DotLiquid.page("selectOrderToMerge.html") liquidModel
+//         )
+//     ]
 
 let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
-    log.Debug("selectOrderFromWhichMoveOrderItems")
+    log.Debug("selectOrderFromWhichMoveOrderItemsRef")
     let ctx = Db.getContext() 
     let orders = Db.Orders.getAllUnarchivedOrders ctx
     let wrappedOrders = orders |> List.filter (fun (x:Db.Order) -> x.Orderid <> targetOrderId) |> List.map (fun (x:Db.Order) -> DbWrappedEntities.DbObjectWrapper.WrapOrder x) 
@@ -3536,16 +3538,31 @@ let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
 
     choose [
         GET >=>  warbler (fun (req:HttpContext) ->
+//             // let idsOfNonUnitaryOrderItems = Db.getIdsOfNonUnitaryOrderItemsOfOrder targetOrderId ctx
+//             // let _ = idsOfNonUnitaryOrderItems |> Seq.iter (fun x -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
             let expectedOrderParameterNames = wrappedOrders |> List.map (fun (x:OrderWrapped) -> "order" + (x.OrderId|> string)) // form: order999 in querystring
-            let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of orders
+            let orderIdsTomerge = expectedOrderParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true | _ -> false ) |> List.map (fun y -> (y.Substring("order".Length) |> int)) // list of ids of ordersI
+
+            let _ =
+                let idOfOrderItemsToSplit = 
+                    orderIdsTomerge 
+                    |> List.map 
+                        (fun x -> Db.getIdsOfNonUnitaryOrderItemsOfOrder x ctx |> Seq.toList) 
+                        |> Seq.fold (@) []
+                idOfOrderItemsToSplit 
+                |> Seq.iter 
+                    (fun (x: int) -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
+                ()
+
             let wrapperOrdersToMerge = wrappedOrders |> List.filter (fun x -> List.contains x.OrderId orderIdsTomerge ) // a wrappedorder format for orders to merge
             let orderAndOrderItems = wrapperOrdersToMerge |> 
                 List.map (fun (x:OrderWrapped) -> {order=x; orderitems =  (Db.getUnpaidOrderItemDetailOfOrderById x.OrderId ctx) |> 
-                    List.map (fun (x:Db.OrderItemDetails) -> (DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetails x "0000"))})
+                    List.map (fun (x:Db.OrderItemDetails) -> (DbWrappedEntities.DbObjectWrapper.WrapOrderItemDetailsIncldingVariations x (Db.getVariationDetailsOfOrderItem (x.Orderitemid) ctx) "0000"))})
             let liquidTableMergeModel = { orderandorderitems=orderAndOrderItems; targetorder = wrappedTargetOrder  }
             let expectedOrderItems = orderAndOrderItems |> List.map (fun (x:OrderAndOrderitemslist) -> x.orderitems) |> List.fold (@) []    // |> List.map (fun (y:OrderItemDetailsWrapped) -> y.Orderitemid))) |> List.fold(@) []   I
             let expectedOrderItemsParameterNames = expectedOrderItems |> List.map (fun (x:OrderItemDetailsWrapped) -> "orderitem"+(x.Orderitemid|> string) )
             let orderItemsIdsToMerge = expectedOrderItemsParameterNames |> List.filter (fun z -> match (req.request.queryParam(z)) with | Choice1Of2 _ -> true| _ -> false  ) |> List.map (fun y -> (y.Substring("orderitem".Length) |> int ))
+
             let wrappedOrderItemsToMerge = expectedOrderItems |> List.filter (fun x -> List.contains x.Orderitemid orderItemsIdsToMerge )
             let stateNewTargetGroupsMapping = stateGroupIdentifierMappingForImportedOrderItems wrappedOrderItemsToMerge 
             match ((List.length wrapperOrdersToMerge),wrappedOrderItemsToMerge) with 

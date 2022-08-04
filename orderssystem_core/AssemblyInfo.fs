@@ -9,7 +9,7 @@ open System.Runtime.CompilerServices
 [<assembly: AssemblyProduct("")>]
 [<assembly: AssemblyCopyright("Tonyx")>]
 [<assembly: AssemblyTrademark("")>]
-[<assembly: log4net.Config.XmlConfigurator(ConfigFile = @"..\..\..\log4net.config")>]
+[<assembly: log4net.Config.XmlConfigurator(ConfigFile = @"../../../log4net.config")>]
 
 // The assembly version has the format {Major}.{Minor}.{Build}.{Revision}
 
