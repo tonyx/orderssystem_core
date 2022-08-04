@@ -68,7 +68,6 @@ let ingredientPrice: Form<IngredientPrice> =
             DecimalProp ((fun f -> <@ f.SubtractPrice @>), [ min 0.01M; step 0.01M ])
         ], [] )
 
-
 type OrderItem = {
     CourseId: decimal
     Comment: string option
@@ -242,7 +241,6 @@ let ingredientLoad:Form<IngredientLoad> =
         ],
         []
     )
-
 type Date = {
     Date: string
 }

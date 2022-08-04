@@ -829,29 +829,7 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
 let addOrderItem' orderId coursesIdWithName coursesIdWithPrices  backUrl viableGroupOutIdsForOrderItem = 
 
     let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
-    // let sonCategoriesLink = match (List.length subCategories) with
-    //     | 0 ->  em ""
-    //     | X -> 
-    //         div [] 
-    //             [
-    //                 h2 "sottocategorie:"; div [] 
-    //                     [
-    //                         for category in subCategories ->
-    //                             a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)] 
-    //                     ]
-    //             ]
-    // let fatherCategoryLink = match fatherCategory with
-    //     | Some theFather -> 
-    //         div [] 
-    //             [
-    //                 h2 local.FatherCategory
-    //                 a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]
-    //             ]
-    //     | None -> em ""
-
     [
-        // fatherCategoryLink
-        // sonCategoriesLink
 
         h2 (local.Add)
         renderForm
@@ -1058,8 +1036,6 @@ let editOrderItemForOrdinaryUsers (orderItem:Db.OrderItemDetails)
         script ["type","text/javascript"; "src","/script_options_add_order_item.js?kzXq"] [  ]
     ]
 
-
-
 let createCourseCategory msg  = [ 
     h2 local.NewCategory
 
@@ -1190,7 +1166,6 @@ let createCourse visibleCategories   =
             ]
     ]
 ]
-
 
 let createCourseWithPreFilledCategory visibleCategories categoryId  = 
     [
@@ -1510,7 +1485,6 @@ let makeSubCourseCategory (courseCategory:Db.CourseCategories)  message =
                 SubmitText = local.Insert
             }
     ]
-
 
 let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list) (father:Db.CourseCategories option)   (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
@@ -2143,8 +2117,6 @@ let createRole (user:UserLoggedOnSession) =
         ]
     | _ -> failwith local.UserIsNotEnabled
 
-
-
 let rolesAdministrationPage  (roles: Db.Role list) (allRolesWithObservers:Db.ObserverRoleStatusCategory list)  (allRolesWithEnablers:Db.EnablerRoleStatusCategory list)  =
     let roleEnablerObserverCategoriesByCheckBoxes = tag "p" [] [a Path.Admin.roleEnablerObserverCategoriesByCheckBoxes   ["class","buttonX"] [Text local.AccessRights]]
     let defaultStateEnabler = tag "p" [] [a Path.Admin.defaultActionableStatesForOrderOwner   ["class","buttonX"] [Text local.DefaultStatesForWaiter]]
@@ -2249,9 +2221,6 @@ let printersAdminLink user =
 let info user = 
         match user.Role with
         | "admin"   -> tag "p" [] [a Path.Admin.info ["class","buttonX"] [Text local.Info]]
-        // | "admin"   -> tag "p" [] [a Path.Admin.info ["class","ba bw2 br4 bg-light-green grow"] [Text local.Info]]
-        // | "admin"   -> tag "p" [] [a Path.Admin.info ["class","ba bw2 br4 bg-light-green b--black grow:hover"] [Text local.Info]]
-        // | "admin"   -> tag "p" [] [a Path.Admin.info ["class","ba grow"] [Text local.Info]]
         | _ -> em ""
 
 let allOrdersLink user = 
@@ -2348,10 +2317,7 @@ let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
     ]
 
 let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>) (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
-// let viewableOrderItems (orderItemsPerStates (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
-    // let states = orderItemsPerStates.Keys
     let states = orderedStates
-    
     [
         h2  local.OrderItemsInProgress
         br []
@@ -2403,50 +2369,6 @@ let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>)
             ]
             script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
     ] 
-
-
-
-
-
-//     [
-//     h2  local.OrderItemsInProgress
-
-//     h2 ("COLLECTING")
-
-//     tag "p" []  [
-//         table  
-//             [
-//                 for orderItem in orderItems  -> 
-//                 let variationsDesc = "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
-//                 let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
-//                 p [] 
-//                     [
-//                         tr 
-//                             [ 
-//                                 td 
-//                                     [
-//                                         br []
-//                                         Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
-//                                             orderItem.Statusname+ (local.InChargeBy + orderItem.Username + " cli.: " + orderItem.Person)
-//                                             + local.Group  + (sprintf "%d" orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
-//                                         br []
-//                                         Text(variationsDesc)
-//                                         br []
-//                                         if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
-//                                             a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
-//                                                 [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
-//                                         if (orderItem.Stateid <> finalState.Stateid) then
-//                                             a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
-//                                                 [Text local.Reject]
-
-//                                         br []
-//                                     ]
-//                             ]
-//                     ]
-//             ]
-//     ]
-//     script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
-// ] 
 
 let viewableOrderItemsRef (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,State>) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
     [
@@ -2617,7 +2539,6 @@ let seeOrder (order:Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetails list
         | (_,true) ->    local.Variation +
             (order.Plaintotalvariation.ToString()) + " = " + order.Adjustedtotal.ToString()
         | _ -> ""
-
     [
         renderForm
             { 
@@ -2770,7 +2691,6 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                     ]
             ]
     ]
-
 
 let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders: Map<int,Db.OrderItemDetails list>) (ordersHavingSubOrdersMap: Map<int,bool>) =
     [  

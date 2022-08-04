@@ -2658,12 +2658,16 @@ let deleteIngredientCategory id =
     Db.safeDeleteIngredientCategory id ctx
     Redirection.found Path.Admin.deleteObjects
 
-type LiquidWrappedOrderItemsForEdit = {orderitemdetailswrapped: OrderItemDetailsWrapped list; suborderwrapped: SubOrderWrapped list; currentsuborderid: int}
+type LiquidWrappedOrderItemsForEdit = 
+    {   
+        orderitemdetailswrapped: OrderItemDetailsWrapped list 
+        suborderwrapped: SubOrderWrapped list
+        currentsuborderid: int
+    }
 
 type invoiceModel = {daticliente: string; orderitemdetailswrapped: OrderItemDetailsWrapped list; nextavailablenumber: int; idname: IndexNameDataRecord list}
 let printWholeOrderInvoiceAsWordformat orderId =
     failwith "unimplemented"
-
 
 let printSubOrderInvoice subOrderId =
     log.Debug(sprintf "%s %d " "printSubOrderInvoice" subOrderId)
@@ -2759,7 +2763,6 @@ let printWholeOrderInvoice orderId =
 
     let orderItemDetailsWrappedList = orderItemsDetails |> List.map (fun (x:Db.OrderItemDetails) -> DbObjectWrapper.WrapOrderItemDetails(x) "") 
 
-
     choose [
         GET >=> warbler (fun _ ->
             let datiCliente = {daticliente = ""; orderitemdetailswrapped = orderItemDetailsWrappedList; nextavailablenumber = nextAvailableNumber; idname  = idNameCustomers }
@@ -2785,8 +2788,8 @@ let printWholeOrderInvoice orderId =
 
                 let textAboutTotal =   
                     match (order.Adjustispercentage,order.Adjustisplain) with
-                    | (true,false) -> sprintf "sconto percentuale: %.2f%%\n%s %.2f"  order.Percentagevariataion "Totale scontato" order.Adjustedtotal
-                    | (false,true) -> sprintf "sconto: %.2f\n%s %.2f"  order.Plaintotalvariation  "Totale scontato" order.Adjustedtotal
+                    | (true, false) -> sprintf "sconto percentuale: %.2f%%\n%s %.2f"  order.Percentagevariataion "Totale scontato" order.Adjustedtotal
+                    | (false, true) -> sprintf "sconto: %.2f\n%s %.2f"  order.Plaintotalvariation  "Totale scontato" order.Adjustedtotal
                     | _ -> ""
 
                 let now = System.DateTime.Now.ToLocalTime()
@@ -2904,7 +2907,6 @@ let subOrderPaymentItems subOrderId orderId  =
             }
         DotLiquid.page("subOrderPaymentItem.html") liquidModel
     )
-
 
 let removeAllDiscountOfSubOrder subOrderId =
     let ctx = Db.getContext()
@@ -3067,7 +3069,6 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
     let ctx = Db.getContext()
     choose [
         GET >=> warbler ( fun (x:HttpContext) ->
-
             let idsOfNonUnitaryOrderItems = Db.getIdsOfNonUnitaryOrderItemsOfOrder id ctx
             let _ = idsOfNonUnitaryOrderItems |> Seq.iter (fun x -> Db.splitOrderItemInToUnitaryOrderItems x ctx)
             let order = Db.getOrderDetail id ctx

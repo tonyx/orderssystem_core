@@ -14,7 +14,7 @@ let TPConnectionString =
     "Password=1234;"
 
 let [<Literal>] dbVendor = Common.DatabaseProviderTypes.POSTGRESQL
-let [<Literal>] resPath = Settings.NpgSqlResPath
+let [<Literal>] resPath = "" 
 let [<Literal>] indivAmount = 1000
 let [<Literal>] useOptTypes  = false
 
@@ -1446,12 +1446,13 @@ let createOrderItemByCourseId courseId orderid quantity comment price (groupOut:
     ctx.SubmitUpdates()
     orderItem
 
-
 let cloneOrderItemStatesWithNewOrderItemId orderItemId (orderitemstate:OrderItemState) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "cloneOrderItemStatesWithNewOrderItemId" orderItemId)
     let stateId = orderitemstate.Stateid
     let startingTime = orderitemstate.Startingtime
-    let clonedState = ctx.Public.Orderitemstates.``Create(orderitemid, startingtime, stateid)``(orderItemId,startingTime,stateId)
+    let clonedState = 
+        ctx.Public.Orderitemstates.``Create(orderitemid, startingtime, stateid)``
+            (orderItemId, startingTime, stateId)
     ctx.SubmitUpdates()
     clonedState
 
@@ -1459,7 +1460,10 @@ let createUnitaryNakedOrderItemByOrderId courseId orderId comment price outGroup
     log.Debug(sprintf "%s %d %d" "createUnitaryNakedOrderItemByOrderId" courseId orderId )
     let now = System.DateTime.Now
     let finalState = States.getFinalState ctx
-    let orderItem = ctx.Public.Orderitems.``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` (courseId,false,outGroupId,orderId,1,1,now,finalState.Stateid)
+    let orderItem = 
+        ctx.Public.Orderitems.
+            ``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` 
+            (courseId, false, outGroupId, orderId, 1, 1, now, finalState.Stateid)
     let _ = orderItem.Comment <- comment
     let _ = orderItem.Price <- price
     ctx.SubmitUpdates()
@@ -1469,7 +1473,14 @@ let getDistinctOutGroupsOfOrder orderId (ctx:DbContext) =
     log.Debug(sprintf "%s %d " "getDistinctOutGroupsOfOrder" orderId)
     let order = Orders.getOrder orderId ctx
     let orderItems = order.``public.orderitems by orderid``
-    let outGroups = orderItems |> Seq.map (fun (x:OrderItem ) -> x.Ordergroupid) |> Set.ofSeq
+    let outGroups = 
+        orderItems 
+        |> Seq.map 
+            (
+                fun 
+                    (x:OrderItem ) -> x.Ordergroupid
+            ) 
+            |> Set.ofSeq
     outGroups
 
 let createRejectedOrderItem orderItemId courseId cause (ctx:DbContext) =
@@ -1566,28 +1577,6 @@ let getNextState (stateId: int) (ctx:DbContext) =
         | stateId -> None
         | _ -> (States.getState currentState.Nextstateid ctx) |> Some
 
-// let getStatesInSequence (ctx: DbContext) =
-//     let initState = States.getInitState ctx
-
-//     let orderingStates acc state =
-
-
-//         let nextState = States.getNextState state ctx
-//         in case nextState of
-//             | Some nextState -> orderingStates (acc |> List.cons state) nextState
-//             | _ -> acc |> List.cons state
-    
-
-//     let result = 
-//         let rec getStatesInSequence' state =
-//             let nextState = getNextState state ctx
-//             match nextState with
-//             | Some theNextState -> [(States.getState state ctx)] @  (getStatesInSequence' theNextState.Stateid)
-//             | None -> [States.getState state ctx]
-//         in getStatesInSequence' initState.Stateid
-//     result
-//     // let result2 = result |> List.map (fun (x:int) -> States.getState x ctx)
-//     // result2
 
 let getMapOfNextStates (ctx: DbContext) =
     log.Debug(sprintf "%s" "getMapOfNextStates")
@@ -2752,9 +2741,7 @@ let removeOrderItemSubOrderMapping orderItemId (ctx:DbContext) =
             for orderItemSubOrderMapping in ctx.Public.Orderitemsubordermapping do
                 where (orderItemSubOrderMapping.Orderitemid = orderItemId)
         }
-    log.Debug("removeO 2")    
     let element = Seq.tryHead orderItemSubOrderMapping
-    log.Debug("removeO 3")    
     match element with 
     | Some theElement -> log.Debug("removeO 4");    theElement.Delete(); ctx.SubmitUpdates()
     | _ -> log.Debug("remove0 5")
@@ -3237,8 +3224,8 @@ module StandardVariations =
         log.Debug(sprintf "getAllStandardVariationForCourseDetailsByCourseId %d" id)
         query {
             for standardVariationForCourseDetails in ctx.Public.Standardvariationforcoursedetails do
-            where (standardVariationForCourseDetails.Courseid = id ) 
-            select standardVariationForCourseDetails
+                where (standardVariationForCourseDetails.Courseid = id ) 
+                select standardVariationForCourseDetails
         } |> Seq.toList
 
     let getAllStandardVariations (ctx:DbContext) =
@@ -3262,9 +3249,9 @@ module StandardVariations =
         log.Debug("tryGetUnitaryngredientStandardVariationitemOfStandardVariation")
         query {
             for variationItem in ctx.Public.Standardvariationitem do
-            join ingredient in ctx.Public.Ingredient on (variationItem.Ingredientid = ingredient.Ingredientid)
-            where (variationItem.Ingredientid = ingredientId && variationItem.Standardvariationid = standardVariationId && ingredient.Unitmeasure = Globals.UNITARY_MEASURE)
-            select variationItem
+                join ingredient in ctx.Public.Ingredient on (variationItem.Ingredientid = ingredient.Ingredientid)
+                where (variationItem.Ingredientid = ingredientId && variationItem.Standardvariationid = standardVariationId && ingredient.Unitmeasure = Globals.UNITARY_MEASURE)
+                select variationItem
         } |> Seq.tryHead
 
     let tryGetAStandardIngredientVariationItem standardVariationId ingredientId (ctx:DbContext) =
@@ -3339,8 +3326,8 @@ module StandardVariations =
         log.Debug("removeEventuallyExistingStandardVariationItem")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
         match existingVariation with 
-        | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
-        | None -> ()
+            | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
+            | None -> ()
 
     let addRemoveUnitaryStandardIngredientVariationItemOrDecreaseByOne standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addRemoveUnitaryStandardIngredientVariationItemOrDecreaseByOne")
@@ -3400,4 +3387,3 @@ module StandardVariations =
         let _ = standardVariationItems |> Seq.iter (fun x -> copyStandardVariationItemToOrderItem x.Standardvariationitemid orderItemId ctx)
         ()
         
-
