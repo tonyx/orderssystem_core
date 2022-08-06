@@ -2370,41 +2370,6 @@ let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>)
             script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
     ] 
 
-let viewableOrderItemsRef (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,State>) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
-    [
-    h2  local.OrderItemsInProgress
-    tag "p" []  [
-        table  
-            [
-                for orderItem in orderItems  -> 
-                let variationsDesc = "var: "+variationsStringDescriptions.[orderItem.Orderitemid]
-                let receiptDesc = if (strIngredientsOfCourses.[orderItem.Orderitemid] <> "") then strIngredientsOfCourses.[orderItem.Orderitemid] else local.Missing
-                p [] 
-                    [
-                        tr 
-                            [ 
-                                td 
-                                    [
-                                        br []
-                                        Text(local.Table+orderItem.Table+": "+local.Quantity+": "+   orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" " + 
-                                            orderItem.Statusname+ (local.InChargeBy + orderItem.Username + " cli.: " + orderItem.Person)
-                                            + local.Group  + (sprintf "%d" orderItem.Groupidentifier) + local.Receipt+ receiptDesc  )
-                                        br []
-                                        Text(variationsDesc)
-                                        br []
-                                        a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
-                                            [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Statusname)]
-                                        a (sprintf Path.Orders.rejectOrderItem  orderItem.Orderitemid ) ["class","buttonX"] 
-                                            [Text local.Reject]
-                                        br []
-                                    ]
-                            ]
-                    ]
-            ]
-    ]
-    script ["type", "text/javascript"; "src", "/autorefresh.js" ] []
-] 
-
 let rejectOrderItem orerItem =
     [
         h2 (local.RejectOrderItem)

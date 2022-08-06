@@ -1818,10 +1818,13 @@ let orderItemProgress (user:UserLoggedOnSession) =
     let myRoleObservablesIds = 
         Db.getObserversCatgoryStateMappingForRole user.RoleId ctx |> 
             List.map (fun (x:Db.Observer) -> (x.Stateid, x.Categoryid))
-           
+
+    let myRoleMovablesIds = 
+        Db.getEnablersCatgoryStateMappingForRole user.RoleId ctx |> 
+            List.map (fun (x:Db.Enabler) -> (x.Stateid, x.Categoryid))
+
     let mapOfLinkedStates = Db.getStatesNextStatesPairs' ctx |> Map.ofList
     let initialState = Db.States.getInitState ctx
-    printf "initState: %s\n" (initialState.Statusname)
     let finalState = Db.States.getFinalState ctx
 
     let states = Db.States.getAllStates ctx
@@ -1838,11 +1841,29 @@ let orderItemProgress (user:UserLoggedOnSession) =
 
     orderedStates |> List.iter (fun x -> printf  "%s\n" (x.Statusname))
 
-    let orderItemMyRoleCanObserve = List.map (fun x -> Db.getOrderItemDetailsOfAParticularStateAndAParticularCategory x ctx) myRoleObservablesIds
-    let concatenatedOrderItemMyRoleCanObserve = List.fold (fun x y -> x@y) [] orderItemMyRoleCanObserve  |> 
-        List.sortBy (fun (x:Db.OrderItemDetails) -> x.Startingtime)
+    let orderItemMyRoleCanObserve = 
+        myRoleObservablesIds
+        |> List.map (fun x -> Db.getOrderItemDetailsOfAParticularStateAndAParticularCategory x ctx) 
 
-    let orderItemsPerStates = orderedStates |> List.map (fun x -> (x.Statusname, concatenatedOrderItemMyRoleCanObserve |> List.filter (fun y -> y.Stateid = x.Stateid) )) |> Map.ofList
+    let orderItemMyRoleCanMove = 
+        myRoleMovablesIds
+        |> List.map (fun x -> Db.getOrderItemDetailsOfAParticularStateAndAParticularCategory x ctx) 
+
+    let concatenatedOrderItemMyRoleCanObserve = 
+        List.fold (fun x y -> x@y) [] orderItemMyRoleCanObserve  
+        |> List.sortBy (fun (x:Db.OrderItemDetails) -> x.Startingtime)
+
+    let concatenatedOrderItemMyRoleCanMove = 
+        List.fold (fun x y -> x@y) [] orderItemMyRoleCanMove  
+        |> List.sortBy (fun (x:Db.OrderItemDetails) -> x.Startingtime)
+
+    let orderItemsPerStates = 
+        orderedStates 
+        |> List.map 
+            (fun x -> 
+                (x.Statusname, concatenatedOrderItemMyRoleCanObserve |> List.filter (fun y -> y.Stateid = x.Stateid) )
+            ) 
+        |> Map.ofList
 
     let listOfVariations = concatenatedOrderItemMyRoleCanObserve |> 
         List.map (fun (x:Db.OrderItemDetails) -> (x.Orderitemid,(Db.getVariationDetailsOfOrderItem x.Orderitemid ctx))) 
@@ -3101,10 +3122,12 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
     ]
 
 let splitOrderItemInToUnitaryOrderItems id (user:UserLoggedOnSession) =
-    log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems" id)
+    log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems X" id)
     let ctx = Db.getContext()
     let theOrderItem = Db.Orders.getTheOrderItemById id ctx
     let connectedOrderItemStates = theOrderItem.``public.orderitemstates by orderitemid`` |> Seq.toList
+    connectedOrderItemStates |> List.iter (fun x -> log.Debug(sprintf "X - orderitemstate %A\n" x))
+
     let ingredientdecrements = theOrderItem.``public.ingredientdecrement by orderitemid`` |> Seq.toList
     let rejectOrderItems = theOrderItem.``public.rejectedorderitems by orderitemid`` |> Seq.toList
     let variations = theOrderItem.``public.variations by orderitemid`` |> Seq.toList

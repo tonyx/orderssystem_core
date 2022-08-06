@@ -1469,6 +1469,19 @@ let createUnitaryNakedOrderItemByOrderId courseId orderId comment price outGroup
     ctx.SubmitUpdates()
     orderItem
 
+let createUnitaryNakedOrderItemByOrderId' courseId orderId comment price outGroupId stateId (ctx: DbContext) =
+    log.Debug(sprintf "%s %d %d" "createUnitaryNakedOrderItemByOrderId" courseId orderId )
+    let now = System.DateTime.Now
+    let finalState = States.getFinalState ctx
+    let orderItem = 
+        ctx.Public.Orderitems.
+            ``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` 
+            (courseId, false, outGroupId, orderId, 1, 1, now, stateId)
+    let _ = orderItem.Comment <- comment
+    let _ = orderItem.Price <- price
+    ctx.SubmitUpdates()
+    orderItem
+
 let getDistinctOutGroupsOfOrder orderId (ctx:DbContext) =
     log.Debug(sprintf "%s %d " "getDistinctOutGroupsOfOrder" orderId)
     let order = Orders.getOrder orderId ctx
@@ -2159,7 +2172,7 @@ let getOrderItemDetailsOfAParticularStateAndAParticularCategory (stateId,categor
     log.Debug("getOrderItemDetailsOfAParticularStateAndAParticularCategory")
     query {
         for orderItem in ctx.Public.Orderitemdetails do
-        where (orderItem.Stateid = stateId && orderItem.Categoryid = categoryId)
+        where (orderItem.Stateid = stateId && orderItem.Categoryid = categoryId && orderItem.Payed = false) 
         select orderItem
     } |> Seq.toList
 
@@ -2833,9 +2846,10 @@ let setOrderAsPayed orderId (ctx:DbContext) =
     ctx.SubmitUpdates()
 
 let splitOrderItemInToUnitaryOrderItems id  (ctx:DbContext) =
-    log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems" id)
+    log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems Y" id)
     let theOrderItem = Orders.getTheOrderItemById id ctx
     let connectedOrderItemStates = theOrderItem.``public.orderitemstates by orderitemid`` |> Seq.toList
+    connectedOrderItemStates |> List.iter (fun x -> log.Debug(sprintf "X - orderitemstate %d\n" (x.Stateid)))
     let ingredientdecrements = theOrderItem.``public.ingredientdecrement by orderitemid`` |> Seq.toList
     let rejectOrderItems = theOrderItem.``public.rejectedorderitems by orderitemid`` |> Seq.toList
     let variations = theOrderItem.``public.variations by orderitemid`` |> Seq.toList
@@ -2847,8 +2861,8 @@ let splitOrderItemInToUnitaryOrderItems id  (ctx:DbContext) =
         [1 .. theOrderItem.Quantity] 
         |> List.map 
             (fun _ -> 
-                createUnitaryNakedOrderItemByOrderId 
-                    courseId orderId comment theOrderItem.Price outGroupId ctx
+                createUnitaryNakedOrderItemByOrderId'
+                    courseId orderId comment theOrderItem.Price outGroupId theOrderItem.Stateid ctx
             ) 
     let do_cloneIngredientDecrements = 
         clonedOrderItems 
@@ -2883,8 +2897,9 @@ let splitOrderItemInToUnitaryOrderItems id  (ctx:DbContext) =
             (fun (x:OrderItem) -> 
                 connectedOrderItemStates 
                 |> List.map 
-                    (fun (y:OrderItemState) 
-                        -> createClonedOrderItemState x.Orderitemid y ctx)) 
+                    (fun (y:OrderItemState) ->
+                        log.Debug((sprintf "QQQ - CLONED STATE Y %d\n" (y.Stateid)))
+                        createClonedOrderItemState x.Orderitemid y ctx)) 
             |> List.fold (@) []
     safeRemoveOrderItem theOrderItem.Orderitemid ctx
 
