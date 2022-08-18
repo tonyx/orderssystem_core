@@ -97,7 +97,11 @@ the printing on windows has not been tested
  
 note: for the fiscal receipt, an ecr.txt file is produced in a format suitable for an external proprietary program that watches the dir and interprets the ecr file, sending the command to the fiscal drawer.  I don't own such a program (ecr) so I can't redistribute it. A solution could be rewriting the command for the fiscal receipt using pos API. More info about later.
  
- 
+
+## Intro video in **Italian Language**
+* [Short presentation. less than 3. mins](https://youtu.be/3K-ohMztd2g)
+
+* [Presentation with walk-through 14:15 mins](https://youtu.be/QiVbJZBl2Lc)
  
 ### Authors
  
