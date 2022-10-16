@@ -1886,7 +1886,8 @@ let orderItemProgress (user:UserLoggedOnSession) =
 
     let variationsStringDescriptions = Utils.variationsByStringDescription (mapOfVariations |> Map.toList) ctx
 
-    html (View.viewableOrderItems orderItemsPerStates concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates orderedStates finalState mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
+    // html (View.viewableOrderItems orderItemsPerStates concatenatedOrderItemMyRoleCanObserve mapOfLinkedStates orderedStates finalState mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
+    html (View.viewableOrderItems orderItemsPerStates  mapOfLinkedStates concatenatedOrderItemMyRoleCanMove orderedStates finalState mapOfVariations orderItemIngredientsMapSequence variationsStringDescriptions) 
 
 let getNextState stateId =
     log.Debug(sprintf "getNextState %d" stateId)

@@ -2316,7 +2316,16 @@ let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =
         tag "innerp" [] [for category in categories -> tag "p" [] [a (sprintf Path.Courses.manageVisibleCoursesOfACategory category.Categoryid) ["class","buttonX"] [Text (local.Manage + category.Name + " ")] ]]
     ]
 
-let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>) (orderItems: OrderItemDetails list) (mapOfLinkedStates: Map<int,Option<State>>) (orderedStates: List<State>) (finalState: State) (mapOfVariations: Map<int,Db.VariationDetail list>) (strIngredientsOfCourses: Map<int,string>) (variationsStringDescriptions: Map<int,string>) = 
+let viewableOrderItems 
+    (orderItemsPerStates:Map<string, List<OrderItemDetails>>)  
+    (mapOfLinkedStates: Map<int,Option<State>>) 
+    (concatenatedOrderItemMyRoleCanMove: List<OrderItemDetails>)
+    (orderedStates: List<State>) 
+    (finalState: State) 
+    (mapOfVariations: Map<int,Db.VariationDetail list>) 
+    (strIngredientsOfCourses: Map<int,string>) 
+    (variationsStringDescriptions: Map<int,string>) = 
+
     let states = orderedStates
     [
         h2  local.OrderItemsInProgress
@@ -2354,6 +2363,7 @@ let viewableOrderItems (orderItemsPerStates:Map<string, List<OrderItemDetails>>)
                                                 br []
                                                 Text(variationsDesc)
                                                 br []
+                                                // if (mapOfLinkedStates.[orderItem.Stateid].IsSome && (concatenatedOrderItemMyRoleCanMove |> List.contains orderItem)) then
                                                 if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
                                                     a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
                                                         [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
