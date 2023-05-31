@@ -1,2 +1,3 @@
-vend rep=1,pre=3.00, des='cola'
-chius t=1, imp=3.00
+vend rep=1,pre=8.00, des='hamburger classico'
+vend rep=1,pre=4.00, des='toast tradizionale'
+chius t=1, imp=12.00

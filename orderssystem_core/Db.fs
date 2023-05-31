@@ -3218,9 +3218,9 @@ let getStatesPrinterMapping printerId (ctx:DbContext) =
             select printerStateMapping
     } |> Seq.toList
 
-let getIngredientDecrementsStartingFromDate ingredientId date (ctx: DbContext): IngredientDecrementView list =
+let getIngredientDecrementsStartingFromDate ingredientId (date: string) (ctx: DbContext): IngredientDecrementView list =
     log.Debug("getIngredientDecrementsStartingFromDate")
-    let myDate = System.DateTime.Parse(date,CultureInfo.CreateSpecificCulture("en-US"))
+    let myDate: System.DateTime = System.DateTime.Parse(date,CultureInfo.CreateSpecificCulture("en-US"))
     ctx.Public.Ingredientdecrementview |> Seq.filter (fun (x:IngredientDecrementView) -> (x.Ingredientid = ingredientId) && System.DateTime.Compare(x.Closingtime,myDate)>0) |> Seq.toList
 
 let addAmountOfingredientAvailability (ingredient:Ingredient) (amount:decimal) (ctx:DbContext) =
