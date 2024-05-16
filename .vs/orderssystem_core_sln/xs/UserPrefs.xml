@@ -1,0 +1,20 @@
+﻿<Properties StartupConfiguration="{8B6B4B05-E2C3-48B4-B1D1-227C61550A1E}|Default">
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="orderssystem_core_sln" expanded="True" selected="True">
+            <Node name="orderssystem_core" expanded="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.orderssystem__core PreferredExecutionTarget="MonoDevelop.Default" />
+</Properties>
