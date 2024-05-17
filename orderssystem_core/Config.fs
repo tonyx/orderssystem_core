@@ -6,8 +6,8 @@ module OrdersSystem.Settings
     // let Printcommand ="PRINT"  // windows
     let InAddIngredientAdjustPrice =true
     let InRemoveIngredientAdjustPrice ="true" 
-    //let PrinterSelector = "-P " // unix
-    let PrinterSelector = "/D:" // windows
+    let PrinterSelector = "-P " // unix
+    // let PrinterSelector = "/D:" // windows
     let Localization = "it" 
     // let EcrFilePath = @"C:\Users\pc\programmi_tony\orderssystem_core\ecr.txt"
     let EcrFilePath = "ecr.txt"

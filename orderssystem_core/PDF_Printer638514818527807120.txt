@@ -1,7 +1,0 @@
-﻿tavolo 12
-numero di stampe eseguite per questo ordine: 1
-gruppo di uscita1data orario 16/05/2024 18:44:12
-n. 1 hamburger classico ing. ricetta:panino morbido, hamburger, green salad,  var: 
-n. 1 bistecca ing. ricetta:mancante var: 
-
-

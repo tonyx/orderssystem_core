@@ -1645,7 +1645,7 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
         outFile.Close() |> ignore
         )
     let _ = forPrintersFileNames |> List.iter (fun (x,y) -> 
-        System.Diagnostics.Process.Start(Settings.Printcommand, Settings.PrinterSelector  + x + " " + AppDomain.CurrentDomain.BaseDirectory + y) |> ignore
+        System.Diagnostics.Process.Start(Settings.Printcommand, Settings.PrinterSelector  + x + " " + Directory.GetCurrentDirectory() + "/" + y) |> ignore
         File.Copy(y,y.Replace(".txt",".ok"))
     )
     ()
@@ -2891,7 +2891,8 @@ let printWholeOrderReceipt orderId =
     let _ = outFile.WriteLine(text)
     let _ = outFile.Close()
     let _ = printerNames |> List.iter (fun x -> 
-        System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
+        // System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
+        System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + Directory.GetCurrentDirectory() + "/" + fileName) |> ignore
         File.Copy(fileName,x+fileName.Replace(".txt",".ok"),true)
     )
     let _ = archiveOrderByUserId orderId 
@@ -3382,8 +3383,6 @@ let qrUserImageGenRef  =
 
         let qrCodeImage = qrCode.GetGraphic(20)
 
-        // let stream = new System.IO.MemoryStream()
-        // let arrayOfQrCode = qrCodeImage.ToArray()
         let encoded = System.Convert.ToBase64String (qrCodeImage)
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o

@@ -1,6 +1,2 @@
-vend rep=1,pre=34.00, des='Broccoli e Salsiccia'
-vend rep=1,pre=8.00, des='hamburger classico'
-vend rep=1,pre=10.00, des='ravioli alla caprese'
-SUBTOT
-SCONT val= 10.00
-chius t=1, imp=42.00
+vend rep=1,pre=3.00, des='Coca Cola'
+chius t=1, imp=3.00
