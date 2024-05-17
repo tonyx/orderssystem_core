@@ -3369,26 +3369,6 @@ let unVoidLatestVoidedRef backUrl   =
 
 type Mymodel = {content: string; table: string}
 
-let qrUserImageGen (user:UserLoggedOnSession) = 
-    log.Debug("qrUserImageGen")
-    warbler (fun x -> 
-        let urlToCode = match x.request.queryParam("qrUserLoginUrl") with | Choice1Of2 par -> System.Net.WebUtility.UrlDecode par | _ -> "error"
-        let table = match x.request.queryParam("table") with | Choice1Of2 par -> par | _  -> "" 
-        log.Debug (sprintf "%s %s %s" "qrUserImageGen" urlToCode table)
-        let qrGenerator = new QRCoder.QRCodeGenerator();
-        log.Debug ("generated?")
-        let qrCodeData  = qrGenerator.CreateQrCode(urlToCode,QRCodeGenerator.ECCLevel.Q)
-        let qrCode = new QRCode(qrCodeData);
-
-        // this may throw the Unable to load DLL 'libgdiplus' exception:
-        let qrCodeImage = qrCode.GetGraphic(20)
-        let stream = new System.IO.MemoryStream()
-        qrCodeImage.Save(stream,qrCodeImage.RawFormat)
-        let arrayOfQrCode = stream.ToArray()
-        let encoded = System.Convert.ToBase64String (arrayOfQrCode)
-        let o = {content=encoded; table=table}
-        DotLiquid.page("qrCode.html") o
-    ) 
 
 let qrUserImageGenRef  = 
     log.Debug("qrUserImageGenRef")
@@ -3397,14 +3377,14 @@ let qrUserImageGenRef  =
         let table = match x.request.queryParam("table") with | Choice1Of2 par -> par | _  -> "" 
         let qrGenerator = new QRCoder.QRCodeGenerator();
         let qrCodeData  = qrGenerator.CreateQrCode(urlToCode,QRCodeGenerator.ECCLevel.Q)
-        let qrCode = new QRCode(qrCodeData);
 
-        // this may throw the Unable to load DLL 'libgdiplus' exception:
+        let qrCode = new PngByteQRCode(qrCodeData);
+
         let qrCodeImage = qrCode.GetGraphic(20)
-        let stream = new System.IO.MemoryStream()
-        qrCodeImage.Save(stream,qrCodeImage.RawFormat)
-        let arrayOfQrCode = stream.ToArray()
-        let encoded = System.Convert.ToBase64String (arrayOfQrCode)
+
+        // let stream = new System.IO.MemoryStream()
+        // let arrayOfQrCode = qrCodeImage.ToArray()
+        let encoded = System.Convert.ToBase64String (qrCodeImage)
         let o = {content=encoded; table=table}
         DotLiquid.page("qrCode.html") o
     ) 
