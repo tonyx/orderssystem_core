@@ -3374,7 +3374,9 @@ let qrUserImageGen (user:UserLoggedOnSession) =
     warbler (fun x -> 
         let urlToCode = match x.request.queryParam("qrUserLoginUrl") with | Choice1Of2 par -> System.Net.WebUtility.UrlDecode par | _ -> "error"
         let table = match x.request.queryParam("table") with | Choice1Of2 par -> par | _  -> "" 
+        log.Debug (sprintf "%s %s %s" "qrUserImageGen" urlToCode table)
         let qrGenerator = new QRCoder.QRCodeGenerator();
+        log.Debug ("generated?")
         let qrCodeData  = qrGenerator.CreateQrCode(urlToCode,QRCodeGenerator.ECCLevel.Q)
         let qrCode = new QRCode(qrCodeData);
 

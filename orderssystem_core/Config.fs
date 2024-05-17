@@ -1,6 +1,6 @@
 module OrdersSystem.Settings
 
-    let HostAddress="192.168.1.189:8083" 
+    let HostAddress="192.168.1.8:8083" 
     let Print = true
     let Printcommand ="/usr/bin/lpr"  // unix
     // let Printcommand ="PRINT"  // windows

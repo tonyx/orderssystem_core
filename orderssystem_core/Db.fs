@@ -18,7 +18,6 @@ let [<Literal>] resPath = ""
 let [<Literal>] indivAmount = 1000
 let [<Literal>] useOptTypes  = false
 // let [<Literal>] nullable = Common.NullableColumnType.NO_OPTION //  = false
-// let [<Literal>] nullable = Common.NullableColumnType.NO_OPTION
 
 type Sql =
     SqlDataProvider< 
