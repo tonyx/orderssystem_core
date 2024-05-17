@@ -1421,7 +1421,8 @@ let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
 
 let createOrderItemByCourseName courseName orderid quantity comment price (groupOut: decimal) (ctx: DbContext) =
     log.Debug(sprintf "%s %s %d %.2f" "createOrderItemByCourseName" courseName orderid  price  )
-    let course = match Courses.tryFindCourseByName courseName ctx with
+    let course = 
+        match Courses.tryFindCourseByName courseName ctx with
         | Some X -> X
         | None -> failwith ("unexisting course with name "+ courseName)
     let initState = States.getInitState ctx
@@ -1950,39 +1951,50 @@ let tryGetOrderItemDetailById orderItemId (ctx: DbContext) =
 let createIngredientDecrementsOfOrderItem (orderItem: OrderItem) preparatorId (ctx: DbContext)  =
     log.Debug(sprintf "%s %d %d" "createIngredientDecrementsOfOrderItem" orderItem.Orderitemid preparatorId)
     let course = Courses.getCourse orderItem.Courseid ctx
-    let plainIngredientIds = course.``public.ingredientcourse by courseid`` |> 
+    let plainIngredientIds = 
+        course.``public.ingredientcourse by courseid`` |> 
         Seq.map (fun (x:IngredientCourse) -> x.Ingredientid)
-    let presumedIngredientQuantities = course.``public.ingredientcourse by courseid`` |>
+    let presumedIngredientQuantities = 
+        course.``public.ingredientcourse by courseid`` |>
         Seq.map (fun (x:IngredientCourse) -> (x.Ingredientid,(x.Quantity*(decimal)orderItem.Quantity))) |> Map.ofSeq
-    let variations = orderItem.``public.variations by orderitemid``
-    let idSOfVariationsExtraIngredients = variations |>
+    let variations = 
+        orderItem.``public.variations by orderitemid``
+    let idSOfVariationsExtraIngredients = 
+        variations |>
         (Seq.filter (fun (x:Variation) -> (not (Seq.contains x.Ingredientid plainIngredientIds)))) |>
         (Seq.map (fun (x:Variation) -> x.Variationsid))
-    let idsOfVariationsWithout = variations |> 
+    let idsOfVariationsWithout = 
+        variations |> 
         (Seq.filter (fun (x:Variation) -> x.Tipovariazione = Globals.SENZA)) |> 
         (Seq.map (fun (x:Variation ) -> x.Ingredientid))
         |> Seq.toList
-    let idsOfVariationsLess = variations |> 
+    let idsOfVariationsLess = 
+        variations |> 
         Seq.filter (fun (x:Variation) -> x.Tipovariazione = Globals.POCO) |> 
         (Seq.map (fun (x:Variation ) -> x.Ingredientid))
         |> Seq.toList
-    let idsOfVariationsMore = variations |> 
+    let idsOfVariationsMore = 
+        variations |> 
         Seq.filter (fun (x:Variation) -> x.Tipovariazione = Globals.MOLTO) |> 
         (Seq.map (fun (x:Variation ) -> x.Ingredientid))
         |> Seq.toList
-    let idsOfVariationsAddLittle = variations |> 
+    let idsOfVariationsAddLittle = 
+        variations |> 
         Seq.filter (fun (x:Variation) -> x.Tipovariazione = Globals.AGGIUNGIPOCO) |> 
         Seq.map (fun (x:Variation ) -> x.Ingredientid)
         |> Seq.toList
-    let idsOfVariationsAddNormal = variations |>  
+    let idsOfVariationsAddNormal = 
+        variations |>  
         Seq.filter (fun (x:Variation) -> x.Tipovariazione = Globals.AGGIUNGINORMALE) |> 
         Seq.map (fun (x:Variation ) -> x.Ingredientid)
         |> Seq.toList
-    let idsOfVariationsAddMuch = variations |>  
+    let idsOfVariationsAddMuch = 
+        variations |>  
         Seq.filter (fun (x:Variation) -> x.Tipovariazione = Globals.AGGIUNGIMOLTO) |> 
         Seq.map (fun (x:Variation ) -> x.Ingredientid)
         |> Seq.toList
-    let plainNetIngredientsByTheBook = plainIngredientIds |> 
+    let plainNetIngredientsByTheBook = 
+        plainIngredientIds |> 
         Seq.filter (fun x -> (not (Seq.contains x idsOfVariationsWithout))) |> 
         Seq.filter (fun x -> (not (Seq.contains x idsOfVariationsLess))) |> 
         (Seq.filter (fun x -> (not (Seq.contains x idsOfVariationsMore))))
@@ -1991,7 +2003,8 @@ let createIngredientDecrementsOfOrderItem (orderItem: OrderItem) preparatorId (c
         (List.map (fun x -> (x,Globals.NORMAL)))) @ (idsOfVariationsLess |> 
         List.map (fun id -> (id,Globals.POCO))) @ (idsOfVariationsMore |> 
         List.map (fun id -> (id,Globals.MOLTO)))
-    let allTogetherIngredientVariations = plainIngredientWithVariations @ 
+    let allTogetherIngredientVariations = 
+        plainIngredientWithVariations @ 
         (idsOfVariationsAddLittle |> List.map (fun id -> (id,Globals.AGGIUNGIPOCO))) @
         (idsOfVariationsAddNormal |> List.map (fun id -> (id,Globals.AGGIUNGINORMALE))) @
         (idsOfVariationsAddMuch |> List.map (fun id -> (id,Globals.AGGIUNGIMOLTO))) 
@@ -2098,7 +2111,8 @@ let isInitialState stateId (ctx:DbContext) =
 
 let isOrderItemHavingOrdersItemAtInitialState orderId (ctx:DbContext) =
     log.Debug(sprintf "isOrderitemHavingOrdersItemAtInitialState %d" orderId)
-    let orderItemAtInitialState = getAllOrderItemDetailsOfOrder orderId ctx |> 
+    let orderItemAtInitialState = 
+        getAllOrderItemDetailsOfOrder orderId ctx |> 
         List.tryFind (fun (x:OrderItemDetails) -> isInitialState x.Stateid ctx)
     match orderItemAtInitialState with
     | Some _ -> true
@@ -2421,7 +2435,8 @@ let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
 let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     log.Debug(sprintf "addAddNormalIngredientVariation %d %d" orderItemId ingredientId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
-    let _ = match existingVariation with   
+    let _ = 
+        match existingVariation with   
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
         | _ -> ()
     let _ = ctx.Public.Variations.Create(ingredientId, orderItemId, Globals.AGGIUNGINORMALE)
@@ -2430,7 +2445,8 @@ let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
 let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) =
     log.Debug(sprintf "addAddIngredientVariation %d %d %s" orderItemId ingredientId quantity)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
-    let _ = match existingVariation with   
+    let _ = 
+        match existingVariation with   
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
         | _ -> ()
     let (newVariation:Variation) = ctx.Public.Variations.Create(ingredientId, orderItemId, quantity)
@@ -2440,7 +2456,8 @@ let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) 
 let addIngredientVariationByIngredientPriceRef orderItemId ingredientId ingredientPriceId (ctx:DbContext) =
     log.Debug(sprintf "addIngredientVariationByIngredientPriceRef %d" orderItemId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
-    let _ = match existingVariation with   
+    let _ = 
+        match existingVariation with   
         | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
         | _ -> ()
     let (newVariation:Variation) = ctx.Public.Variations.Create(ingredientId,orderItemId,Globals.PER_PREZZO_INGREDIENTE)
@@ -2494,12 +2511,13 @@ let addAddIngredientVariationByName orderItemid ingredientName (quantity:string)
     match ingredient with
     | Some theIngredient -> 
         if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASURE)) then 
-        (
-            let overWrittenQuantity = match theIngredient.Unitmeasure with 
-                | (UNITARY_MEASURE) -> UNITARY_MEASURE 
-                | _ -> quantity
-            addAddIngredientVariation orderItemid theIngredient.Ingredientid overWrittenQuantity (ctx:DbContext)
-        ) else
+            (
+                let overWrittenQuantity = 
+                    match theIngredient.Unitmeasure with 
+                    | (UNITARY_MEASURE) -> UNITARY_MEASURE 
+                    | _ -> quantity
+                addAddIngredientVariation orderItemid theIngredient.Ingredientid overWrittenQuantity (ctx:DbContext)
+            ) else
         (
             let ingredientPriceId = Int32.Parse(quantity)
             addIngredientVariationByIngredientPriceRef orderItemid theIngredient.Ingredientid ingredientPriceId ctx
@@ -2514,7 +2532,8 @@ let addAddIngredientVariationById orderItemid (ingredientId:int) (quantity:strin
     let ingredient = getIngredientById ingredientId ctx
     if (not (Double.TryParse(quantity,mut)) && not (quantity = Globals.UNITARY_MEASURE)) then 
         (
-            let overWrittenQuantity = match ingredient.Unitmeasure with 
+            let overWrittenQuantity = 
+                match ingredient.Unitmeasure with 
                 | (UNITARY_MEASURE) -> UNITARY_MEASURE 
                 | _ -> quantity
             addAddIngredientVariation orderItemid ingredientId overWrittenQuantity (ctx:DbContext)
@@ -3282,7 +3301,8 @@ module StandardVariations =
     let addAddNormalIngredientStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addAddNormalIngredientVariation")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
-        let _ = match existingVariation with   
+        let _ = 
+            match existingVariation with   
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
             | _ -> ()
         let _ = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)``(ingredientId,standardVariationId,Globals.AGGIUNGINORMALE)
@@ -3291,7 +3311,8 @@ module StandardVariations =
     let addIngreaseIngredientStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addAddNormalIngredientVariation")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
-        let _ = match existingVariation with   
+        let _ = 
+            match existingVariation with   
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
             | _ -> ()
 
@@ -3311,16 +3332,19 @@ module StandardVariations =
         log.Debug(sprintf "addAddIngredientVariation standardVariationId:%d  ingredientId:%d quantity:%s " standardVariationId ingredientId quantity)
         let mut: int ref = ref 1
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
-        let _ = match existingVariation with   
+        let _ = 
+            match existingVariation with   
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
             | _ -> ()
         let overwritten = Int32.TryParse(quantity,mut)
         let newVariationItem = ctx.Public.Standardvariationitem.Create(ingredientId, standardVariationId, quantity)
         let ingredient = getIngredientById ingredientId ctx
-        let _ = match ingredient.Unitmeasure with 
+        let _ = 
+            match ingredient.Unitmeasure with 
             | Globals.UNITARY_MEASURE -> newVariationItem.Plailnumvariation <- (if (quantity = Globals.SENZA) then -1 else 1)
             | _ -> ()    
-        let _ = match overwritten with
+        let _ = 
+            match overwritten with
             | true -> newVariationItem.Ingredientpriceid <- !mut; newVariationItem.Tipovariazione <- ""
             | _ ->    
                 let defaultAddPriceForThisIngredient = tryGetFirstIngredientPricedDefaultAdd ingredientId ctx
@@ -3332,7 +3356,8 @@ module StandardVariations =
     let addStandardIngredientVariationItemByIngredientPriceRef standardVariationId ingredientId ingredientPriceId (ctx:DbContext) = 
         log.Debug("addIngredientVariationByIngredientPriceRef")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
-        let _ = match existingVariation with   
+        let _ = 
+            match existingVariation with   
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
             | _ -> ()
         let newVariation = ctx.Public.Standardvariationitem.Create(ingredientId,standardVariationId,Globals.PER_PREZZO_INGREDIENTE)
@@ -3391,7 +3416,8 @@ module StandardVariations =
         | None ->
             let variation = ctx.Public.Variations.``Create(ingredientid, orderitemid, tipovariazione)``(standardVariationItem.Ingredientid,orderItemId,standardVariationItem.Tipovariazione)
             log.Debug(standardVariationItem.Ingredientpriceid)
-            let _ = match standardVariationItem.Ingredientpriceid with
+            let _ = 
+                match standardVariationItem.Ingredientpriceid with
                 | 0 -> ()
                 | X -> variation.SetColumn("ingredientpriceid",X)
             ctx.SubmitUpdates()

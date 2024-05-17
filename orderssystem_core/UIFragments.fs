@@ -167,13 +167,13 @@ let addItemOfCategory (order:Db.Orderdetail) (categories:Db.CourseCategories lis
     let pairOfCategories = makePairsOfLinks categories order.Orderid backUrl addFromAllLink
     let result =
         table [for category in pairOfCategories -> 
-            tr  [ for subItem in category -> 
-                match subItem with 
-                | Some theSubItem  -> 
-                    theSubItem
-                | None ->  
-                    td []
-                ]
+                    tr  [ for subItem in category -> 
+                            match subItem with 
+                            | Some theSubItem  -> 
+                                theSubItem
+                            | None ->  
+                                td []
+                            ]
             ]
     result
 
@@ -200,22 +200,22 @@ let ordersBarRef (pairOfOrders:Db.Orderdetail option list list) (pairOfOtherOrde
 
         Text(local.MyOwn)
         table [for orderPair in pairOfOrders ->
-            tr [for order in orderPair ->
-                match order with
-                | Some theOrder ->
-                     td [a (sprintf Path.Orders.viewOrder theOrder.Orderid) ["class","buttonX"] [Text (local.Table + " "+ theOrder.Table+" ")]]
-                | None -> td []
-            ]
+                tr [for order in orderPair ->
+                    match order with
+                    | Some theOrder ->
+                        td [a (sprintf Path.Orders.viewOrder theOrder.Orderid) ["class","buttonX"] [Text (local.Table + " "+ theOrder.Table+" ")]]
+                    | None -> td []
+                ]
         ]
 
         Text(local.OfOthers)
         table [for orderPair in pairOfOtherOrders ->
-            tr [for order in orderPair ->
-                match order with
-                | Some theOrder ->
-                     td [a (sprintf Path.Orders.viewOrder theOrder.Orderid) ["class","buttonX"] [Text (local.Table + " "+ theOrder.Table+" ")]]
-                | None -> td []
-            ]
+                tr [for order in orderPair ->
+                    match order with
+                    | Some theOrder ->
+                        td [a (sprintf Path.Orders.viewOrder theOrder.Orderid) ["class","buttonX"] [Text (local.Table + " "+ theOrder.Table+" ")]]
+                    | None -> td []
+                ]
         ]
     ]
 

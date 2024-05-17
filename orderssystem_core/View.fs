@@ -584,7 +584,8 @@ let logon msg = [
 
 
 let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
-    let sonCategoriesLink = match (List.length subCategories) with
+    let sonCategoriesLink = 
+        match (List.length subCategories) with
         | 0 ->  em ""
         | X -> div [] [h2 local.SubCategories; div [] 
                 [
@@ -593,7 +594,8 @@ let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (
                 ]
             ]
         
-    let fatherCategoryLink = match fatherCategory with
+    let fatherCategoryLink = 
+        match fatherCategory with
         | Some theFather -> div [] [h2 local.FatherCategory; a (sprintf Path.Orders.addOrderItemByCategory orderId theFather.Fatherid backUrl) ["class","buttonX"] [Text (" "+theFather.Fathername)]]
         | None -> em ""
 
@@ -751,7 +753,8 @@ let addOrderItemByAllCategoriesForStrippedUsers orderId coursesIdWithName course
 let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
 
     let jsPricesForCourses = Utils.javascriptDecimalStringPairMapConverter coursesIdWithPrices 
-    let sonCategoriesLink = match (List.length subCategories) with
+    let sonCategoriesLink = 
+        match (List.length subCategories) with
         | 0 ->  em ""
         | X -> 
             div [] 
@@ -762,7 +765,8 @@ let addOrderItem orderId coursesIdWithName coursesIdWithPrices (subCategories:Db
                                 a (sprintf Path.Orders.addOrderItemByCategory orderId category.Sonid backUrl)  ["class","buttonX"] [Text (" "+category.Sonname)] 
                         ]
                 ]
-    let fatherCategoryLink = match fatherCategory with
+    let fatherCategoryLink = 
+        match fatherCategory with
         | Some theFather -> 
             div [] 
                 [
@@ -1285,7 +1289,8 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
 
-    let fatherLink = match father with 
+    let fatherLink = 
+        match father with 
         | Some X -> div [] [h2 local.FatherCategory; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]; 
                             (a (sprintf Path.Courses.mergeSubCourseCategoryToFather category.Value.Categoryid) ["class","buttonX"] [Text(local.MergeWithFatherCategory)])]
         | None ->  em ""
@@ -1353,7 +1358,7 @@ let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:
             div ["class","redstyle"] ((previousPageLink theCategory pageNumber) @ (([0 .. numberOfPages] |> (List.map (fun i ->
 
                 if (i = pageNumber) then
-                ((a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid i)) ["class","redstyle"] [Text (((i |> string)+" "))])
+                    ((a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid i)) ["class","redstyle"] [Text (((i |> string)+" "))])
                 else 
                 ((a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid i)) ["class","noredstyle"] [Text (((i |> string)))])
 
@@ -1490,7 +1495,8 @@ let seeVisibleCoursesPaginated (category:Db.CourseCategories option) (subCategor
     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
 
-    let fatherLink = match father with 
+    let fatherLink = 
+        match father with 
         | Some X -> div [] [h2 local.FatherCategory; tag "p" [] [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated X.Categoryid 0) ["class","buttonX"] [Text(X.Name)]]]
         | None ->  em ""
     
@@ -1899,9 +1905,10 @@ let temporaryUsersAdministrationPage  (users: Db.UsersView list) =
         ulAttr ["id ","item-list"] 
             [
                 for user in users  -> 
-                    let enabledview = match user.Enabled with
-                    | true -> "enabled"
-                    | false -> "disabled"
+                    let enabledview = 
+                        match user.Enabled with
+                        | true -> "enabled"
+                        | false -> "disabled"
 
                     let isExpired = user.Creationtime.AddMinutes(Globals.EXPIRATION_TIME_TEMPORARY_USERS).CompareTo(System.DateTime.Now)<0
                     let regenLink = 
@@ -1936,9 +1943,10 @@ let userAdministrationPage  (users: Db.UsersView list) =
         table 
             [
                 for user in users  -> 
-                    let enabledview = match user.Enabled with
-                    | true -> "enabled"
-                    | false -> "disabled"
+                    let enabledview = 
+                        match user.Enabled with
+                        | true -> "enabled"
+                        | false -> "disabled"
 
                     tr 
                         [
@@ -2462,7 +2470,8 @@ let defaultActionableStatesForTempUser (states: Db.State list) (defaultActionabl
     ]]
 
 let seeSingleOrder (order: Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetails list) =
-    let discountMessage = match (order.Adjustispercentage,order.Adjustisplain) with
+    let discountMessage = 
+        match (order.Adjustispercentage,order.Adjustisplain) with
         | (true,_) -> 
             local.Variation+
             (if (order.Percentagevariataion > (decimal) 0) then "+" else "" ) +
@@ -2470,8 +2479,7 @@ let seeSingleOrder (order: Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetai
             (if (order.Percentagevariataion > (decimal) 0) then "+" else "" ) +
             (sprintf "%.2f"  (((order.Percentagevariataion)/(decimal)100)*(order.Total))) + ") = " +
             (sprintf "%.2f" order.Adjustedtotal)
-        | (_,true) ->   local.Variation + 
-            (order.Plaintotalvariation.ToString()) + " = " + order.Adjustedtotal.ToString()
+        | (_,true) ->   local.Variation + (order.Plaintotalvariation.ToString()) + " = " + order.Adjustedtotal.ToString()
         | _ -> ""
 
     [
@@ -2491,8 +2499,7 @@ let seeSingleOrder (order: Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetai
                                     [ 
                                         a (sprintf Path.Orders.editDoneOrderitem orderItem.Orderitemid orderItem.Categoryid ) ["",""] 
                                             [Text(orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" "+ (string)orderItem.Price  
-                                              + (if (orderItem.Quantity>1) then " * " + (string)(orderItem.Quantity) + " = "+
-                                                (string)((decimal)orderItem.Quantity*orderItem.Price) else ""))
+                                              + (if (orderItem.Quantity>1) then " * " + (string)(orderItem.Quantity) + " = "+ (string)((decimal)orderItem.Quantity*orderItem.Price) else ""))
                                             ]
                                     ]
                             ]
@@ -2503,7 +2510,8 @@ let seeSingleOrder (order: Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetai
 
 let seeOrder (order:Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetails list) backUrl = 
 
-    let discountMessage = match (order.Adjustispercentage,order.Adjustisplain) with
+    let discountMessage = 
+        match (order.Adjustispercentage,order.Adjustisplain) with
         | (true,_) -> 
             local.Variation +
             (if (order.Percentagevariataion > (decimal) 0) then "+" else "" ) +
@@ -2511,8 +2519,7 @@ let seeOrder (order:Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetails list
             (if (order.Percentagevariataion > (decimal) 0) then "+" else "" ) +
             (sprintf "%.2f"  (((order.Percentagevariataion)/(decimal)100)*(order.Total))) + ") = " +
             (sprintf "%.2f" order.Adjustedtotal)
-        | (_,true) ->    local.Variation +
-            (order.Plaintotalvariation.ToString()) + " = " + order.Adjustedtotal.ToString()
+        | (_,true) ->    local.Variation + (order.Plaintotalvariation.ToString()) + " = " + order.Adjustedtotal.ToString()
         | _ -> ""
     [
         renderForm
@@ -2526,9 +2533,7 @@ let seeOrder (order:Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetails list
                                 [ 
                                     { 
                                         Label = local.Value
-                                        Html = formInput (fun f -> <@  f.Value @>) [ "value", 
-                                            (if (order.Adjustispercentage) then (sprintf "%.0f" order.Percentagevariataion) else 
-                                            (sprintf "%.2f" order.Plaintotalvariation)) ] } 
+                                        Html = formInput (fun f -> <@  f.Value @>) [ "value", (if (order.Adjustispercentage) then (sprintf "%.0f" order.Percentagevariataion) else (sprintf "%.2f" order.Plaintotalvariation)) ] } 
                                     { 
                                         Label = local.Percentage
                                         Html = selectInput (fun f -> <@  f.PercentOrValue @>) percentageOrValue 
@@ -2561,8 +2566,7 @@ let seeOrder (order:Db.Order) (orderItemsdetailsOfOrder:Db.OrderItemDetails list
                                         [ 
                                             a (sprintf Path.Orders.editDoneOrderitem orderItem.Orderitemid orderItem.Categoryid) ["",""] 
                                                 [Text(orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" "+ (string)orderItem.Price  
-                                                  + (if (orderItem.Quantity>1) then " * " + (string)(orderItem.Quantity)  +    " = "+
-                                                (string)((decimal)orderItem.Quantity*orderItem.Price) else "")
+                                                  + (if (orderItem.Quantity>1) then " * " + (string)(orderItem.Quantity)  +    " = "+ (string)((decimal)orderItem.Quantity*orderItem.Price) else "")
                                                 )
                                                 ]
                                             a (sprintf Path.Orders.removeOrderItemThenGoBackToUrl orderItem.Orderitemid (WebUtility.UrlEncode backUrl)) ["class","buttonX"] 
@@ -2590,10 +2594,9 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
             a ((sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid  )) ["class","buttonX"] [Text local.Ingredients]
         else em ""
 
-    let linksMoveOutGroup = outGroupsOfOrder |> 
-        List.map (fun (x:Db.OrderOutGroup) -> ( if (x.Printcount <= 0) then (
-                a ((sprintf Path.Orders.moveInitialStateOrderItemsByOutGroup order.Orderid x.Ordergroupid 
-                (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonEnabled"] [Text (local.ConfirmGroup + (x.Groupidentifier|> string )  )]
+    let linksMoveOutGroup = 
+        outGroupsOfOrder |> 
+        List.map (fun (x:Db.OrderOutGroup) -> ( if (x.Printcount <= 0) then ( a ((sprintf Path.Orders.moveInitialStateOrderItemsByOutGroup order.Orderid x.Ordergroupid (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonEnabled"] [Text (local.ConfirmGroup + (x.Groupidentifier|> string )  )]
             ) else  (
                 a ((sprintf Path.Orders.reprintOrderItemsGroup order.Orderid x.Ordergroupid 
                 (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonPrinted"] [Text (local.ReprintGroup + (x.Groupidentifier|> string )  )]
@@ -2743,12 +2746,12 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
         tag "h2" [] [Text(local.AddIngredient)]
 
         table [for ingredientCategoryTriple in triplesOfIngredientsList ->
-            tr [ for subItem in ingredientCategoryTriple  ->
-                match subItem with
-                | Some theSubItem ->
-                    theSubItem
-                | None -> td []
-            ]  
+                tr [ for subItem in ingredientCategoryTriple  ->
+                                     match subItem with
+                                        | Some theSubItem ->
+                                            theSubItem
+                                        | None -> td []
+                ]  
         ]
 
         renderForm
