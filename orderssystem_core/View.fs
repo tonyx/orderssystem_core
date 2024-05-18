@@ -3253,16 +3253,43 @@ let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetai
         | _ ->   a (sprintf Path.Orders.editOrderItemVariation orderItem.Orderitemid ) ["class","buttonX"] [Text(local.SubmitVariations)]
     [
         h2 (local.CommentsFor+" "+orderItem.Name)
-        Text(local.ExistingComment + orderItem.Comment) 
+        
+        // Text(local.ExistingComment + orderItem.Comment) 
+        tr [
+            td [
+                div []
+                    [
+                        Text(local.ExistingComment + ":")
+                    ]
+            ]
+            td [
+                div []
+                    [
+                        if (orderItem.Comment = "") then
+                            Text("nessun commento")
+                        else
+                            Text(orderItem.Comment.Substring(1))
+                        // Text(orderItem.Comment)
+                    ]
+            ]
+        ]
         (a (sprintf Path.Orders.removeExistingCommentToOrderItem orderItem.Orderitemid) ["class","buttonX"] [Text(local.Reset)])
         br []
         h2 (local.SelectableComments)
         ulAttr ["id","item-list"] [
-            for standardComment in selectableStandardComments ->
-                tag "p" [] [
-                    Text(standardComment.Comment)
-                    a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text(local.Add)]
+            table [
+                    for standardComment in selectableStandardComments ->
+                        tr [
+                        td [
+                            div []
+                                [
+                                
+                                    Text(standardComment.Comment)
+                                    a (sprintf Path.Orders.addStandardCommentToOrderItem standardComment.Standardcommentid orderItem.Orderitemid) ["class","buttonX"] [Text(local.Add)]
+                                ]
+                        ]
                 ]
+            ]
         ]
         linkToContinue
         br []
