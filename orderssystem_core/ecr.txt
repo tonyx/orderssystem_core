@@ -1,2 +1,0 @@
-vend rep=1,pre=3.00, des='Coca Cola'
-chius t=1, imp=3.00

@@ -114,6 +114,7 @@
                 <a href ="/orders/seeDoneOrders#order{{model.orderid}}" class="buttonX"> ritorna </a>
                 {% if model.residual_payment_due <= 0 %}
                 <a href ="/orders/createEcrReceiptInstructionForSubOrder/{{model.sub_order_id}}/{{model.order_id}}" class="buttonX">conferma</a>
+                <a href ="/orders/printSubOrderInvoice/{{model.sub_order_id}}" class="buttonX">ricevuta non fiscale</a>
                 {% endif %}
             </innerp>
         </ul>

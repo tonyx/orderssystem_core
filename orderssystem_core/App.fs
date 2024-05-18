@@ -27,6 +27,7 @@ open System.Net
 open OrdersSystem.DbWrappedEntities 
 open System.IO
 open System.Text
+open QRCoder
 open OrdersSystem.Settings
 open System.Runtime
 
@@ -34,6 +35,23 @@ open System.Drawing;
 open System.Drawing.Printing;
 open System.Security.Cryptography.X509Certificates
 open System
+
+open QuestPDF.Fluent
+open QuestPDF.Helpers
+open QuestPDF.Infrastructure
+
+open QuestPDF.Fluent
+open QuestPDF.Helpers
+open QuestPDF.Infrastructure
+open System.Diagnostics
+
+
+//   <add key ="QuestPDF.Settings.License"  value = "LicenseType.Community" />
+let _ = 
+    QuestPDF.Settings.License <- LicenseType.Community
+    // LicenseManager.SetLicense(ConfigurationManager.AppSettings.["QuestPDF.Settings.License"])
+    // let license = ConfigurationManager.AppSettings.["QuestPDF.Settings.License"]
+    // QuestPDF.LicenseManager.SetLicense(license)
 
 type Stritem = {entry: string}
 type IndexNameRecord = {name: string; index: int}
@@ -1607,12 +1625,60 @@ let removeSpooledFiles() =
     let _ = txtFilesToRemove |> List.iter (fun x -> File.Delete(x))
     ()
 
+let createHelloPdf (orderOutGroupDetail: Db.OrderOutGroupDetail) (plainIngredientsMap: Map<int, string>) (variationsIngredientsMap: Map<int, string>) =
+    let ctx = Db.getContext()
+    let orderItems = Db.getOrderItemsDetailOfOrderByOutGroup orderOutGroupDetail.Ordergroupid ctx
+    let filename = "text.pdf"
+    Document
+        .Create(fun container ->
+            container.Page (fun page ->
+                page.Size(PageSizes.A4)
+                page.Margin(2f, Unit.Centimetre)
+                page.PageColor(Colors.White)
+                page.DefaultTextStyle(fun x -> x.FontSize(20f))
+
+                page
+                    .Header()
+                    .AlignCenter()
+                    .Text("ordinazione")
+                    .SemiBold()
+                    .FontSize(36f)
+                    .FontColor(Colors.Blue.Medium)
+                |> ignore
+
+                page
+                    .Content()
+                    .Text(fun text ->
+                        text.EmptyLine() |> ignore
+                        text.Line(orderOutGroupDetail.Table) |> ignore
+                        text.EmptyLine() |> ignore
+                        List.iter (fun (x:Db.OrderItemDetails) -> 
+                            text.Line(sprintf "n. %d %s \n" x.Quantity x.Name) |> ignore
+                            text.Line(x.Name) |> ignore
+                            text.Line(x.Comment) |> ignore
+                            text.Line("ingr ricetta: " + (if (plainIngredientsMap.[x.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[x.Orderitemid])) |> ignore
+                            text.Line("var: " + variationsIngredientsMap.[x.Orderitemid]) |> ignore
+                            text.EmptyLine() |> ignore
+                            ) orderItems
+                    )
+            )
+            |> ignore)
+        // .GeneratePdf(filename)
+
 let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.OrderOutGroupDetail) (plainIngredientsMap:Map<int,string>) (variationsIngredientsMap:Map<int,string>)  =
     log.Debug(sprintf "makeFileOutForAGroupOfordersForDifferentPrinters %d" orderOutGroupDetail.Ordergroupid)
     let ctx = Db.getContext()
     let _ = removeSpooledFiles()
     let printCount = orderOutGroupDetail.Printcount
-    let header = local.Table  + orderOutGroupDetail.Table + "\n"+local.ProgressivePrintCounterForThisReceipt  + (printCount |> string) + "\n"+ local.ExitGroup+ (orderOutGroupDetail.Groupidentifier |> string) +  local.TimeStamp + DateTime.Now.ToLocalTime().ToString() + "\n"
+    let header = 
+        local.Table  + 
+        orderOutGroupDetail.Table + "\n" +
+        local.ProgressivePrintCounterForThisReceipt  + 
+        (printCount |> string) + "\n"+ 
+        local.ExitGroup + 
+        (orderOutGroupDetail.Groupidentifier |> string) +  
+        local.TimeStamp + 
+        DateTime.Now.ToLocalTime().ToString() + "\n"
     let orderItems = Db.getOrderItemsDetailOfOrderByOutGroup orderOutGroupDetail.Ordergroupid ctx
     let toBeWorkedState = Db.States.getStateByName("TOBEWORKED")
     let printers = Db.getPrinters ctx
@@ -1631,24 +1697,42 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
         (x, y |> (List.map ( fun (z:Db.OrderItemDetails) ->   
         "n. " + (z.Quantity |> string) + " " + z.Name + " " + "ing. ricetta:" +  (if (plainIngredientsMap.[z.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[z.Orderitemid])
         + " var: " +  variationsIngredientsMap.[z.Orderitemid] +   z.Comment + "\n")) |> List.fold (+) ""  |> replaceEmojWithPlainText ))
-    let filesAndContents = printersForOrderItemsTextes |>  List.map (fun (x:Db.Printer,y:string) -> (x.Name, header + y) )
-    let filesNamesAndContents = filesAndContents |> List.map (fun (x,y) ->
-        (sprintf "%s%d.txt" x System.DateTime.Now.Ticks,y))
+
+    let filesAndContents = printersForOrderItemsTextes |> List.map (fun (x: Db.Printer, y:string) -> (x.Name, header + y) )
+
+    let pdfFilesAndContents = printersForOrderItemsTextes |> List.filter (fun (_, y) -> y.Length > 0) |>  List.map (fun (x: Db.Printer, _) -> (x.Name, createHelloPdf orderOutGroupDetail plainIngredientsMap variationsIngredientsMap))
+
+    let filesNamesAndContents = filesAndContents |> List.map (fun (x, y) ->
+        (sprintf "%s%d.txt" x System.DateTime.Now.Ticks, y))
+
     let filteredFileNamesAndContents = filesNamesAndContents |> List.filter (fun (_,y:string) -> (y.Length > 0))
     let fileNames = filteredFileNamesAndContents |> List.map (fun (x,y) -> x)
     let printerNames = printersForOrderItemsTextes |> List.map (fun (x:Db.Printer, _) -> x.Name)
     let forPrintersFileNames = List.map2 (fun x y -> (x, y) ) printerNames fileNames
-    let _ = filteredFileNamesAndContents |> List.iter (fun (x,y) ->
+    let _ = filteredFileNamesAndContents |> List.iter (fun (x, y) ->
         let outFile = new System.IO.StreamWriter(x,true,Encoding.UTF8)
         let _ = outFile.WriteLine(y)
         let _ = outFile.WriteLine()
         outFile.Close() |> ignore
         )
-    let _ = forPrintersFileNames |> List.iter (fun (x,y) -> 
+
+    let _ = pdfFilesAndContents |> List.iter (fun (x,y) -> 
+        y.GeneratePdf(x + ".pdf"))    
+
+    let forPrintersPdfFileNames = List.map2 (fun x y -> (x, y) ) printerNames (pdfFilesAndContents |> List.map (fun (x, _) -> x + ".pdf"))
+    // let pdfFiles = pdfFilesAndContents |> List.map (fun (x,_) -> x + ".pdf")
+
+    let _ = forPrintersFileNames |> List.iter (fun (x, y) -> 
         System.Diagnostics.Process.Start(Settings.Printcommand, Settings.PrinterSelector  + x + " " + Directory.GetCurrentDirectory() + "/" + y) |> ignore
-        File.Copy(y,y.Replace(".txt",".ok"))
-    )
+        File.Copy(y, y.Replace(".txt",".ok")))
+
+    // another hack for pdf: consider that this needs to be filtered by printer/categories (see printersForOrderItems)
+    let _ = forPrintersPdfFileNames |> List.iter (fun (x, y) -> 
+        // System.Diagnostics.Process.Start(Settings.Printcommand, Settings.PrinterSelector  + x + " " + Directory.GetCurrentDirectory() + "/" + y) |> ignore
+        File.Copy(y, y.Replace(".pdf",".ok")))
+
     ()
+
 
 let fileDumpOrderOutGroupForDifferentPrinters (orderOutGroup:Db.OrderOutGroupDetail) =
     log.Debug(sprintf "fileDumpOrderOutGroupForDifferentPrinters %d orderOutGroup.Ordergroupid")
@@ -1684,6 +1768,8 @@ let printOrderOutGroup orderOutGroupId  (order:Db.Order) (orderItemsDetails:Db.O
     ctx.SubmitUpdates()
     let orderOutGroupDetail = Db.getOutGroupDetail orderOutGroup.Ordergroupid  ctx
     fileDumpOrderOutGroupForDifferentPrinters orderOutGroupDetail
+
+    // createHelloPdf orderOutGroupDetail
 
 let rePrintOrderOutGroup orderId orderOutGroupId encodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "rePrintOrderOutGrop %d" orderOutGroupId)
@@ -2790,7 +2876,8 @@ let printSubOrderInvoice subOrderId =
                 let _ = outFile.WriteLine(text)
                 let _ = outFile.Close()
                 let _ = printerNames |> List.iter (fun x -> 
-                    System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
+                    // System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
+                    System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + Directory.GetCurrentDirectory() + "/" + fileName) |> ignore
                     File.Copy(fileName,x+fileName.Replace(".txt",".ok"),true)
                 )
 
@@ -2868,7 +2955,8 @@ let printWholeOrderInvoice orderId =
                 let _ = outFile.WriteLine(text)
                 let _ = outFile.Close()
                 let _ = printerNames |> List.iter (fun x -> 
-                    System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
+                    // System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + AppDomain.CurrentDomain.BaseDirectory + fileName) |> ignore
+                    System.Diagnostics.Process.Start(Settings.Printcommand, "-P" + x + " " + Directory.GetCurrentDirectory() + "/" + fileName) |> ignore
                     File.Copy(fileName,x+fileName.Replace(".txt",".ok"),true)
                 )
                 let _ = archiveOrderByUserId orderId

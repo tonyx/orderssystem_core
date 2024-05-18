@@ -1,0 +1,7 @@
+﻿tavolo 6
+numero di stampe eseguite per questo ordine: 2
+gruppo di uscita1data orario 18/05/2024 20:37:44
+n. 1 bistecca ing. ricetta:mancante var: 
+n. 1 Piadina ing. ricetta:mancante var: 
+
+
