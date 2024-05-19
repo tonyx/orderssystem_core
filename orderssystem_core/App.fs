@@ -21,6 +21,7 @@ open Globals
 open View
 open FSharp.Data.Sql
 open OrdersSystem
+// open OrdersSystem.Commons
 open Suave.Writers
 open QRCoder
 open System.Net
@@ -212,6 +213,7 @@ let adminPassingUserLoggedOn f_success =
         | _ -> UNAUTHORIZED "Not logged in"
     ))
 
+// FOCUS::::
 let passHash (pass: string) =
     use sha = Security.Cryptography.SHA256.Create()
     Text.Encoding.UTF8.GetBytes(pass)

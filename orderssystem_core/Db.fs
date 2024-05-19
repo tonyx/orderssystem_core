@@ -2287,7 +2287,9 @@ let getLatestVoidedOrder userId (ctx:DbContext) =
 // detect any runtime exception, log it, and restore the connection
 let newIngredientCatgory name visibility description (ctx: DbContext) = 
     log.Debug(sprintf "newIngredientCatgory %s" name)
+    printf "XXXXX. before call\n"
     let newIngredient = ctx.Public.Ingredientcategory.``Create(name, visibility)``(name, visibility)
+    printf "XXXXX. after call\n"
     newIngredient.Description <- description
     ctx.SubmitUpdates()
 
