@@ -217,7 +217,7 @@
         <StartingFrom> a partire da </StartingFrom>
         <Visualize>visualizza </Visualize>
         <PriceForIngredient>prezzo for ingredient</PriceForIngredient>
-        <AddPrice>aggiungi prezzo</AddPrice>
+        <AddPrice>prezzo di aggiunta</AddPrice>
         <SubtractPrice>prezzo di sottrazione price</SubtractPrice>
         <IsDefaultAddQuantity>è la quantità di aggiunga per default </IsDefaultAddQuantity>
         <IsDefaultSubtractQuantity>è la quantità di sottrazione per default </IsDefaultSubtractQuantity>

@@ -223,7 +223,7 @@
         <StartingFrom> starting from </StartingFrom>
         <Visualize>visualize </Visualize>
         <PriceForIngredient>price for ingredient </PriceForIngredient>
-        <AddPrice>add price</AddPrice>
+        <AddPrice>Price for adding</AddPrice>
         <SubtractPrice>subtract price</SubtractPrice>
         <IsDefaultAddQuantity>is the default add quantity </IsDefaultAddQuantity>
         <IsDefaultSubtractQuantity>is the default subtract quantity </IsDefaultSubtractQuantity>
