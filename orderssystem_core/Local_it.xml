@@ -209,7 +209,7 @@
         <VoidIt>annulla</VoidIt>
         <PossibleVariations>variazioni possibili </PossibleVariations>
         <Confirm>conferma </Confirm>
-        <VoidOrder>annulla ordine </VoidOrder>
+        <VoidOrder>Annulla ordine</VoidOrder>
         <ActiveOrders>ordini attivi </ActiveOrders>
         <SeeIngredientUsages>vedi utilizzi di ingredienti</SeeIngredientUsages>
         <OrdinaryQuantity>quantità ordinaria  </OrdinaryQuantity>
@@ -249,7 +249,7 @@
         <No>No</No>
         <IsDefaultAddAndSubtractQuantity>E' la quantità di default di aggiunta e sottrazione </IsDefaultAddAndSubtractQuantity>
         <AddRole>aggiungi ruolo </AddRole>
-        <Merge>unisci</Merge>
+        <Merge>Unisci</Merge>
         <RollBackLatestVoided>ripristina l'ultimo annullato</RollBackLatestVoided>
         <allTheOrders>tutti gli ordini</allTheOrders>
         <MyOwn>i miei </MyOwn>

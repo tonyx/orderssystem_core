@@ -135,6 +135,26 @@ ul#item-list li a span
 
 }
 
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+    font-family: "Courier New", Courier, monospace;
+
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    color: rgb(146, 64, 64);
+}
+
 .noredstyle
 {
     /* font-size: smaller; */
@@ -846,6 +866,25 @@ ul#item-list li a span
     font: italic
 
 }
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+    font-family: "Courier New", Courier, monospace;
+
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    color: rgb(146, 64, 64);
+}
 
 .noredstyle
 {
@@ -1536,6 +1575,27 @@ ul#item-list li a span
     font: italic
 
 }
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+
+    font-family: "Courier New", Courier, monospace;
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    background-color: rgb(146, 64, 64);
+    color: rgb(146, 64, 64);
+}
 
 .noredstyle
 {
@@ -2209,6 +2269,26 @@ ul#item-list li a span
     border-color:   #280588; 
     font: italic
 
+}
+
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+    font-family: "Courier New", Courier, monospace;
+
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    color: rgb(146, 64, 64);
 }
 
 .noredstyle

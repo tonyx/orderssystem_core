@@ -215,7 +215,7 @@
         <VoidIt>void</VoidIt>
         <PossibleVariations>possibile variations </PossibleVariations>
         <Confirm>confirm </Confirm>
-        <VoidOrder>void order </VoidOrder>
+        <VoidOrder>Void order</VoidOrder>
         <ActiveOrders>active orders </ActiveOrders>
         <SeeIngredientUsages>see ingredient usages</SeeIngredientUsages>
         <OrdinaryQuantity>ordinary  quantity  </OrdinaryQuantity>
@@ -254,7 +254,7 @@
         <No>No</No>
         <IsDefaultAddAndSubtractQuantity>Is the default quantity for adding and subtracting </IsDefaultAddAndSubtractQuantity>
         <AddRole>add role </AddRole>
-        <Merge>merge</Merge>
+        <Merge>Merge</Merge>
         <RollBackLatestVoided>roll back latest voided</RollBackLatestVoided>
         <allTheOrders>all the orders</allTheOrders>
         <MyOwn>my own </MyOwn>
