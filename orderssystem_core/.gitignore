@@ -3,6 +3,9 @@ bin/*
 .fake
 .ionide
 .idea
+*.ok
+*.pdf
+*.txt
 obj/*
 packages
 
