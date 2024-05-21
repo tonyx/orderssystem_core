@@ -149,6 +149,21 @@ ul#item-list li a span
     font: bold
 
 }
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
+
 .myMonoSpace 
 {
     font-family: "Courier New", Courier, monospace;
@@ -479,7 +494,7 @@ innerp
 
 h2
 {
-    color: #a01948;
+    color: #000080; 
 }
 
 h2, h3
@@ -880,6 +895,20 @@ ul#item-list li a span
     font: bold
 
 }
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
 .myMonoSpace 
 {
     font-family: "Courier New", Courier, monospace;
@@ -1206,7 +1235,8 @@ innerp
 
 h2
 {
-    color: #a01948;
+    /* color: #a01948; */
+    color: #000080; 
 }
 
 h2, h3
@@ -1590,6 +1620,19 @@ ul#item-list li a span
 
 }
 
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
 .myMonoSpace 
 {
     font-family: "Courier New", Courier, monospace;
@@ -1890,7 +1933,7 @@ innerp
 
 h2
 {
-    color: #a01948;
+    color: #000080; 
 }
 
 h2, h3
@@ -2285,6 +2328,20 @@ ul#item-list li a span
     font: bold
 
 }
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
 .myMonoSpace 
 {
     font-family: "Courier New", Courier, monospace;
@@ -2616,7 +2673,7 @@ innerp
 
 h2
 {
-    color: #a01948;
+    color: #000080; 
 }
 
 h2, h3

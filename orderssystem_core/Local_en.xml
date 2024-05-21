@@ -6,8 +6,8 @@
 
 
         <SubmitVariations>submit variations</SubmitVariations>
-        <SelectableComments>selectable comments </SelectableComments>
-        <ExistingComment>existing commments </ExistingComment> 
+        <SelectableComments>Selectable comments </SelectableComments>
+        <ExistingComment>Existing commments </ExistingComment> 
         <Reset>Reset</Reset> 
         <CommentsFor>comments for </CommentsFor> 
         <AddSelectableVariation>add selectable variation</AddSelectableVariation> 
@@ -247,8 +247,8 @@
         <AccessRights>access right</AccessRights>
         <Optimization>optimization</Optimization>
         <Deletions>deletions</Deletions>
-        <Orders>orders</Orders>
-        <Logoff>log out</Logoff>
+        <Orders>Orders</Orders>
+        <Logoff>Log out</Logoff>
         <OrderItemStates>order items states </OrderItemStates>
         <Yes>Yes</Yes>
         <No>No</No>
@@ -265,4 +265,8 @@
         <ExistingStandardVariation>Existing standard variations </ExistingStandardVariation>
         <Prices>Prices</Prices>
         <Courses>Dishes</Courses>
+        <NoIngredients>No ingredients yet</NoIngredients>
+        <NoComments>No comments defined</NoComments>
+        <NoStandardVariations>There are no standard variations associated</NoStandardVariations>
+        <Empty>Vuoto</Empty>
     </localization>

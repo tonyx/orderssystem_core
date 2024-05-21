@@ -266,6 +266,10 @@
             <xs:element type="xs:string" name="ExistingStandardVariation"/>
             <xs:element type="xs:string" name="Prices"/>
             <xs:element type="xs:string" name="Courses"/>
+            <xs:element type="xs:string" name="NoIngredients"/>
+            <xs:element type="xs:string" name="NoComments"/>
+            <xs:element type="xs:string" name="NoStandardVariations"/>
+            <xs:element type="xs:string" name="Empty"/>
 
 
           </xs:sequence>

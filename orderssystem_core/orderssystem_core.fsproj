@@ -16,10 +16,9 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="GlobalData.fs" />
-    <Compile Include="Config.fs" />
     <Compile Include="Db.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="DbWrappedentities.fs" />
+    <Compile Include="DbWrappedEntities.fs" />
     <Compile Include="Path.fs" />
     <Compile Include="Forms.fs" />
     <Compile Include="UIFragments.fs" />

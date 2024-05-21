@@ -1,84 +1,84 @@
     <localization>
-        <modifyUser>modifica utente</modifyUser>
-        <userEnabled>user enabled</userEnabled>
-        <SubmitVariations>inserisci variazioni</SubmitVariations>
-        <SelectableComments>commenti selezionabili</SelectableComments>
-        <ExistingComment>commenti esistenti</ExistingComment> 
+        <modifyUser>Modifica utente</modifyUser>
+        <userEnabled>User enabled</userEnabled>
+        <SubmitVariations>Inserisci variazioni</SubmitVariations>
+        <SelectableComments>Commenti selezionabili</SelectableComments>
+        <ExistingComment>Commenti esistenti</ExistingComment> 
         <Reset>Ripristina</Reset> 
-        <CommentsFor>commenti per</CommentsFor> 
-        <AddSelectableVariation>aggiungi variazione selezionabile</AddSelectableVariation> 
-        <AddSelectableVariationsFor>aggiungi variazione standard selezionabile per</AddSelectableVariationsFor>
-        <ExistingComments>commenti esistenti</ExistingComments> 
-        <AddSelectableComment>aggiungi commento selezionabile</AddSelectableComment> 
-        <AddStandardCommentFor>aggiungi commento standard per</AddStandardCommentFor>
-        <AreYouSureVoidOrder>siete sicuri di voler annullare l'ordine</AreYouSureVoidOrder>
-        <OrderItemsInProgress>orderitems in avanzamento</OrderItemsInProgress>
-        <UserIsNotEnabled>utente non abilitato</UserIsNotEnabled>
+        <CommentsFor>Commenti per</CommentsFor> 
+        <AddSelectableVariation>Aggiungi variazione selezionabile</AddSelectableVariation> 
+        <AddSelectableVariationsFor>Aggiungi variazione standard selezionabile per</AddSelectableVariationsFor>
+        <ExistingComments>Commenti esistenti</ExistingComments> 
+        <AddSelectableComment>Aggiungi commento selezionabile</AddSelectableComment> 
+        <AddStandardCommentFor>Aggiungi commento standard per</AddStandardCommentFor>
+        <AreYouSureVoidOrder>Siete sicuri di voler annullare l'ordine</AreYouSureVoidOrder>
+        <OrderItemsInProgress>Orderitems in avanzamento</OrderItemsInProgress>
+        <UserIsNotEnabled>Utente non abilitato</UserIsNotEnabled>
         <SwitchVisibility>Cambia visibilità</SwitchVisibility> 
-        <SubCategory>sottocategoria</SubCategory> 
-        <AddSubCategoryOf>aggiungi sottocategoria di </AddSubCategoryOf> 
-        <Choose>scegli</Choose> 
-        <StandardVariation>variazione standard </StandardVariation> 
-        <StandardVariations>variazioni standard </StandardVariations> 
-        <ExistingSubCategories>sottocategorie esistenti </ExistingSubCategories> 
-        <AddSubCategory>aggiungi sottocategoria</AddSubCategory> 
-        <MergeWithFatherCategory>unisci con categoria padre</MergeWithFatherCategory> 
-        <ErrorUnexistingCategory>errore: categoria inesistente</ErrorUnexistingCategory> 
+        <SubCategory>Sottocategoria</SubCategory> 
+        <AddSubCategoryOf>Aggiungi sottocategoria di </AddSubCategoryOf> 
+        <Choose>Scegli</Choose> 
+        <StandardVariation>Variazione standard </StandardVariation> 
+        <StandardVariations>Variazioni standard </StandardVariations> 
+        <ExistingSubCategories>Sottocategorie esistenti </ExistingSubCategories> 
+        <AddSubCategory>Aggiungi sottocategoria</AddSubCategory> 
+        <MergeWithFatherCategory>Unisci con categoria padre</MergeWithFatherCategory> 
+        <ErrorUnexistingCategory>Errore: categoria inesistente</ErrorUnexistingCategory> 
         <CreateCourse>Inserisci piatto</CreateCourse> 
-        <BackToOrder>torna all'ordine</BackToOrder> 
-        <FatherCategory>categoria padre </FatherCategory> 
-        <SubCategories>sottocategoria</SubCategories> 
+        <BackToOrder>Torna all'ordine</BackToOrder> 
+        <FatherCategory>Categoria padre </FatherCategory> 
+        <SubCategories>Sottocategoria</SubCategories> 
         <LogOn>Log on</LogOn> 
-        <CouldNotFindTheRequestedResource>impossibile trovare la pagina richiesta </CouldNotFindTheRequestedResource> 
-        <SearchCourse>cerca piatto</SearchCourse> 
-        <PageNotFound>pagina non trovata</PageNotFound> 
+        <CouldNotFindTheRequestedResource>Impossibile trovare la pagina richiesta </CouldNotFindTheRequestedResource> 
+        <SearchCourse>Perca piatto</SearchCourse> 
+        <PageNotFound>Pagina non trovata</PageNotFound> 
         <ModifySelectableStandardVariations>Modifica variazioni standard selezionabili</ModifySelectableStandardVariations> 
         <SelectableStandardVariations>Variazioni standard selezionabili</SelectableStandardVariations> 
-        <ModifySelectableStandardComments>modifica commenti standard selezionabili</ModifySelectableStandardComments> 
-        <SelectableStandardComments>commenti standard selezionabili</SelectableStandardComments> 
+        <ModifySelectableStandardComments>Modifica commenti standard selezionabili</ModifySelectableStandardComments> 
+        <SelectableStandardComments>Commenti standard selezionabili</SelectableStandardComments> 
         <EditUser>Modifica utente</EditUser>
-        <Insert>inserisci</Insert> 
+        <Insert>Inserisci</Insert> 
         <NewComment>Nuovo commento</NewComment> 
-        <StandardComments>commenti standard</StandardComments> 
-        <TimeStamp>data orario </TimeStamp> 
-        <ProgressivePrintCounterForThisReceipt>numero di stampe eseguite per questo ordine: </ProgressivePrintCounterForThisReceipt> 
-        <CantAddAnotherAdmin>impossibile aggiungere un altro utente amministratore </CantAddAnotherAdmin> 
-        <UserNameIsTaken>spiacente ma questo nome utente è già usato. Provare un altro nome </UserNameIsTaken> 
-        <ACategoryNamed>una categoria con il nome </ACategoryNamed> 
-        <ACourseNamed>un piatto con il nome</ACourseNamed> 
-        <NameIsUsed>questo nome è già usato</NameIsUsed> 
-        <AlreadyExists>esiste già </AlreadyExists> 
-        <ModifyUser>modifica utente</ModifyUser> 
-        <UserEnabled>utente abilitato</UserEnabled> 
-        <UserCanVoidOrder>l'utente può annullare un ordine</UserCanVoidOrder> 
-        <UserCanSeeAnyOrder>l'utente può vedere qualsiasi ordine</UserCanSeeAnyOrder> 
-        <UserCanChangePrices>l'utente può cambiare i prezzi</UserCanChangePrices> 
-        <UserCanManageCourses>l'utente può gestire i piatti</UserCanManageCourses> 
-        <EditCategory>modifica categoria</EditCategory> 
-        <Course>piatto</Course> 
-        <Name>nome</Name> 
-        <SaveChanges>registra cambiamenti</SaveChanges> 
-        <GoBack>torna</GoBack> 
-        <GoBackTo>torna a</GoBackTo> 
+        <StandardComments>Commenti standard</StandardComments> 
+        <TimeStamp>Data orario </TimeStamp> 
+        <ProgressivePrintCounterForThisReceipt>Numero di stampe eseguite per questo ordine: </ProgressivePrintCounterForThisReceipt> 
+        <CantAddAnotherAdmin>Impossibile aggiungere un altro utente amministratore </CantAddAnotherAdmin> 
+        <UserNameIsTaken>Spiacente ma questo nome utente è già usato. Provare un altro nome </UserNameIsTaken> 
+        <ACategoryNamed>Una categoria con il nome </ACategoryNamed> 
+        <ACourseNamed>Un piatto con il nome</ACourseNamed> 
+        <NameIsUsed>Questo nome è già usato</NameIsUsed> 
+        <AlreadyExists>Esiste già </AlreadyExists> 
+        <ModifyUser>Modifica utente</ModifyUser> 
+        <UserEnabled>Utente abilitato</UserEnabled> 
+        <UserCanVoidOrder>L'utente può annullare un ordine</UserCanVoidOrder> 
+        <UserCanSeeAnyOrder>L'utente può vedere qualsiasi ordine</UserCanSeeAnyOrder> 
+        <UserCanChangePrices>L'utente può cambiare i prezzi</UserCanChangePrices> 
+        <UserCanManageCourses>L'utente può gestire i piatti</UserCanManageCourses> 
+        <EditCategory>Modifica categoria</EditCategory> 
+        <Course>Piatto</Course> 
+        <Name>Nome</Name> 
+        <SaveChanges>Registra cambiamenti</SaveChanges> 
+        <GoBack>Torna</GoBack> 
+        <GoBackTo>Torna a</GoBackTo> 
         <AccountInformation>Informazioni sull'account </AccountInformation>
-        <AddIngredientTo>aggiungi ingrediente a </AddIngredientTo> 
-        <Ingredient>ingrediente</Ingredient> 
-        <NameBySelection>nome da selezione</NameBySelection> 
-        <NameByFreeText>nome da testo libero</NameByFreeText> 
-        <Quantity>quantità </Quantity> 
-        <Add>aggiungi</Add> 
+        <AddIngredientTo>Aggiungi ingrediente a </AddIngredientTo> 
+        <Ingredient>Ingrediente</Ingredient> 
+        <NameBySelection>Nome da selezione</NameBySelection> 
+        <NameByFreeText>Nome da testo libero</NameByFreeText> 
+        <Quantity>Quantità </Quantity> 
+        <Add>Aggiungi</Add> 
         <Info>Informazioni</Info> 
-        <CollapseOrderItems>raggruppa</CollapseOrderItems> 
-        <Price>prezzo </Price> 
-        <Description>descrizione </Description> 
-        <Visibility>visibilità </Visibility> 
-        <Category>categoria </Category> 
+        <CollapseOrderItems>Raggruppa</CollapseOrderItems> 
+        <Price>Prezzo </Price> 
+        <Description>Descrizione </Description> 
+        <Visibility>Visibilità </Visibility> 
+        <Category>Categoria </Category> 
         <saveChanges>saveChanges</saveChanges> 
-        <ExistingIngredients>ingredienti esistenti</ExistingIngredients> 
-        <CategoriesOfIngredientsYouCanAdd>categorie di ingredienti aggiugibili</CategoriesOfIngredientsYouCanAdd> 
-        <AddAmong>aggiungi tra </AddAmong> 
-        <AddAmongAll>aggiungi tra tutti </AddAmongAll> 
-        <MainPage>pagina principale</MainPage> 
+        <ExistingIngredients>Ingredienti esistenti</ExistingIngredients> 
+        <CategoriesOfIngredientsYouCanAdd>Aggiunte di ingredienti possibili</CategoriesOfIngredientsYouCanAdd> 
+        <AddAmong>Aggiungi tra </AddAmong> 
+        <AddAmongAll>Aggiungi tra tutti </AddAmongAll> 
+        <MainPage>Pagina principale</MainPage> 
         <ChangePasswordFor>Cambia password per </ChangePasswordFor> 
         <ChangePassword>Cambia password</ChangePassword> 
         <OldPassword>Vecchia  password</OldPassword> 
@@ -97,167 +97,171 @@
         <Manage>Gestisci</Manage> 
         <Missing>Mancante</Missing> 
         <Table>Tavolo </Table> 
-        <Group>gruppo</Group> 
-        <Receipt>ricetta </Receipt> 
-        <Bill>scontrino </Bill> 
-        <Reject>respingi</Reject> 
-        <RejectOrderItem>respingi order item</RejectOrderItem> 
-        <Motivation>motivo</Motivation> 
-        <Submit>conferma</Submit> 
+        <Group>Gruppo</Group> 
+        <Receipt>Ricetta </Receipt> 
+        <Bill>Scontrino </Bill> 
+        <Reject>Respingi</Reject> 
+        <RejectOrderItem>Respingi order item</RejectOrderItem> 
+        <Motivation>Motivo</Motivation> 
+        <Submit>Conferma</Submit> 
         <ActionableStatesForUser>stati azionabili per l'utente</ActionableStatesForUser> 
-        <Disable>disabilita</Disable> 
-        <Enable>abilita</Enable> 
-        <ActionableStatesForWaiters>stati azionabili per i camerieri </ActionableStatesForWaiters> 
-        <ActionableStatesForTemporaryUsers>stati azionabili per utenti temporanei </ActionableStatesForTemporaryUsers> 
-        <Total>totale</Total>
-        <VariationOverPriceDiscount>variazioni su sconti </VariationOverPriceDiscount>
-        <Value>valore</Value>
-        <Percentage>percentuale</Percentage>
-        <VoidDiscounts>annulla sconti</VoidDiscounts>
-        <TheEnd>fine</TheEnd>
+        <Disable>Disabilita</Disable> 
+        <Enable>Abilita</Enable> 
+        <ActionableStatesForWaiters>Stati azionabili per i camerieri </ActionableStatesForWaiters> 
+        <ActionableStatesForTemporaryUsers>Stati azionabili per utenti temporanei </ActionableStatesForTemporaryUsers> 
+        <Total>Totale</Total>
+        <VariationOverPriceDiscount>Variazioni su sconti </VariationOverPriceDiscount>
+        <Value>Valore</Value>
+        <Percentage>Percentuale</Percentage>
+        <VoidDiscounts>Annulla sconti</VoidDiscounts>
+        <TheEnd>Fine</TheEnd>
         <Ingredients> ingr. </Ingredients>
-        <ConfirmGroup>conferma gruppo</ConfirmGroup>
-        <PrintGroup>stampa gruppo</PrintGroup>
-        <ReprintGroup>ristampa gruppo</ReprintGroup>
-        <NewOrder>nuovo ordine</NewOrder>
-        <Order>ordine</Order>
-        <UnArchiveLatest>dearchivia ultimo</UnArchiveLatest>
-        <TotalDiscounted>totlae scontato</TotalDiscounted>
-        <Archive> archivia </Archive>
-        <Modify> mod. </Modify>
-        <Subdivide> suddividi </Subdivide>
-        <Invoice> fattura </Invoice>
-        <All>tutti</All>
-        <Variations>variazioni</Variations>
-        <Variation>variatione</Variation>
-        <IngredientToAdd>ingredienti da aggiungere</IngredientToAdd>
-        <CourseBySelection>piatto per selezione</CourseBySelection>
-        <CourseByFreeText>piatto per testo libero</CourseByFreeText>
-        <ExitGroup>gruppo di uscita</ExitGroup>
-        <Comment>commento</Comment>
-        <Person>persona</Person>
-        <AddOrder>aggiungi ordinazione</AddOrder>
-        <ChangeTo>camba in </ChangeTo>
-        <Update>aggiorna</Update>
-        <NewCategory>nuova categoria</NewCategory>
-        <CreateNewCourse>inserisci nuovo piatto</CreateNewCourse>
-        <ManageCategories>gestisci categorie</ManageCategories>
-        <AddCategory>aggiungi categoria</AddCategory>
-        <StoredCategories>categorie memorizzate</StoredCategories>
-        <ManageCourses>gestisci piatti</ManageCourses>
-        <StoredCourses>piatti memorizzati</StoredCourses>
-        <ManageVisibleCoursesOfCategory>gestisci piatti visibili della categoria </ManageVisibleCoursesOfCategory>
-        <SeeAll>vedi tutti</SeeAll>
-        <AddNew>aggiungi nuovo</AddNew>
-        <VisibleCoursesOfCategory>piatti visibili della categoria</VisibleCoursesOfCategory>
-        <ClickToChange>clicca per modificare</ClickToChange>
+        <ConfirmGroup>Conferma gruppo</ConfirmGroup>
+        <PrintGroup>Stampa gruppo</PrintGroup>
+        <ReprintGroup>Ristampa gruppo</ReprintGroup>
+        <NewOrder>Nuovo ordine</NewOrder>
+        <Order>Ordine</Order>
+        <UnArchiveLatest>Dearchivia ultimo</UnArchiveLatest>
+        <TotalDiscounted>Totale scontato</TotalDiscounted>
+        <Archive> Archivia </Archive>
+        <Modify> Modifica </Modify>
+        <Subdivide> Suddividi </Subdivide>
+        <Invoice> Fattura </Invoice>
+        <All>Tutti</All>
+        <Variations>Variazioni</Variations>
+        <Variation>Variatione</Variation>
+        <IngredientToAdd>Ingredienti da aggiungere</IngredientToAdd>
+        <CourseBySelection>Piatto per selezione</CourseBySelection>
+        <CourseByFreeText>Piatto per testo libero</CourseByFreeText>
+        <ExitGroup>Gruppo di uscita</ExitGroup>
+        <Comment>Commento</Comment>
+        <Person>Persona</Person>
+        <AddOrder>Aggiungi ordinazione</AddOrder>
+        <ChangeTo>Camba in </ChangeTo>
+        <Update>Aggiorna</Update>
+        <NewCategory>Nuova categoria</NewCategory>
+        <CreateNewCourse>Inserisci nuovo piatto</CreateNewCourse>
+        <ManageCategories>Gestisci categorie</ManageCategories>
+        <AddCategory>Aggiungi categoria</AddCategory>
+        <StoredCategories>Categorie memorizzate</StoredCategories>
+        <ManageCourses>Gestisci piatti</ManageCourses>
+        <StoredCourses>Piatti memorizzati</StoredCourses>
+        <ManageVisibleCoursesOfCategory>Gestisci piatti visibili della categoria </ManageVisibleCoursesOfCategory>
+        <SeeAll>Vedi tutti</SeeAll>
+        <AddNew>Aggiungi nuovo</AddNew>
+        <VisibleCoursesOfCategory>Piatti visibili della categoria</VisibleCoursesOfCategory>
+        <ClickToChange>Clicca per modificare</ClickToChange>
         <AllTheItems>tutti gli item</AllTheItems>
         <VisibleOfCategory> visibili della categoria </VisibleOfCategory>
-        <AddNewItem>aggiungi nuovo item</AddNewItem>
-        <CoursesOfCategory>piatti della categoria </CoursesOfCategory>
+        <AddNewItem>Aggiungi nuovo item</AddNewItem>
+        <CoursesOfCategory>Piatti della categoria </CoursesOfCategory>
         <AllVisibleCoursesOfCategory>tutti i piatti visibili della categoria </AllVisibleCoursesOfCategory>
         <ClickToSeeAllVisibleCoursesOfCategory>visibili</ClickToSeeAllVisibleCoursesOfCategory>
-        <AddQuantityIn>aggiungi quantità in </AddQuantityIn>
-        <ModifyIngredient>modifica ingrediente </ModifyIngredient>
-        <Allergen>allergene</Allergen>
-        <UpdateAvailability>modifica disponibilità</UpdateAvailability>
-        <CheckAvailability>verifica disponibilità</CheckAvailability>
-        <MeasuringSystem>sistema di misurazione</MeasuringSystem>
-        <NewIngredient>nuovo ingrediente </NewIngredient>
-        <AvailablQuantity>quantità disponibile </AvailablQuantity>
+        <AddQuantityIn>Aggiungi quantità in </AddQuantityIn>
+        <ModifyIngredient>Modifica ingrediente </ModifyIngredient>
+        <Allergen>Allergene</Allergen>
+        <UpdateAvailability>Modifica disponibilità</UpdateAvailability>
+        <CheckAvailability>Verifica disponibilità</CheckAvailability>
+        <MeasuringSystem>Sistema di misurazione</MeasuringSystem>
+        <NewIngredient>Nuovo ingrediente </NewIngredient>
+        <AvailablQuantity>Quantità disponibile </AvailablQuantity>
         <VisibleCategoriesOfIngredients>categorie di ingredienti visibili </VisibleCategoriesOfIngredients>
-        <CreateNewCategory>aggiungi nuova categoria </CreateNewCategory>
-        <VisibleExistingCategories>categorie visibili esistenti </VisibleExistingCategories>
+        <CreateNewCategory>Aggiungi nuova categoria </CreateNewCategory>
+        <VisibleExistingCategories>Categorie visibili esistenti </VisibleExistingCategories>
         <ManagePrinters>Gestisci stampanti </ManagePrinters>
         <DeletePrinters>Elimina stampante </DeletePrinters>
         <DetectPrinters>Rileva  stampanti </DetectPrinters>
-        <AllCategoriesOfIngredients>tutte le categorie di ingredienti </AllCategoriesOfIngredients>
-        <ExistingCategories>categorie esistenti </ExistingCategories>
-        <TemporaryUser>utenti temporanei</TemporaryUser>
-        <CreateTemporaryUsers>inserisci utente temporaneo </CreateTemporaryUsers>
-        <NameOrTable>nome o tavolo</NameOrTable>
+        <AllCategoriesOfIngredients>Tutte le categorie di ingredienti </AllCategoriesOfIngredients>
+        <ExistingCategories>Categorie esistenti </ExistingCategories>
+        <TemporaryUser>Utenti temporanei</TemporaryUser>
+        <CreateTemporaryUsers>Inserisci utente temporaneo </CreateTemporaryUsers>
+        <NameOrTable>Nome o tavolo</NameOrTable>
         <ManageTemporaryUsers>Gestisci utenti temporanei</ManageTemporaryUsers>
-        <ManageUsers>gestisci utenti</ManageUsers>
-        <AddUser>aggiungi utente</AddUser>
-        <LinkStates>link states</LinkStates>
-        <RegenerateTempUser>rigenera utente temporaneo </RegenerateTempUser>
+        <ManageUsers>Gestisci utenti</ManageUsers>
+        <AddUser>Aggiungi utente</AddUser>
+        <LinkStates>Link states</LinkStates>
+        <RegenerateTempUser>Rigenera utente temporaneo </RegenerateTempUser>
         <UserExpired>utente scaduto </UserExpired>
         <TheName>il nome </TheName>
         <DeletionPage>pagina di cancellazioni </DeletionPage>
-        <WarningDeletion>attenzione, tutti i dati verranno persi</WarningDeletion>
-        <DeleteUsers>elimina utenti </DeleteUsers>
-        <DeleteTemporaryUsers>elimina utenti temporanei</DeleteTemporaryUsers>
-        <DeleteCourses>elimina piatti</DeleteCourses>
-        <DeleteCourseCategories>elimina categorie di piatti</DeleteCourseCategories>
-        <DeleteRoles>elimina ruoli</DeleteRoles>
-        <DeleteIngredients>elimina ingredienti</DeleteIngredients>
-        <DeleteIngredientCategories>elimina categorie di ingredienti</DeleteIngredientCategories>
-        <Delete>elimina</Delete>
-        <Remove>rimuovi</Remove>
-        <RoleName>nome ruolo</RoleName>
-        <CreateRole>inserisci ruolo</CreateRole>
-        <AllTheOrders>tutti gli ordini</AllTheOrders>
+        <WarningDeletion>Attenzione, tutti i dati verranno persi</WarningDeletion>
+        <DeleteUsers>Elimina utenti </DeleteUsers>
+        <DeleteTemporaryUsers>Elimina utenti temporanei</DeleteTemporaryUsers>
+        <DeleteCourses>Elimina piatti</DeleteCourses>
+        <DeleteCourseCategories>Elimina categorie di piatti</DeleteCourseCategories>
+        <DeleteRoles>Elimina ruoli</DeleteRoles>
+        <DeleteIngredients>Elimina ingredienti</DeleteIngredients>
+        <DeleteIngredientCategories>Elimina categorie di ingredienti</DeleteIngredientCategories>
+        <Delete>Elimina</Delete>
+        <Remove>Rimuovi</Remove>
+        <RoleName>Nome ruolo</RoleName>
+        <CreateRole>Inserisci ruolo</CreateRole>
+        <AllTheOrders>Tutti gli ordini</AllTheOrders>
         <CourseCategories>Categorie di piatti</CourseCategories>
         <ManageRoles>Gestisci ruoli</ManageRoles>
         <ManageIngredients>Ingredienti</ManageIngredients>
         <ManageOrdinaryUsers>Gestisci utenti ordinari</ManageOrdinaryUsers>
         <ManagePayments>Pagamenti</ManagePayments>
-        <AddIngredient>aggiungi ingrediente </AddIngredient>
-        <OriginalPrice>prezzo originario </OriginalPrice>
-        <RecalculatedPrice>prezzo ricalcolato </RecalculatedPrice>
-        <ExistingVariations>variationi esistenti </ExistingVariations>
-        <VoidIt>annulla</VoidIt>
-        <PossibleVariations>variazioni possibili </PossibleVariations>
+        <AddIngredient>Aggiungi ingrediente </AddIngredient>
+        <OriginalPrice>Prezzo originario </OriginalPrice>
+        <RecalculatedPrice>Prezzo ricalcolato </RecalculatedPrice>
+        <ExistingVariations>Variationi esistenti </ExistingVariations>
+        <VoidIt>Annulla</VoidIt>
+        <PossibleVariations>Variazioni possibili </PossibleVariations>
         <Confirm>conferma </Confirm>
         <VoidOrder>Annulla ordine</VoidOrder>
         <ActiveOrders>ordini attivi </ActiveOrders>
-        <SeeIngredientUsages>vedi utilizzi di ingredienti</SeeIngredientUsages>
-        <OrdinaryQuantity>quantità ordinaria  </OrdinaryQuantity>
-        <SeeComsumptionStartingFrom>vedi utilizzi a partire da </SeeComsumptionStartingFrom>
+        <SeeIngredientUsages>Vedi utilizzi di ingredienti</SeeIngredientUsages>
+        <OrdinaryQuantity>Quantità ordinaria  </OrdinaryQuantity>
+        <SeeComsumptionStartingFrom>Vedi utilizzi a partire da </SeeComsumptionStartingFrom>
         <StartingFrom> a partire da </StartingFrom>
-        <Visualize>visualizza </Visualize>
-        <PriceForIngredient>prezzo for ingredient</PriceForIngredient>
-        <AddPrice>prezzo di aggiunta</AddPrice>
-        <SubtractPrice>prezzo di sottrazione </SubtractPrice>
-        <IsDefaultAddQuantity>è la quantità di aggiunga per default </IsDefaultAddQuantity>
-        <IsDefaultSubtractQuantity>è la quantità di sottrazione per default </IsDefaultSubtractQuantity>
-        <AllIngredientsOfCategory>tutti gli ingredienti della categoria </AllIngredientsOfCategory>
-        <SearchByName>ricerca per nome </SearchByName>
-        <Search>cerca</Search>
-        <ViewUsages>vedi utilizzi</ViewUsages>
-        <Load>carico</Load>
-        <AddIngredientPrice>aggiungi prezzi per ingrediente </AddIngredientPrice>
-        <Button>bottone</Button>
-        <SixToTwentyChars>da sei a venti caratteri</SixToTwentyChars>
-        <IsAbstract>astratto</IsAbstract>
+        <Visualize>Visualizza </Visualize>
+        <PriceForIngredient>Prezzo per ingrediente</PriceForIngredient>
+        <AddPrice>Prezzo di aggiunta</AddPrice>
+        <SubtractPrice>Prezzo di sottrazione </SubtractPrice>
+        <IsDefaultAddQuantity>È la quantità di aggiunga per default </IsDefaultAddQuantity>
+        <IsDefaultSubtractQuantity>È la quantità di sottrazione per default </IsDefaultSubtractQuantity>
+        <AllIngredientsOfCategory>Tutti gli ingredienti della categoria </AllIngredientsOfCategory>
+        <SearchByName>Ricerca per nome </SearchByName>
+        <Search>Cerca</Search>
+        <ViewUsages>Vedi utilizzi</ViewUsages>
+        <Load>Carico</Load>
+        <AddIngredientPrice>Aggiungi prezzi per ingrediente </AddIngredientPrice>
+        <Button>Bottone</Button>
+        <SixToTwentyChars>Da sei a venti caratteri</SixToTwentyChars>
+        <IsAbstract>Astratto</IsAbstract>
         <ChangeVisibility>Cambia visibilità</ChangeVisibility>
-        <SeeOnlyVisibles>mostra solo quelli nello stato 'visibile'</SeeOnlyVisibles>
-        <Visibles>visibili</Visibles>
-        <UserName>nome utente</UserName>
-        <DefaultStatesForWaiter>stati di default per i camerieri </DefaultStatesForWaiter>
-        <DefaultStatesForTemporaryUsers>stati di default per gli utenti temporanei </DefaultStatesForTemporaryUsers>
-        <ListOfExistingRoles>lista dei ruoli esistenti </ListOfExistingRoles>
-        <EnableState>abilita stato</EnableState>
-        <ViewStates>vedi stati</ViewStates>
-        <AccessRights>diritti di accesso</AccessRights>
-        <Optimization>ottimizzazione</Optimization>
-        <Deletions>cancellazioni</Deletions>
-        <Orders>ordini</Orders>
-        <Logoff>scollegamento</Logoff>
-        <OrderItemStates>stati degli order item </OrderItemStates>
+        <SeeOnlyVisibles>Mostra solo quelli nello stato 'visibile'</SeeOnlyVisibles>
+        <Visibles>Visibili</Visibles>
+        <UserName>Nome Utente</UserName>
+        <DefaultStatesForWaiter>Stati visibili di default per i camerieri </DefaultStatesForWaiter>
+        <DefaultStatesForTemporaryUsers>Stati visibili di default per gli utenti temporanei </DefaultStatesForTemporaryUsers>
+        <ListOfExistingRoles>Lista dei ruoli esistenti </ListOfExistingRoles>
+        <EnableState>Abilita stato</EnableState>
+        <ViewStates>Vedi stati</ViewStates>
+        <AccessRights>Diritti di accesso</AccessRights>
+        <Optimization>Ottimizzazione</Optimization>
+        <Deletions>Cancellazioni</Deletions>
+        <Orders>Ordini</Orders>
+        <Logoff>Scollegamento</Logoff>
+        <OrderItemStates>Stati di avanzamento </OrderItemStates>
         <Yes>Sì</Yes>
         <No>No</No>
         <IsDefaultAddAndSubtractQuantity>E' la quantità di default di aggiunta e sottrazione </IsDefaultAddAndSubtractQuantity>
-        <AddRole>aggiungi ruolo </AddRole>
+        <AddRole>Aggiungi ruolo </AddRole>
         <Merge>Unisci</Merge>
-        <RollBackLatestVoided>ripristina l'ultimo annullato</RollBackLatestVoided>
-        <allTheOrders>tutti gli ordini</allTheOrders>
-        <MyOwn>i miei </MyOwn>
-        <OfOthers>quelli di altri</OfOthers>
-        <CoursesOfType>piatti di tipo </CoursesOfType>
-        <Find>trova</Find>
+        <RollBackLatestVoided>Ripristina l'ultimo annullato</RollBackLatestVoided>
+        <allTheOrders>Tutti gli ordini</allTheOrders>
+        <MyOwn>I miei </MyOwn>
+        <OfOthers>Quelli di altri</OfOthers>
+        <CoursesOfType>Piatti di tipo </CoursesOfType>
+        <Find>Trova</Find>
         <InChargeBy>Resp. </InChargeBy>
         <ExistingStandardVariation>Variazioni standard esistenti </ExistingStandardVariation>
-        <Prices>prezzi</Prices>
+        <Prices>Prezzi</Prices>
         <Courses>Piatti</Courses>
+        <NoIngredients>Nessun ingrediente</NoIngredients>
+        <NoComments>Non ci sono commenti associati</NoComments>
+        <NoStandardVariations>Non ci sono variazioni standard associate</NoStandardVariations>
+        <Empty>Vuoto</Empty>
     </localization>

@@ -301,32 +301,37 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
             br []
 
             h2 local.ExistingIngredients
-            table 
-                [
-                    for existinIngredient in ingredientsOfTheCourse ->
-                        tr 
-                            [
-                                td 
+            if (List.length ingredientsOfTheCourse > 0) then
+                table 
+                    [
+                            for existinIngredient in ingredientsOfTheCourse ->
+                                tr 
                                     [
-                                        Text(existinIngredient.Ingredientname)
-                                    ]
-                                td 
-                                    [
-                                        Text(if existinIngredient.Quantity <> (decimal)0.0 then (sprintf "%s %.2f" local.Quantity existinIngredient.Quantity) else "")
+                                        td 
+                                            [
+                                                Text(existinIngredient.Ingredientname)
+                                            ]
+                                        td 
+                                            [
+                                                Text(if existinIngredient.Quantity <> (decimal)0.0 then (sprintf "%s %.2f" local.Quantity existinIngredient.Quantity) else "")
+                                            ]
+
+                                        td 
+                                            [
+                                                a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
+                                                    [Text (local.Remove)] 
+                                            ]
                                     ]
 
-                                td 
-                                    [
-                                        a (sprintf Path.Courses.deleteIngredientToCourse  course.Courseid existinIngredient.Ingredientid) ["class","buttonX"] 
-                                            [Text (local.Remove)] 
-                                    ]
-                            ]
-                ]
-
+                    ]
+            else
+                Text local.NoIngredients
+                br []
             br []
 
             h2 local.CategoriesOfIngredientsYouCanAdd
-            ulAttr ["id","item-list"] 
+            // ulAttr ["id","item-list"] 
+            div ["class", "outline-box"]
                 [
                     for ingredientCategory in ingredientCategories ->
                         tag "p" [] 
@@ -343,38 +348,48 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
                 ]
 
             h2 (local.SelectableComments)
-            table 
-                [
-                    for commentForCourse in commentsForCourse ->
-                        tr 
-                            [
-                                td 
-                                    [
-                                        Text(commentForCourse.Comment)
-                                    ]
-                            ]
-                ]
+            if (commentsForCourse.Length > 0) then
+                table 
+                    [
+                        for commentForCourse in commentsForCourse ->
+                            tr 
+                                [
+                                    td 
+                                        [
+                                            Text(commentForCourse.Comment)
+                                        ]
+                                ]
+                    ]
+            else    
+                Text local.NoComments
+                br []
+            br []
+
             a (sprintf Path.Admin.standardCommentsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
 
             br []
             br []
 
             h2 local.SelectableStandardVariations
-            table 
-                [
-                    for standardVariationForCourseDetail in standardVariationForCourseDetails ->
-                        tr 
-                            [ 
-                                td 
-                                    [
-                                        Text(standardVariationForCourseDetail.Standardvariationname)
-                                    ]
-                            ]
-                ]
-            a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
-
+            if (standardVariationForCourseDetails.Length > 0) then
+                table 
+                    [
+                        for standardVariationForCourseDetail in standardVariationForCourseDetails ->
+                            tr 
+                                [
+                                    td 
+                                        [
+                                            Text(standardVariationForCourseDetail.Standardvariationname)
+                                        ]
+                                ]
+                    ]
+            else    
+                Text local.NoStandardVariations
+                br []
             br []
 
+            a (sprintf Path.Admin.standardVariationsForCourse course.Courseid) ["class","buttonX"] [Text (local.Modify)]
+            br []
             tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
 
             div [] 
@@ -1389,15 +1404,23 @@ let manageStandardVariations (standardVariations:Db.StandardVariation list) msg 
                     ]
                 SubmitText = local.Add
             }
+        br []
+        br []
 
         h2 local.ExistingStandardVariation 
-        div [] [
+
+
+        table  [
             for variation in standardVariations ->  
-                tag "p" [] [
-                    (a (sprintf Path.Admin.manageStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(variation.Name )])
-                    (a (sprintf Path.Admin.removeStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(local.Remove)])
-                    br []
-                ]
+            tr [
+                    td [
+                        (a (sprintf Path.Admin.manageStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(variation.Name )])
+                    ]
+                    td [
+                        (a (sprintf Path.Admin.removeStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(local.Remove)])
+                    ]
+
+            ]
         ]
     ]
 
@@ -2357,12 +2380,15 @@ let viewableOrderItems
         br []
         for st in states do
 
-            h2 st.Statusname
+            h2 ((st.Statusname |> Settings.getLocalIfAvailable) + ":")
 
             let ordItOfThisState = 
                 orderItemsPerStates.[st.Statusname]
                 |> List.sortBy (fun x -> x.Table)
 
+            if (List.isEmpty ordItOfThisState) then
+                tag "p" ["class", "outline-box"] [Text local.Empty]
+            else
             tag "p" []  [
                 table  
                     [
@@ -2391,7 +2417,7 @@ let viewableOrderItems
                                                 // if (mapOfLinkedStates.[orderItem.Stateid].IsSome && (concatenatedOrderItemMyRoleCanMove |> List.contains orderItem)) then
                                                 if (mapOfLinkedStates.[orderItem.Stateid].IsSome) then
                                                     a (sprintf Path.Orders.moveOrderItemToTheNextStateAndGoOrdersProgress orderItem.Orderitemid) ["class","buttonX"] 
-                                                        [Text ("->: "+  mapOfLinkedStates.[orderItem.Stateid].Value.Statusname)]
+                                                        [Text ("->: "+  ((mapOfLinkedStates.[orderItem.Stateid].Value.Statusname) |> Settings.getLocalIfAvailable))]
                                                 if (orderItem.Stateid <> finalState.Stateid) then
                                                     a (sprintf Path.Orders.rejectOrderItem orderItem.Orderitemid ) ["class","buttonX"] 
                                                         [Text local.Reject]
