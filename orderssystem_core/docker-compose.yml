@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=orderssystem;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=orderssystem;Username=postgres;Password=myPassword
 
   db:
     image: postgres:latest
