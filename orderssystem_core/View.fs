@@ -1080,7 +1080,6 @@ let createCourseCategory msg  = [
 
 let createCourseByCategory message visibleCategories categoryId  = 
     [
-        h2 local.CreateCourse
         h2 local.CreateNewCourse
 
         div ["id", "register-message"] [
@@ -1447,9 +1446,10 @@ let manageStandardVariation (standardVariation:Db.StandardVariation) (standardVa
                 div [] 
                     [
                         tag "p" [] [(Text(detail.Ingredientname+" - "));
-                        (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione))));
-                        (Text(local.AddPrice + ((string)(detail.Addprice))));
-                        (Text(local.SubtractPrice + ((string)(detail.Subtractprice))));
+                        // (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione)) + " "));
+                        (Text((detail.Tipovariazione) + " "));
+                        (Text(local.AddPrice + ((string)(detail.Addprice)) + " "));
+                        (Text(local.SubtractPrice + ((string)(detail.Subtractprice)) + " "));
                         (Text(local.Quantity + ((string)(detail.Quantity))));
                         ((a (sprintf Path.Admin.removeStandardVariationItem detail.Standardvariationitemid)) ["class","buttonX"] [Text(local.Remove)])
                     ]

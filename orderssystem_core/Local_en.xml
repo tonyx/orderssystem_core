@@ -71,7 +71,7 @@
         <NameByFreeText>name by free text</NameByFreeText> 
         <Quantity>quantity </Quantity> 
         <Add>Add</Add> 
-        <Info>Informations</Info> 
+        <Info>Information</Info> 
         <CollapseOrderItems> colapse order items  </CollapseOrderItems> 
         <Price> price </Price> 
         <Description> description </Description> 
@@ -174,15 +174,15 @@
         <VisibleCategoriesOfIngredients>visible categories of ingredients</VisibleCategoriesOfIngredients>
         <CreateNewCategory>create new category</CreateNewCategory>
         <VisibleExistingCategories>visible existing categories </VisibleExistingCategories>
-        <ManagePrinters>manage printers </ManagePrinters>
-        <DeletePrinters>delete printer  </DeletePrinters>
-        <DetectPrinters>detect printers </DetectPrinters>
+        <ManagePrinters>Manage printers </ManagePrinters>
+        <DeletePrinters>Delete printer  </DeletePrinters>
+        <DetectPrinters>Detect printers </DetectPrinters>
         <AllCategoriesOfIngredients>all categories of ingredients </AllCategoriesOfIngredients>
         <ExistingCategories>existing categories </ExistingCategories>
         <TemporaryUser>temporary users </TemporaryUser>
         <CreateTemporaryUsers>create temporary user </CreateTemporaryUsers>
         <NameOrTable>name or table </NameOrTable>
-        <ManageTemporaryUsers>manage temporary users</ManageTemporaryUsers>
+        <ManageTemporaryUsers>Manage temporary users</ManageTemporaryUsers>
         <ManageUsers>manage users</ManageUsers>
         <AddUser>add user </AddUser>
         <LinkStates>link states</LinkStates>
@@ -204,8 +204,8 @@
         <CreateRole>create role</CreateRole>
         <AllTheOrders>all the orders</AllTheOrders>
         <CourseCategories>course categories</CourseCategories>
-        <ManageRoles>manage roles</ManageRoles>
-        <ManageIngredients>manage ingredients</ManageIngredients>
+        <ManageRoles>Manage roles</ManageRoles>
+        <ManageIngredients>Manage ingredients</ManageIngredients>
         <ManageOrdinaryUsers>manage ordinary users</ManageOrdinaryUsers>
         <ManagePayments>manage payments</ManagePayments>
         <AddIngredient>add ingredient </AddIngredient>
@@ -263,6 +263,6 @@
         <Find>find</Find>
         <InChargeBy>In charge by </InChargeBy>
         <ExistingStandardVariation>Existing standard variations </ExistingStandardVariation>
-        <Prices>prices</Prices>
-        <Courses>courses</Courses>
+        <Prices>Prices</Prices>
+        <Courses>Dishes</Courses>
     </localization>

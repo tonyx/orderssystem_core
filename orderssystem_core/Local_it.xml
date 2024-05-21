@@ -14,7 +14,7 @@
         <AreYouSureVoidOrder>siete sicuri di voler annullare l'ordine</AreYouSureVoidOrder>
         <OrderItemsInProgress>orderitems in avanzamento</OrderItemsInProgress>
         <UserIsNotEnabled>utente non abilitato</UserIsNotEnabled>
-        <SwitchVisibility>cambia visibilità</SwitchVisibility> 
+        <SwitchVisibility>Cambia visibilità</SwitchVisibility> 
         <SubCategory>sottocategoria</SubCategory> 
         <AddSubCategoryOf>aggiungi sottocategoria di </AddSubCategoryOf> 
         <Choose>scegli</Choose> 
@@ -67,7 +67,7 @@
         <NameByFreeText>nome da testo libero</NameByFreeText> 
         <Quantity>quantità </Quantity> 
         <Add>aggiungi</Add> 
-        <Info>informazioni</Info> 
+        <Info>Informazioni</Info> 
         <CollapseOrderItems>raggruppa</CollapseOrderItems> 
         <Price>prezzo </Price> 
         <Description>descrizione </Description> 
@@ -79,24 +79,24 @@
         <AddAmong>aggiungi tra </AddAmong> 
         <AddAmongAll>aggiungi tra tutti </AddAmongAll> 
         <MainPage>pagina principale</MainPage> 
-        <ChangePasswordFor>cambia password per </ChangePasswordFor> 
-        <ChangePassword>cambia password</ChangePassword> 
-        <OldPassword>vecchia  password</OldPassword> 
-        <ConfirmPassword>conferma password</ConfirmPassword> 
+        <ChangePasswordFor>Cambia password per </ChangePasswordFor> 
+        <ChangePassword>Cambia password</ChangePassword> 
+        <OldPassword>Vecchia  password</OldPassword> 
+        <ConfirmPassword>Conferma password</ConfirmPassword> 
         <CreateNewAccount>aggiungi un nuovo utente</CreateNewAccount> 
-        <FillData>riempi i dati</FillData>> 
-        <Role>ruolo</Role>> 
+        <FillData>Inserisci i dati</FillData>> 
+        <Role>Puolo</Role>> 
         <CanSeeAllOrders>può vedere qualsiasi ordine </CanSeeAllOrders>> 
         <CanOverWritePrices>può sovrascrivere i prezzi </CanOverWritePrices>> 
-        <Error>errore</Error>> 
-        <AnErrorOccurred>si è verificato un errore</AnErrorOccurred>> 
-        <ConnectedUser>utente collegato </ConnectedUser> 
-        <UserRole>ruolo utente </UserRole> 
+        <Error>Errore</Error>> 
+        <AnErrorOccurred>Si è verificato un errore</AnErrorOccurred>> 
+        <ConnectedUser>Utente collegato </ConnectedUser> 
+        <UserRole>Ruolo utente </UserRole> 
         <CourseCategoriesManagement> gestione categorie di piatti </CourseCategoriesManagement> 
-        <AllCourses>tutti i piatti </AllCourses> 
-        <Manage>gestisci</Manage> 
-        <Missing>mancante</Missing> 
-        <Table>tavolo </Table> 
+        <AllCourses>Tutti i piatti </AllCourses> 
+        <Manage>Gestisci</Manage> 
+        <Missing>Mancante</Missing> 
+        <Table>Tavolo </Table> 
         <Group>gruppo</Group> 
         <Receipt>ricetta </Receipt> 
         <Bill>scontrino </Bill> 
@@ -168,15 +168,15 @@
         <VisibleCategoriesOfIngredients>categorie di ingredienti visibili </VisibleCategoriesOfIngredients>
         <CreateNewCategory>aggiungi nuova categoria </CreateNewCategory>
         <VisibleExistingCategories>categorie visibili esistenti </VisibleExistingCategories>
-        <ManagePrinters>gestisci stampanti </ManagePrinters>
-        <DeletePrinters>elimina stampante </DeletePrinters>
-        <DetectPrinters>rileva  stampanti </DetectPrinters>
+        <ManagePrinters>Gestisci stampanti </ManagePrinters>
+        <DeletePrinters>Elimina stampante </DeletePrinters>
+        <DetectPrinters>Rileva  stampanti </DetectPrinters>
         <AllCategoriesOfIngredients>tutte le categorie di ingredienti </AllCategoriesOfIngredients>
         <ExistingCategories>categorie esistenti </ExistingCategories>
         <TemporaryUser>utenti temporanei</TemporaryUser>
         <CreateTemporaryUsers>inserisci utente temporaneo </CreateTemporaryUsers>
         <NameOrTable>nome o tavolo</NameOrTable>
-        <ManageTemporaryUsers>gestisci utenti temporanei</ManageTemporaryUsers>
+        <ManageTemporaryUsers>Gestisci utenti temporanei</ManageTemporaryUsers>
         <ManageUsers>gestisci utenti</ManageUsers>
         <AddUser>aggiungi utente</AddUser>
         <LinkStates>link states</LinkStates>
@@ -197,11 +197,11 @@
         <RoleName>nome ruolo</RoleName>
         <CreateRole>inserisci ruolo</CreateRole>
         <AllTheOrders>tutti gli ordini</AllTheOrders>
-        <CourseCategories>categorie di piatti</CourseCategories>
-        <ManageRoles>gestisci ruoli</ManageRoles>
-        <ManageIngredients>ingredienti</ManageIngredients>
-        <ManageOrdinaryUsers>gestisci utenti ordinari</ManageOrdinaryUsers>
-        <ManagePayments>pagamenti</ManagePayments>
+        <CourseCategories>Categorie di piatti</CourseCategories>
+        <ManageRoles>Gestisci ruoli</ManageRoles>
+        <ManageIngredients>Ingredienti</ManageIngredients>
+        <ManageOrdinaryUsers>Gestisci utenti ordinari</ManageOrdinaryUsers>
+        <ManagePayments>Pagamenti</ManagePayments>
         <AddIngredient>aggiungi ingrediente </AddIngredient>
         <OriginalPrice>prezzo originario </OriginalPrice>
         <RecalculatedPrice>prezzo ricalcolato </RecalculatedPrice>
@@ -218,7 +218,7 @@
         <Visualize>visualizza </Visualize>
         <PriceForIngredient>prezzo for ingredient</PriceForIngredient>
         <AddPrice>prezzo di aggiunta</AddPrice>
-        <SubtractPrice>prezzo di sottrazione price</SubtractPrice>
+        <SubtractPrice>prezzo di sottrazione </SubtractPrice>
         <IsDefaultAddQuantity>è la quantità di aggiunga per default </IsDefaultAddQuantity>
         <IsDefaultSubtractQuantity>è la quantità di sottrazione per default </IsDefaultSubtractQuantity>
         <AllIngredientsOfCategory>tutti gli ingredienti della categoria </AllIngredientsOfCategory>
@@ -230,7 +230,7 @@
         <Button>bottone</Button>
         <SixToTwentyChars>da sei a venti caratteri</SixToTwentyChars>
         <IsAbstract>astratto</IsAbstract>
-        <ChangeVisibility>cambia visibilità</ChangeVisibility>
+        <ChangeVisibility>Cambia visibilità</ChangeVisibility>
         <SeeOnlyVisibles>mostra solo quelli nello stato 'visibile'</SeeOnlyVisibles>
         <Visibles>visibili</Visibles>
         <UserName>nome utente</UserName>
@@ -259,5 +259,5 @@
         <InChargeBy>Resp. </InChargeBy>
         <ExistingStandardVariation>Variazioni standard esistenti </ExistingStandardVariation>
         <Prices>prezzi</Prices>
-        <Courses>piatti</Courses>
+        <Courses>Piatti</Courses>
     </localization>

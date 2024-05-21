@@ -73,12 +73,13 @@ module OrdersSystem.Globals
     let replaceEmojWithPlainText strIn = substituteRec strIn EMOTICONS_SUBSTITUTIONS
 
     let stateDisplayNameToCodeName = Map.ofList [
-        ("Collecting","COLLECTING");
-        ("To be worked","TOBEWORKED");
+        ("Collecting","COLLECTING")
+        ("To be worked","TOBEWORKED")
         ("Started working","STARTEDWORKING");
-        ("Ready for Delivery","READYFORDELIVERY");
-        ("Delivered","DELIVERED");
-        ("Enabler","ENABLER") ] 
+        ("Ready for Delivery","READYFORDELIVERY")
+        ("Delivered","DELIVERED")
+        ("Enabler","ENABLER") 
+        ] 
 
     let WEIGHT_UNIT_OF_MEASURES = ["gr";"dg";"hg";"dag"]
     let LIQUID_UNIT_OF_MEASURES =  ["lt";"cl";"dl"]

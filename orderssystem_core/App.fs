@@ -866,10 +866,15 @@ let managePrinter printerId categoryId =
 let recognizePrinters = 
     log.Debug("recognizePrinters")
     warbler (fun _ -> 
-        let ctx = Db.getContext()
-        let printerNames = [for i in System.Drawing.Printing.PrinterSettings.InstalledPrinters do yield i]
-        printerNames |> List.iter (fun printerName -> Db.createPrinter printerName ctx)
-        Redirection.FOUND Path.Admin.printers
+        try
+            let ctx = Db.getContext()
+            let printerNames = [for i in System.Drawing.Printing.PrinterSettings.InstalledPrinters do yield i]
+            printerNames |> List.iter (fun printerName -> Db.createPrinter printerName ctx)
+            Redirection.FOUND Path.Admin.printers
+        with
+        | ex -> 
+            log.Error(sprintf "recognizePrinters %s" ex.Message)
+            Redirection.FOUND Path.Admin.printers
     )
 
 let resetPrinters =
@@ -1700,7 +1705,9 @@ let makeDocumentOfOrderItemList
                             text.Line(x.Name) |> ignore
                             text.Line(x.Comment) |> ignore
                             text.Line("ingr ricetta: " + (if (plainIngredientsMap.[x.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[x.Orderitemid])) |> ignore
-                            text.Line("var: " + variationsIngredientsMap.[x.Orderitemid]) |> ignore
+                            if (variationsIngredientsMap.ContainsKey(x.Orderitemid) && (variationsIngredientsMap[x.Orderitemid]).Trim() <> String.Empty) then
+                                printf "is not empty"
+                                text.Line("var: " + variationsIngredientsMap.[x.Orderitemid]) |> ignore
                             text.EmptyLine() |> ignore
                             ) orderItems
                     )
@@ -1750,16 +1757,18 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
         |> List.map (fun (x, (y:Db.OrderItemDetails list)) -> 
             (x, y |> makeDocumentOfOrderItemList header plainIngredientsMap variationsIngredientsMap))
 
-    let filesAndContents = printersForOrderItemsTextes |> List.map (fun (x: Db.Printer, y:string) -> (x.Name, header + y) )
+    // let filesAndContents = printersForOrderItemsTextes |> List.map (fun (x: Db.Printer, y:string) -> (x.Name, header + y) )
+
     let pdfFilesAndContents = printerfForOrderItemsPdfTexts |> List.map (fun (x: Db.Printer, y) -> (x.Name, y))
 
-    let filesNamesAndContents = filesAndContents |> List.map (fun (x, y) ->
-        (sprintf "%s%d.txt" x System.DateTime.Now.Ticks, y))
+    // let filesNamesAndContents = filesAndContents |> List.map (fun (x, y) ->
+    //     (sprintf "%s%d.txt" x System.DateTime.Now.Ticks, y))
+
     let pdfFileNamesAndContents = 
         pdfFilesAndContents 
         |> List.map (fun (x, y) -> (sprintf "%s%d.pdf" x System.DateTime.Now.Ticks, y))
 
-    let filteredFileNamesAndContents = filesNamesAndContents |> List.filter (fun (_,y:string) -> (y.Length > 0))
+    // let filteredFileNamesAndContents = filesNamesAndContents |> List.filter (fun (_,y:string) -> (y.Length > 0))
     let filteredPdfFileNamesAndContents = pdfFileNamesAndContents
 
     // let fileNames = filteredFileNamesAndContents |> List.map (fun (x,y) -> x)
@@ -1767,7 +1776,7 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
     let pdfFileNames = filteredPdfFileNamesAndContents |> List.map (fun (x,y) -> x)
 
 
-    let printerNames = printersForOrderItemsTextes |> List.map (fun (x:Db.Printer, _) -> x.Name)
+    let printerNames = printerfForOrderItemsPdfTexts |> List.map (fun (x:Db.Printer, _) -> x.Name)
 
     // let forPrintersFileNames = List.map2 (fun x y -> (x, y) ) printerNames fileNames
 
