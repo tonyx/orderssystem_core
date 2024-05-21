@@ -36,10 +36,9 @@
 
 
     <Compile Include="GlobalData.fs" />
-    <Compile Include="Config.fs" />
     <Compile Include="Db.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="DbWrappedentities.fs" />
+    <Compile Include="DbWrappedEntities.fs" />
     <Compile Include="Path.fs" />
     <Compile Include="Forms.fs" />
     <Compile Include="UIFragments.fs" />
@@ -102,6 +101,7 @@
 
     <PackageReference Include="Sharpino" Version="2.2.2" />
 
+    <!-- <PackageReference Include="Sharpino" Version="2.2.2" /> -->
     <!-- <PackageReference Include="runtime.osx.10.10-x64.CoreCompat.System.Drawing" Version="1.0.1-beta004" /> -->
     <PackageReference Include="SharpYaml" Version="2.1.1" />
 

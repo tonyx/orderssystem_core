@@ -6,8 +6,8 @@
 
 
         <SubmitVariations>submit variations</SubmitVariations>
-        <SelectableComments>selectable comments </SelectableComments>
-        <ExistingComment>existing commments </ExistingComment> 
+        <SelectableComments>Selectable comments </SelectableComments>
+        <ExistingComment>Existing commments </ExistingComment> 
         <Reset>Reset</Reset> 
         <CommentsFor>comments for </CommentsFor> 
         <AddSelectableVariation>add selectable variation</AddSelectableVariation> 
@@ -71,7 +71,7 @@
         <NameByFreeText>name by free text</NameByFreeText> 
         <Quantity>quantity </Quantity> 
         <Add>Add</Add> 
-        <Info>Informations</Info> 
+        <Info>Information</Info> 
         <CollapseOrderItems> colapse order items  </CollapseOrderItems> 
         <Price> price </Price> 
         <Description> description </Description> 
@@ -174,15 +174,15 @@
         <VisibleCategoriesOfIngredients>visible categories of ingredients</VisibleCategoriesOfIngredients>
         <CreateNewCategory>create new category</CreateNewCategory>
         <VisibleExistingCategories>visible existing categories </VisibleExistingCategories>
-        <ManagePrinters>manage printers </ManagePrinters>
-        <DeletePrinters>delete printer  </DeletePrinters>
-        <DetectPrinters>detect printers </DetectPrinters>
+        <ManagePrinters>Manage printers </ManagePrinters>
+        <DeletePrinters>Delete printer  </DeletePrinters>
+        <DetectPrinters>Detect printers </DetectPrinters>
         <AllCategoriesOfIngredients>all categories of ingredients </AllCategoriesOfIngredients>
         <ExistingCategories>existing categories </ExistingCategories>
         <TemporaryUser>temporary users </TemporaryUser>
         <CreateTemporaryUsers>create temporary user </CreateTemporaryUsers>
         <NameOrTable>name or table </NameOrTable>
-        <ManageTemporaryUsers>manage temporary users</ManageTemporaryUsers>
+        <ManageTemporaryUsers>Manage temporary users</ManageTemporaryUsers>
         <ManageUsers>manage users</ManageUsers>
         <AddUser>add user </AddUser>
         <LinkStates>link states</LinkStates>
@@ -204,8 +204,8 @@
         <CreateRole>create role</CreateRole>
         <AllTheOrders>all the orders</AllTheOrders>
         <CourseCategories>course categories</CourseCategories>
-        <ManageRoles>manage roles</ManageRoles>
-        <ManageIngredients>manage ingredients</ManageIngredients>
+        <ManageRoles>Manage roles</ManageRoles>
+        <ManageIngredients>Manage ingredients</ManageIngredients>
         <ManageOrdinaryUsers>manage ordinary users</ManageOrdinaryUsers>
         <ManagePayments>manage payments</ManagePayments>
         <AddIngredient>add ingredient </AddIngredient>
@@ -215,7 +215,7 @@
         <VoidIt>void</VoidIt>
         <PossibleVariations>possibile variations </PossibleVariations>
         <Confirm>confirm </Confirm>
-        <VoidOrder>void order </VoidOrder>
+        <VoidOrder>Void order</VoidOrder>
         <ActiveOrders>active orders </ActiveOrders>
         <SeeIngredientUsages>see ingredient usages</SeeIngredientUsages>
         <OrdinaryQuantity>ordinary  quantity  </OrdinaryQuantity>
@@ -223,7 +223,7 @@
         <StartingFrom> starting from </StartingFrom>
         <Visualize>visualize </Visualize>
         <PriceForIngredient>price for ingredient </PriceForIngredient>
-        <AddPrice>add price</AddPrice>
+        <AddPrice>Price for adding</AddPrice>
         <SubtractPrice>subtract price</SubtractPrice>
         <IsDefaultAddQuantity>is the default add quantity </IsDefaultAddQuantity>
         <IsDefaultSubtractQuantity>is the default subtract quantity </IsDefaultSubtractQuantity>
@@ -247,14 +247,14 @@
         <AccessRights>access right</AccessRights>
         <Optimization>optimization</Optimization>
         <Deletions>deletions</Deletions>
-        <Orders>orders</Orders>
-        <Logoff>log out</Logoff>
+        <Orders>Orders</Orders>
+        <Logoff>Log out</Logoff>
         <OrderItemStates>order items states </OrderItemStates>
         <Yes>Yes</Yes>
         <No>No</No>
         <IsDefaultAddAndSubtractQuantity>Is the default quantity for adding and subtracting </IsDefaultAddAndSubtractQuantity>
         <AddRole>add role </AddRole>
-        <Merge>merge</Merge>
+        <Merge>Merge</Merge>
         <RollBackLatestVoided>roll back latest voided</RollBackLatestVoided>
         <allTheOrders>all the orders</allTheOrders>
         <MyOwn>my own </MyOwn>
@@ -263,6 +263,10 @@
         <Find>find</Find>
         <InChargeBy>In charge by </InChargeBy>
         <ExistingStandardVariation>Existing standard variations </ExistingStandardVariation>
-        <Prices>prices</Prices>
-        <Courses>courses</Courses>
+        <Prices>Prices</Prices>
+        <Courses>Dishes</Courses>
+        <NoIngredients>No ingredients yet</NoIngredients>
+        <NoComments>No comments defined</NoComments>
+        <NoStandardVariations>There are no standard variations associated</NoStandardVariations>
+        <Empty>Vuoto</Empty>
     </localization>

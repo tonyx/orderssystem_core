@@ -263,5 +263,5 @@ let myOrdersLink (userView:Db.UsersView) =
 
 let voidOrderLink orderId (userView:Db.UsersView) backUrl = 
       match userView.Canvoidorders with
-        |  true ->   (a ((sprintf Path.Orders.voidOrderFromMyOrders orderId (WebUtility.UrlEncode backUrl) )) ["",""] [Text local.VoidOrder])
+        |  true ->   (a ((sprintf Path.Orders.voidOrderFromMyOrders orderId (WebUtility.UrlEncode backUrl) )) ["class","buttonX"] [Text local.VoidOrder])
         | _ -> em ""

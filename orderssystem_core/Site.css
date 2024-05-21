@@ -135,6 +135,41 @@ ul#item-list li a span
 
 }
 
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+    font-family: "Courier New", Courier, monospace;
+
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
+
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    color: rgb(146, 64, 64);
+}
+
 .noredstyle
 {
     /* font-size: smaller; */
@@ -459,7 +494,7 @@ innerp
 
 h2
 {
-    color: #a01948;
+    color: #000080; 
 }
 
 h2, h3
@@ -846,6 +881,39 @@ ul#item-list li a span
     font: italic
 
 }
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+    font-family: "Courier New", Courier, monospace;
+
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    color: rgb(146, 64, 64);
+}
 
 .noredstyle
 {
@@ -1167,7 +1235,8 @@ innerp
 
 h2
 {
-    color: #a01948;
+    /* color: #a01948; */
+    color: #000080; 
 }
 
 h2, h3
@@ -1536,6 +1605,40 @@ ul#item-list li a span
     font: italic
 
 }
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+
+    font-family: "Courier New", Courier, monospace;
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    background-color: rgb(146, 64, 64);
+    color: rgb(146, 64, 64);
+}
 
 .noredstyle
 {
@@ -1830,7 +1933,7 @@ innerp
 
 h2
 {
-    color: #a01948;
+    color: #000080; 
 }
 
 h2, h3
@@ -2211,6 +2314,40 @@ ul#item-list li a span
 
 }
 
+.myTestStyle
+{
+    /* OLD */
+    /* font-size: small; */
+    /* border-color: #2f2b2b;  */
+    font-family: "Courier New", Courier, monospace;
+
+    /* font-size: xx-large; */
+    /* background-color: rgb(105, 25, 99); */
+
+    border-color:   #280588; 
+    font: bold
+
+}
+
+.outline-box {
+    padding-top: 10px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border: 1px solid #000; /* Border thickness and color */
+    margin: 5px; /* Space around the box */
+    width: 400px; /* Width of the box */
+    text-align: left; /* Center the text */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle shadow */
+    color: black;
+}
+
+.myMonoSpace 
+{
+    font-family: "Courier New", Courier, monospace;
+    color: rgb(146, 64, 64);
+}
+
 .noredstyle
 {
     /* font-size: smaller; */
@@ -2536,7 +2673,7 @@ innerp
 
 h2
 {
-    color: #a01948;
+    color: #000080; 
 }
 
 h2, h3

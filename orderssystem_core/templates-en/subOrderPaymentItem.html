@@ -94,13 +94,14 @@
 
                 {% if model.residual_payment_due > 0.00 %}
                     <form method="GET">
-                        Pagamento:    
+                        Payment:    
                         <select name ="tenderid">
                             {% for paymentmethod in model.tender_codes %}
                             <option  value ="{{paymentmethod.index}}"  >{{paymentmethod.name}}</option>
                             {% endfor %}
                         </select>
-                        ammontare: <input name= "amount" type = "number" step="0.01" value = "{{model.residual_payment_as_string}}"/>
+                        <br>
+                        Amount: <input name= "amount" type = "number" step="0.01" value = "{{model.residual_payment_as_string}}"/>
                         <br>
                         <input type="submit" value="Aggiungi">
                     </form>

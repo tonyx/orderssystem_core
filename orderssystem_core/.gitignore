@@ -8,6 +8,9 @@ bin/*
 *.txt
 obj/*
 packages
+*.txt
+*.ok
+*.pdf
 
 **/bin/*
 
