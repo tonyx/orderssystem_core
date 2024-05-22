@@ -3,6 +3,7 @@ module OrdersSystem.Models.Dish
 open OrdersSystem.Commons
 open System
 open Sharpino
+open FSharpPlus
 open FsToolkit.ErrorHandling
 open Sharpino.Core
 
@@ -20,17 +21,31 @@ open Sharpino.Core
             DishTypes: List<DishTypes>
         }
 
-    type Dish private (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<Guid>, active: bool) =
+    type IngredientMeasureItemType =
+        | Grams of float
+        | Kilograms of float
+        | Liters of float
+        | Milliliters of float
+        | Pieces of int
+        | Other of string 
+
+    type IngredientAndQuantity =
+        {
+            IngredientId: Guid
+            PossibleAlternativeQuantities: List<IngredientMeasureItemType>
+        }
+
+    type Dish private (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientAndQuantities: List<IngredientAndQuantity>, active: bool) =
 
         member this.Id = id
         member this.Name = name
-        member this.IngredientRefs = ingredientRefs
-        member this.DishTypes = dishTypes
 
+        member this.IngredientAndQuantities = ingredientAndQuantities
+
+        member this.DishTypes = dishTypes
         member this.Active = active
 
-
-        new (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<Guid>) =
+        new (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<IngredientAndQuantity>) =
             Dish (id, name, dishTypes, ingredientRefs, true) 
 
         member this.AddDishType (dishType: DishTypes) =
@@ -40,7 +55,7 @@ open Sharpino.Core
                     |> List.contains dishType
                     |> not
                     |> Result.ofBool "DishType already exists"
-                return Dish (id, name, dishType :: dishTypes, this.IngredientRefs)
+                return Dish (id, name, dishType :: dishTypes, this.IngredientAndQuantities)
             }
 
         member this.RemoveDishType (dishType: DishTypes) =
@@ -53,11 +68,11 @@ open Sharpino.Core
                     this.DishTypes 
                     |> List.length > 1
                     |> Result.ofBool "Dish must have at least one type"
-                return Dish (id, name, dishTypes |> List.filter ((<>) dishType), this.IngredientRefs)
+                return Dish (id, name, dishTypes |> List.filter ((<>) dishType), this.IngredientAndQuantities)
             }
 
         member this.Deactivate () =
-            Dish (id, name, dishTypes, ingredientRefs, false) |> Ok
+            Dish (id, name, dishTypes, ingredientAndQuantities, false) |> Ok
         member this.UpdateName (newName: string) =
             result {
                 do! 
@@ -65,24 +80,26 @@ open Sharpino.Core
                     |> String.IsNullOrWhiteSpace
                     |> not
                     |> Result.ofBool "Name cannot be empty"
-                return Dish (id, newName, dishTypes, this.IngredientRefs)
+                return Dish (id, newName, dishTypes, this.IngredientAndQuantities)
             }
-        member this.AddIngredient (ingredientId: Guid) =
+        member this.AddIngredientAndQuantity (ingredientAndQuantity: IngredientAndQuantity) =
             result {
                 do! 
-                    this.IngredientRefs 
-                    |> List.contains ingredientId
+                    this.IngredientAndQuantities 
+                    |>> (fun x -> x.IngredientId)
+                    |> List.contains ingredientAndQuantity.IngredientId
                     |> not
                     |> Result.ofBool "Ingredient already exists"
-                return Dish (id, name, dishTypes, ingredientId :: ingredientRefs)
+                return Dish (id, name, dishTypes, ingredientAndQuantity :: ingredientAndQuantities)
             }
         member this.RemoveIngredient (ingredientId: Guid) =
             result {
                 do! 
-                    this.IngredientRefs 
+                    this.IngredientAndQuantities 
+                    |>> (fun x -> x.IngredientId)
                     |> List.contains ingredientId
                     |> Result.ofBool "Ingredient does not exist"
-                return Dish (id, name, dishTypes, ingredientRefs |> List.filter ((<>) ingredientId))
+                return Dish (id, name, dishTypes, ingredientAndQuantities |> List.filter (fun x -> x.IngredientId <> ingredientId))
             }
         member this.ToDishTO  =
             { Id = id; Name = name; DishTypes = dishTypes }

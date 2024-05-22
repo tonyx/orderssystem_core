@@ -12,7 +12,7 @@ open FsToolkit.ErrorHandling
 type OrderEvents =
     | Deactivated 
     | OrderItemAdded of OrderItem
-    | OrderItemRemoved of OrderItem
+    | OrderItemRemoved of Guid
     | OrderItemChanged of OrderItem
 
         interface Event<Order>  with

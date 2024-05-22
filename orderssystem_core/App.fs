@@ -1634,45 +1634,6 @@ let removeSpooledFiles() =
     let _ = pdfFilesToRemove |> List.iter (fun x -> File.Delete(x))
     ()
 
-// let createHelloPdf (orderOutGroupDetail: Db.OrderOutGroupDetail) (plainIngredientsMap: Map<int, string>) (variationsIngredientsMap: Map<int, string>) =
-//     let ctx = Db.getContext()
-//     let orderItems = Db.getOrderItemsDetailOfOrderByOutGroup orderOutGroupDetail.Ordergroupid ctx
-//     let filename = "text.pdf"
-//     Document
-//         .Create(fun container ->
-//             container.Page (fun page ->
-//                 page.Size(PageSizes.A4)
-//                 page.Margin(2f, Unit.Centimetre)
-//                 page.PageColor(Colors.White)
-//                 page.DefaultTextStyle(fun x -> x.FontSize(20f))
-
-//                 page
-//                     .Header()
-//                     .AlignCenter()
-//                     .Text("ordinazione")
-//                     .SemiBold()
-//                     .FontSize(36f)
-//                     .FontColor(Colors.Blue.Medium)
-//                 |> ignore
-
-//                 page
-//                     .Content()
-//                     .Text(fun text ->
-//                         text.EmptyLine() |> ignore
-//                         text.Line(orderOutGroupDetail.Table) |> ignore
-//                         text.EmptyLine() |> ignore
-//                         List.iter (fun (x:Db.OrderItemDetails) -> 
-//                             text.Line(sprintf "n. %d %s \n" x.Quantity x.Name) |> ignore
-//                             text.Line(x.Name) |> ignore
-//                             text.Line(x.Comment) |> ignore
-//                             text.Line("ingr ricetta: " + (if (plainIngredientsMap.[x.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[x.Orderitemid])) |> ignore
-//                             text.Line("var: " + variationsIngredientsMap.[x.Orderitemid]) |> ignore
-//                             text.EmptyLine() |> ignore
-//                             ) orderItems
-//                     )
-//             )
-//             |> ignore)
-//         // .GeneratePdf(filename)
 
 let makeDocumentOfOrderItemList 
     (header: string)

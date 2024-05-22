@@ -12,7 +12,7 @@ open FsToolkit.ErrorHandling
 
 type OrderCommands =
     | AddOrderItem of OrderItem
-    | RemoveOrderItem of OrderItem
+    | RemoveOrderItem of Guid
     | ChangeOrderItem of OrderItem
     | Deactivate
 
@@ -21,14 +21,14 @@ type OrderCommands =
                 match this with
                 | AddOrderItem item -> 
                     order.AddOrderItem item
-                    |> Result.map (fun order -> [OrderItemAdded item])
+                    |> Result.map (fun _ -> [OrderItemAdded item])
                 | RemoveOrderItem item -> 
                     order.RemoveOrderItem item
-                    |> Result.map (fun order -> [OrderItemRemoved item])
+                    |> Result.map (fun _ -> [OrderItemRemoved item])
                 | ChangeOrderItem item -> 
                     order.ChangeOrderItem item
-                    |> Result.map (fun order -> [OrderItemChanged item])
+                    |> Result.map (fun _ -> [OrderItemChanged item])
                 | Deactivate -> 
                     order.Deactivate ()
-                    |> Result.map (fun order -> [Deactivated])
+                    |> Result.map (fun _ -> [Deactivated])
             member this.Undoer = None

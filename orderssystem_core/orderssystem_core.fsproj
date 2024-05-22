@@ -23,8 +23,12 @@
     <Compile Include="Models/User/Commands.fs" />
 
     <Compile Include="Models/Ingredient/Ingredient.fs" />
+    <Compile Include="Models/Ingredient/Events.fs" />
+    <Compile Include="Models/Ingredient/Commands.fs" />
 
     <Compile Include="Models/Dish/Dish.fs" />
+    <Compile Include="Models/Dish/Events.fs" />
+    <Compile Include="Models/Dish/Commands.fs" />
 
     <Compile Include="Models/Order/Order.fs" />
     <Compile Include="Models/Order/Events.fs" />
@@ -34,6 +38,7 @@
     <Compile Include="Models/Table/Events.fs" />
     <Compile Include="Models/Table/Commands.fs" />
 
+    <compile Include="Contexts/Restaurant/Restaurant.fs" />
 
     <Compile Include="GlobalData.fs" />
     <Compile Include="Db.fs" />
