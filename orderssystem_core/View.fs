@@ -11,6 +11,7 @@ open System.Web
 open System.Net
 open UIFragments
 open System.Net
+open OrdersSystem.Utils
 
 
 let visibilityType = [("VISIBLE","VISIBLE");("INVISIBLE","INVISIBLE")]
@@ -247,7 +248,7 @@ let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.
     (standardVariationForCourseDetails:Db.StandardVariationForCourseDetails list)  message = 
         [ 
 
-            h2 "Edit"
+            h2 ("Edit: " + course.Name)
 
             div ["id", "register-message"] 
                 [
@@ -1621,14 +1622,14 @@ let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: 
     let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated ingredient.Ingredientcategoryid backPageNumber)
 
     [
-        tag "h1" [] [Text (local.Ingredient + ingredient.Name)]
+         //tag "h1" [] [Text (local.Ingredient + " " + ingredient.Name)]
 
         div ["id", "register-message"] 
             [
                 Text message
             ]
 
-        h2 local.ModifyIngredient
+        h2 (local.ModifyIngredient + " " + ingredient.Name)
         renderForm
             { 
                 Form = Form.ingredientEdit
@@ -2639,7 +2640,11 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
 
     let linksMoveOutGroup = 
         outGroupsOfOrder |> 
-        List.map (fun (x:Db.OrderOutGroup) -> ( if (x.Printcount <= 0) then ( a ((sprintf Path.Orders.moveInitialStateOrderItemsByOutGroup order.Orderid x.Ordergroupid (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonEnabled"] [Text (local.ConfirmGroup + (x.Groupidentifier|> string )  )]
+        List.map (fun (x:Db.OrderOutGroup) -> 
+            ( if (x.Printcount <= 0) then 
+                ( a ((sprintf Path.Orders.moveInitialStateOrderItemsByOutGroup order.Orderid x.Ordergroupid 
+                (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) 
+                ["class","buttonEnabled"] [Text (local.ConfirmGroup + (x.Groupidentifier|> string )  )]
             ) else  (
                 a ((sprintf Path.Orders.reprintOrderItemsGroup order.Orderid x.Ordergroupid 
                 (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonPrinted"] [Text (local.ReprintGroup + (x.Groupidentifier|> string )  )]
@@ -2667,8 +2672,8 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                     [
                         tag "a" [local.Name,local.Order+((order.Orderid) |> string)] []
                         br []
-                        Text(local.Table+": "+order.Table)
-                        Text(local.InChargeBy + ": " + order.Username)
+                        Text(local.Table+": "+order.Table + ". ")
+                        Text(local.InChargeBy + ": " + order.Username + ". ")
 
                         canVoidOrder
                         (a (sprintf Path.Orders.selectOrderFromWhichMoveOrderItems order.Orderid) ["class", "buttonX"] [Text local.Merge])
@@ -2680,7 +2685,8 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                                     tr
                                         [
                                             td [ 
-                                                Text(orderItem.Quantity.ToString()+" "+orderItem.Name+" "+orderItem.Comment+" "+ 
+                                                let strippedComment = stripComma orderItem.Comment
+                                                Text(orderItem.Quantity.ToString()+" "+orderItem.Name+": " + strippedComment + ". " + 
                                                     (if (not (mapOfStates.[orderItem.Stateid].Isinitial)) then orderItem.Statusname else "")+" g: "+(orderItem.Groupidentifier.ToString())+" ")
                                                 modifyOrderItemLink orderItem mapOfStates backUrl
                                                 ingredientsVarOrderItmLink orderItem
@@ -2798,7 +2804,7 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
 
     let ingredientMap = ingredientsYouCanAdd |> List.map (fun (x:Db.IngredientDetail) -> ((decimal)x.Ingredientid,x.Ingredientname))
     [ 
-        tag "h1" [] [Text(local.Variations+orderItemDetail.Name)]
+        tag "h1" [] [Text(local.Variations + ": " + orderItemDetail.Name)]
         tag "h2" [] [Text(local.AddIngredient)]
 
         table [for ingredientCategoryTriple in triplesOfIngredientsList ->
@@ -2836,11 +2842,11 @@ let editOrderItemVariations (orderItemDetail:Db.OrderItemDetails) (ingredients: 
                 SubmitText = local.Add 
             }
         tag "originalprice" [] [
-            Text(sprintf  "%s %.2f." local.OriginalPrice orderItemDetail.Originalprice)
+            Text(sprintf  "%s: %.2f. " local.OriginalPrice orderItemDetail.Originalprice)
         ]
         
         tag "updatedprice" [] [
-            Text(sprintf  "%s %.2f." local.RecalculatedPrice orderItemDetail.Price)
+            Text(sprintf  "%s: %.2f." local.RecalculatedPrice orderItemDetail.Price)
         ]
 
         tag "fieldset" [] [
@@ -3065,7 +3071,7 @@ let chooseDateForDecrementHistory ingredientId  =
 let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.IngredientPriceDetail list) msg =
     let ingredientCategoryId = ingredient.Ingredientcategoryid
     [
-        h2(local.AddIngredientPrice + ingredient.Name + " " + local.MeasuringSystem + ": " + ingredient.Unitmeasure)
+        h2(local.AddIngredientPrice + ingredient.Name + ". " + local.MeasuringSystem + ": " + ingredient.Unitmeasure)
         h2(msg)
         renderForm 
             { 
@@ -3237,7 +3243,7 @@ let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list
 let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) =
     let selectableStandardComments = allStandardComments |> List.map (fun x -> ((decimal)x.Standardcommentid,x.Comment))
     [
-        h2 (local.AddStandardCommentFor+course.Name)
+        h2 (local.AddStandardCommentFor + " " + course.Name)
         renderForm 
             {
                 Form = Form.commentForCourse

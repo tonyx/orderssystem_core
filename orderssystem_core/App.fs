@@ -25,6 +25,7 @@ open Suave.Writers
 open QRCoder
 open System.Net
 open OrdersSystem.DbWrappedEntities 
+open OrdersSystem.Utils
 open System.IO
 open System.Text
 open QRCoder
@@ -1632,45 +1633,6 @@ let removeSpooledFiles() =
     let _ = pdfFilesToRemove |> List.iter (fun x -> File.Delete(x))
     ()
 
-// let createHelloPdf (orderOutGroupDetail: Db.OrderOutGroupDetail) (plainIngredientsMap: Map<int, string>) (variationsIngredientsMap: Map<int, string>) =
-//     let ctx = Db.getContext()
-//     let orderItems = Db.getOrderItemsDetailOfOrderByOutGroup orderOutGroupDetail.Ordergroupid ctx
-//     let filename = "text.pdf"
-//     Document
-//         .Create(fun container ->
-//             container.Page (fun page ->
-//                 page.Size(PageSizes.A4)
-//                 page.Margin(2f, Unit.Centimetre)
-//                 page.PageColor(Colors.White)
-//                 page.DefaultTextStyle(fun x -> x.FontSize(20f))
-
-//                 page
-//                     .Header()
-//                     .AlignCenter()
-//                     .Text("ordinazione")
-//                     .SemiBold()
-//                     .FontSize(36f)
-//                     .FontColor(Colors.Blue.Medium)
-//                 |> ignore
-
-//                 page
-//                     .Content()
-//                     .Text(fun text ->
-//                         text.EmptyLine() |> ignore
-//                         text.Line(orderOutGroupDetail.Table) |> ignore
-//                         text.EmptyLine() |> ignore
-//                         List.iter (fun (x:Db.OrderItemDetails) -> 
-//                             text.Line(sprintf "n. %d %s \n" x.Quantity x.Name) |> ignore
-//                             text.Line(x.Name) |> ignore
-//                             text.Line(x.Comment) |> ignore
-//                             text.Line("ingr ricetta: " + (if (plainIngredientsMap.[x.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[x.Orderitemid])) |> ignore
-//                             text.Line("var: " + variationsIngredientsMap.[x.Orderitemid]) |> ignore
-//                             text.EmptyLine() |> ignore
-//                             ) orderItems
-//                     )
-//             )
-//             |> ignore)
-//         // .GeneratePdf(filename)
 
 let makeDocumentOfOrderItemList 
     (header: string)
@@ -1702,8 +1664,7 @@ let makeDocumentOfOrderItemList
                         text.Line(header) |> ignore
                         List.iter (fun (x:Db.OrderItemDetails) -> 
                             text.Line(sprintf "n. %d %s \n" x.Quantity x.Name) |> ignore
-                            text.Line(x.Name) |> ignore
-                            text.Line(x.Comment) |> ignore
+                            text.Line( x.Comment |> stripComma) |> ignore
                             text.Line("ingr ricetta: " + (if (plainIngredientsMap.[x.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[x.Orderitemid])) |> ignore
                             if (variationsIngredientsMap.ContainsKey(x.Orderitemid) && (variationsIngredientsMap[x.Orderitemid]).Trim() <> String.Empty) then
                                 printf "is not empty"
@@ -1724,12 +1685,12 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
     let header = 
         local.Table  + 
         orderOutGroupDetail.Table + "\n" +
-        local.ProgressivePrintCounterForThisReceipt  + 
+        local.ProgressivePrintCounterForThisReceipt  +  ": " +
         (printCount |> string) + "\n"+ 
         local.ExitGroup + 
-        (orderOutGroupDetail.Groupidentifier |> string) +  
-        local.TimeStamp + 
-        DateTime.Now.ToLocalTime().ToString() + "\n"
+        (orderOutGroupDetail.Groupidentifier |> string) +  ". " +
+        local.TimeStamp + ": " +
+        DateTime.Now.ToLocalTime().ToString() + ".\n"
     let orderItems = Db.getOrderItemsDetailOfOrderByOutGroup orderOutGroupDetail.Ordergroupid ctx
     let toBeWorkedState = Db.States.getStateByName("TOBEWORKED")
     let printers = Db.getPrinters ctx
@@ -1743,14 +1704,14 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
             List.filter (fun (z:Db.OrderItemDetails) -> List.contains z.Categoryid  y))) 
     let filteredPrintersForOrderItems = printersForOrderItems |> List.filter (fun (_,y) -> ((List.length y) > 0))
 
-    let printersForOrderItemsTextes = 
-        filteredPrintersForOrderItems |> 
-        List.map (fun (x, (y:Db.OrderItemDetails list)) -> 
-        (x, y |> (List.map ( fun (z:Db.OrderItemDetails) ->   
-            "n. " + (z.Quantity |> string) + " " + z.Name + " " + "ing. ricetta:" +  
-            (if (plainIngredientsMap.[z.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[z.Orderitemid])
-            + " var: " +  variationsIngredientsMap.[z.Orderitemid] +  z.Comment + "\n"))
-            |> List.fold (+) ""  |> replaceEmojWithPlainText ))
+    // let printersForOrderItemsTextes = 
+    //     filteredPrintersForOrderItems |> 
+    //     List.map (fun (x, (y:Db.OrderItemDetails list)) -> 
+    //     (x, y |> (List.map ( fun (z:Db.OrderItemDetails) ->   
+    //         "n. " + (z.Quantity |> string) + " " + z.Name + " " + "ing. ricetta:" +  
+    //         (if (plainIngredientsMap.[z.Orderitemid]) = "" then "mancante" else  plainIngredientsMap.[z.Orderitemid])
+    //         + " var: " +  variationsIngredientsMap.[z.Orderitemid] +  z.Comment + "\n"))
+    //         |> List.fold (+) ""  |> replaceEmojWithPlainText ))
 
     let printerfForOrderItemsPdfTexts =
         filteredPrintersForOrderItems
@@ -1792,9 +1753,7 @@ let makeFileOutForAGroupOfordersForDifferentPrinters (orderOutGroupDetail:Db.Ord
     let _ = filteredPdfFileNamesAndContents |> List.iter (fun (x, y) ->
         y.GeneratePdf(x))
 
-
     let _ = forPrintersPdfFileNames |> List.iter (fun (x, y) -> 
-
         // System.Diagnostics.Process.Start(Settings.Printcommand, Settings.PrinterSelector  + x + " " + Directory.GetCurrentDirectory() + "/" + y) |> ignore
 
         File.Copy(y, y.Replace(".pdf",".ok")))

@@ -21,6 +21,10 @@ let unbundleVat price rate =
     let unbundledPrice = price*unbundlerMultiplier
     unbundledPrice
 
+let stripComma (inString: string) =
+    let firstCommaPosition = if inString.IndexOf "," >= 0 then inString.IndexOf "," + 1 else 0
+    if (inString.Length > 2) then inString.Substring(firstCommaPosition) else ""
+
 let textForWholeOrderReceipt orderId (orderItemsDetails:Db.OrderItemDetails list)  (ctx:Db.DbContext) =
     let order = Db.Orders.getOrder orderId ctx
     let textAboutTotal =   
