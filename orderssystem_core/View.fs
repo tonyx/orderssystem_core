@@ -7,6 +7,8 @@ open OrdersSystem
 open OrdersSystem.Db
 open OrdersSystem.Globals
 open OrdersSystem.Form
+
+// open FSharpPlus
 open System.Web
 open System.Net
 open UIFragments
@@ -112,8 +114,6 @@ let standardComments (comments:Db.StandardComment list) =
             ]
     ]
 
-    
-
 let editUser (user:Db.User) = [
     h2 (local.EditUser + user.Username)
     renderForm 
@@ -196,7 +196,6 @@ let editCourseCategory  (courseCategory: Db.CourseCategories) message = [
         ]
 ]
 
-
 let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.Course) message = 
     let ingredientsIdNameMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> ((decimal)x.Ingredientid,x.Name))
 
@@ -240,7 +239,6 @@ let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.
         script ["type","text/javascript"; "src","/autocompleteIng.js"] []
         
     ]
-                    
 
 
 let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.IngredientCategory list) 
@@ -416,9 +414,7 @@ let index container userName =
  "<!DOCTYPE html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"+
     (html [] [
         head [] [
-            cssLink "/Site.css?XXdfasdffXzuyhh"
-            // cssLink "https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"
-            // cssLink "/Tachyons.css"
+            cssLink "/Site.css?XXdfasdffXzuyhh" // random chars may help get rid of caching css on browser side during dev
             title [] "Orders system"
         ]
         body [] [
@@ -597,7 +593,6 @@ let logon msg = [
             SubmitText = local.LogOn
         }
 ]
-
 
 let addOrderItemForStrippedUsers orderId coursesIdWithName coursesIdWithPrices (subCategories:Db.FatherSonCategoriesDetails list) (fatherCategory:Db.FatherSonCategoriesDetails option) (categoryName: string) backUrl viableGroupOutIdsForOrderItem = 
     let sonCategoriesLink = 
@@ -1472,8 +1467,8 @@ let manageStandardVariation (standardVariation:Db.StandardVariation) (standardVa
                         tag "p" [] [(Text(detail.Ingredientname+" - "));
                         // (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione)) + " "));
                         (Text((detail.Tipovariazione) + " "));
-                        (Text(local.AddPrice + ((string)(detail.Addprice)) + " "));
-                        (Text(local.SubtractPrice + ((string)(detail.Subtractprice)) + " "));
+                        (Text(local.AddPrice + ": " + ((string)(detail.Addprice)) + ". "));
+                        (Text(local.SubtractPrice + ((string)(detail.Subtractprice)) + ". "));
                         (Text(local.Quantity + ((string)(detail.Quantity))));
                         ((a (sprintf Path.Admin.removeStandardVariationItem detail.Standardvariationitemid)) ["class","buttonX"] [Text(local.Remove)])
                     ]
@@ -2632,6 +2627,8 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
     (myOrdersDetails:Db.Orderdetail list) (otherOrdersDetails:Db.Orderdetail list) (user:UserLoggedOnSession) =
 
     let backUrl = sprintf Path.Orders.viewOrder order.Orderid
+    let orderitemGroups = (orderItems |> List.groupBy (fun x -> x.Groupidentifier))  |> List.map (fun x ->  x |> fst)
+    let orderitemColorGroups = List.zip orderitemGroups (getFirstNColorValues orderitemGroups.Length) |> Map.ofList
 
     let ingredientsVarOrderItmLink (orderItem:Db.OrderItemDetails) =
         if (mapOfStates.[orderItem.Stateid].Isinitial) then
@@ -2644,10 +2641,10 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
             ( if (x.Printcount <= 0) then 
                 ( a ((sprintf Path.Orders.moveInitialStateOrderItemsByOutGroup order.Orderid x.Ordergroupid 
                 (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) 
-                ["class","buttonEnabled"] [Text (local.ConfirmGroup + (x.Groupidentifier|> string )  )]
+                ["style", (printOrderItemGroupButtonWithGroupColor (orderitemColorGroups.[x.Groupidentifier]))] [Text (local.ConfirmGroup + " " + (x.Groupidentifier|> string )  )]
             ) else  (
                 a ((sprintf Path.Orders.reprintOrderItemsGroup order.Orderid x.Ordergroupid 
-                (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonPrinted"] [Text (local.ReprintGroup + (x.Groupidentifier|> string )  )]
+                (WebUtility.UrlEncode (sprintf Path.Orders.viewOrder order.Orderid )))) ["class","buttonPrinted"] [Text (local.ReprintGroup + " " + (x.Groupidentifier|> string )  )]
             )
         )
         )
@@ -2681,10 +2678,10 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
                         addItemOfCategory order categories backUrl 
                         table 
                             [
-                                for orderItem in orderItems ->
+                                for orderItem in (orderItems |> List.sortBy (fun x -> x.Groupidentifier)) ->
                                     tr
                                         [
-                                            td [ 
+                                            td  [div ["style", "background-color:"+ orderitemColorGroups.[orderItem.Groupidentifier]] [ 
                                                 let strippedComment = stripComma orderItem.Comment
                                                 Text(orderItem.Quantity.ToString()+" "+orderItem.Name+": " + strippedComment + ". " + 
                                                     (if (not (mapOfStates.[orderItem.Stateid].Isinitial)) then orderItem.Statusname else "")+" g: "+(orderItem.Groupidentifier.ToString())+" ")
@@ -2694,6 +2691,7 @@ let viewSingleOrder (order: Db.Orderdetail) (orderItems: Db.OrderItemDetails lis
 
                                                 (if (orderItem.Hasbeenrejected && ((eventualRejectionsOfOrderItems.[orderItem.Orderitemid]).IsSome)) then 
                                                     (Text(local.InChargeBy+": "+(eventualRejectionsOfOrderItems.[orderItem.Orderitemid].Value).Cause)) else (Text("")))
+                                            ]
                                             ]
                                         ]
                             ]
@@ -2734,7 +2732,7 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
                     br []
                     tag "a" ["name","order"+((order.Orderid) |> string)] []
                     br []
-                    Text(local.Table+order.Table)
+                    Text(local.Table+order.Table +  ". ")
                     Text(local.InChargeBy + ": " + order.Username + " ")
                     Text(local.Total+": "+(string)order.Total)
                     (if (order.Total <> order.Adjustedtotal) then Text(local.TotalDiscounted+":"+(string)order.Adjustedtotal) else Text("") )
@@ -2754,7 +2752,7 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
                                 td 
                                     [ 
                                         a (sprintf Path.Orders.editDoneOrderitem orderItem.Orderitemid orderItem.Categoryid) ["",""] 
-                                            [Text(orderItem.Quantity.ToString()+" "+orderItem.Name)] 
+                                            [Text(orderItem.Quantity.ToString() + " " + " " + orderItem.Name + " " + orderItem.Comment)] 
                                             
                                             // +" "+orderItem.Comment+" "+ (string)orderItem.Price)]
                                         //    + (if (orderItem.Quantity>1) then " * " + (string)(orderItem.Quantity)  +    " = "+(string)((decimal)orderItem.Quantity*orderItem.Price) else ""))]
@@ -2762,11 +2760,12 @@ let seeDoneOrders  (orders: Db.NonArchivedOrderDetail list) (orderItemsOfOrders:
                                 td 
                                     [
                                         // let pric = sprintf "%*.*f" 10 2 (orderItem.Price)
-                                        let pric = sprintf "%.2f" (orderItem.Price)
-                                        let numCharBeforeDecimalPoint = pric.IndexOf "."
-                                        let pad = 6 - numCharBeforeDecimalPoint
-                                        let leftAdjust = [1 .. pad] |> List.fold (fun x _ -> x + "_") ""
-                                        let adjustPric = leftAdjust + pric
+                                        let adjustPric = fillAlignComma orderItem.Price
+                                        // let pric = sprintf "%.2f" (orderItem.Price)
+                                        // let numCharBeforeDecimalPoint = pric.IndexOf "."
+                                        // let pad = 6 - numCharBeforeDecimalPoint
+                                        // let leftAdjust = [1 .. pad] |> List.fold (fun x _ -> x + "_") ""
+                                        // let adjustPrice = leftAdjust + pric
 
                                         div ["class", "myTestStyle"] [Text(adjustPric + (if (orderItem.Quantity>1) then " * " + (string)(orderItem.Quantity)  +    " = "+(string)((decimal)orderItem.Quantity*orderItem.Price) else ""))]
                                     ]
@@ -3122,13 +3121,13 @@ let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.Ingre
 
             tr [
                 td [
-                    Text(sprintf "%s (%s) %.2f" local.Quantity ingredient.Unitmeasure ingredientPrice.Quantity)
+                    Text(sprintf "%s (%s) %.2f." local.Quantity ingredient.Unitmeasure ingredientPrice.Quantity)
                 ]
                 td [
-                    Text(sprintf "%s %.2f" local.AddPrice ingredientPrice.Addprice)
+                    Text(sprintf "%s %.2f." local.AddPrice ingredientPrice.Addprice)
                 ]
                 td [
-                    Text(sprintf "%s %.2f" local.SubtractPrice ingredientPrice.Subtractprice)
+                    Text(sprintf "%s %.2f." local.SubtractPrice ingredientPrice.Subtractprice)
                 ]
 
                 td [

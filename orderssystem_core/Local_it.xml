@@ -48,6 +48,7 @@
         <ACourseNamed>Un piatto con il nome</ACourseNamed> 
         <NameIsUsed>Questo nome è già usato</NameIsUsed> 
         <AlreadyExists>Esiste già </AlreadyExists> 
+        <AlreadyExistsAssociatedOrder>Esiste già un ordine associato a questo tavolo</AlreadyExistsAssociatedOrder>
         <ModifyUser>Modifica utente</ModifyUser> 
         <UserEnabled>Utente abilitato</UserEnabled> 
         <UserCanVoidOrder>L'utente può annullare un ordine</UserCanVoidOrder> 
@@ -89,7 +90,7 @@
         <CanSeeAllOrders>può vedere qualsiasi ordine </CanSeeAllOrders>> 
         <CanOverWritePrices>può sovrascrivere i prezzi </CanOverWritePrices>> 
         <Error>Errore</Error>> 
-        <AnErrorOccurred>Si è verificato un errore</AnErrorOccurred>> 
+        <AnErrorOccurred>Spiacenti. Si è verificato un errore</AnErrorOccurred>> 
         <ConnectedUser>Utente collegato </ConnectedUser> 
         <UserRole>Ruolo utente </UserRole> 
         <CourseCategoriesManagement> gestione categorie di piatti </CourseCategoriesManagement> 
@@ -263,5 +264,6 @@
         <NoIngredients>Nessun ingrediente</NoIngredients>
         <NoComments>Non ci sono commenti associati</NoComments>
         <NoStandardVariations>Non ci sono variazioni standard associate</NoStandardVariations>
+        <LoginOrPasswordInvalid>Login o password non valida</LoginOrPasswordInvalid>
         <Empty>Vuoto</Empty>
     </localization>

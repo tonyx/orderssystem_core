@@ -167,6 +167,38 @@ module OrdersSystem.Globals
 
 
 
+    let printOrderItemGroupButton =
+        """
+                color: black;
+                background-color: lightgreen;
+                margin-right: 5px;
+                margin-left:5px;
+                margin-top: 5px;
+                margin-bottom: 5px;
+                padding: 4px;
+                border: 1px solid black;
+                border-radius: 5px;
+                border-spacing: 5px;
+             
+        """
+
+    let printOrderItemGroupButtonWithGroupColor backColor=
+        """
+                color: black;
+                background-color: 
+        """
+        + backColor + ";" +
+        """
+                margin-right: 5px;
+                margin-left:5px;
+                margin-top: 5px;
+                margin-bottom: 5px;
+                padding: 4px;
+                border: 1px solid black;
+                border-radius: 5px;
+                border-spacing: 5px;
+             
+        """
 
 
 

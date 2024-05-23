@@ -69,3 +69,11 @@ let variationsByStringDescription (listOfVariations:(int*Db.VariationDetail list
                 + " "+v.Ingredientname + ", " + y) "" variations)
             )
             |> Map.ofList
+
+let fillAlignComma (x: decimal) =
+    let pric = sprintf "%.2f" x
+    let numCharBeforeDecimalPoint = pric.IndexOf "."
+    let pad = 6 - numCharBeforeDecimalPoint
+    let leftAdjust = [1 .. pad] |> List.fold (fun x _ -> x + "_") ""
+    let adjustPrice = leftAdjust + pric
+    adjustPrice
