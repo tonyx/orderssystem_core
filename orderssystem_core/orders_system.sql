@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.0
--- Dumped by pg_dump version 9.6.8
+-- Dumped from database version 14.4
+-- Dumped by pg_dump version 15.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -12,26 +12,22 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+-- *not* creating schema, since initdb creates it
 
 
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
+ALTER SCHEMA public OWNER TO postgres;
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: archivedorderslogbuffer; Type: TABLE; Schema: public; Owner: postgres
@@ -563,6 +559,32 @@ CREATE TABLE public.orderitems (
 ALTER TABLE public.orderitems OWNER TO postgres;
 
 --
+-- Name: orders; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.orders (
+    orderid integer NOT NULL,
+    "table" character varying(100) NOT NULL,
+    person character varying(120) NOT NULL,
+    ongoing boolean DEFAULT true,
+    userid integer NOT NULL,
+    startingtime timestamp without time zone NOT NULL,
+    closingtime timestamp without time zone,
+    voided boolean DEFAULT false,
+    archived boolean DEFAULT false NOT NULL,
+    total numeric(10,2),
+    adjustedtotal numeric(10,2),
+    plaintotalvariation numeric(10,2) DEFAULT 0,
+    percentagevariataion numeric(10,2) DEFAULT 0,
+    adjustispercentage boolean DEFAULT false,
+    adjustisplain boolean DEFAULT false,
+    forqruserarchived boolean
+);
+
+
+ALTER TABLE public.orders OWNER TO postgres;
+
+--
 -- Name: ingredientdecrementview; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -570,7 +592,7 @@ CREATE VIEW public.ingredientdecrementview AS
  SELECT a.ingredientdecrementid,
     a.orderitemid,
     c.quantity AS numberofcourses,
-    c.closingtime,
+    f.closingtime,
     c.courseid,
     d.name AS coursename,
     a.typeofdecrement,
@@ -585,10 +607,11 @@ CREATE VIEW public.ingredientdecrementview AS
     b.name AS ingredientname,
     e.quantity AS ingredientquantity,
     b.unitmeasure
-   FROM ((((public.ingredientdecrement a
+   FROM (((((public.ingredientdecrement a
      JOIN public.ingredient b ON ((a.ingredientid = b.ingredientid)))
      JOIN public.orderitems c ON ((a.orderitemid = c.orderitemid)))
      JOIN public.courses d ON ((c.courseid = d.courseid)))
+     JOIN public.orders f ON ((c.orderid = f.orderid)))
      LEFT JOIN public.ingredientcourse e ON (((e.ingredientid = a.ingredientid) AND (e.courseid = c.courseid))));
 
 
@@ -770,32 +793,6 @@ CREATE TABLE public.invoices (
 
 
 ALTER TABLE public.invoices OWNER TO postgres;
-
---
--- Name: orders; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.orders (
-    orderid integer NOT NULL,
-    "table" character varying(100) NOT NULL,
-    person character varying(120) NOT NULL,
-    ongoing boolean DEFAULT true,
-    userid integer NOT NULL,
-    startingtime timestamp without time zone NOT NULL,
-    closingtime timestamp without time zone,
-    voided boolean DEFAULT false,
-    archived boolean DEFAULT false NOT NULL,
-    total numeric(10,2),
-    adjustedtotal numeric(10,2),
-    plaintotalvariation numeric(10,2) DEFAULT 0,
-    percentagevariataion numeric(10,2) DEFAULT 0,
-    adjustispercentage boolean DEFAULT false,
-    adjustisplain boolean DEFAULT false,
-    forqruserarchived boolean
-);
-
-
-ALTER TABLE public.orders OWNER TO postgres;
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
@@ -1050,7 +1047,7 @@ CREATE TABLE public.suborder (
 ALTER TABLE public.suborder OWNER TO postgres;
 
 --
--- Name: orderitemdetails; Type: VIEW; Schema: public; Owner: Tonyx
+-- Name: orderitemdetails; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW public.orderitemdetails AS
@@ -1064,10 +1061,7 @@ CREATE VIEW public.orderitemdetails AS
     b.categoryid,
     b.courseid,
     c.statusname,
-    c.stateid,
-    c.isinitial,
-    c.isfinal,
-    c.nextstateid,
+    a.stateid,
     d.userid,
     a.startingtime,
     a.closingtime,
@@ -1078,7 +1072,7 @@ CREATE VIEW public.orderitemdetails AS
     h.suborderid,
     g.groupidentifier,
     g.ordergroupid,
-    (COALESCE(f.payed, false) OR d.archived) AS payed
+    (COALESCE(f.payed, false) OR d.archived OR d.voided) AS payed
    FROM (((((((public.orderitems a
      JOIN public.courses b ON ((a.courseid = b.courseid)))
      JOIN public.states c ON ((a.stateid = c.stateid)))
@@ -1086,13 +1080,10 @@ CREATE VIEW public.orderitemdetails AS
      JOIN public.users e ON ((d.userid = e.userid)))
      JOIN public.orderoutgroup g ON ((a.ordergroupid = g.ordergroupid)))
      LEFT JOIN public.orderitemsubordermapping h ON ((a.orderitemid = h.orderitemid)))
-     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)))
-
-     WHERE NOT (d.archived = true OR d.voided = true);
-     
+     LEFT JOIN public.suborder f ON ((f.suborderid = h.suborderid)));
 
 
-ALTER TABLE public.orderitemdetails OWNER TO "Tonyx";
+ALTER TABLE public.orderitemdetails OWNER TO postgres;
 
 --
 -- Name: orderitems_orderitemid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1894,25 +1885,11 @@ ALTER TABLE ONLY public.voidedorderslogbuffer ALTER COLUMN voidedorderslogbuffer
 
 
 --
--- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 292, true);
-
-
---
 -- Data for Name: archivedorderslogbuffer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.archivedorderslogbuffer (archivedlogbufferid, archivedtime, orderid) FROM stdin;
 \.
-
-
---
--- Name: comments_for_course_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.comments_for_course_seq', 5, true);
 
 
 --
@@ -1922,6 +1899,17 @@ SELECT pg_catalog.setval('public.comments_for_course_seq', 5, true);
 COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid) FROM stdin;
 4	537	6
 5	539	6
+16	548	17
+17	548	18
+18	553	6
+19	553	9
+20	540	11
+22	548	19
+23	540	17
+26	551	17
+27	551	20
+28	549	17
+31	569	17
 \.
 
 
@@ -1930,10 +1918,6 @@ COPY public.commentsforcourse (commentsforcourseid, courseid, standardcommentid)
 --
 
 COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
-70	secondi	t	f
-71	superalcolici	t	f
-74	bevande	t	f
-73	pranzo	t	t
 \.
 
 
@@ -1942,25 +1926,7 @@ COPY public.coursecategories (categoryid, name, visibile, abstract) FROM stdin;
 --
 
 COPY public.courses (courseid, name, description, price, categoryid, visibility) FROM stdin;
-537	cuba libre		6.00	71	t
-538	pranzo		10.00	73	f
-536	bistecca		10.00	70	t
-539	cola		3.00	74	t
 \.
-
-
---
--- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.courses_categoryid_seq', 74, true);
-
-
---
--- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.courses_courseid_seq', 539, true);
 
 
 --
@@ -1972,25 +1938,11 @@ COPY public.customerdata (customerdataid, data, name) FROM stdin;
 
 
 --
--- Name: customerdata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.customerdata_id_seq', 12, true);
-
-
---
 -- Data for Name: defaultactionablestates; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.defaultactionablestates (defaultactionablestatesid, stateid) FROM stdin;
 \.
-
-
---
--- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.defaulwaiteractionablestates_seq', 30, true);
 
 
 --
@@ -2002,37 +1954,11 @@ COPY public.enablers (enablersid, roleid, stateid, categoryid) FROM stdin;
 
 
 --
--- Name: enablers_elablersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.enablers_elablersid_seq', 190, true);
-
-
---
--- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.incredientdecrementid_seq', 273, true);
-
-
---
 -- Data for Name: ingredient; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredient (ingredientid, ingredientcategoryid, name, description, visibility, allergen, updateavailabilityflag, availablequantity, checkavailabilityflag, unitmeasure) FROM stdin;
-180	56	green salad		t	f	f	0.00	f	gr
-181	57	havana 3		t	f	f	0.00	f	cl
-182	57	havana 7		t	f	f	0.00	f	cl
-184	58	pepsi		t	f	f	0.00	f	cl
-183	58	coca cola		t	f	f	0.00	f	unità
 \.
-
-
---
--- Name: ingredient_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 58, true);
 
 
 --
@@ -2040,9 +1966,6 @@ SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 58, true);
 --
 
 COPY public.ingredientcategory (ingredientcategoryid, name, description, visibility) FROM stdin;
-56	vegetables		t
-57	superalcolici		t
-58	soft drink		t
 \.
 
 
@@ -2051,16 +1974,7 @@ COPY public.ingredientcategory (ingredientcategoryid, name, description, visibil
 --
 
 COPY public.ingredientcourse (ingredientcourseid, courseid, ingredientid, quantity) FROM stdin;
-363	537	181	\N
-366	539	183	1.00
 \.
-
-
---
--- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientcourseid_seq', 366, true);
 
 
 --
@@ -2072,13 +1986,6 @@ COPY public.ingredientdecrement (ingredientdecrementid, orderitemid, typeofdecre
 
 
 --
--- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientid_seq', 184, true);
-
-
---
 -- Data for Name: ingredientincrement; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2087,28 +1994,11 @@ COPY public.ingredientincrement (ingredientincrementid, ingredientid, comment, u
 
 
 --
--- Name: ingredientincrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientincrementid_seq', 32, true);
-
-
---
 -- Data for Name: ingredientprice; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ingredientprice (ingredientpriceid, ingredientid, quantity, isdefaultadd, isdefaultsubtract, addprice, subtractprice) FROM stdin;
-105	182	10.00	t	t	1.00	1.00
-106	184	10.00	t	t	10.00	10.00
-107	183	1.00	t	t	1.00	1.00
 \.
-
-
---
--- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ingredientpriceid_seq', 107, true);
 
 
 --
@@ -2120,13 +2010,6 @@ COPY public.invoices (invoicesid, data, invoicenumber, customerdataid, date, sub
 
 
 --
--- Name: invoicesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.invoicesid_seq', 45, true);
-
-
---
 -- Data for Name: observers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2135,42 +2018,11 @@ COPY public.observers (observersid, stateid, roleid, categoryid) FROM stdin;
 
 
 --
--- Name: observers_observerid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.observers_observerid_seq', 210, true);
-
-
---
--- Name: observers_observersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
-
-
---
--- Name: orderitem_sub_order_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 80, true);
-
-
---
 -- Data for Name: orderitems; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.orderitems (orderitemid, courseid, quantity, orderid, comment, price, stateid, archived, startingtime, closingtime, ordergroupid, hasbeenrejected, printcount) FROM stdin;
-1477	537	1	618		6.00	1	\N	2019-11-10 19:31:07.445218	\N	565	f	0
-1478	539	1	618	, poco ghiaccio	4.00	1	\N	2019-11-11 10:54:49.116651	\N	565	f	0
-1479	539	1	618		2.00	1	\N	2019-11-11 15:52:39.75081	\N	565	f	0
 \.
-
-
---
--- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1479, true);
 
 
 --
@@ -2178,17 +2030,7 @@ SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1479, true);
 --
 
 COPY public.orderitemstates (orderitemstatesid, orderitemid, stateid, startingtime) FROM stdin;
-2739	1477	1	2019-11-10 19:31:07.445218
-2740	1478	1	2019-11-11 10:54:49.116651
-2741	1479	1	2019-11-11 15:52:39.75081
 \.
-
-
---
--- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 2741, true);
 
 
 --
@@ -2204,15 +2046,7 @@ COPY public.orderitemsubordermapping (orderitemsubordermappingid, orderitemid, s
 --
 
 COPY public.orderoutgroup (ordergroupid, printcount, orderid, groupidentifier) FROM stdin;
-565	0	618	1
 \.
-
-
---
--- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 565, true);
 
 
 --
@@ -2220,22 +2054,7 @@ SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 565, true);
 --
 
 COPY public.orders (orderid, "table", person, ongoing, userid, startingtime, closingtime, voided, archived, total, adjustedtotal, plaintotalvariation, percentagevariataion, adjustispercentage, adjustisplain, forqruserarchived) FROM stdin;
-618	1		t	2	2019-11-10 19:30:52.55629	\N	f	f	0.00	0.00	0.00	0.00	f	f	\N
 \.
-
-
---
--- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.orders_orderid_seq', 618, true);
-
-
---
--- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.paymentid_seq', 149, true);
 
 
 --
@@ -2255,13 +2074,6 @@ COPY public.printerforcategory (printerforcategoryid, categoryid, printerid, sta
 
 
 --
--- Name: printerforcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.printerforcategory_id_seq', 55, true);
-
-
---
 -- Data for Name: printerforreceiptandinvoice; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2270,28 +2082,13 @@ COPY public.printerforreceiptandinvoice (printerforcategoryid, printinvoice, pri
 
 
 --
--- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 4, true);
-
-
---
 -- Data for Name: printers; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.printers (printerid, name) FROM stdin;
-42	_192_168_1_10
-43	_192_168_1_20
-44	PDFwriter
+50	PDF_Printer
+52	HPC01803AC853C__HP_Color_Laser_150_
 \.
-
-
---
--- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.printers_id_seq', 44, true);
 
 
 --
@@ -2303,13 +2100,6 @@ COPY public.rejectedorderitems (rejectedorderitemid, courseid, cause, timeofreje
 
 
 --
--- Name: rejectedorderitems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 81, true);
-
-
---
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2317,42 +2107,9 @@ COPY public.roles (roleid, rolename, comment) FROM stdin;
 1	admin	\N
 28	temporary	
 29	cameriere	
+36	pizzaiolo	
+37	barman	
 \.
-
-
---
--- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.roles_roleid_seq', 29, true);
-
-
---
--- Name: standard_comments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_comments_seq', 11, true);
-
-
---
--- Name: standard_variation_for_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 3, true);
-
-
---
--- Name: standard_variation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_variation_id_seq', 5, true);
-
-
---
--- Name: standard_variation_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 15, true);
 
 
 --
@@ -2362,8 +2119,11 @@ SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 15, true);
 COPY public.standardcomments (standardcommentid, comment) FROM stdin;
 6	poco ghiaccio
 9	molto ghiaccio
-10	ben cotta
 11	al sangue
+17	ben cotto
+18	cottura normale
+19	piccante
+20	verace
 \.
 
 
@@ -2372,7 +2132,6 @@ COPY public.standardcomments (standardcommentid, comment) FROM stdin;
 --
 
 COPY public.standardvariationforcourse (standardvariationforcourseid, standardvariationid, courseid) FROM stdin;
-2	3	539
 \.
 
 
@@ -2381,8 +2140,6 @@ COPY public.standardvariationforcourse (standardvariationforcourseid, standardva
 --
 
 COPY public.standardvariationitem (standardvariationitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid, standardvariationid) FROM stdin;
-5	182	👍	\N	\N	4
-15	183	🚫	\N	107	3
 \.
 
 
@@ -2391,8 +2148,6 @@ COPY public.standardvariationitem (standardvariationitemid, ingredientid, tipova
 --
 
 COPY public.standardvariations (standardvariationid, name) FROM stdin;
-3	coca cola
-4	havana
 \.
 
 
@@ -2405,20 +2160,6 @@ COPY public.states (stateid, isinitial, isfinal, statusname, nextstateid, isexce
 6	f	t	DONE	\N	f	f
 2	f	f	TOBEWORKED	6	f	t
 \.
-
-
---
--- Name: states_stateid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.states_stateid_seq', 6, true);
-
-
---
--- Name: subcategory_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.subcategory_mapping_seq', 1, true);
 
 
 --
@@ -2438,13 +2179,6 @@ COPY public.suborder (suborderid, orderid, subtotal, comment, payed, creationtim
 
 
 --
--- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.suborderid_seq', 392, true);
-
-
---
 -- Data for Name: temp_user_actionable_states; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -2453,25 +2187,11 @@ COPY public.temp_user_actionable_states (tempuseractionablestateid, userid, stat
 
 
 --
--- Name: temp_user_actionable_states_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.temp_user_actionable_states_seq', 12, true);
-
-
---
 -- Data for Name: temp_user_default_actionable_states; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.temp_user_default_actionable_states (tempmuseractionablestatesid, stateid) FROM stdin;
 \.
-
-
---
--- Name: tempuseractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.tempuseractionablestates_seq', 1, false);
 
 
 --
@@ -2488,27 +2208,16 @@ COPY public.tendercodes (tendercodesid, tendercode, tendername) FROM stdin;
 
 
 --
--- Name: tendercodesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
-
-
---
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users (userid, username, password, enabled, canvoidorders, role, canmanageallorders, creationtime, istemporary, canchangetheprice, "table", consumed, canmanagecourses) FROM stdin;
 2	administrator	4194d1706ed1f408d5e02d672777019f4d5385c766a8c6ca8acba3167d36a7b9	t	t	1	t	\N	f	t	\N	\N	f
 183	tonino	87cfad1b5f9782a36c7b8fd877c65a6f7d96e6499149323826ad4bc327bbf37c	t	f	28	t	\N	f	f	\N	\N	f
+191	giorgio	ecb38115d0b47f3584a9d632cc6660f2004145be05bc8a24e4e6ccb2d15cf64b	t	f	36	f	\N	f	f	\N	\N	f
+193	benny	3fe289d7d1bf66596b7ccc72dd8b03bd664c7ae74f9090979638f12a8c0daa31	t	f	37	t	\N	f	t	\N	\N	t
+196	cassiere	f2f017dd566e79b2b8f2c9ab0f2e7f125621a8c374142687fccbfe8db2b80116	t	f	28	f	\N	f	f	\N	\N	f
 \.
-
-
---
--- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.users_userid_seq', 183, true);
 
 
 --
@@ -2516,22 +2225,7 @@ SELECT pg_catalog.setval('public.users_userid_seq', 183, true);
 --
 
 COPY public.variations (variationsid, orderitemid, ingredientid, tipovariazione, plailnumvariation, ingredientpriceid) FROM stdin;
-1144	1479	183	🚫	\N	107
 \.
-
-
---
--- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.variations_seq', 1144, true);
-
-
---
--- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 313, true);
 
 
 --
@@ -2550,6 +2244,286 @@ COPY public.waiteractionablestates (waiterwatchablestatesid, userid, stateid) FR
 301	2	1
 302	2	2
 \.
+
+
+--
+-- Name: archivedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.archivedorderslog_id_seq', 339, true);
+
+
+--
+-- Name: comments_for_course_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.comments_for_course_seq', 31, true);
+
+
+--
+-- Name: courses_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_categoryid_seq', 92, true);
+
+
+--
+-- Name: courses_courseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.courses_courseid_seq', 569, true);
+
+
+--
+-- Name: customerdata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.customerdata_id_seq', 12, true);
+
+
+--
+-- Name: defaulwaiteractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.defaulwaiteractionablestates_seq', 30, true);
+
+
+--
+-- Name: enablers_elablersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.enablers_elablersid_seq', 216, true);
+
+
+--
+-- Name: incredientdecrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.incredientdecrementid_seq', 418, true);
+
+
+--
+-- Name: ingredient_categoryid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredient_categoryid_seq', 114, true);
+
+
+--
+-- Name: ingredientcourseid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientcourseid_seq', 425, true);
+
+
+--
+-- Name: ingredientid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientid_seq', 233, true);
+
+
+--
+-- Name: ingredientincrementid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientincrementid_seq', 44, true);
+
+
+--
+-- Name: ingredientpriceid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ingredientpriceid_seq', 147, true);
+
+
+--
+-- Name: invoicesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.invoicesid_seq', 47, true);
+
+
+--
+-- Name: observers_observerid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.observers_observerid_seq', 239, true);
+
+
+--
+-- Name: observers_observersid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.observers_observersid_seq', 1, false);
+
+
+--
+-- Name: orderitem_sub_order_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitem_sub_order_mapping_seq', 185, true);
+
+
+--
+-- Name: orderitems_orderitemid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitems_orderitemid_seq', 1759, true);
+
+
+--
+-- Name: orderitemstates_orderitemstates_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderitemstates_orderitemstates_id_seq', 3203, true);
+
+
+--
+-- Name: orderoutgroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orderoutgroup_id_seq', 736, true);
+
+
+--
+-- Name: orders_orderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orders_orderid_seq', 718, true);
+
+
+--
+-- Name: paymentid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.paymentid_seq', 202, true);
+
+
+--
+-- Name: printerforcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printerforcategory_id_seq', 102, true);
+
+
+--
+-- Name: printerforreceiptandinvoice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printerforreceiptandinvoice_id_seq', 5, true);
+
+
+--
+-- Name: printers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.printers_id_seq', 52, true);
+
+
+--
+-- Name: rejectedorderitems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.rejectedorderitems_id_seq', 130, true);
+
+
+--
+-- Name: roles_roleid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.roles_roleid_seq', 37, true);
+
+
+--
+-- Name: standard_comments_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_comments_seq', 20, true);
+
+
+--
+-- Name: standard_variation_for_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_for_course_id_seq', 20, true);
+
+
+--
+-- Name: standard_variation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_id_seq', 18, true);
+
+
+--
+-- Name: standard_variation_item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.standard_variation_item_id_seq', 43, true);
+
+
+--
+-- Name: states_stateid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.states_stateid_seq', 6, true);
+
+
+--
+-- Name: subcategory_mapping_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.subcategory_mapping_seq', 2, true);
+
+
+--
+-- Name: suborderid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.suborderid_seq', 450, true);
+
+
+--
+-- Name: temp_user_actionable_states_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.temp_user_actionable_states_seq', 12, true);
+
+
+--
+-- Name: tempuseractionablestates_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tempuseractionablestates_seq', 1, false);
+
+
+--
+-- Name: tendercodesid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tendercodesid_seq', 6, true);
+
+
+--
+-- Name: users_userid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_userid_seq', 198, true);
+
+
+--
+-- Name: variations_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.variations_seq', 1281, true);
+
+
+--
+-- Name: voidedorderslog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.voidedorderslog_id_seq', 366, true);
 
 
 --
@@ -3608,6 +3582,14 @@ ALTER TABLE ONLY public.waiteractionablestates
 
 
 --
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
 -- Name: TABLE archivedorderslogbuffer; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -3839,6 +3821,13 @@ GRANT ALL ON TABLE public.orderitems TO suave;
 
 
 --
+-- Name: TABLE orders; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.orders TO suave;
+
+
+--
 -- Name: TABLE ingredientdecrementview; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -3913,13 +3902,6 @@ GRANT ALL ON SEQUENCE public.invoicesid_seq TO suave;
 --
 
 GRANT ALL ON TABLE public.invoices TO suave;
-
-
---
--- Name: TABLE orders; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.orders TO suave;
 
 
 --
@@ -4007,7 +3989,7 @@ GRANT ALL ON TABLE public.orderoutgroup TO suave;
 
 
 --
--- Name: SEQUENCE suborderid_seq; Type: ACL; RefSchema: public; Owner: postgres
+-- Name: SEQUENCE suborderid_seq; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON SEQUENCE public.suborderid_seq TO suave;
@@ -4021,7 +4003,7 @@ GRANT ALL ON TABLE public.suborder TO suave;
 
 
 --
--- Name: TABLE orderitemdetails; Type: ACL; Schema: public; Owner: Tonyx
+-- Name: TABLE orderitemdetails; Type: ACL; Schema: public; Owner: postgres
 --
 
 GRANT ALL ON TABLE public.orderitemdetails TO suave;

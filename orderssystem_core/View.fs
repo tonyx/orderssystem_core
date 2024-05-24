@@ -59,15 +59,20 @@ type Session =
 let editTemporaryUser (user:Db.User) (host:string) = 
     let qrUserLoginUrl = "http://"+host+Path.Extension.qrCodeLogin+"?specialCode="+user.Username+"&returnPath="+Path.Extension.qrUserOrder
 
-    let linkImageGen = tag "p" [] [a (Path.Extension.qrUserImageGen+"?qrUserLoginUrl="+System.Net.WebUtility.UrlEncode(qrUserLoginUrl)+"&table="+user.Table)  [("target","_blink");("class","buttonX")] [Text("genera codice di accesso q ")]]
+    let linkImageGen = 
+        tag "p" [] 
+            [a (Path.Extension.qrUserImageGen+"?qrUserLoginUrl="+System.Net.WebUtility.UrlEncode(qrUserLoginUrl)+"&table="+user.Table)  [("target","_blink");("class","buttonX")] [Text(local.GerateQrCode)]]
     [
         h2 (local.EditUser+": "+user.Username)
         p [("id","myUrl")] [Text(qrUserLoginUrl)]
-        tag "copia url" [("id","button");("onclick","copyToClipboard('#myUrl')")] [Text(local.Button)]
+
+        // tag "copia url" [("id","button");("onclick","copyToClipboard('#myUrl')")] [Text(local.Button)]
+        // use manual copy at the moment 
+
         br []
         br []
         linkImageGen
-        div [] [a (Path.Admin.temporaryUsers)   [] [Text(local.GoBack)]]
+        div [] [a (Path.Admin.temporaryUsers) [] [Text(local.GoBack)]]
         script ["type","text/javascript"; "src","/jquery-3.1.1.min.js"] []
         script ["type","text/javascript"; "src","/copytoclipboard.js"] []
     ]
@@ -2027,7 +2032,7 @@ let rolesDeletionPage (roles: Db.Role list ) =
         ]
     ]
 
-let ingredientsDeletionPage (ingredients: Db.Ingredient list ) =
+let ingredientsDeletionPage (ingredients: Db.Ingredient list) =
     [
         tag "h1" [] [Text local.DeleteIngredients]
         ulAttr ["id ","item-list"] [
@@ -2041,16 +2046,26 @@ let userDeletionPage (users: Db.UsersView list) backUrl =
         tag "h1" [] [Text local.DeleteUsers]
         ulAttr ["id ","item-list"] [
             for user in users ->
-                tag "p" [] [a ((sprintf Path.Admin.deleteUser user.Userid)+"?backUrl="+backUrl) ["class","buttonX"] [Text (local.Delete+" "+user.Username)]] 
+                let delteUserPath = (sprintf Path.Admin.deleteUser user.Userid)
+                div [] [
+                    tag "button" [("onclick","confirmRemove('"+delteUserPath+"',"+"'" + local.AskConfirmDeletion + "'"+")");("class","buttonX")] [Text(local.Delete+" "+user.Username)]
+                    br []
+                ]
         ]
+        script ["type", "text/javascript"; "src","/confirmRemove.js"] []
     ]
 let ingredientCategoriesDeletionPage (ingredientCategories: Db.IngredientCategory list) =
     [
         tag "h1" [] [Text local.DeleteIngredientCategories]
         ulAttr ["id ","item-list"] [
             for ingCategory in ingredientCategories ->
-                tag "p" [] [a (sprintf Path.Admin.deleteIngredientCategory ingCategory.Ingredientcategoryid) ["class","buttonX"] [Text (local.Delete+" "+ingCategory.Name)]] 
+                let deletePath = (sprintf Path.Admin.deleteIngredientCategory ingCategory.Ingredientcategoryid)
+                div [] [
+                    tag "button" [("onclick","confirmRemove('"+deletePath+"',"+"'" + local.AskConfirmDeletion + "'"+")");("class","buttonX")] [Text(local.Delete+" "+ingCategory.Name)]
+                    br []
+                ]
         ]
+        script ["type", "text/javascript"; "src","/confirmRemove.js"] []
     ]
 
 

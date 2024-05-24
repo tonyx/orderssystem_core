@@ -1,4 +1,4 @@
-﻿module OrdersSystem.App
+module OrdersSystem.App
 
 open System
 
@@ -266,7 +266,7 @@ let html container =
         | UserLoggedOn User -> result 0 (Some User.Username)
         | _ -> result 0 None)
 
-// error handled at the caller side
+
 let makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx =
     log.Debug(sprintf "%s orerItemId: %d" "makeOrderItemAsRejectedIfContainsUnavalableIngredients" orderItemId)
     let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
@@ -388,8 +388,8 @@ let deleteIngredientsBySelection =
                 let ingredientName = form.IngredientName
                 let ingredient = Db.tryGetIngredientByName ingredientName ctx
                 match ingredient with
-                | Some theCourse -> 
-                    Db.safeDeleteIngredient theCourse.Ingredientid ctx
+                | Some theIngredient -> 
+                    Db.safeDeleteIngredient theIngredient.Ingredientid ctx
                     Redirection.FOUND Path.Admin.deleteIngredients
                 | _ ->  Redirection.FOUND Path.Admin.deleteIngredients
             with
@@ -2097,7 +2097,6 @@ let setOrderToArchivedIfAllorderItemsAreDone  orderId =
     ret
 
 // deprecated (or not?)
-//
 let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
     log.Debug(sprintf "moveOrderItemNextStep orderItemId:%d userName %s" orderItemId user.Username)
     warbler (fun _ ->
@@ -2342,9 +2341,14 @@ let editOrderItemByCategoryPassingUserLoggedOnRef (orderItemId:int) categoryId l
 
 let resetVariationThenEditOrderItemByCat (orderItemId:int) categoryId landingPage urlEncodedBackUrl (user:UserLoggedOnSession) =
     log.Debug(sprintf "resetVariationThenEditOrderItemByCat %d" orderItemId)
-    let ctx = Db.getContext()
-    let _ = Db.removeAllVariationsOfOrderItem orderItemId ctx
-    editOrderItemByCategoryPassingUserLoggedOn orderItemId categoryId landingPage urlEncodedBackUrl user
+    try
+        let ctx = Db.getContext()
+        let _ = Db.removeAllVariationsOfOrderItem orderItemId ctx
+        editOrderItemByCategoryPassingUserLoggedOn orderItemId categoryId landingPage urlEncodedBackUrl user
+    with
+    | ex ->
+        log.Error("Error in resetVariationThenEditOrderItemByCat", ex)
+        Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 
 let resetVariationThenEditOrderItemByCatRef (orderItemId:int) categoryId landingPage urlEncodedBackUrl  =
@@ -2363,8 +2367,14 @@ let createRole (user:UserLoggedOnSession ) =
     choose [
         GET >=> html (View.createRole user)
         POST >=> bindToForm Form.role (fun form ->
-            Db.createRole form.Name form.Comment ctx 
-            Redirection.FOUND Path.home
+
+            try
+                Db.createRole form.Name form.Comment ctx 
+                Redirection.FOUND Path.home
+            with
+            | ex ->
+                log.Error("Error in createRole", ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
         )
     ]
 
@@ -2376,9 +2386,14 @@ let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
             html (View.createOrder "")
         )
         POST >=> bindToForm Form.order (fun form ->
-            let thePerson = match form.Person with | Some X -> X | _ -> ""
-            let _ = Db.createOrderByUser form.Table thePerson user.UserId ctx
-            Redirection.FOUND Path.Orders.myOrders
+            try
+                let thePerson = match form.Person with | Some X -> X | _ -> ""
+                let _ = Db.createOrderByUser form.Table thePerson user.UserId ctx
+                Redirection.FOUND Path.Orders.myOrders
+            with
+            | ex ->
+                log.Error("Error in createOrderByUserLoggedOn", ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
         )
     ]
 
@@ -2395,9 +2410,14 @@ let createSingleOrderByUserLoggedOn (user:UserLoggedOnSession) =
                 | true -> 
                     View.createOrder "esiste già un ordine associato a quel tavolo " |> html
                 | false ->
-                    let thePerson = match form.Person with | Some X -> X | _ -> ""
-                    let order = Db.createOrderByUser form.Table thePerson user.UserId ctx
-                    Redirection.FOUND (sprintf Path.Orders.viewOrder order.Orderid)
+                    try
+                        let thePerson = match form.Person with | Some X -> X | _ -> ""
+                        let order = Db.createOrderByUser form.Table thePerson user.UserId ctx
+                        Redirection.FOUND (sprintf Path.Orders.viewOrder order.Orderid)
+                    with
+                    | ex ->
+                        log.Error("Error in createSingleOrderByUserLoggedOn", ex)
+                        Redirection.FOUND Path.Errors.unableToCompleteOperation
         )
     ]
 
@@ -2694,8 +2714,13 @@ let unableToCompleteOperation aString    =
 let voidorder orderId =
     log.Debug(sprintf "voidorder %d" orderId)
     let ctx = Db.getContext()
-    Db.voidOrder orderId ctx
-    Redirection.FOUND Path.home
+    try
+        Db.voidOrder orderId ctx
+        Redirection.FOUND Path.home
+    with
+    | ex ->
+        log.Error("Error in voidorder", ex)
+        Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let voidOrderByUserLoggedOn orderId urlEncodedBackUrl (user: UserLoggedOnSession) =
     log.Debug(sprintf "voidOrderByUserLoggedOn orderId: %d, user: %s" orderId user.Username)
@@ -3099,7 +3124,7 @@ let deleteCourseCategory id =
     let ctx =  Db.getContext()
     try
         Db.safeDeleteCourseCategory id ctx
-        Redirection.found Path.Admin.deleteObjects
+        Redirection.found Path.Admin.deleteCourseCategories
     with
     | ex ->
         log.Error("Error in deleteCourseCategory", ex)
@@ -3109,7 +3134,7 @@ let deleteIngredientCategory id =
     let ctx = Db.getContext()
     try
         Db.safeDeleteIngredientCategory id ctx
-        Redirection.found Path.Admin.deleteObjects
+        Redirection.found Path.Admin.deleteIngredientCategories
     with
     | ex ->
         log.Error("Error in deleteIngredientCategory", ex)
@@ -3623,51 +3648,56 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
 
 let splitOrderItemInToUnitaryOrderItems id (user:UserLoggedOnSession) =
     log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems X" id)
-    let ctx = Db.getContext()
-    let theOrderItem = Db.Orders.getTheOrderItemById id ctx
-    let connectedOrderItemStates = theOrderItem.``public.orderitemstates by orderitemid`` |> Seq.toList
-    connectedOrderItemStates |> List.iter (fun x -> log.Debug(sprintf "X - orderitemstate %A\n" x))
+    try
+        let ctx = Db.getContext()
+        let theOrderItem = Db.Orders.getTheOrderItemById id ctx
+        let connectedOrderItemStates = theOrderItem.``public.orderitemstates by orderitemid`` |> Seq.toList
+        connectedOrderItemStates |> List.iter (fun x -> log.Debug(sprintf "X - orderitemstate %A\n" x))
 
-    let ingredientdecrements = theOrderItem.``public.ingredientdecrement by orderitemid`` |> Seq.toList
-    let rejectOrderItems = theOrderItem.``public.rejectedorderitems by orderitemid`` |> Seq.toList
-    let variations = theOrderItem.``public.variations by orderitemid`` |> Seq.toList
-    let courseId = theOrderItem.Courseid
-    let orderId = theOrderItem.Orderid
-    let comment = theOrderItem.Comment
-    let outGroupId = theOrderItem.Ordergroupid
-    let clonedOrderItems = 
-        [1 .. theOrderItem.Quantity] 
-        |> List.map (fun _ -> Db.createUnitaryNakedOrderItemByOrderId courseId orderId comment theOrderItem.Price outGroupId ctx) 
-    let clonedIngredientDecrements = 
-        clonedOrderItems  
-        |> List.map (fun (x:Db.OrderItem) -> 
-            ingredientdecrements 
-            |> List.map (fun (y:Db.IngredientDecrement) -> 
-                Db.createClonedIngredientDecrement x.Orderitemid ((decimal) theOrderItem.Quantity)  y ctx)) 
+        let ingredientdecrements = theOrderItem.``public.ingredientdecrement by orderitemid`` |> Seq.toList
+        let rejectOrderItems = theOrderItem.``public.rejectedorderitems by orderitemid`` |> Seq.toList
+        let variations = theOrderItem.``public.variations by orderitemid`` |> Seq.toList
+        let courseId = theOrderItem.Courseid
+        let orderId = theOrderItem.Orderid
+        let comment = theOrderItem.Comment
+        let outGroupId = theOrderItem.Ordergroupid
+        let clonedOrderItems = 
+            [1 .. theOrderItem.Quantity] 
+            |> List.map (fun _ -> Db.createUnitaryNakedOrderItemByOrderId courseId orderId comment theOrderItem.Price outGroupId ctx) 
+        let clonedIngredientDecrements = 
+            clonedOrderItems  
+            |> List.map (fun (x:Db.OrderItem) -> 
+                ingredientdecrements 
+                |> List.map (fun (y:Db.IngredientDecrement) -> 
+                    Db.createClonedIngredientDecrement x.Orderitemid ((decimal) theOrderItem.Quantity)  y ctx)) 
+                    |> List.fold (@) []
+        let clonedVariations = 
+            clonedOrderItems 
+            |> List.map (fun (x:Db.OrderItem) -> 
+                variations 
+                |> List.map  (fun (y:Db.Variation) -> 
+                    Db.createClonedVariationOfOrderItem x.Orderitemid y.Ingredientid y.Tipovariazione ctx)) 
+                    |> List.fold (@) []
+        let clonedRejectedOrderItems = 
+            clonedOrderItems 
+            |> List.map (fun (x:Db.OrderItem) -> 
+                rejectOrderItems 
+                |> List.map (fun (y:Db.RejectedOrderItems) ->
+                    Db.createClonedRejectedOrderItem x.Orderitemid y ctx )) 
+                    |> List.fold (@) []
+        let clonedOrderItemStates = 
+            clonedOrderItems 
+            |> List.map (fun (x:Db.OrderItem) -> 
+                connectedOrderItemStates 
+                |> List.map (fun (y:Db.OrderItemState) -> Db.createClonedOrderItemState x.Orderitemid y ctx)) 
                 |> List.fold (@) []
-    let clonedVariations = 
-        clonedOrderItems 
-        |> List.map (fun (x:Db.OrderItem) -> 
-            variations 
-            |> List.map  (fun (y:Db.Variation) -> 
-                Db.createClonedVariationOfOrderItem x.Orderitemid y.Ingredientid y.Tipovariazione ctx)) 
-                |> List.fold (@) []
-    let clonedRejectedOrderItems = 
-        clonedOrderItems 
-        |> List.map (fun (x:Db.OrderItem) -> 
-            rejectOrderItems 
-            |> List.map (fun (y:Db.RejectedOrderItems) ->
-                Db.createClonedRejectedOrderItem x.Orderitemid y ctx )) 
-                |> List.fold (@) []
-    let clonedOrderItemStates = 
-        clonedOrderItems 
-        |> List.map (fun (x:Db.OrderItem) -> 
-            connectedOrderItemStates 
-            |> List.map (fun (y:Db.OrderItemState) -> Db.createClonedOrderItemState x.Orderitemid y ctx)) 
-            |> List.fold (@) []
     
-    let _ = Db.safeRemoveOrderItem theOrderItem.Orderitemid ctx
-    Redirection.FOUND (sprintf Path.Orders.subdivideDoneOrder theOrderItem.Orderid)
+        let _ = Db.safeRemoveOrderItem theOrderItem.Orderitemid ctx
+        Redirection.FOUND (sprintf Path.Orders.subdivideDoneOrder theOrderItem.Orderid)
+    with
+    | ex ->
+        log.Error(sprintf "%A" ex)
+        Redirection.found Path.Errors.unableToCompleteOperation
             
 let editDoneOrder id (user:UserLoggedOnSession) =
     let thisUrl = sprintf Path.Orders.editDoneOrder id

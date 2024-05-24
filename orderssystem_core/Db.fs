@@ -1114,6 +1114,7 @@ let createCustmomerData (companyName: string) (customerData:string) (ctx:DbConte
     ctx.SubmitUpdates()
     newCustomerData
 
+// error handled at caller side
 let createInvoiceBySubOrderIdWithNoCustomerId subOrderId invoiceText invoiceNumber (ctx:DbContext) =
     log.Debug(sprintf "createInvoiceBySubOrderIdWithNoCustomerId subOrderId: %d invoiceNumber %d" subOrderId invoiceNumber)
     let now = System.DateTime.Now
@@ -1121,6 +1122,7 @@ let createInvoiceBySubOrderIdWithNoCustomerId subOrderId invoiceText invoiceNumb
     let _ = newInvoice.Suborderid <- subOrderId
     ctx.SubmitUpdates()
 
+// error handled at caller side
 let createInvoiceByOrderIdWithNoCustomerId orderId invoiceText invoiceNumber (ctx:DbContext) =
     log.Debug(sprintf "createInvoiceWithNoCustomerId orderId: %d invoiceNumber: %d" invoiceNumber)
     let now = System.DateTime.Now
@@ -1128,6 +1130,7 @@ let createInvoiceByOrderIdWithNoCustomerId orderId invoiceText invoiceNumber (ct
     let _ = newInvoice.Orderid <- orderId
     ctx.SubmitUpdates()
 
+// error handled at caller side
 let createInvoiceBysubOrderIdAndCustomerId subOrderId customerDataId invoiceText invoiceNumber (ctx:DbContext) =
     log.Debug(sprintf "createInvoiceWithCustomerId subOrderId: %d invoiceNumber: %d" subOrderId invoiceNumber)
     let now = System.DateTime.Now
@@ -1136,6 +1139,7 @@ let createInvoiceBysubOrderIdAndCustomerId subOrderId customerDataId invoiceText
     let _ = newInvoice.Suborderid <- subOrderId
     ctx.SubmitUpdates()
 
+// not used?
 let createInvoiceByOrderIdAndCustomerId orderId customerDataId invoiceText invoiceNumber (ctx:DbContext) =
     log.Debug("createInvoiceByOrderIdAndCustomerId")
     let now = System.DateTime.Now
@@ -1146,8 +1150,11 @@ let createInvoiceByOrderIdAndCustomerId orderId customerDataId invoiceText invoi
 
 let safeRemovePrinters (ctx:DbContext) =
     log.Debug("safeRemovePrinters")
-    ctx.Public.Printers |> Seq.iter (fun (x:Printer) -> x.Delete())
-    ctx.SubmitUpdates()
+    try
+        ctx.Public.Printers |> Seq.iter (fun (x:Printer) -> x.Delete())
+        ctx.SubmitUpdates()
+    with
+    | ex -> log.Error("error in safeRemovePrinters", ex)
 
 let getOrderedListOfOrdinaryStates (ctx: DbContext): State list =
     log.Debug("getOrderedListOfOrdinaryStates")
@@ -1164,39 +1171,47 @@ let getOrderedListOfOrdinaryStates (ctx: DbContext): State list =
     let first = List.find (fun (x:State) -> x.Isinitial) states
     rearrangeInOrder states [] first.Stateid
 
+// error handled at the caller side
 let createWaiterActionableState (stateId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "createWaiterActionableState" stateId)
     let _ = ctx.Public.Defaultactionablestates.Create(stateId)
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let createTempUserActionableState (stateId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "createTempUserActionableState" stateId )
     let _ = ctx.Public.TempUserDefaultActionableStates.Create(stateId)
     ctx.SubmitUpdates()
+// error handled at the caller side
 
+// error handled at the caller side
 let createSpecificWaiterAcionableState (userId:int) (stateId:int) (ctx:DbContext) =
     log.Debug(sprintf "%s %d %d" "createSpecificWaiterAcionableState" userId stateId)
     let _ = ctx.Public.Waiteractionablestates.Create(stateId,userId) 
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let deleteWaiterActionableState (stateId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "deleteWaiterActionableState" stateId)
     let existing = ctx.Public.Defaultactionablestates |> Seq.find (fun (x:DefaultActionableState) -> x.Stateid = stateId)
     existing.Delete()
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let deleteDefaultTempUserActionableState (stateId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "deleteDefaultTempUserActionableState" stateId)
     let existing = ctx.Public.TempUserDefaultActionableStates |> Seq.find (fun (x:TempUserDefaultActionableStates) -> x.Stateid = stateId)
     existing.Delete()
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let deleteSpecificWaiterAcionableState (userId:int ) (stateId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d" "deleteSpecificWaiterAcionableState" userId stateId)
     let existing = ctx.Public.Waiteractionablestates |> Seq.find (fun (x:WaiterActionableState) -> (x.Stateid = stateId && x.Userid = userId))
     existing.Delete()
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let tryCreateRoleStateCategoryObserveMap (roleId:int) (stateId:int) (categoryId:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d %d %d" "tryCreateRoleStateCategoryObserveMap" roleId stateId categoryId)
         let existing = ctx.Public.Observers |> Seq.tryFind (fun (x:Observer) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = categoryId))
@@ -1209,45 +1224,64 @@ let tryCreateRoleStateCategoryObserveMap (roleId:int) (stateId:int) (categoryId:
 
 let tryCreateRoleStateCategoryObserverByStateName (roleId:int) stateName (categoryId: int) (ctx:DbContext) =
     log.Debug(sprintf "%s %d %s" "tryCreateRoleStateCategoryObserverByStateName" roleId stateName)
-    let state = States.tryGetStateByName stateName ctx
-    match state with
-    | Some theState -> tryCreateRoleStateCategoryObserveMap roleId theState.Stateid categoryId ctx
-    | _ -> None
+    try
+        let state = States.tryGetStateByName stateName ctx
+        match state with
+        | Some theState -> tryCreateRoleStateCategoryObserveMap roleId theState.Stateid categoryId ctx
+        | _ -> None
+    with
+    | ex -> 
+        log.Error("error in tryCreateRoleStateCategoryObserverByStateName", ex)
+        None
     
 let tryCreateRoleStateCategoryEnablerMap (roleId:int) (stateId:int) (categoryId:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d %d %d" "tryCreateRoleStateCategoryEnablerMap" roleId stateId categoryId)
         let existing = ctx.Public.Enablers |> Seq.tryFind  (fun (x:Enabler) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = categoryId))
-        match existing with
-        | Some _ -> None
-        | None ->
-            let createdEnabler = ctx.Public.Enablers.Create(categoryId,roleId,stateId) 
-            ctx.SubmitUpdates()
-            Some createdEnabler
+        try
+            match existing with
+            | Some _ -> None
+            | None ->
+                let createdEnabler = ctx.Public.Enablers.Create(categoryId,roleId,stateId) 
+                ctx.SubmitUpdates()
+                Some createdEnabler
+        with
+        | ex -> 
+            log.Error("error in tryCreateRoleStateCategoryEnablerMap", ex)
+            None
 
 let tryRemoveRoleStateCategoryEnablerMap (roleId:int) (stateId:int) (categoryId:int) (ctx: DbContext) =
         log.Debug(sprintf "%s %d %d %d" "tryRemoveRoleStateCategoryEnablerMap" roleId stateId categoryId)
-        let enabler = ctx.Public.Enablers |> Seq.tryFind  (fun (x:Enabler) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = categoryId))
-        match enabler with
-        | Some theEnabler -> 
-            theEnabler.Delete()
-            ctx.SubmitUpdates()
-        | None -> ()
+        try
+            let enabler = ctx.Public.Enablers |> Seq.tryFind  (fun (x:Enabler) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = categoryId))
+            match enabler with
+            | Some theEnabler -> 
+                theEnabler.Delete()
+                ctx.SubmitUpdates()
+            | None -> ()
+        with
+        | ex -> log.Error("error in tryRemoveRoleStateCategoryEnablerMap", ex)
 
 let tryRemoveRoleStateCategoryObserverMap (roleId:int) (stateId:int) (categoryId:int) (ctx: DbContext) =
-        log.Debug(sprintf "%s %d %d %d" "tryRemoveRoleStateCategoryObserverMap" roleId stateId categoryId)
+    log.Debug(sprintf "%s %d %d %d" "tryRemoveRoleStateCategoryObserverMap" roleId stateId categoryId)
+    try
         let observer = ctx.Public.Observers |> Seq.tryFind  (fun (x:Observer) -> (x.Roleid = roleId && x.Stateid = stateId && x.Categoryid = categoryId))
         match observer with
         | Some theObserver -> 
             theObserver.Delete()
             ctx.SubmitUpdates()
         | None -> ()
+    with
+    | ex -> log.Error("error in tryRemoveRoleStateCategoryObserverMap", ex)
 
 let tryRemoveRoleStateCategoryEnablerByStateName (roleId:int) stateName (categoryId:int) (ctx: DbContext) =
     log.Debug(sprintf "%s %d %s %d" "tryRemoveRoleStateCategoryEnablerByStateName" roleId stateName categoryId)
-    let state = States.tryGetStateByName stateName ctx
-    match state with 
-    | Some theState -> tryRemoveRoleStateCategoryEnablerMap roleId theState.Stateid categoryId ctx
-    | _ -> ()
+    try
+        let state = States.tryGetStateByName stateName ctx
+        match state with 
+        | Some theState -> tryRemoveRoleStateCategoryEnablerMap roleId theState.Stateid categoryId ctx
+        | _ -> ()
+    with
+    | ex -> log.Error("error in tryRemoveRoleStateCategoryEnablerByStateName", ex)
 
 let tryRemoveRoleStateCategoryObserverByStateName (roleId:int) stateName (categoryId:int) (ctx: DbContext) =
     log.Debug(sprintf "tryRemoveRoleStateCategoryObserverByStateName roleId: %d categoryId %d" roleId categoryId)
@@ -1259,9 +1293,14 @@ let tryRemoveRoleStateCategoryObserverByStateName (roleId:int) stateName (catego
 let tryCreateRoleStateCategoryEnablerByStateName (roleId:int) stateName (categoryId: int) (ctx:DbContext) =
     log.Debug(sprintf "tryCreateroleStateCategoryEnlerByStateName %d" roleId)
     let state = States.tryGetStateByName stateName ctx
-    match state with
-    | Some theState -> tryCreateRoleStateCategoryEnablerMap roleId theState.Stateid categoryId ctx
-    | _ -> None
+    try
+        match state with
+        | Some theState -> tryCreateRoleStateCategoryEnablerMap roleId theState.Stateid categoryId ctx
+        | _ -> None
+    with
+    | ex -> 
+        log.Error("error in tryCreateRoleStateCategoryEnablerByStateName", ex)
+        None
 
 let getRoles (ctx: DbContext): Role list =
     log.Debug("getRoles")
@@ -1312,6 +1351,7 @@ let tableIsAlreadyInAnOpenOrder table (ctx:DbContext) =
     }
     Seq.length ordersOfTable >0
 
+// error handled at the caller side
 let createOrderByUser table person (userid:int) (ctx:DbContext) =
     log.Debug(sprintf "%s %s %d" "createOrderByUser" table userid)
     let order = ctx.Public.Orders.Create(false,person,System.DateTime.Now,table,userid)
@@ -1376,6 +1416,7 @@ let tryGetOutGroupByOrderIdAndGroupIdentifier orderId groupOut (ctx:DbContext) =
     log.Debug(sprintf "%s %d %d" "tryGetOutGroupByOrderIdAndGroupIdentifier" orderId groupOut)
     ctx.Public.Orderoutgroup |> Seq.tryFind (fun (x:OrderOutGroup) -> (x.Orderid = orderId && x.Groupidentifier =  groupOut))
 
+// error handled at the caller side
 let createOrGetOutGroup orderId groupOut (ctx:DbContext) =
     log.Debug(sprintf "%s %d %d" "createOrGetOutGroup" orderId groupOut)
     let existingGroup = tryGetOutGroupByOrderIdAndGroupIdentifier orderId groupOut ctx
@@ -1396,19 +1437,22 @@ let bindOrderItemToSubOrder orderItemId subOrderId (ctx:DbContext) =
 
 let createPlainUnitaryOrderItemById  orderId courseId subGroupIdOption (ctx:DbContext) =
     log.Debug(sprintf "createPlainUnitaryOrderItemById orderId:%d courseId:%d" orderId courseId)
-    let finalState = States.getFinalState ctx
-    let course = Courses.getCourse courseId ctx
-    let price = course.Price
-    let now = System.DateTime.Now
-    let groupDbItem = createOrGetOutGroup orderId 99 ctx
-    let _ = groupDbItem.Printcount <- 1
-    let orderItem = ctx.Public.Orderitems.``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` (courseId,false,groupDbItem.Ordergroupid,orderId,1,1,now,finalState.Stateid)
-    orderItem.Price <- price
-    ctx.SubmitUpdates()
-    let _ = match subGroupIdOption with
-                | Some N -> bindOrderItemToSubOrder orderItem.Orderitemid N ctx;
-                | _ -> ()
-    ctx.SubmitUpdates()
+    try
+        let finalState = States.getFinalState ctx
+        let course = Courses.getCourse courseId ctx
+        let price = course.Price
+        let now = System.DateTime.Now
+        let groupDbItem = createOrGetOutGroup orderId 99 ctx
+        let _ = groupDbItem.Printcount <- 1
+        let orderItem = ctx.Public.Orderitems.``Create(courseid, hasbeenrejected, ordergroupid, orderid, printcount, quantity, startingtime, stateid)`` (courseId,false,groupDbItem.Ordergroupid,orderId,1,1,now,finalState.Stateid)
+        orderItem.Price <- price
+        ctx.SubmitUpdates()
+        let _ = match subGroupIdOption with
+                    | Some N -> bindOrderItemToSubOrder orderItem.Orderitemid N ctx;
+                    | _ -> ()
+        ctx.SubmitUpdates()
+    with
+    | ex -> log.Error("error in createPlainUnitaryOrderItemById", ex)
 
 let removeExistingCommentToOrderItem id ctx =
     log.Debug(sprintf "removeExistingCommentToOrderItem %d" id)
@@ -1432,6 +1476,7 @@ let unBoundDifferentSubGroupsOfOrderItemsByIs (ids: int list)  (ctx: DbContext)=
             | 1 -> Set.toList differentSubOrdersIds |> List.tryHead
             | _ -> None
 
+// not used
 let createOrderItemByCourseName courseName orderid quantity comment price (groupOut: decimal) (ctx: DbContext) =
     log.Debug(sprintf "%s %s %d %.2f" "createOrderItemByCourseName" courseName orderid  price  )
     let course = 
@@ -1449,6 +1494,7 @@ let createOrderItemByCourseName courseName orderid quantity comment price (group
     ctx.SubmitUpdates()
     orderItem
 
+// error handled at the caller side
 let createOrderItemByCourseId courseId orderid quantity comment price (groupOut: decimal) (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d %.2f" "createOrderItemByCourseId" courseId orderid  price  )
     let initState = States.getInitState ctx
@@ -1462,6 +1508,7 @@ let createOrderItemByCourseId courseId orderid quantity comment price (groupOut:
     ctx.SubmitUpdates()
     orderItem
 
+// not used
 let cloneOrderItemStatesWithNewOrderItemId orderItemId (orderitemstate:OrderItemState) (ctx: DbContext) =
     log.Debug(sprintf "%s %d" "cloneOrderItemStatesWithNewOrderItemId" orderItemId)
     let stateId = orderitemstate.Stateid
@@ -1472,6 +1519,7 @@ let cloneOrderItemStatesWithNewOrderItemId orderItemId (orderitemstate:OrderItem
     ctx.SubmitUpdates()
     clonedState
 
+// error handled at the caller side
 let createUnitaryNakedOrderItemByOrderId courseId orderId comment price outGroupId (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d" "createUnitaryNakedOrderItemByOrderId" courseId orderId )
     let now = System.DateTime.Now
@@ -1485,6 +1533,7 @@ let createUnitaryNakedOrderItemByOrderId courseId orderId comment price outGroup
     ctx.SubmitUpdates()
     orderItem
 
+// error handled at the caller side
 let createUnitaryNakedOrderItemByOrderId' courseId orderId comment price outGroupId stateId (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d" "createUnitaryNakedOrderItemByOrderId" courseId orderId )
     let now = System.DateTime.Now
@@ -1498,6 +1547,7 @@ let createUnitaryNakedOrderItemByOrderId' courseId orderId comment price outGrou
     ctx.SubmitUpdates()
     orderItem
 
+// not used
 let getDistinctOutGroupsOfOrder orderId (ctx:DbContext) =
     log.Debug(sprintf "%s %d " "getDistinctOutGroupsOfOrder" orderId)
     let order = Orders.getOrder orderId ctx
@@ -1516,6 +1566,7 @@ let createRejectedOrderItem orderItemId courseId cause (ctx:DbContext) =
     log.Debug(sprintf "%s %d %d %s" "createRejectedOrderItem" orderItemId courseId cause )
     ctx.Public.Rejectedorderitems.Create(cause,courseId,orderItemId,System.DateTime.Now)
 
+// not used
 let addOrderItemPriceToSubOrder orderItemId subOrderId  (ctx:DbContext) =
     log.Debug(sprintf "addOrderItemPriceToSubOrder orderItemId: %d subOrderId: %d")
     let orderItem = Orders.getTheOrderItemById orderItemId ctx
@@ -1523,12 +1574,14 @@ let addOrderItemPriceToSubOrder orderItemId subOrderId  (ctx:DbContext) =
     subOrder.Subtotal <- subOrder.Subtotal + (orderItem.Price * (decimal)orderItem.Quantity)
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let updatePasswordOfUser idUser passwordHash (ctx:DbContext) =
     log.Debug(sprintf "%s %d" "updatePasswordOfUser" idUser)
     let user = getUserById idUser ctx
     user.Password<- passwordHash
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let updateOrderItem (orderItemId, courseid, quantity, comment) (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d" "updateOrderItem" orderItemId courseid)
     let tryOrderItem = Orders.getOrderItemById orderItemId ctx
@@ -1537,6 +1590,7 @@ let updateOrderItem (orderItemId, courseid, quantity, comment) (ctx: DbContext) 
     | Some orderItem -> orderItem.Quantity<-quantity; orderItem.Courseid<-courseid; orderItem.Comment<-thecomment;  ctx.SubmitUpdates()
     | None -> ()
 
+// error handled at the caller side
 let updateUserStatus id status canVoidorders canManageAllOrders canChangeThePrices canManageAllCourses (ctx: DbContext) =
     let userView = tryFindUserView id ctx
     let user = getUserById id ctx
@@ -1579,6 +1633,7 @@ let getVisibleIngredientsOfACategory categoryId (ctx: DbContext) =
             select ingredient
     } |> Seq.toList
 
+// error handled at the caller side
 let addIngredientToCourse ingredientId courseId (quantity: decimal option) (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d" "addIngredientToCourse" ingredientId courseId)
     let ingredientCourseAssociation = ctx.Public.Ingredientcourse.Create(courseId,ingredientId)
@@ -1615,12 +1670,14 @@ let getMapOfStates (ctx: DbContext) =
     log.Debug("getMapOfStates")
     (States.getAllStates ctx) |> List.map (fun (x:State) -> (x.Stateid,x)) |> Map.ofSeq
 
+// error  handled at the caller side
 let setAdjstedTotalOfOrder orderId total (ctx:DbContext) =
     log.Debug(sprintf "%s %d %.2f" "setAdjstedTotalOfOrder" orderId total)
     let order =Orders.getOrder orderId ctx
     order.Adjustedtotal <- total
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let setTotalOfOrder orderId total (ctx: DbContext) =
     log.Debug(sprintf "%s %d %.2f" "setTotalOfOrder" orderId total )
     let order =Orders.getOrder orderId ctx
@@ -1838,6 +1895,7 @@ let createSubCategoryMapping fatherId sonId (ctx:DbContext) =
     let newMapping =  ctx.Public.Subcategorymapping.``Create(fatherid, sonid)``(fatherId,sonId)
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let createSubCourseCategory name visibility fatherId  (ctx:DbContext) =
     log.Debug("createSubCourseCategory")
     let sonCategory = newCategory name visibility false ctx
@@ -2131,6 +2189,7 @@ let isOrderItemHavingOrdersItemAtInitialState orderId (ctx:DbContext) =
     | Some _ -> true
     | _ -> false
 
+// error handled at the caller side
 let tryMoveOrderItemToNextState (orderItemId: int) userId (ctx: DbContext) =
     log.Debug(sprintf "%s %d %d" "tryMoveOrderItemToNextState" orderItemId userId)
     let orderItem = tryGetOrderItemById orderItemId ctx
@@ -2156,6 +2215,7 @@ let tryMoveOrderItemToNextState (orderItemId: int) userId (ctx: DbContext) =
         | None -> ()
     | None -> failwith (sprintf "%s %d " "unexisting order item with id " orderItemId)
 
+// error handled at the caller side
 let updateCourseCategory (courseCategory:CourseCategories) name visibility abstractness (ctx: DbContext) =
     log.Debug(sprintf "%s %d %s" "updateCourseCategory" courseCategory.Categoryid name)
     courseCategory.Name<-name
@@ -2163,6 +2223,7 @@ let updateCourseCategory (courseCategory:CourseCategories) name visibility abstr
     courseCategory.Abstract <- abstractness
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let voidOrder id (ctx: DbContext) =
     let order = tryGetOrderById id ctx
     match order with
@@ -2221,6 +2282,7 @@ let tryGetEnablerRoleCategorySatateMappingById  (id:int)  (ctx: DbContext) =
         select enabler
     } |> Seq.tryHead
 
+// error handled at the caller side
 let deleteEnabler id (ctx: DbContext) =
     log.Debug(sprintf "deleteEnabler %d" id)
     let enabler = tryGetEnablerRoleCategorySatateMappingById id ctx
@@ -2245,6 +2307,7 @@ let tryGetEnablerByRoleAndCategory roleid categoryid (ctx: DbContext) =
         select enabler
     } |> Seq.tryHead
 
+// error handled at the caller side
 let deleteObserver id (ctx: DbContext) =
     log.Debug(sprintf "deleteObserver %d" id)
     let observer = tryGetObserverRoleCategorySatateMappingById id ctx
@@ -2295,16 +2358,15 @@ let getLatestVoidedOrder userId (ctx:DbContext) =
         select voidedOrder
     } |> Seq.tryHead
 
-// todo: in an unpreditable way here we get the error "System.Exception: Unchanged entity encountered in update list - this should not be possible!"
-// this happened mainly after an ingredient category has been deleted (delete has a cascade effect)
-// I suspect that every time there is a SubmitUpdate we may want to 
-// detect any runtime exception, log it, and restore the connection
+
+// error handled at the caller side
 let newIngredientCatgory name visibility description (ctx: DbContext) = 
     log.Debug(sprintf "newIngredientCatgory %s" name)
     let newIngredient = ctx.Public.Ingredientcategory.``Create(name, visibility)``(name, visibility)
     newIngredient.Description <- description
     ctx.SubmitUpdates()
 
+// error handled at the caller side
 let newIngredient name visibility description idCategory allergene 
     (availableQuantity:decimal) updateAvailabilityFlag checkAvailabilityFlag unitOfMeasure (ctx: DbContext) =
     log.Debug(sprintf "newIngredient %s" name )
@@ -2338,6 +2400,7 @@ let findIngredientByName name (ctx:DbContext) =
         select ingredient
     } |> Seq.tryHead
 
+// not used (was related to hand filling fields with some autocomplete bla bla bla)
 let addIngredientToCourseByName ingredientName courseId quantity ctx =
     log.Debug(sprintf "addIngredientToCourseByName %s %d" ingredientName courseId)
     let ingredient = findIngredientByName ingredientName ctx
@@ -2361,6 +2424,7 @@ let tryFindIngridientPriceOfQuantity ingredientId quantity (ctx: DbContext) =
     log.Debug(sprintf "getIngredientPrices %d" ingredientId)
     ctx.Public.Ingredientprice |> Seq.tryFind (fun (x:IngredientPrice) -> (x.Ingredientid = ingredientId && x.Quantity = quantity))
 
+// not used
 let makeAllIngredientPriceNoDefaultAdd (ctx:DbContext) =
     log.Debug("makeAllIngredientPriceNoDefaultAdd")
     try
@@ -2410,16 +2474,19 @@ let tryCreateIngredientPrice addPrice ingredientId isDefaultAdd isDefaultSubtrac
         log.Error(sprintf "error in tryCreateIngredientPrice %s" (ex.Message))
         None
 
+// error handled at the caller side
 let deleteIngredientPrice (ingredientPrice:IngredientPrice) (ctx:DbContext) =
     log.Debug(sprintf "deleteIngredientPrice %d" ingredientPrice.Ingredientpriceid)
     ingredientPrice.Delete()
     ctx.SubmitUpdates()
 
+// error handled (chain of calls)
 let safeDeleteVariation (variation:Variation) (ctx:DbContext) =
     log.Debug("safeDeleteVariation")
     variation.Delete()
     ctx.SubmitUpdates()
 
+// error handled at the client side
 let safeDeleteIngredientPrice (ingredientPrice:IngredientPrice) (ctx:DbContext) =
     log.Debug(sprintf "safeDeleteIngredientPrice %d" ingredientPrice.Ingredientpriceid)
     let variations = ingredientPrice.``public.variations by ingredientpriceid``
@@ -2452,6 +2519,7 @@ let tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId (
         select variation
     } |> Seq.tryHead
 
+// error handled at the caller side
 let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     log.Debug(sprintf "addIncreaseIngredientVariation %d %d" orderItemId ingredientId)
     let existingVariation = tryGetIngredientVariationOfOrderItemAndIngredient orderItemId ingredientId ctx
@@ -2462,6 +2530,7 @@ let addIncreaseIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     let _ = ctx.Public.Variations.Create(ingredientId,orderItemId,Globals.MOLTO)
     ctx.SubmitUpdates()
 
+// not used?
 let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     log.Debug(sprintf "addAddNormalIngredientVariation %d %d" orderItemId ingredientId)
     try
@@ -2474,6 +2543,7 @@ let addAddNormalIngredientVariation orderItemId ingredientId (ctx:DbContext) =
     with
     | ex -> log.Error(sprintf "error in addAddNormalIngredientVariation %s" (ex.Message))
 
+// some error handled at the caller side as well. Deal with it atm
 let addAddIngredientVariation orderItemId ingredientId quantity (ctx:DbContext) =
     log.Debug(sprintf "addAddIngredientVariation %d %d %s" orderItemId ingredientId quantity)
     try
@@ -2680,36 +2750,40 @@ let getAllVariationsOfOrderItem orderItemId   (ctx:DbContext): Variation list =
     } |> Seq.toList
 
 let SetOrderItemAsRejected orderItemId (ctx:DbContext) =
-    log.Debug(sprintf "SetOrderItemAsRejected %d" orderItemId)
-    let orderItem = Orders.getTheOrderItemById orderItemId ctx
-    orderItem.Hasbeenrejected <- true;
-    ctx.SubmitUpdates()
 
+    log.Debug(sprintf "SetOrderItemAsRejected %d" orderItemId)
+    try
+        let orderItem = Orders.getTheOrderItemById orderItemId ctx
+        orderItem.Hasbeenrejected <- true;
+        ctx.SubmitUpdates()
+    with
+    | ex -> log.Error(sprintf "error in SetOrderItemAsRejected %s" (ex.Message))
+
+// error handled at caller side
 let removeAllVariationsOfOrderItem orderItemId (ctx:DbContext) =
     log.Debug(sprintf "removeAllVariationsOfOrderItem %d" orderItemId)
     let variations = getAllVariationsOfOrderItem orderItemId ctx
     let _ = variations |> List.iter (fun (x:Variation) -> x.Delete())
     ctx.SubmitUpdates()
 
+// let client handle this in case of erro
 let updateOrderItemAndPriceByCourseId orderItemId courseId quantity comment newPrice (groupOut: decimal ) (ctx: DbContext) =
     log.Debug(sprintf "updateOrderItemAndPriceByCourseId %d %d" orderItemId courseId) 
-    try
-        let orderItem = Orders.getTheOrderItemById orderItemId ctx
-        let thecomment  = match comment with | Some c -> c | None -> ""
-        let oldCourseId = courseId
-        orderItem.Quantity<-quantity
-        orderItem.Courseid<-courseId
-        orderItem.Comment<-thecomment 
-        orderItem.Price <- newPrice
-        let orderGroupOut = createOrGetOutGroup orderItem.Orderid ((int)groupOut) ctx
-        orderItem.Ordergroupid <- (int)orderGroupOut.Ordergroupid
-        orderItem.Hasbeenrejected <- false
-        ctx.SubmitUpdates()
-        let x = Orders.updateTotalOfOrder orderItem.Orderid ctx
-        if (oldCourseId <> courseId) then (removeAllVariationsOfOrderItem orderItemId ctx)  else ()
-    with
-    | ex -> log.Error(sprintf "error in updateOrderItemAndPriceByCourseId %s" (ex.Message))
+    let orderItem = Orders.getTheOrderItemById orderItemId ctx
+    let thecomment  = match comment with | Some c -> c | None -> ""
+    let oldCourseId = courseId
+    orderItem.Quantity<-quantity
+    orderItem.Courseid<-courseId
+    orderItem.Comment<-thecomment 
+    orderItem.Price <- newPrice
+    let orderGroupOut = createOrGetOutGroup orderItem.Orderid ((int)groupOut) ctx
+    orderItem.Ordergroupid <- (int)orderGroupOut.Ordergroupid
+    orderItem.Hasbeenrejected <- false
+    ctx.SubmitUpdates()
+    let x = Orders.updateTotalOfOrder orderItem.Orderid ctx
+    if (oldCourseId <> courseId) then (removeAllVariationsOfOrderItem orderItemId ctx)  else ()
 
+// not used as we use always by id
 let updateOrderItemAndPriceByCourseName orderItemId courseName quantity comment newPrice (groupOut: decimal ) (ctx: DbContext) =
     log.Debug(sprintf "updateOrderItemAndPriceByCourseName %d %s" orderItemId courseName) 
     let tryOrderItem = Orders.getOrderItemById orderItemId ctx
@@ -3386,6 +3460,7 @@ module StandardVariations =
                 select standardVariationItem
         } |> Seq.tryHead
 
+    // not used
     let addAddNormalIngredientStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addAddNormalIngredientVariation")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
@@ -3396,6 +3471,7 @@ module StandardVariations =
         let _ = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)``(ingredientId,standardVariationId,Globals.AGGIUNGINORMALE)
         ctx.SubmitUpdates()
 
+    // not used
     let addIngreaseIngredientStandardVariationItem standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addAddNormalIngredientVariation")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
@@ -3407,6 +3483,7 @@ module StandardVariations =
         let _ = ctx.Public.Standardvariationitem.``Create(ingredientid, standardvariationid, tipovariazione)``(ingredientId,standardVariationId,Globals.MOLTO)
         ctx.SubmitUpdates()
 
+    // error handled at the caller side
     let addRemoveIngredientStandardVariationItem standardVariationId ingredientId  (ctx: DbContext) =
         log.Debug(sprintf "addRemoveIngredientStandardVariationItem standardVariationId%d ingredientId %d" ingredientId standardVariationId)
         let newVariation = ctx.Public.Standardvariationitem.Create(ingredientId,standardVariationId,Globals.SENZA)
@@ -3416,6 +3493,7 @@ module StandardVariations =
                 | _ -> ()
         ctx.SubmitUpdates()    
 
+    // error handled at the caller side
     let addAddIngredientStandardVariationItem standardVariationId ingredientId (quantity:string) (ctx:DbContext) =
         log.Debug(sprintf "addAddIngredientVariation standardVariationId:%d  ingredientId:%d quantity:%s " standardVariationId ingredientId quantity)
         let mut: int ref = ref 1
@@ -3441,6 +3519,7 @@ module StandardVariations =
                 | _ -> ()
         ctx.SubmitUpdates()
 
+    // not used
     let addStandardIngredientVariationItemByIngredientPriceRef standardVariationId ingredientId ingredientPriceId (ctx:DbContext) = 
         log.Debug("addIngredientVariationByIngredientPriceRef")
         let existingVariation = tryGetAStandardIngredientVariationItem standardVariationId ingredientId ctx
@@ -3459,6 +3538,7 @@ module StandardVariations =
             | Some theExistingVariation -> theExistingVariation.Delete(); ctx.SubmitUpdates()
             | None -> ()
 
+    // not used
     let addRemoveUnitaryStandardIngredientVariationItemOrDecreaseByOne standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addRemoveUnitaryStandardIngredientVariationItemOrDecreaseByOne")
         let existingUnitaryVariation = tryGetUnitaryIngredientStandardVariationitemOfStandardVariation standardVariationId ingredientId ctx 
@@ -3472,6 +3552,7 @@ module StandardVariations =
             newVariation.Plailnumvariation <- -1
             ctx.SubmitUpdates()
 
+    // not used
     let addAddUnitaryStandardIngredientVariationitemOrIncreaseByOne standardVariationId ingredientId (ctx:DbContext) =
         log.Debug("addAddUnitaryStandardIngredientVariationitemOrIncreaseByOne")
         let existingUnitaryVariation = tryGetUnitaryIngredientStandardVariationitemOfStandardVariation  standardVariationId ingredientId ctx 
@@ -3485,6 +3566,7 @@ module StandardVariations =
             newVariation.Plailnumvariation <- 1
             ctx.SubmitUpdates()
 
+    // not used
     let addRemoveStandardIngredientVariationItem variationId ingrdientId (ctx:DbContext) =
         log.Debug("addRemoveStandardIngredientVariationItem")
         let existingVariation = tryGetAStandardIngredientVariationItem variationId ingrdientId ctx
@@ -3511,10 +3593,11 @@ module StandardVariations =
             ctx.SubmitUpdates()
         | _ -> ()     
 
+    // error handled at caller side
     let setStandardVariationToOrderItem standardVariationId orderItemId (ctx:DbContext) =
         log.Debug(sprintf "setStandardVariationToOrderItem %d %d" standardVariationId orderItemId)
         let standardVariation = getStandardVariation standardVariationId ctx
         let standardVariationItems = standardVariation.``public.standardvariationitem by standardvariationid``
-        let _ = standardVariationItems |> Seq.iter (fun x -> copyStandardVariationItemToOrderItem x.Standardvariationitemid orderItemId ctx)
+        standardVariationItems |> Seq.iter (fun x -> copyStandardVariationItemToOrderItem x.Standardvariationitemid orderItemId ctx)
         ()
         

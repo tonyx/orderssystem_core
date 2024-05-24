@@ -270,4 +270,6 @@
         <NoStandardVariations>There are no standard variations associated</NoStandardVariations>
         <LoginOrPasswordInvalid>Login or password are invalid</LoginOrPasswordInvalid>
         <Empty>Empty</Empty>
+        <GerateQrCode>Generate Qr code</GerateQrCode>
+        <AskConfirmDeletion>Are you sure you want to remove this item?</AskConfirmDeletion>
     </localization>

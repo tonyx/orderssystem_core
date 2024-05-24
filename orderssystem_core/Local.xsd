@@ -272,7 +272,8 @@
             <xs:element type="xs:string" name="NoStandardVariations"/>
             <xs:element type="xs:string" name="LoginOrPasswordInvalid"/>
             <xs:element type="xs:string" name="Empty"/>
-
+            <xs:element type="xs:string" name="GerateQrCode"/>
+            <xs:element type="xs:string" name="AskConfirmDeletion"/>
 
           </xs:sequence>
         </xs:complexType>
