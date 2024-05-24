@@ -1074,7 +1074,7 @@ CREATE VIEW public.orderitemdetails AS
     h.suborderid,
     g.groupidentifier,
     g.ordergroupid,
-    (COALESCE(f.payed, false) OR d.archived) AS payed
+    (COALESCE(f.payed, false) OR d.archived OR d.voided) AS payed
    FROM (((((((public.orderitems a
      JOIN public.courses b ON ((a.courseid = b.courseid)))
      JOIN public.states c ON ((a.stateid = c.stateid)))

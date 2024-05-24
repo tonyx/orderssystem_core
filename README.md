@@ -7,6 +7,10 @@ A system for ordering food and drink in restaurants, pubs, etc...
 These instructions will show you how to get you a copy of the project up and running.
  
 Typical users can be managers, employees and customers of restaurants, pubs, bars that need to automate the process of collecting orders, printing orders, and delivering fiscal receipts.
+
+## Important note:
+At the moment Npgsql library and Sqlprovider must stay pinned to version 6.0.11 and 1.1.65.
+For security reason only trusted users must be allowed.
  
 ## General description.
  

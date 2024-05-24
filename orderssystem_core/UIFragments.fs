@@ -197,6 +197,8 @@ let ordersBar (myOrders:Db.Orderdetail list) (otherOrders:Db.Orderdetail list) =
 
 let ordersBarRef (pairOfOrders:Db.Orderdetail option list list) (pairOfOtherOrders:Db.Orderdetail option list list) =
     [
+        h2 local.Orders
+        br []
 
         Text(local.MyOwn)
         table [for orderPair in pairOfOrders ->

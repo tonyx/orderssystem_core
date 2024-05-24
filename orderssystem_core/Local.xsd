@@ -52,6 +52,7 @@
             <xs:element type="xs:string" name="ACourseNamed"/>
             <xs:element type="xs:string" name="NameIsUsed"/>
             <xs:element type="xs:string" name="AlreadyExists"/>
+            <xs:element type="xs:string" name="AlreadyExistsAssociatedOrder"/>
             <xs:element type="xs:string" name="ModifyUser"/>
             <xs:element type="xs:string" name="UserEnabled"/>
             <xs:element type="xs:string" name="UserCanVoidOrder"/>
@@ -269,8 +270,10 @@
             <xs:element type="xs:string" name="NoIngredients"/>
             <xs:element type="xs:string" name="NoComments"/>
             <xs:element type="xs:string" name="NoStandardVariations"/>
+            <xs:element type="xs:string" name="LoginOrPasswordInvalid"/>
             <xs:element type="xs:string" name="Empty"/>
-
+            <xs:element type="xs:string" name="GerateQrCode"/>
+            <xs:element type="xs:string" name="AskConfirmDeletion"/>
 
           </xs:sequence>
         </xs:complexType>
