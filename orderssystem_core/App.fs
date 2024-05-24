@@ -16,10 +16,8 @@ open Suave.Operators
 open Suave.RequestErrors
 open Suave.State.CookieStateStore
 open Suave.Successful
-// open Suave.Web
 open Globals
 open View
-// open FSharp.Data.Sql
 open OrdersSystem
 open Suave.Writers
 open QRCoder
@@ -29,31 +27,16 @@ open OrdersSystem.Utils
 open Microsoft.Security.Application
 open System.IO
 open System.Text
-// open QRCoder
-// open OrdersSystem.Settings
-// open System.Runtime
-
-// open System.Drawing;
-// open System.Drawing.Printing;
-// open System.Security.Cryptography.X509Certificates
-// open System
 
 open QuestPDF.Fluent
 open QuestPDF.Helpers
 open QuestPDF.Infrastructure
 
-// open QuestPDF.Fluent
-// open QuestPDF.Helpers
-// open QuestPDF.Infrastructure
 open System.Diagnostics
 
 
-//   <add key ="QuestPDF.Settings.License"  value = "LicenseType.Community" />
 let _ = 
     QuestPDF.Settings.License <- LicenseType.Community
-    // LicenseManager.SetLicense(ConfigurationManager.AppSettings.["QuestPDF.Settings.License"])
-    // let license = ConfigurationManager.AppSettings.["QuestPDF.Settings.License"]
-    // QuestPDF.LicenseManager.SetLicense(license)
 
 type Stritem = {entry: string}
 type IndexNameRecord = {name: string; index: int}
@@ -1569,7 +1552,6 @@ let addOrderItemForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
                     visibleCourses |> List.map (fun g -> decimal g.Courseid, g.Price |> string)
                 let coursesNames = 
                     visibleCourses  |> List.map (fun g -> decimal g.Courseid, g.Name)
-                // html (View.addOrderItem'  orderId cocoursesNames  coursesIdWithPrices subCategories fatherCategory category.Name backUrl viableGroupOutIdsForOrderItem)
                 html (View.addOrderItem'  orderId coursesNames  coursesIdWithPrices  backUrl viableGroupOutIdsForOrderItem)
             )
             POST >=> bindToForm Form.orderItem (fun form ->
