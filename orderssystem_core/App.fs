@@ -629,7 +629,7 @@ let controlPanelRef  =
     log.Debug("XXXX. controlPanel")
     printf "XXXX. controlPanel"
     
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
     
     warbler (fun _ ->
     loggedOn (session (function 
@@ -5015,6 +5015,7 @@ let webPart =
         pathScan Path.Orders.setSubOrderAsNotPaid (fun (subOrderId,orderId) -> adminPassingUserLoggedOn (setSubOrderAsNotPaid subOrderId orderId))
         pathRegex "(.*)\.(css|png|gif|js|html)" >=> Files.browseHome
         html View.notFound
+        // html View.controlPanel
     ]
 
 // let cert = new X509Certificate2("certificate.p12","secret")

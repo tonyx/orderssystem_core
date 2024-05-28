@@ -38,6 +38,12 @@ type LocalizationX = XmlProvider<Schema = "../orderssystem_core/Local.xsd">
 
 let local = LocalizationX.Load ("Local_"+Settings.Localization+".xml")
 
+
+let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+log4net.Config.BasicConfigurator.Configure() |> ignore
+
+log.Debug "XXXX. This is the view"
+
 type UserLoggedOnSession = {
     Username : string
     Role : string
@@ -551,8 +557,11 @@ let changePassword message (user:UserLoggedOnSession) =
 //             }
 //     ]
 
-let notFound = [
-    h2 local.PageNotFound
+let notFound =
+    log.Debug "Page not found"  
+    
+    [
+    h2 (local.PageNotFound + " asdlfkjas;fdjas;dfkja;s")
     p [] [
         Text local.CouldNotFindTheRequestedResource
     ]
