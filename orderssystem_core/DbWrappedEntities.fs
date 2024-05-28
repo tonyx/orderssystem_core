@@ -1,12 +1,12 @@
 module OrdersSystem.DbWrappedEntities
 
-open FSharp.Data.Sql
+// open FSharp.Data.Sql
 open OrdersSystem
 open System
 // open FSharp.Configuration
 
 open System.Globalization
-open ExpressionOptimizer
+// open ExpressionOptimizer
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 type CourseWrapped = {
@@ -28,11 +28,11 @@ type OrderitemVariatonWrapped = {
     Quantity: int
 }
 
-let makeOrderitemVariationWrapped (x: Db.VariationDetail) = {
-    TipoVariazione = x.Tipovariazione
-    IngredientName = x.Ingredientname
-    Quantity = (int)x.Quantity
-}
+// let makeOrderitemVariationWrapped (x: Db.VariationDetail) = {
+//     TipoVariazione = x.Tipovariazione
+//     IngredientName = x.Ingredientname
+//     Quantity = (int)x.Quantity
+// }
 
 type TenderCodeWrapped = {
     TenderCodeName: string
@@ -82,102 +82,105 @@ type OrderWrapped = {
 }
 
 /// experimental feature
-let wrapMyObject (object: Common.SqlEntity) =
-    let table = object.Table
-    match table.Name with
-    | "orderitemdetails" ->  printf "ok"
-    | _ -> printf "not ok"
+// let wrapMyObject (object: Common.SqlEntity) =
+//     let table = object.Table
+//     match table.Name with
+//     | "orderitemdetails" ->  printf "ok"
+//     | _ -> printf "not ok"
 
 type DbObjectWrapper =
-    static member WrapOrderItemDetailsIncldingVariations(orderItemDetail: Db.OrderItemDetails) (orderItemDetailVariations:  List<Db.VariationDetail>) cssColor =
-        {
-            Quantity = orderItemDetail.Quantity
-            Categoryid = orderItemDetail.Categoryid
-            Closingtime = orderItemDetail.Closingtime
-            Comment  = orderItemDetail.Comment
-            Courseid = orderItemDetail.Courseid
-            Hasbeenrejected = orderItemDetail.Hasbeenrejected
-            Name = orderItemDetail.Name
-            Orderid = orderItemDetail.Orderid
-            Orderitemid = orderItemDetail.Orderitemid
-            Orderout= orderItemDetail.Groupidentifier
-            Originalprice=orderItemDetail.Originalprice
-            Price = orderItemDetail.Price
-            Person= orderItemDetail.Person
-            Suborderid = orderItemDetail.Suborderid
-            Paid = orderItemDetail.Payed
-            Csscolor = cssColor
-            Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price
-            Stateid = orderItemDetail.Stateid
-            Variations = orderItemDetailVariations |> List.map (fun x -> makeOrderitemVariationWrapped x)
-        }
-
-    static member WrapOrderItemDetails(orderItemDetail: Db.OrderItemDetails) cssColor =
-        {
-            Quantity = orderItemDetail.Quantity
-            Categoryid = orderItemDetail.Categoryid
-            Closingtime = orderItemDetail.Closingtime
-            Comment  = orderItemDetail.Comment
-            Courseid = orderItemDetail.Courseid
-            Hasbeenrejected = orderItemDetail.Hasbeenrejected
-            Name = orderItemDetail.Name
-            Orderid = orderItemDetail.Orderid
-            Orderitemid = orderItemDetail.Orderitemid
-            Orderout= orderItemDetail.Groupidentifier
-            Originalprice=orderItemDetail.Originalprice
-            Price = orderItemDetail.Price
-            Person= orderItemDetail.Person
-            Suborderid = orderItemDetail.Suborderid
-            Paid = orderItemDetail.Payed
-            Csscolor = cssColor
-            Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price
-            Stateid = orderItemDetail.Stateid
-            Variations = []
-        }
-
-    static member WrapCourse (course: Db.Course) =
-        {
-            CourseId = course.Courseid
-            CourseName  = course.Name
-        }
-
-    static member WrapSubOrder (subOrder: Db.SubOrder) cssColor =
-        {
-            Suborderid = subOrder.Suborderid
-            Orderid = subOrder.Orderid
-            Comment = subOrder.Comment
-            Subtotal = subOrder.Subtotal
-            Subtotaladjustment = subOrder.Subtotaladjustment
-            SubtotalPercentAdjustment = subOrder.Subtotalpercentadjustment
-            SubtotalAdjustmentFromPercentage = Math.Round(subOrder.Subtotal * (subOrder.Subtotalpercentadjustment/100M),2,MidpointRounding.ToEven)
-            Csscolor = cssColor
-            Paid = subOrder.Payed
-        }
+    member this.Foo = "bar"
     
-    static member WrapOrder (order: Db.Order) =
-        {
-            OrderId=order.Orderid
-            Tavolo=order.Table
-            Totale= order.Total
-            Sconto = order.Total - order.Adjustedtotal
-            TotaleScontato = order.Adjustedtotal
-        }
+    // static member WrapOrderItemDetailsIncldingVariations(orderItemDetail: Db.OrderItemDetails) (orderItemDetailVariations:  List<Db.VariationDetail>) cssColor =
+    //     {
+    //         Quantity = orderItemDetail.Quantity
+    //         Categoryid = orderItemDetail.Categoryid
+    //         Closingtime = orderItemDetail.Closingtime
+    //         Comment  = orderItemDetail.Comment
+    //         Courseid = orderItemDetail.Courseid
+    //         Hasbeenrejected = orderItemDetail.Hasbeenrejected
+    //         Name = orderItemDetail.Name
+    //         Orderid = orderItemDetail.Orderid
+    //         Orderitemid = orderItemDetail.Orderitemid
+    //         Orderout= orderItemDetail.Groupidentifier
+    //         Originalprice=orderItemDetail.Originalprice
+    //         Price = orderItemDetail.Price
+    //         Person= orderItemDetail.Person
+    //         Suborderid = orderItemDetail.Suborderid
+    //         Paid = orderItemDetail.Payed
+    //         Csscolor = cssColor
+    //         Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price
+    //         Stateid = orderItemDetail.Stateid
+    //         Variations = orderItemDetailVariations |> List.map (fun x -> makeOrderitemVariationWrapped x)
+    //     }
 
-    static member WrapTenderCode (tenderCode:Db.TenderCode) =
-        { 
-            TenderCodeName= tenderCode.Tendername
-            TenderCodeId=tenderCode.Tendercodesid
-            TenderCodeIdentifier=tenderCode.Tendercode
-        }
+    // static member WrapOrderItemDetails(orderItemDetail: Db.OrderItemDetails) cssColor =
+    //     {
+    //         Quantity = orderItemDetail.Quantity
+    //         Categoryid = orderItemDetail.Categoryid
+    //         Closingtime = orderItemDetail.Closingtime
+    //         Comment  = orderItemDetail.Comment
+    //         Courseid = orderItemDetail.Courseid
+    //         Hasbeenrejected = orderItemDetail.Hasbeenrejected
+    //         Name = orderItemDetail.Name
+    //         Orderid = orderItemDetail.Orderid
+    //         Orderitemid = orderItemDetail.Orderitemid
+    //         Orderout= orderItemDetail.Groupidentifier
+    //         Originalprice=orderItemDetail.Originalprice
+    //         Price = orderItemDetail.Price
+    //         Person= orderItemDetail.Person
+    //         Suborderid = orderItemDetail.Suborderid
+    //         Paid = orderItemDetail.Payed
+    //         Csscolor = cssColor
+    //         Totalprice = (decimal)orderItemDetail.Quantity * orderItemDetail.Price
+    //         Stateid = orderItemDetail.Stateid
+    //         Variations = []
+    //     }
 
-    static member WrapPaymentItem (paymentItem:Db.PaymentItemDetail) =
-        { 
-            SubOrderId = paymentItem.Suborderid
-            Amount = paymentItem.Amount
-            TenderCodeId= paymentItem.Tendercodesid
-            TenderName = paymentItem.Tendername
-            PaymentItemId = paymentItem.Paymentid
-        }
+    // static member WrapCourse (course: Db.Course) =
+    //     {
+    //         CourseId = course.Courseid
+    //         CourseName  = course.Name
+    //     }
+
+    // static member WrapSubOrder (subOrder: Db.SubOrder) cssColor =
+    //     {
+    //         Suborderid = subOrder.Suborderid
+    //         Orderid = subOrder.Orderid
+    //         Comment = subOrder.Comment
+    //         Subtotal = subOrder.Subtotal
+    //         Subtotaladjustment = subOrder.Subtotaladjustment
+    //         SubtotalPercentAdjustment = subOrder.Subtotalpercentadjustment
+    //         SubtotalAdjustmentFromPercentage = Math.Round(subOrder.Subtotal * (subOrder.Subtotalpercentadjustment/100M),2,MidpointRounding.ToEven)
+    //         Csscolor = cssColor
+    //         Paid = subOrder.Payed
+    //     }
+    
+    // static member WrapOrder (order: Db.Order) =
+    //     {
+    //         OrderId=order.Orderid
+    //         Tavolo=order.Table
+    //         Totale= order.Total
+    //         Sconto = order.Total - order.Adjustedtotal
+    //         TotaleScontato = order.Adjustedtotal
+    //     }
+
+    // static member WrapTenderCode (tenderCode:Db.TenderCode) =
+    //     { 
+    //         TenderCodeName= tenderCode.Tendername
+    //         TenderCodeId=tenderCode.Tendercodesid
+    //         TenderCodeIdentifier=tenderCode.Tendercode
+    //     }
+
+
+    // static member WrapPaymentItem (paymentItem:Db.PaymentItemDetail) =
+    //     { 
+    //         SubOrderId = paymentItem.Suborderid
+    //         Amount = paymentItem.Amount
+    //         TenderCodeId= paymentItem.Tendercodesid
+    //         TenderName = paymentItem.Tendername
+    //         PaymentItemId = paymentItem.Paymentid
+    //     }
 
 
 

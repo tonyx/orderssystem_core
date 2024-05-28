@@ -16,6 +16,9 @@ type DishCommands =
     | RemoveIngredient of Guid
     | UpdateName of String
     | Deactivate
+    | SetVisible
+    | SetInvisible
+    | Update of DishTO
 
         interface Command<Dish, DishEvents>  with
             member this.Execute dish = 
@@ -38,4 +41,14 @@ type DishCommands =
                 | Deactivate -> 
                     dish.Deactivate ()
                     |> Result.map (fun _ -> [Deactivated])
+                | SetVisible ->
+                    dish.SetVisible ()
+                    |> Result.map (fun _ -> [VisibleSet])
+                | SetInvisible ->
+                    dish.SetInvisible ()
+                    |> Result.map (fun _ -> [InvisibleSet])
+                | Update dishTo ->
+                    dish.Update dishTo
+                    |> Result.map (fun _ -> [Updated dishTo])
+
             member this.Undoer = None

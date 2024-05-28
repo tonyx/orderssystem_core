@@ -98,7 +98,8 @@ type OrderItemSubOrderMapping = DbContext.``public.orderitemsubordermappingEntit
 
 let getContext() = Sql.GetDataContext(TPConnectionString)
 
-module Courses = 
+module Courses =
+    // done in Sharpino way: FindDishByPartialName
     let tryFindCourseByName name (ctx: DbContext) =
         log.Debug(sprintf "tryFindCourseByName %s" name)
         query {
@@ -107,6 +108,7 @@ module Courses =
                 select course
             } |> Seq.tryHead
 
+    // done in Sharpino way: GetDish
     let getCourse courseId (ctx:DbContext) =
         log.Debug(sprintf "%s %d" "getCourse" courseId)
         query {
@@ -114,6 +116,7 @@ module Courses =
                 where (course.Courseid = courseId)
         } |> Seq.head
 
+    // done in Sharpino way:  GetDishByName
     let tryGetCourseByName courseName (ctx:DbContext) =
         log.Debug(sprintf "%s tryGetCourseByName " courseName)
         query {
@@ -122,6 +125,7 @@ module Courses =
             select course
         } |> Seq.tryHead
 
+    // done in Sharpino way GetDish (alway "try" as we are using Result<...> type) 
     let tryFindCourseById id (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "tryFindCourseById" id)
         query {
@@ -130,6 +134,8 @@ module Courses =
                 select course
         } |> Seq.tryHead
 
+    
+    // sharpino GetAllDishes
     let getAllCourses (ctx: DbContext) : Course list =
         log.Debug("getAllCourses")
         query {
@@ -138,6 +144,7 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    // ported: GetAllVisibleDishes
     let getAllVisibleCourses (ctx: DbContext) : Course list =
         log.Debug("getAllVisibleCourses")
         query {
@@ -147,6 +154,7 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    // ported: GetVisibleDishesByCategory: consider that category is not an id anymore but rather a union type
     let getVisibleCoursesDetailsByCategoryAndPage categoryId pageId (ctx: DbContext): Coursedetails list =
         log.Debug(sprintf "%s %d %d" "getVisibleCoursesDetailsByCategoryAndPage" categoryId pageId)
         let startIndex = pageId * Globals.NUM_DB_ITEMS_IN_A_PAGE
@@ -160,6 +168,7 @@ module Courses =
                 select corseDetails
         } |> Seq.toList
 
+    // GetAllDishes
     let getAllCourseDetails (ctx: DbContext) : Coursedetails list =
         log.Debug("getAllCourseDetails")
         query {
@@ -168,6 +177,7 @@ module Courses =
                 select corseDetails
         } |> Seq.toList
 
+    // no need for details (apparently as the only extra field by join is category name and category visibility)
     let getAllCoursesDetailsByCatgory categoryId (ctx: DbContext) : Coursedetails list =
         log.Debug(sprintf "getAllCoursesDetailsByCatgory %d" categoryId)
         query {
@@ -177,13 +187,16 @@ module Courses =
                 select corseDetails
         } |> Seq.toList
 
+    // ported: GetNumberOfDishes
     let getNumberOfAllCourses (ctx: DbContext) =
         ctx.Public.Courses |> Seq.length
 
+    // not ported: just calculate at the moment at caller side
     let getNumberOfAllCoursesOfACategory categoryId (ctx: DbContext) =
         log.Debug(sprintf "getNumberOfAllCoursesOfACatgory %d" categoryId)
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> (x.Categoryid = categoryId)) |> Seq.length
 
+    // ported: GetNumberOfVisibleDishes
     let getNumberOfVisibleCoursesOfACatgory categoryId (ctx: DbContext) =
         log.Debug(sprintf "getNumberOfVisibleCoursesOfACategory %d" categoryId)
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> (x.Categoryid = categoryId ) && x.Visibility) |>  Seq.length
@@ -203,6 +216,8 @@ module Courses =
         if (startIndex < allCourses.Length) then [startIndex .. upperIndex ] |> List.map (fun i -> allCourses.[i]) 
             else []
 
+    
+    // not ported: too much complexity
     let rec getAllSubCategoriesIdsByFatherId fatherId (ctx:DbContext) =
         log.Debug(sprintf "getAllSubCategoryMappingByFatherId %d" fatherId)
         let (result: int list) = ctx.Public.Subcategorymapping |> Seq.filter (fun x -> x.Fatherid = fatherId ) |> Seq.map (fun x -> x.Sonid) |> Seq.toList
@@ -210,6 +225,7 @@ module Courses =
             | 0 -> result
             | X -> result @ (List.fold (fun acc y -> (acc @ (getAllSubCategoriesIdsByFatherId y ctx))) [] result )
 
+    // we will see if the "other" in the category can be used as parameter for a search
     let searchCoursesByCategory categoryId (name:string) (ctx:DbContext) = 
         log.Debug(sprintf "searchCourseByCategory %d\n" categoryId)
         query {
@@ -218,6 +234,7 @@ module Courses =
                 select corseDetails
         } |> Seq.toList
 
+    //  ported: FindDishByName
     let searchCourses  (name:string) (ctx:DbContext) = 
         log.Debug(sprintf "searchCourses %s\n" name)
         query {
@@ -226,6 +243,7 @@ module Courses =
                 select corseDetails
         } |> Seq.toList
 
+    // not sure about this!
     let getAllCoursesDetailsByCategoryWithTextNameSearch categoryId (name:string) (ctx: DbContext): Coursedetails list =
         log.Debug(sprintf "%s %d %s " "getAllCoursesDetailsByCategoryWithTextNameSearch" categoryId name)
         let subCategoriesIds = getAllSubCategoriesIdsByFatherId categoryId ctx
@@ -237,6 +255,7 @@ module Courses =
         if (startIndex < allCourses.Length) then [startIndex .. upperIndex ] |> List.map (fun i -> allCourses.[i]) 
             else []
 
+    // not ported: category are union type
     let tryGetCategoryById id (ctx: DbContext) : CourseCategories option =
         log.Debug(sprintf "%s %d" "tryGetCategoryById" id)
         query {
@@ -245,6 +264,7 @@ module Courses =
                 select category
         } |> Seq.tryHead
 
+    // use: GetAllDishesOfACertainType and eventually filter by visibility
     let getVisibleCoursesDetailsByCatgory categoryId (ctx: DbContext) : DbContext.``public.coursedetails2Entity`` list =
         log.Debug(sprintf "%s %d" "getVisibleCoursesDetailsByCatgory" categoryId)
         query {
@@ -254,6 +274,7 @@ module Courses =
                 select corseDetails
         } |> Seq.toList
 
+    // no abstract anymore
     let getAllAbstractCourses (ctx:DbContext) =
         log.Debug("getAllAbstractCourses")
         query {
@@ -263,6 +284,7 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    // categories (dish type) are union type no need to search (unlesss we want to use them in the context)
     let getAllCategories (ctx: DbContext) : CourseCategories list =
         log.Debug("getAllCategories")
         query {
@@ -271,18 +293,22 @@ module Courses =
                 select category
         } |> Seq.toList
 
+    // no way!!!!
     let getAllFatherSonCategoriesDetails (ctx:DbContext) =
         log.Debug("getAllFatherSonCategoriesDetails")
         ctx.Public.Fathersoncategoriesdetails |> Seq.toList
 
+    // no no!
     let getAllSubCategoryMapping (ctx:DbContext) =
         log.Debug("getAllSubCategoryMapping")
         ctx.Public.Subcategorymapping |> Seq.toList
-    
+   
+    // GetAllDishesOfACertainType  
     let getAllCoursesByCourseCategory id (ctx: DbContext) =
         log.Debug(sprintf "getAllCoursesByCourseCategory %d" id)
         ctx.Public.Courses |> Seq.filter (fun (x:Course) -> x.Categoryid = id) |> Seq.toList
 
+    // no no
     let getFatherSonCategoriesDetailsByFatherId fatherId (ctx:DbContext) =
         log.Debug(sprintf "getAllFatherSonCategoriesDetailsByFatherId %d" fatherId)
         query {
@@ -292,6 +318,7 @@ module Courses =
                 select entry
         } |> Seq.toList
     
+    // no no
     let getVisibleFatherSonCategoriesDetailsByFatherId fatherId (ctx:DbContext) =
         log.Debug(sprintf "getVisibleFatherSonCategoriesDetailsByFatherId %d" fatherId)
         query {
@@ -302,6 +329,7 @@ module Courses =
                 select entry
         } |> Seq.toList
 
+    // no need
     let getFatherSonCategoriesDetailsBySonId sonId (ctx:DbContext) =
         log.Debug(sprintf "getAllFatherSonCategoriesDetailsBySonId %d" sonId)
         query {
@@ -310,6 +338,8 @@ module Courses =
                 select entry
         } |> Seq.tryHead
 
+    
+    // use update dish for this
     let moveCoursesCategories oriCategoryId targetCategoryId (ctx: DbContext) =
         log.Debug(sprintf "moveCoursesCategories %d %d" oriCategoryId targetCategoryId)
         try
@@ -319,6 +349,7 @@ module Courses =
         with
         | ex -> log.Error("error in moveCoursesCategories",ex)
 
+    // not needed
     let getAllRootCategories (ctx:DbContext) =
         log.Debug("getAllRootCategories")
         let allSons = getAllSubCategoryMapping ctx |> List.map (fun x -> x.Sonid)
@@ -328,6 +359,8 @@ module Courses =
         let allSons = getAllSubCategoryMapping ctx |> List.map (fun x -> x.Sonid)
         ctx.Public.Coursecategories |> Seq.filter  (fun x -> (not (List.contains x.Categoryid allSons))) |> Seq.filter (fun x -> (x.Visibile && not x.Abstract)) |>  Seq.toList |> List.sortBy (fun x -> x.Name)
 
+    
+    // categories cannot be invisible
     let getVisibleCourseCategories (ctx: DbContext) : CourseCategories list =
         log.Debug("getVisibleCourseCategories")
         query {
@@ -337,6 +370,7 @@ module Courses =
                 select category
         } |> Seq.toList
 
+    // arrange at the caller side
     let getVisibleCoursesOfACategory categoryId (ctx:DbContext): Course list =
         log.Debug(sprintf "%s %d" "getVisibleCoursesOfACategory" categoryId)
         query {
@@ -346,6 +380,7 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    // GetAllVisibleDishes
     let getVisibleCourses (ctx: DbContext): Course list =
         log.Debug(sprintf "%s" "getVisibleCourses")
         query {
@@ -355,6 +390,7 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    // GetVisibleDishesByCategory
     let getVisibleCoursesByCategory categoryId (ctx: DbContext): Course list =
         log.Debug(sprintf "%s %d" "getVisibleCoursesByCategory" categoryId)
         query {
@@ -364,12 +400,14 @@ module Courses =
                 select course
         } |> Seq.toList
 
+    // not needed
     let getVisibleCoursesByCategoryAndSubCategories categoryId (ctx:DbContext): Course list =
         log.Debug("getVisibleCoursesByCategoryAndSubCategories")
         let allCategoriesHierarchy = [categoryId]@(getAllSubCategoriesIdsByFatherId categoryId ctx)
         let toReturn = allCategoriesHierarchy |> List.map (fun x -> getVisibleCoursesByCategory x ctx) |> List.fold (@) []
         toReturn
 
+    // CreateDish
     let createCourse price name  description  visibility  categoryId (ctx: DbContext) =
         log.Debug(sprintf "%s %.2f %s %s %b %d " "createCourse" price name description visibility categoryId)
         let newCourse = ctx.Public.Courses.Create(categoryId,name,visibility)
@@ -377,7 +415,8 @@ module Courses =
         newCourse.Price <- price
         ctx.SubmitUpdates()
         newCourse
-
+        
+    // UpdateDish
     let updateCourse (course : Course) price name description visibility categoryId  (ctx : DbContext) =
         log.Debug(sprintf "%s %d" "updateCourse" course.Courseid)
         course.Visibility <- visibility
@@ -387,6 +426,7 @@ module Courses =
         course.Categoryid <- categoryId
         ctx.SubmitUpdates()
 
+    // GetDish
     let tryGetCourse courseId (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "tryGetCourse" courseId )
         query {
@@ -395,6 +435,8 @@ module Courses =
                 select course
         } |> Seq.tryHead
 
+    // FOCUS!!!
+    // not needed (unless we want to work on the "other" by string)
     let tryGetCourseCategoryByName name (ctx: DbContext) =
         log.Debug(sprintf "%s %s " "tryGetCourseCategoryByName" name)
         query {
@@ -403,6 +445,7 @@ module Courses =
                 select category
         } |> Seq.tryHead
 
+    // GetDish
     let tryFindCourse id (ctx: DbContext ) =
         log.Debug(sprintf "%s %d" "tryFindCourse" id)
         query {
@@ -411,6 +454,7 @@ module Courses =
                 select course
         } |> Seq.tryHead
 
+    // not needed
     let tryGetCourseCategory id (ctx: DbContext ) =
         log.Debug(sprintf "%s %d " "tryGetCourseCategory" id)
         query {
@@ -419,10 +463,12 @@ module Courses =
                 select category
         } |> Seq.tryHead
 
+    // not needed
     let getCourseCategory id (ctx: DbContext) =
         log.Debug(sprintf "getCourseCategory %d" id)
         ctx.Public.Coursecategories |> Seq.find (fun x -> x.Categoryid = id)
 
+    // not needed
     let tryFindCategoryByName categoryName (ctx: DbContext) : CourseCategories option =
         log.Debug(sprintf "%s %s" "tryFindCategoryByName" categoryName )
         query {
@@ -431,43 +477,53 @@ module Courses =
             select category
         } |> Seq.tryHead
 
+    // not needed
     let getAllourseCategories (ctx: DbContext) =
         log.Debug("getAllourseCategories")
         ctx.Public.Coursecategories |> Seq.toList
 
+    // not needed
     let getActiveCategories (ctx: DbContext): CourseCategories list =
         log.Debug("getActiveCategories")
         ctx.Public.Coursecategories |> Seq.toList |> List.filter (fun (x:CourseCategories) -> x.Visibile)
 
+    // not needed
     let getActiveConcreteCategories (ctx: DbContext): CourseCategories list =
         log.Debug("getActiveCategories")
         ctx.Public.Coursecategories |> Seq.toList |> List.filter (fun (x:CourseCategories) -> x.Visibile && not x.Abstract) |> List.sortBy (fun x -> x.Name)
 
 module States =
 
+    // not needed: will reduce to collecting started doing done or similar
     let getStateByName stateName (ctx: DbContext) =
         log.Debug(sprintf "%s %s" "getStateByName" stateName)
         ctx.Public.States |> Seq.find (fun (x:State) -> x.Statusname = stateName)
 
+    // not needed: states are fixed
     let getAllStates (ctx:DbContext) =
         log.Debug("getAllStates")
         ctx.Public.States |> Seq.toList
 
+    // not needed
     let getOrdinaryStates (ctx: DbContext): State list =
         log.Debug("getOrdinaryStates")
         ctx.Public.States |>  Seq.filter (fun (x:State) -> (not x.Isexceptional) ) |> Seq.toList
 
+    // not needed
     let getFinalState (ctx:DbContext) =
         ctx.Public.States |> Seq.find( fun (x:State) -> x.Isfinal)
 
+    // not needed
     let getState id (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "getState" id)
         ctx.Public.States |> Seq.find (fun (x:State) -> x.Stateid = id)
 
+    // not needed
     let tryGetStateByName statName (ctx:DbContext) =
         log.Debug(sprintf "tryGetStateByName %s" statName)
         ctx.Public.States |> Seq.tryFind (fun (x:State)-> x.Statusname = statName) 
 
+    // not needed
     let getInitState (ctx:DbContext): State =
         log.Debug("getInitState")
         let initState =
@@ -568,6 +624,7 @@ module Orders =
                 select orderItemDetail
         } |> Seq.tryHead
 
+    // ported OrdersSystem.GetOrderItemsOfOrder
     let getOrderItemsOfOrder orderId (ctx: DbContext) =
         log.Debug(sprintf "%s %d" "getOrderItemsOfOrder" orderId)
         query {
@@ -901,6 +958,7 @@ let tryGetStandardVariationByName name (ctx:DbContext) =
         select item
     } |> Seq.tryHead
 
+// not done
 let getStandardVariation id (ctx:DbContext) =
     log.Debug(sprintf "getStandardVariation %d" id)
     ctx.Public.Standardvariations |> Seq.find (fun x -> x.Standardvariationid = id)

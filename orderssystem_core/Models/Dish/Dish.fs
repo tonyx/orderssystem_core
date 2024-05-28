@@ -35,7 +35,7 @@ open Sharpino.Core
             PossibleAlternativeQuantities: List<IngredientMeasureItemType>
         }
 
-    type Dish private (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientAndQuantities: List<IngredientAndQuantity>, active: bool) =
+    type Dish private (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientAndQuantities: List<IngredientAndQuantity>, active: bool, visible: bool) =
 
         member this.Id = id
         member this.Name = name
@@ -43,10 +43,11 @@ open Sharpino.Core
         member this.IngredientAndQuantities = ingredientAndQuantities
 
         member this.DishTypes = dishTypes
+        member this.Visible = visible
         member this.Active = active
 
         new (id: Guid, name: string, dishTypes: List<DishTypes>, ingredientRefs: List<IngredientAndQuantity>) =
-            Dish (id, name, dishTypes, ingredientRefs, true) 
+            Dish (id, name, dishTypes, ingredientRefs, true, true) 
 
         member this.AddDishType (dishType: DishTypes) =
             result {
@@ -55,8 +56,24 @@ open Sharpino.Core
                     |> List.contains dishType
                     |> not
                     |> Result.ofBool "DishType already exists"
-                return Dish (id, name, dishType :: dishTypes, this.IngredientAndQuantities)
+                return Dish (id, name, dishType :: dishTypes, this.IngredientAndQuantities, this.Active, this.Visible)
             }
+
+        // todo: DishTO should have a visible field
+        member this.Update (dishTo: DishTO) =
+            result {
+                do! 
+                    dishTo.Id = this.Id
+                    |> Result.ofBool "Dish Id does not match"
+                let dish = Dish (id, dishTo.Name, dishTo.DishTypes, this.IngredientAndQuantities, this.Active, this.Visible)
+                return dish
+            }
+            
+        member this.SetVisible () =
+            Dish (id, name, dishTypes, ingredientAndQuantities, this.Active, true) |> Ok
+
+        member this.SetInvisible () =
+            Dish (id, name, dishTypes, ingredientAndQuantities, this.Active, false) |> Ok            
 
         member this.RemoveDishType (dishType: DishTypes) =
             result {
@@ -68,11 +85,11 @@ open Sharpino.Core
                     this.DishTypes 
                     |> List.length > 1
                     |> Result.ofBool "Dish must have at least one type"
-                return Dish (id, name, dishTypes |> List.filter ((<>) dishType), this.IngredientAndQuantities)
+                return Dish (id, name, dishTypes |> List.filter ((<>) dishType), this.IngredientAndQuantities, this.Active, this.Visible)
             }
 
         member this.Deactivate () =
-            Dish (id, name, dishTypes, ingredientAndQuantities, false) |> Ok
+            Dish (id, name, dishTypes, ingredientAndQuantities, false, this.Visible) |> Ok
         member this.UpdateName (newName: string) =
             result {
                 do! 
@@ -90,7 +107,7 @@ open Sharpino.Core
                     |> List.contains ingredientAndQuantity.IngredientId
                     |> not
                     |> Result.ofBool "Ingredient already exists"
-                return Dish (id, name, dishTypes, ingredientAndQuantity :: ingredientAndQuantities)
+                return Dish (id, name, dishTypes, ingredientAndQuantity :: ingredientAndQuantities, this.Active, this.Visible)
             }
         member this.RemoveIngredient (ingredientId: Guid) =
             result {
@@ -99,7 +116,7 @@ open Sharpino.Core
                     |>> (fun x -> x.IngredientId)
                     |> List.contains ingredientId
                     |> Result.ofBool "Ingredient does not exist"
-                return Dish (id, name, dishTypes, ingredientAndQuantities |> List.filter (fun x -> x.IngredientId <> ingredientId))
+                return Dish (id, name, dishTypes, ingredientAndQuantities |> List.filter (fun x -> x.IngredientId <> ingredientId), this.Active, this.Visible)
             }
         member this.ToDishTO  =
             { Id = id; Name = name; DishTypes = dishTypes }

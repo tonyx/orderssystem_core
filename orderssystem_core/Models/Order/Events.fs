@@ -11,21 +11,12 @@ open FsToolkit.ErrorHandling
 
 type OrderEvents =
     | Deactivated 
-    | OrderItemAdded of OrderItem
-    | OrderItemRemoved of Guid
-    | OrderItemChanged of OrderItem
 
         interface Event<Order>  with
             member this.Process order =
                 match this with
                 | Deactivated -> 
                     order.Deactivate ()
-                | OrderItemAdded item -> 
-                    order.AddOrderItem item
-                | OrderItemRemoved item -> 
-                    order.RemoveOrderItem item
-                | OrderItemChanged item -> 
-                    order.ChangeOrderItem item
     member this.Serialize =
         globalSerializer.Serialize this
     static member Deserialize json =

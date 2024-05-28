@@ -15,7 +15,7 @@ type Table private (id: Guid, description: Option<string>, number: int, seats: i
     member this.Active = active
     member this.Description = description
 
-    private new (id: Guid, description: Option<string>, number: int, seats: int) =
+    new (id: Guid, description: Option<string>, number: int, seats: int) =
         Table (id, description, number, seats, true)
 
     new (number: int, seats: int) =

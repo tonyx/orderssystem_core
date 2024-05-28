@@ -13,6 +13,15 @@ open Sharpino.Core
         | Pieces
         | Other of string
 
+    type IngredientCategories =
+        | Meat
+        | Fish
+        | Vegetable
+        | Fruit
+        | Dairy
+        | Grain
+        | Other of string
+
     type IngredientTypes =
         | Meat
         | Fish
@@ -22,25 +31,64 @@ open Sharpino.Core
         | Grain
         | Other of string
 
+    type IngredientPrice =
+        {
+            IngredientId: Guid
+            Price: float
+            Quantity: float
+            MeasuringSystem: IngredientMeasureType
+        }
+        with 
+        static member mkIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
+            { IngredientId = ingredientId; Price = price; Quantity = quantity; MeasuringSystem = measuringSystem }
+
     type IngredientTO =
         {
             Id: Guid
             Name: string
             IngredientTypes: List<IngredientTypes>
             IngredientMeasureTypes: List<IngredientMeasureType>
+            Active: bool
+            IngredientPrices: List<IngredientPrice>
+
         }
 
-    type Ingredient private (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasureTypes: List<IngredientMeasureType>, active: bool) =
-
+    type Ingredient private (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasureTypes: List<IngredientMeasureType>, active: bool, ingredientPrices: List<IngredientPrice>) =
         let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
         member this.IngredientTypes = ingredientTypes
         member this.IngredientMeasureTypes = ingredientMeasureTypes
+        member this.IngredientPrices = ingredientPrices
         member this.Active = active
 
         new (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasureType>) =
-            Ingredient (id, name, ingredientTypes, ingredientMeasures, true)
+            Ingredient (id, name, ingredientTypes, ingredientMeasures, true, [])
+
+
+        member this.AddIngredientPrice (ingredientPrice: IngredientPrice) =
+            result {
+                let! measureSystemIsCompatible = 
+                    this.IngredientMeasureTypes 
+                    |> List.contains ingredientPrice.MeasuringSystem
+                    |> Result.ofBool "Measuring system is not compatible with ingredient"
+
+                do! 
+                    this.IngredientPrices 
+                    |> List.contains ingredientPrice
+                    |> not
+                    |> Result.ofBool "IngredientPrice already exists"
+                return Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices)
+            }
+
+        member this.RemoveIngredientPrice (ingredientPrice: IngredientPrice) =
+            result {
+                do! 
+                    this.IngredientPrices 
+                    |> List.contains ingredientPrice
+                    |> Result.ofBool "IngredientPrice does not exist"
+                return Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, active, ingredientPrices |> List.filter ((<>) ingredientPrice))
+            }
 
         member this.AddIngredientType (ingredientType: IngredientTypes) =
             result {
@@ -71,8 +119,16 @@ open Sharpino.Core
                 return Ingredient (id, newName, ingredientTypes, ingredientMeasureTypes)
             }
 
+        member this.Update (ingredient: Ingredient) =
+            result {
+                do! 
+                    ingredient.Id = this.Id
+                    |> Result.ofBool "Ingredient Id does not match"
+                return ingredient
+            }
+
         member this.Deactivate () =
-            Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, false) |> Ok
+            Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, false, ingredientPrices) |> Ok
 
         member this.AddIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
             result {
@@ -98,9 +154,11 @@ open Sharpino.Core
                 Name = this.Name; 
                 IngredientTypes = this.IngredientTypes; 
                 IngredientMeasureTypes = this.IngredientMeasureTypes 
+                Active = this.Active;
+                IngredientPrices = this.IngredientPrices
             }
         static member FromIngredientTO (ingredientTO: IngredientTO) =
-            Ingredient (ingredientTO.Id, ingredientTO.Name, ingredientTO.IngredientTypes, ingredientTO.IngredientMeasureTypes)
+            Ingredient (ingredientTO.Id, ingredientTO.Name, ingredientTO.IngredientTypes, ingredientTO.IngredientMeasureTypes, ingredientTO.Active, ingredientTO.IngredientPrices)
 
         static member SnapshotsInterval =
             15

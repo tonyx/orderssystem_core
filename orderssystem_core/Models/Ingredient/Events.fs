@@ -14,6 +14,9 @@ type IngredientEvents =
     | Deactivated 
     | IngredientMeasureTypeAdded of IngredientMeasureType
     | IngredientMeasureTypeRemoved of IngredientMeasureType
+    | IngredientUpdated of Ingredient
+    | IngredientPriceAdded of IngredientPrice
+    | IngredientPriceRemoved of IngredientPrice
 
         interface Event<Ingredient>  with
             member this.Process ingredient =
@@ -30,6 +33,14 @@ type IngredientEvents =
                     ingredient.RemoveIngredientMeasureType ingredientMeasure
                 | Deactivated ->
                     ingredient.Deactivate ()
+                | IngredientPriceAdded ingredientPrice ->
+                    ingredient.AddIngredientPrice ingredientPrice
+                | IngredientPriceRemoved ingredientPrice ->
+                    ingredient.RemoveIngredientPrice ingredientPrice
+                | IngredientUpdated ingredient ->
+                    ingredient.Update ingredient
+                
+
     member this.Serialize =
         globalSerializer.Serialize this
     static member Deserialize json =

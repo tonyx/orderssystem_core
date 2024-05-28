@@ -13,8 +13,11 @@ type DishEvents =
     | IngredientAndQuantityAdded of IngredientAndQuantity
     | IngredientRemoved of Guid
     | NameUpdated of String
-    | Deactivated 
-
+    | Updated of DishTO
+    | InvisibleSet
+    | VisibleSet
+    | Deactivated
+    
         interface Event<Dish>  with
             member this.Process dish =
                 match this with
@@ -30,6 +33,12 @@ type DishEvents =
                     dish.UpdateName name
                 | Deactivated -> 
                     dish.Deactivate ()
+                | Updated dishTo ->
+                    dish.Update dishTo
+                | InvisibleSet ->
+                    dish.SetInvisible ()
+                | VisibleSet ->
+                    dish.SetVisible ()
 
     member this.Serialize =
         globalSerializer.Serialize this
