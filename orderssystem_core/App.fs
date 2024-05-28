@@ -47,6 +47,10 @@ open System.Diagnostics
 open Sharpino.Storage
 
 
+
+log4net.Config.BasicConfigurator.Configure() |> ignore
+
+
 let _ = 
     QuestPDF.Settings.License <- LicenseType.Community
 
@@ -83,13 +87,18 @@ let session f =
         | None -> f NoSession
         | Some state ->
             printf "this is the state %A\n" state
+            
             match state.get "cartid", state.get "username", state.get "role", state.get "userid", state.get "roleid",state.get "temporary", state.get "canmanagecourses", state.get "canmanageallorders"  with 
             | Some cartId, None, None, None,None,None,None,None ->
+                printf "XXx. cart only"
                 f (CartIdOnly cartId)
             // | _, Some username, Some role, Some userid, Some roleid,Some temporary,Some canmanagecourses,Some canmanageallorders ->
-            | _, Some username, _, Some userid, Some roleid,Some temporary,Some canmanagecourses,Some canmanageallorders -> // focus I am faking
-                f (UserLoggedOn {Username = username; Role = ""; UserId = userid;RoleId=roleid;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
+            | _, Some username, _, Some userid, _ ,Some temporary,Some canmanagecourses,Some canmanageallorders -> // focus I am faking
+                log.Debug (sprintf "XXx. %s is logged on" username)
+                printf "XXx. is logged on\n"
+                f (UserLoggedOn {Username = username; Role = ""; UserId = userid; RoleId = 0 ;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
             | _ -> 
+                printf "XXx. is not logged on"
                 f NoSession)
 
 let redirectWithReturnPath redirection =
@@ -203,13 +212,16 @@ let anyUserPassingUserLoggedOn f_success =
     loggedOn (session (function
         | UserLoggedOn { Role = role;Username = username;UserId=userid;RoleId=roleid;Temporary=X} -> 
             // let dbUser =  Db.Users.getUser(userid) ctx
+            printf "XXX. going to get user\n"
             let dbUser =  (ordersSystem.GetUser userid).OkValue // todo fix
+            printf "XXX. got  user\n"
             if (dbUser.Active) then f_success {Role=role;Username=username;UserId=userid;RoleId=roleid;Temporary=X;CanManageAllCourses= dbUser.CanManageAllDishes ;CanManageAllOrders=dbUser.CanManageAllOrders} else FORBIDDEN "user is not enabled"
         | UserLoggedOn _ -> FORBIDDEN "Only for logged on users"
         | _ -> UNAUTHORIZED "Not logged in"
     ))
 
 let adminPassingUserLoggedOn f_success =
+    log.Debug "XXX. adminPassingUserLoggedOn"
     loggedOn (session (function
         | UserLoggedOn { Role = "admin";Username = username;UserId=userid;RoleId=roleid} -> f_success {Role="admin";Username=username;UserId=userid;RoleId=roleid;Temporary=false;CanManageAllCourses=true;CanManageAllOrders=true}
         | UserLoggedOn _ -> FORBIDDEN "Only for admins"
@@ -310,8 +322,7 @@ let makeOrderItemAsRejectedIfContainsUnavalableIngredients orderItemId ctx =
     Redirection.FOUND Path.home
 
 let makeOrderItemRejectedIfContainsInvisibleIngredients orderItemId ctx =
-    
-    // log.Debug(sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId) 
+    log.Debug(sprintf "makeOrderItemRejectedIfContainsInvisibleIngredients %d" orderItemId) 
     // let orderItemDetail = Db.Orders.getOrderItemDetail orderItemId ctx
     // let ingredientOfCourse = Db.getIngredientsOfACourse orderItemDetail.Courseid ctx
     // let invisibleIngredients = ingredientOfCourse |> List.filter (fun (x:Db.IngredientOfCourse ) -> (not x.Visibility || not x.Categoryvisibility)) 
@@ -398,7 +409,8 @@ let logon =
 let deleteObjects = 
     View.objectDeletionPage |> html
 
-let error = 
+let error =
+    log.Debug "XXX. not found"
     View.notFound |> html
 
 let deleteUsers = warbler (fun _ ->
@@ -412,7 +424,7 @@ let deleteUsers = warbler (fun _ ->
 )
 
 let deleteTemporaryUsers = warbler (fun _ ->
-    // log.Debug("deleteTemporaryUsers")
+    log.Debug("deleteTemporaryUsers")
     // let ctx = Db.getContext()
     // let ordinaryUsers = Db.Users.getTemporaryUsersView ctx |> List.filter  (fun (x:Db.UsersView) -> x.Rolename <> "admin")
     // View.userDeletionPage ordinaryUsers Path.Admin.deleteTemporaryUsers |> html
@@ -421,7 +433,7 @@ let deleteTemporaryUsers = warbler (fun _ ->
 )
 
 let deleteUserRoles = warbler (fun _ -> 
-    // log.Debug("deleteUserRoles")
+    log.Debug("deleteUserRoles")
     // let ctx = Db.getContext()
     // let allUserRoles = Db.getAllRoles ctx
     // View.rolesDeletionPage allUserRoles |> html)
@@ -430,7 +442,7 @@ let deleteUserRoles = warbler (fun _ ->
     )
 
 let alignAllPricesOfAnOrder orderId =
-    // log.Debug("alignAllPricesOfAnOrder")
+    log.Debug("alignAllPricesOfAnOrder")
     // let ctx = Db.getContext()
     // let order = Db.Orders.getOrder orderId ctx
     // let orderItems = order.``public.orderitems by orderid``
@@ -447,7 +459,7 @@ let alignAllPricesOfAnOrder orderId =
 
 // porting: OrdersSystem.RemoveIngredient
 let deleteIngredientsBySelection =
-    // log.Debug("deleteIngredientsBySelection")
+    log.Debug("deleteIngredientsBySelection")
     // choose [
     //     GET >=> 
     //         warbler (fun _ ->
@@ -473,8 +485,7 @@ let deleteIngredientsBySelection =
     Redirection.FOUND Path.home
 
 let deleteIngredients = warbler (fun _ ->
-    
-    // log.Debug("deleteIngredients")
+    log.Debug("deleteIngredients")
     // let ctx = Db.getContext()
     // let allIngredients = Db.getAllIngredients ctx
     // View.ingredientsDeletionPage allIngredients |> html
@@ -483,9 +494,7 @@ let deleteIngredients = warbler (fun _ ->
 
 // porting OrdersSystem.RemoveRole
 let deleteUserRole id =
-    Redirection.FOUND Path.home
-    
-    // log.Debug("deleteUserRole")
+    log.Debug("deleteUserRole")
     // let ctx = Db.getContext()
     // try
     //     Db.safeDeleteRole id ctx
@@ -494,26 +503,28 @@ let deleteUserRole id =
     // | ex ->
     //     log.Error("Error in deleteUserRole", ex)
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
+    Redirection.FOUND Path.home
 
 let deleteIngredient id =
-    Redirection.FOUND Path.home
+    log.Debug("deleteIngredient")
     
-    // log.Debug("deleteIngredient")
     // let ctx = Db.getContext()
     // Db.safeDeleteIngredient id ctx
     // Redirection.found Path.Admin.deleteObjects 
+    
+    Redirection.FOUND Path.home
 
 let deletePrinter id =
+    log.Debug("deletePrinter")
     
     Redirection.FOUND Path.home
     
-    // log.Debug("deletePrinter")
     // let ctx = Db.getContext()
     // Db.safeRemovePrinter id ctx
     // Redirection.found Path.Admin.printers
 
 let deleteIngredientPrice id =
-    Redirection.FOUND Path.home
+    log.Debug("deleteIngredientPrice")
     
     // log.Debug("deleteIngredientPrice")
     // let ctx = Db.getContext()
@@ -526,9 +537,11 @@ let deleteIngredientPrice id =
     // | ex ->
     //     log.Error("Error in deleteIngredientPrice", ex)
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
+    
+    Redirection.FOUND Path.home
 
 let deleteCourseCategories =
-    Redirection.FOUND Path.home
+    log.Debug("deleteCourseCategories")
     
     // log.Debug("deleteCourseCategories")
     // choose [
@@ -538,9 +551,12 @@ let deleteCourseCategories =
     //         View.courseCategoriesDeletionPage allCourseCategories |> html
     //     )
     // ]
+    
+    Redirection.FOUND Path.home
 
 let deleteIngredientCategories  =
-    Redirection.FOUND Path.home
+    log.Debug("deleteIngredientCategories")
+    
     
     
     // warbler ( fun _ ->
@@ -549,8 +565,11 @@ let deleteIngredientCategories  =
     // let allIngredientCategories = Db.getAllIngredientCategories ctx
     // View.ingredientCategoriesDeletionPage allIngredientCategories |> html
     // )
+    Redirection.FOUND Path.home
 
 let deleteCourses = 
+    log.Debug("deleteCourses")
+    
     Redirection.FOUND Path.home
     
     // log.Debug("deleteCourses")
@@ -578,6 +597,7 @@ let deleteCourses =
     // ]
 
 let emtpy =
+    log.Debug("empty")
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -591,6 +611,8 @@ let emtpy =
     // )) 
 
 let controlPanel (userLoggedOn:UserLoggedOnSession) =
+    log.Debug "XXX. controlpanel"
+    printf "XXX. controlpanel\n"
     // Redirection.FOUND Path.home
     
     warbler (fun _ ->
@@ -604,23 +626,29 @@ let controlPanel (userLoggedOn:UserLoggedOnSession) =
 )
 
 let controlPanelRef  =
+    log.Debug("XXXX. controlPanel")
+    printf "XXXX. controlPanel"
+    
     Redirection.FOUND Path.home
     
-    
-//     warbler (fun _ ->
-//     loggedOn (session (function 
-//         | UserLoggedOn userLoggedOn ->
-//             log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
-//             let ctx = Db.getContext()
-//             let user = Db.getUserById userLoggedOn.UserId ctx
-//             View.controlPanel userLoggedOn user |> html
-//         | _ -> FORBIDDEN "not logged on"
-//         )
-//     )
-// )
+    warbler (fun _ ->
+    loggedOn (session (function 
+        | UserLoggedOn userLoggedOn ->
+            log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
+            // let ctx = Db.getContext()
+            // let user = Db.getUserById userLoggedOn.UserId ctx
+            
+            let user = (ordersSystem.GetUser userLoggedOn.UserId).OkValue
+            log.Debug("YYYY. got user!!!!!")
+            View.controlPanel userLoggedOn user |> html
+        | _ -> FORBIDDEN "not logged on"
+        )
+    )
+)
 
 // FOCUS: porting OrdersSystem.GetOrderDetails
 let userEnabledToSeeWholeDoneOrers userId = 
+    log.Debug(sprintf "userEnabledToSeeWholeDoneOrers %d" userId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "userEnabledToSeeWholeDoneOrers %d" userId)
@@ -628,6 +656,7 @@ let userEnabledToSeeWholeDoneOrers userId =
     // Db.isUserEnabledToSeeWholeOrders userId ctx
 
 let categoriesManagement (userLoggedOn:UserLoggedOnSession) =
+    log.Debug(sprintf "categoriesManagement by user%s" userLoggedOn.Username )
     Redirection.FOUND Path.home
     
 //     warbler (fun _ ->
@@ -638,6 +667,7 @@ let categoriesManagement (userLoggedOn:UserLoggedOnSession) =
 // )
 
 let qrOrder (userLoggedOn:UserLoggedOnSession) = 
+    log.Debug(sprintf "qrOrder by user: %s" userLoggedOn.Username)
     Redirection.FOUND Path.home
 
 // warbler (fun _ ->
@@ -659,6 +689,8 @@ let qrOrder (userLoggedOn:UserLoggedOnSession) =
 //     View.qrOrder userLoggedOn orders activeCategories orderItemsOfOrders mapOfStates  eventualRejectionsOfOrderItems |> html)
 
 let myOrders (userLoggedOn:UserLoggedOnSession) =
+    log.Debug(sprintf "myOrders by user:%s " userLoggedOn.Username)
+    
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -683,6 +715,7 @@ let myOrders (userLoggedOn:UserLoggedOnSession) =
 
 // FOCUS: porting OrdersSystem.GetOrdersOfUser
 let myOrdersSingles (userLoggedOn:UserLoggedOnSession) =
+    log.Debug("myOrdersSingles")
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -702,6 +735,7 @@ let myOrdersSingles (userLoggedOn:UserLoggedOnSession) =
     // View.ordersListbySingles userView  myOrders  otherOrders  mapOfLinkedStates statesEnabledForUser   initialStateId  outGroupsOfOrders |> html)
 
 let ordinaryUsers  =
+    log.Debug("ordinaryUsers")
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -712,6 +746,7 @@ let ordinaryUsers  =
 
 // FOCUS: porting OrdersSystem.GetTemporaryUsers (0)
 let temporaryUsers =
+    log.Debug("temporaryUsers")
     Redirection.FOUND Path.home
     
 //     warbler (fun _ ->
@@ -722,7 +757,8 @@ let temporaryUsers =
 // )
 
 // not done
-let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =  
+let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =
+    log.Debug (sprintf "switchVisbilityOfIngredientCategory %d" ingredientCatgoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "switchVisbilityOfIngredientCategory %d" ingredientCatgoryId)
@@ -745,6 +781,7 @@ let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =
     // )
 
 let switchVisbilityOfIngredient ingredientCategoryId ingredientId  =
+    log.Debug (sprintf "switchVisbilityOfIngredient %d"  ingredientId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "switchVisbilityOfIngredient %d"  ingredientId)
@@ -768,6 +805,7 @@ type IngredientNameModel = {ingredientname: string}
 
 // not implemented in OrderSystem
 let viewIngredientUsage ingredientId pageNumberBack =
+    log.Debug (sprintf "viewIngredientUsage %d" ingredientId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "viewIngredientUsage %d" ingredientId)
@@ -786,6 +824,7 @@ let viewIngredientUsage ingredientId pageNumberBack =
 
 // not implemented in OrderSystem
 let fillIngredient id pageNumberBack (user:UserLoggedOnSession) =
+    log.Debug (sprintf "fillIngredient %d" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "fillIngredient %d" id)
@@ -816,6 +855,7 @@ let fillIngredient id pageNumberBack (user:UserLoggedOnSession) =
 
 // FOCUS: add and remove ingredient prices are implemented in orderssystem
 let editIngredientPrices id =
+    log.Debug (sprintf "editIngredientPrices %d" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "editIngredientPrices %d" id)
@@ -842,6 +882,7 @@ let editIngredientPrices id =
 
 // FOCUS: ported OrdersSystem.GetIngredientPrices
 let editIngredient id  pageNumberBack =
+    log.Debug (sprintf "editIngredient %d" id)  
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "editIngredient" id)
@@ -891,6 +932,7 @@ let editIngredient id  pageNumberBack =
     // ]
 
 let editIngredientCategoryPaginated (idCategory:int) (pageNumber: int) =
+    log.Debug (sprintf "%s %d %d" "editIngredientCategoryPaginated" idCategory pageNumber)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "editIngredientCategoryPaginated" idCategory pageNumber)
@@ -914,6 +956,7 @@ let editIngredientCategoryPaginated (idCategory:int) (pageNumber: int) =
 
 // will ditch ingredient categories
 let editIngredientCategory (idCategory: int) (user: UserLoggedOnSession) =
+    log.Debug (sprintf "%s %d" "editIngredientCategory" idCategory)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "editIngredientCategory" idCategory)
@@ -956,6 +999,7 @@ let editIngredientCategory (idCategory: int) (user: UserLoggedOnSession) =
 
 // ingredient categories will be hard coded and "other"
 let visibleingredientCategories =
+    log.Debug "visibleingredientCategories"
     Redirection.FOUND Path.home
     
     // log.Debug("visibleingredientCategories")
@@ -996,6 +1040,7 @@ type MyPrinterModel =
 
 // FOCUS no printer in domain model  (yet)
 let managePrinter printerId categoryId =
+    log.Debug (sprintf "%s %d %d" "managePrinter" printerId categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "managePrinter" printerId categoryId)
@@ -1085,7 +1130,8 @@ let managePrinter printerId categoryId =
     //         Redirection.FOUND (sprintf Path.Admin.managePrinter printerId ((int)categoryId)))
     // ]
 
-let recognizePrinters = 
+let recognizePrinters =
+    log.Debug "recognizePrinters"
     Redirection.FOUND Path.home
     
     // log.Debug("recognizePrinters")
@@ -1102,6 +1148,7 @@ let recognizePrinters =
     // )
 
 let resetPrinters =
+    log.Debug "resetPrinters"
     Redirection.FOUND Path.home
     
     // log.Debug("resetPrinters")
@@ -1112,6 +1159,7 @@ let resetPrinters =
     // )
 
 let adminPrinters =
+    log.Debug("adminPrinters")
     Redirection.FOUND Path.home
     
     // log.Debug("adminPrinters")
@@ -1127,7 +1175,8 @@ let about =
         View.about |> html
     )
 
-let adminIngredientCategories = 
+let adminIngredientCategories =
+    log.Debug "adminIngredientCategories"
     Redirection.FOUND Path.home
     
     // log.Debug("adminIngredientCategories")
@@ -1150,7 +1199,9 @@ let adminIngredientCategories =
     //     )
     // ]
 
-let adminRoles  =  
+let adminRoles  =
+    log.Debug("adminRoles")
+    
     Redirection.FOUND Path.home
     // log.Debug("adminRoles")
     // let ctx = Db.getContext()
@@ -1162,6 +1213,7 @@ let adminRoles  =
     // )
 
 let adminCategories  = 
+    log.Debug("adminCategories")
     Redirection.FOUND Path.home
     // log.Debug("adminCategories")
     // let ctx = Db.getContext()
@@ -1180,6 +1232,7 @@ let adminCategories  =
 
 // FOCUS: porting OrdersSystem.GetAllOrders
 let allOrders (userLoggedOn:UserLoggedOnSession) =
+    log.Debug "allOrders"
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -1203,6 +1256,7 @@ let allOrders (userLoggedOn:UserLoggedOnSession) =
 
 // FOCUS: let's see (billing)
 let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
+    log.Debug (sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrder %d" orderId)
     failwith "unimplemented"
     // Redirection.FOUND Path.home
     // log.Debug(sprintf "allSubOrdersOfOrderDetailBelongsToAPaidSubOrderRef  %d" orderId)
@@ -1213,6 +1267,7 @@ let allSubOrdersOfOrderDetailBelongsToAPaidSubOrder orderId =
 
 // In case of use of ecr protocol
 let createEcrReceiptInstructionForSubOrder subOrderId orderId =
+    log.Debug (sprintf "createEcrReceiptInstructionForSubOrder %d %d" subOrderId orderId)   
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "createEcrReceiptInstructionForSubOrder subOrderId:%d orderId%d" subOrderId orderId)
@@ -1249,6 +1304,7 @@ let createEcrReceiptInstructionForSubOrder subOrderId orderId =
 
 // In case of use of ecr protocol
 let createEcrReceiptInstructionForOrder  orderId =
+    log.Debug (sprintf "createEcrReceiptInstructionForOrder %d" orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "createEcrReceiptInstructionForSubOrder %d" orderId)
@@ -1288,6 +1344,7 @@ let createEcrReceiptInstructionForOrder  orderId =
     //     Redirection.found Path.Errors.unableToCompleteOperation
 // NOT DONE
 let defaultActionableStatesForOrderOwner =
+    log.Debug "defaultActionableStatesForOrderOwner"
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -1299,6 +1356,7 @@ let defaultActionableStatesForOrderOwner =
 
 // NOT DONE
 let tempUserDefaultActionableStates =
+    log.Debug "tempUserDefaultActionableStates"
     Redirection.FOUND Path.home
     
     // warbler (fun _ ->
@@ -1310,6 +1368,7 @@ let tempUserDefaultActionableStates =
 
 // NOT DONE
 let specificActionableStateForOrderOwner id =
+    log.Debug(sprintf "specificActionableStateForOrderOwner %d" id)
     Redirection.FOUND Path.home
     
     
@@ -1323,6 +1382,7 @@ let specificActionableStateForOrderOwner id =
 
 // FOCUS: ORDERSSYSTE.GetAllDishes
 let manageCourses =
+    log.Debug "manageCourses"
     Redirection.FOUND Path.home
     
     
@@ -1333,7 +1393,8 @@ let manageCourses =
     // View.seeVisibleCourses "categoria" allCourses  |> html)
 
 // NOT DONE: categories are fixed
-let manageVisibleCoursesOfACategory categoryId =  
+let manageVisibleCoursesOfACategory categoryId =
+    log.Debug (sprintf "%s %d" "manageVisibleCoursesOfACategory" categoryId)
     Redirection.FOUND Path.home
     // log.Debug(sprintf "%s %d " "manageVisibleCoursesOfACategory" categoryId)
     // let ctx = Db.getContext()
@@ -1342,7 +1403,8 @@ let manageVisibleCoursesOfACategory categoryId =
     // View.seeVisibleCoursesOfACategory category allCourses |> html
 
 // NOT DONE: categories 
-let manageAllCoursesOfACategory categoryId =  
+let manageAllCoursesOfACategory categoryId =
+    log.Debug (sprintf "%s %d " "manageAllCoursesOfACategory" categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "manageAllCoursesOfACategory" categoryId)
@@ -1353,6 +1415,7 @@ let manageAllCoursesOfACategory categoryId =
 
 // FOCUS: easy to filter dishes by category
 let manageAllCoursesOfACategoryPaginated categoryId pageNumber =
+    log.Debug (sprintf "%s %d %d" "manageAllCoursesOfACategoryPaginated" categoryId pageNumber)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "manageAllCoursesOfACategoryPaginated" categoryId categoryId )
@@ -1382,6 +1445,7 @@ let manageAllCoursesOfACategoryPaginated categoryId pageNumber =
 
 // FOCUS: easy to filter dishes by category
 let manageVisibleCoursesOfACategoryPaginated categoryId pageNumber =
+    log.Debug (sprintf "%s %d %d" "manageVisibleCoursesOfACategoryPaginated" categoryId pageNumber) 
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "manageVisibleCoursesOfACategoryPaginated" categoryId)
@@ -1396,6 +1460,7 @@ let manageVisibleCoursesOfACategoryPaginated categoryId pageNumber =
 
 // NOT DONE: categories are hard coded
 let manageCategories =
+    log.Debug "manageCategories"
     Redirection.FOUND Path.home
     
     
@@ -1407,6 +1472,8 @@ let manageCategories =
 
 // FOCUS: UPDATE
 let editCourse id  =
+    log.Debug(sprintf "%s %d " "editCourse" id)
+    
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "editCourse" id)
@@ -1449,6 +1516,7 @@ let editCourse id  =
     
 // categories are fixed    
 let editCourseCategory id =
+    log.Debug(sprintf "%s %d " "editCourseCategory" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "editCourseCategory" id)
@@ -1485,6 +1553,7 @@ let editCourseCategory id =
         
 // user update is ok in domain model etc... but let's see if it should be based on list of fiels, the To or the data itself
 let editUser id =
+    log.Debug(sprintf "%s %d " "editUser" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "editUser" id)
@@ -1512,6 +1581,7 @@ let editUser id =
     // | None -> never
 
 let editTemporaryUser id   =
+    log.Debug(sprintf "%s %d \n " "editTemporaryUser" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d \n " "editTemporaryUser" id)
@@ -1526,6 +1596,7 @@ let editTemporaryUser id   =
     // | None -> never
 
 let createCategory =
+    log.Debug "createCategory"
     Redirection.FOUND Path.home
     
     // log.Debug("createCategory")
@@ -1554,13 +1625,15 @@ let createCategory =
 
 
 let setEnablerStatesForUser (statesId: int list) (userId:int) =
+    log.Debug (sprintf "%s %d " "setEnablerStatesForUser" userId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d  " "setEnablerStatesForUser" userId)
     // let ctx = Db.getContext()
     // Db.setEnablerStatesForUser statesId userId ctx
 
-let changePassword  (user:UserLoggedOnSession)= 
+let changePassword  (user:UserLoggedOnSession)=
+    log.Debug "changePassword"
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -1587,6 +1660,7 @@ let randomAlphanumericString() =
     } |> Seq.toArray |> (fun x -> new String(x))
 
 let regenTempUser userId =
+    log.Debug(sprintf "%s %d" "regenTempUser" userId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "regenTempUser" userId)
@@ -1612,7 +1686,9 @@ let regenTempUser userId =
     //     )
     // ]
 
-let addQrUser = 
+let addQrUser =
+    log.Debug("addQrUser")
+    
     Redirection.FOUND Path.home
     
     // log.Debug("addQrUser")
@@ -1645,7 +1721,8 @@ let addQrUser =
     //
     // ]
 
-let addUser = 
+let addUser =
+    log.Debug "addUser"
     Redirection.FOUND Path.home
     
     // log.Debug("addUser")
@@ -1682,6 +1759,7 @@ let addUser =
     // ]
 
 let getViableGroupOutIdentifiers orderId =
+    log.Debug (sprintf "getViableGroupOutIdentifiers %d" orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "getViableGroupOutIdentifiers %d" orderId)
@@ -1694,6 +1772,7 @@ let getViableGroupOutIdentifiers orderId =
     // availableNumbers |> List.map (fun x -> ((decimal) x,(string)x))
 
 let addOrderItemByAllCategoriesForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemByAllCategoriesForOrdinaryUsers"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByAllCategoriesForOrdinaryUsers orderId:%d " orderId)
@@ -1729,6 +1808,7 @@ let addOrderItemByAllCategoriesForOrdinaryUsers orderId backUrl (user:UserLogged
     // | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
 let addOrderItemByAllCategoriesForStrippedUsers orderId backUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemByAllCategoriesForStrippedUsers"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByAllCategoriesForOrdinaryUsers orderId:%d " orderId)
@@ -1763,6 +1843,7 @@ let addOrderItemByAllCategoriesForStrippedUsers orderId backUrl (user:UserLogged
     // | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
 let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemByCategoryForOrdinaryUsers"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d categoryId:%d" orderId categoryId)
@@ -1801,6 +1882,7 @@ let addOrderItemByCategoryForOrdinaryUsers orderId categoryId backUrl (user:User
     // | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
 let addOrderItemForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemForOrdinaryUsers"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByCategoryForOrdinaryUsers orderId:%d"  orderId )
@@ -1835,6 +1917,7 @@ let addOrderItemForOrdinaryUsers orderId backUrl (user:UserLoggedOnSession) =
     // | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
     
 let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession)=
+    log.Debug "addOrderItemByCategoryForStrippedUsers"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
@@ -1874,6 +1957,7 @@ let addOrderItemByCategoryForStrippedUsers orderId categoryId backUrl (user:User
     // | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
 let addOrderItemForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemForStrippedUsers"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByCategoryForStrippedUsers orderId:%d categoryId%d")
@@ -1911,7 +1995,8 @@ let addOrderItemForStrippedUsers orderId categoryId backUrl (user:UserLoggedOnSe
     //     ]
     // | _ -> Redirection.FOUND (Path.Orders.myOrders+"#order"+(orderId|> string))
 
-let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackUrl (user:UserLoggedOnSession) = 
+let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemByCategoryPassingUserLoggedOn"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemByCategoryPassingUserLoggedOn orderId:%d categoryId:%d" orderId categoryId)
@@ -1923,7 +2008,8 @@ let addOrderItemByCategoryPassingUserLoggedOn orderId categoryId urlEncodedBackU
     //     | false -> addOrderItemByCategoryForStrippedUsers orderId categoryId urlEncodedBackUrl  (user:UserLoggedOnSession)
     // )
 
-let addOrderItemPassingUserLoggedOn orderId urlEncodedBackUrl (user:UserLoggedOnSession) = 
+let addOrderItemPassingUserLoggedOn orderId urlEncodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug "addOrderItemPassingUserLoggedOn"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "addOrderItemPassingUserLoggedOn orderId:%d " orderId )
@@ -1936,6 +2022,7 @@ let addOrderItemPassingUserLoggedOn orderId urlEncodedBackUrl (user:UserLoggedOn
     // )
 
 let deleteOrderItem orderItemId =
+    log.Debug (sprintf "deleteOrderItem %d" orderItemId)
     Redirection.FOUND Path.home
     
     // try
@@ -1948,6 +2035,7 @@ let deleteOrderItem orderItemId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let deleteOrderItemByUser orderItemId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "deleteOrderItemByUser %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "deleteOrderItemByUser orderIteId: %d" orderItemId)
@@ -1967,6 +2055,7 @@ let deleteOrderItemByUser orderItemId encodedBackUrl (user:UserLoggedOnSession) 
     // )
 
 let setStateAsActionableForTempUserByDefault stateId =
+    log.Debug (sprintf "setStateAsActionableForTempUserByDefault stateId:%d" stateId)
     Redirection.FOUND Path.home
     
     // try
@@ -1980,6 +2069,7 @@ let setStateAsActionableForTempUserByDefault stateId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let setStateAsActiobableByDefault stateid =
+    log.Debug (sprintf "setStateAsActiobableByDefault %d" stateid)
     Redirection.FOUND Path.home
     
     // try
@@ -1993,6 +2083,7 @@ let setStateAsActiobableByDefault stateid =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let unSetStateAsActiobableByDefault stateid =
+    log.Debug (sprintf "unSetStateAsActiobableByDefault %d" stateid)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "unsetStateAsAciobableByDefault %d" stateid)
@@ -2006,6 +2097,7 @@ let unSetStateAsActiobableByDefault stateid =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let unSetStateAsActionableForTempUserByDefault stateid =
+    log.Debug (sprintf "unSetStateAsActionableForTempUserByDefault %d" stateid)
     Redirection.FOUND Path.home
     
     // try
@@ -2019,6 +2111,7 @@ let unSetStateAsActionableForTempUserByDefault stateid =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let setStateAsActionableForWaiter userId stateId =
+    log.Debug (sprintf "setStateAsActionableForWaiter userId:%d stateId%d" userId stateId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "unsetStateAsActionableForWaiter userId:%d stateId%d" userId stateId)
@@ -2033,6 +2126,7 @@ let setStateAsActionableForWaiter userId stateId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let unSetStateAsAcionableForWaiter userId stateId =
+    log.Debug (sprintf "unSetStateAsAcionableForWaiter userId:%d stateId%d" userId stateId)
     Redirection.FOUND Path.home
     // log.Debug(sprintf "unsetStateAsAcionableForWaiter userId:%d stateId%d" userId stateId)
     // try
@@ -2046,6 +2140,7 @@ let unSetStateAsAcionableForWaiter userId stateId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let deleteEnablerMapping id =
+    log.Debug (sprintf "deleteEnablerMapping %d" id)
     Redirection.FOUND Path.home
     // log.Debug(sprintf "deleteEnablerMapping %d" id)
     // try
@@ -2058,6 +2153,7 @@ let deleteEnablerMapping id =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let deleteObserverMapping id =
+    log.Debug (sprintf "deleteObserverMapping %d" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "deleteObserverMapping %d" id)
@@ -2099,6 +2195,7 @@ let deleteObserverMapping id =
     //     log.Error("Error in moveOrderItemNextState", ex)
 
 let moveAllOrderItemsInBlockFromInitialState orderId (user:UserLoggedOnSession) =
+    log.Debug (sprintf "moveAllOrderItemsInBlockFromInitialState %d" orderId)   
     Redirection.FOUND Path.home
     
     // try
@@ -2272,6 +2369,7 @@ let removeSpooledFiles() =
     //     log.Error("Error in printOrderOutGroup", ex)
 
 let rePrintOrderOutGroup orderId orderOutGroupId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "rePrintOrderOutGroup %d" orderOutGroupId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "rePrintOrderOutGrop %d" orderOutGroupId)
@@ -2326,6 +2424,7 @@ let rePrintOrderOutGroup orderId orderOutGroupId encodedBackUrl (user:UserLogged
     // | H::T -> [H::(List.filter (fun (x: Db.OrderItem) -> twoOrderItemsAreIdentical x  H) T )] @ detectIdenticalOrderItemsAndMakeChunks ((List.filter (fun (x:Db.OrderItem) -> not (twoOrderItemsAreIdentical x  H)) T))
 
 let moveInitialStateOrderItemsByOrderOutGroup orderId orderOutGroupId  encodedBackUrl (user:UserLoggedOnSession)  =
+    log.Debug (sprintf "moveInitialStateOrderItemsByOrderOutGroup %d %d" orderId orderOutGroupId)   
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s orderId %d orderOutGroupId %d" "moveInitialStateOrderItemsByOrderOutGroup" orderId orderOutGroupId)
@@ -2362,6 +2461,7 @@ let moveInitialStateOrderItemsByOrderOutGroup orderId orderOutGroupId  encodedBa
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let adjustTotalOfOrder orderId =
+    log.Debug (sprintf "adjustTotalOfOrder %d" orderId)
     failwith "unimplemented"
     
     // log.Debug(sprintf "adjustTotalOfOrde %d" orderId)
@@ -2382,6 +2482,7 @@ let adjustTotalOfOrder orderId =
     //     log.Error("Error in adjustTotalOfOrder", ex)
 
 let setOrderToArchivedIfAllorderItemsAreDone  orderId =
+    log.Debug (sprintf "setOrderToArchivedIfAllorderItemsAreDone %d" orderId)
 
     failwith "unimplemented"
     
@@ -2408,6 +2509,7 @@ let setOrderToArchivedIfAllorderItemsAreDone  orderId =
 
 // deprecated (or not?)
 let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
+    log.Debug (sprintf "moveOrderItemNextStep %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "moveOrderItemNextStep orderItemId:%d userName %s" orderItemId user.Username)
@@ -2429,6 +2531,7 @@ let moveOrderItemNextStep orderItemId returnPath (user:UserLoggedOnSession) =
     // )
 
 let moveOrderItemNextStepAndBacktoOrder orderItemId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "moveOrderItemNextStepAndBacktoOrder %d" orderItemId)    
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "moveOrderItemNextStepAndBacktoOrder %d" orderItemId )
@@ -2449,6 +2552,7 @@ let moveOrderItemNextStepAndBacktoOrder orderItemId encodedBackUrl (user:UserLog
     // )
 
 let removeOrderItemThenGoBackToUrl orderItemId encodedBackUrl (user:UserLoggedOnSession ) =
+    log.Debug (sprintf "removeOrderItemThenGoBackToUrl %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "removeOrderItemThenGoBackToUrl %d" orderItemId)
@@ -2464,6 +2568,7 @@ let removeOrderItemThenGoBackToUrl orderItemId encodedBackUrl (user:UserLoggedOn
     // )
 
 let orderItemProgress (user:UserLoggedOnSession) =
+    log.Debug "orderItemProgress"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "orderItemProgress user: %s " user.Username)
@@ -2556,6 +2661,7 @@ let getNextState stateId =
     //     Db.States.getState nextStateId ctx
 
 let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landingPage  encodedBackUrl  (user:UserLoggedOnSession)=
+    log.Debug (sprintf "editOrderItemByCategoryForStrippedUsers %d %d" orderItemId categoryId)  
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "editOrderItemByCategoryForStrippedUsers orderItemId: %d categoryId: %d" orderItemId categoryId)
@@ -2602,6 +2708,7 @@ let editOrderItemByCategoryForStrippedUsers (orderItemId:int) categoryId landing
     // | None -> Redirection.FOUND landingPage
 
 let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landingPage encodedBackUrl  (user:UserLoggedOnSession)=
+    log.Debug (sprintf "editOrderItemByCategoryForOrdinaryUsers %d %d" orderItemId categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "editOrderItemByCategoryForOrdinaryUsers %d %d" orderItemId categoryId)
@@ -2652,6 +2759,7 @@ let editOrderItemByCategoryForOrdinaryUsers (orderItemId:int) categoryId landing
 //     | false -> editOrderItemByCategoryForStrippedUsers  (orderItemId:int) categoryId landingPage encodedBackUrl   (user:UserLoggedOnSession)
 
 let editOrderItemByCategoryPassingUserLoggedOnRef (orderItemId:int) categoryId landingPage (encodedBackUrl:string) =
+    log.Debug (sprintf "editOrderItemByCategoryPassingUserLoggedOnRef %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "editOrderItemByCategoryPassingUserLoggedOn orderItemId: %d, categoryId:%d " orderItemId categoryId)
@@ -2666,6 +2774,7 @@ let editOrderItemByCategoryPassingUserLoggedOnRef (orderItemId:int) categoryId l
     // ))
 
 let resetVariationThenEditOrderItemByCat (orderItemId:int) categoryId landingPage urlEncodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "resetVariationThenEditOrderItemByCat %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "resetVariationThenEditOrderItemByCat %d" orderItemId)
@@ -2680,6 +2789,7 @@ let resetVariationThenEditOrderItemByCat (orderItemId:int) categoryId landingPag
 
 
 let resetVariationThenEditOrderItemByCatRef (orderItemId:int) categoryId landingPage urlEncodedBackUrl  =
+    log.Debug (sprintf "resetVariationThenEditOrderItemByCatRef %d" orderItemId)
     Redirection.FOUND Path.home
     
     // loggedOn (session (function 
@@ -2692,6 +2802,7 @@ let resetVariationThenEditOrderItemByCatRef (orderItemId:int) categoryId landing
     // )
 
 let createRole (user:UserLoggedOnSession ) =
+    log.Debug "createRole"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "createRole, logged user: %s" user.Username)
@@ -2711,6 +2822,7 @@ let createRole (user:UserLoggedOnSession ) =
     // ]
 
 let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
+    log.Debug "createOrderByUserLoggedOn"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "createOrderByUserLoggedOn. Logged user: %s" user.Username)
@@ -2732,6 +2844,7 @@ let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
     // ]
 
 let createSingleOrderByUserLoggedOn (user:UserLoggedOnSession) =
+    log.Debug "createSingleOrderByUserLoggedOn"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "createSingleOrderByUserLoggedOn. Logged user %s" user.Username)
@@ -2768,6 +2881,7 @@ type RolesCategoryMappings =
     }
 
 let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
+    log.Debug (sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat %d %d" roleId categoryId)
     failwith "unimplemented"
     
     // log.Debug(sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId: %d, categoryId: %d " roleId categoryId)
@@ -2915,6 +3029,7 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
     // ]
 
 let roleEnablerObserverCategoriesByCheckBoxes   =
+    log.Debug "roleEnablerObserverCategoriesByCheckBoxes"
     Redirection.FOUND Path.home
     
     // log.Debug("roleEnablerObserverCategoriesByCheckBoxes")
@@ -2939,6 +3054,7 @@ let roleEnablerObserverCategoriesByCheckBoxes   =
 type NamesAndMeasures =  { names: IndexNameRecord list; measures: IndexUnitMeasureMap list; message: string}
 
 let selectIAllngredientCatForCourse courseId  =
+    log.Debug (sprintf "selectIAllngredientCatForCourse %d" courseId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "selectIAllngredientCatForCourse %d" courseId )
@@ -2977,6 +3093,7 @@ let selectIAllngredientCatForCourse courseId  =
     // ]
 
 let selectIngredientCatForCourse courseId categoryId message =
+    log.Debug (sprintf "selectIngredientCatForCourse %d %d" courseId categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "selectIngredientCatForCourse courseId: %d, categoryId: %d " categoryId)
@@ -3016,8 +3133,8 @@ let selectIngredientCatForCourse courseId categoryId message =
 
 
 let createCourseByCatgory id =
+    log.Debug "createCourseByCatgory"
     Redirection.FOUND Path.home
-    
     // log.Debug( sprintf "createCourseByCatgory %d")
     // let ctx = Db.getContext()
     // choose [
@@ -3045,6 +3162,7 @@ let createCourseByCatgory id =
     // ]
 
 let archiveOrder id (user:UserLoggedOnSession) =
+    log.Debug (sprintf "archiveOrder %d" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "archiveOrder %d" id)
@@ -3057,10 +3175,12 @@ let archiveOrder id (user:UserLoggedOnSession) =
     // Redirection.FOUND Path.Orders.seeDoneOrders
 
 let unableToCompleteOperation aString    =
+    log.Debug (sprintf "unableToCompleteOperation %s" aString) 
     
     View.cantComplete aString |> html
 
 let voidorder orderId =
+    log.Debug (sprintf "voidorder %d" orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "voidorder %d" orderId)
@@ -3074,6 +3194,7 @@ let voidorder orderId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let voidOrderByUserLoggedOn orderId urlEncodedBackUrl (user: UserLoggedOnSession) =
+    log.Debug (sprintf "voidOrderByUserLoggedOn %d" orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "voidOrderByUserLoggedOn orderId: %d, user: %s" orderId user.Username)
@@ -3098,11 +3219,13 @@ let voidOrderByUserLoggedOn orderId urlEncodedBackUrl (user: UserLoggedOnSession
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
     
 let askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) =
+    log.Debug (sprintf "askConfirmationVoidOrderByUserLoggedOn %d" orderId)
     Redirection.FOUND Path.home
     // log.Debug(sprintf "%s order: %d  user: %s" "askConfirmationVoidOrderByUserLoggedOn" orderId user.Username)
     // View.askConfirmationVoidOrderByUserLoggedOn orderId encodedBackUrl (user: UserLoggedOnSession) |> html
 
 let deleteIngredientToCourse courseId ingredientId =
+    log.Debug (sprintf "deleteIngredientToCourse %d %d" courseId ingredientId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "deleteIngredientToCourse courseId: %d, ingredientId: %d" courseId ingredientId)
@@ -3115,6 +3238,7 @@ let deleteIngredientToCourse courseId ingredientId =
     // Redirection.FOUND retPath
 
 let archiveOrderByUserId orderId  =
+    log.Debug (sprintf "archiveOrderByUserId %d" orderId)
     failwith "unimplemented"
     
     // log.Debug(sprintf "archiveOrderByUserId %d" orderId )
@@ -3141,6 +3265,7 @@ let archiveOrderByUserId orderId  =
 
 
 let seeDoneOrders (user:UserLoggedOnSession)=
+    log.Debug (sprintf "seeDoneOrders %s" user.Username)
     Redirection.FOUND Path.home
     
     // log.Debug("seeDoneOrders")
@@ -3168,8 +3293,9 @@ let seeDoneOrders (user:UserLoggedOnSession)=
     // | _ -> Redirection.found Path.home
 
 let adjustPriceOfOrderItemByVariations orderItemId =
-    failwith "unimplemented"
+    log.Debug (sprintf "adjustPriceOfOrderItemByVariations %d" orderItemId)
     
+    failwith "unimplemented"
     
     // log.Debug(sprintf "%s %d" "adjustPriceOfOrderItemByVariations" orderItemId)
     // let ctx = Db.getContext()
@@ -3260,6 +3386,7 @@ let adjustPriceOfOrderItemByVariations orderItemId =
     //  else (Redirection.FOUND Path.home)
 
 let viewSingleOrderRef orderId =
+    log.Debug (sprintf "viewSingleOrderRef %d" orderId)
     Redirection.FOUND Path.home
     
     // loggedOn (session (function 
@@ -3295,6 +3422,7 @@ let viewSingleOrderRef orderId =
     // ))
 
 let editOrderItemVariationPassingUserLoggedOn orderItemId  (user:UserLoggedOnSession) =
+    log.Debug (sprintf "editOrderItemVariationPassingUserLoggedOn %d" orderItemId)  
     Redirection.FOUND Path.home
     
     // warbler (fun  x ->  
@@ -3315,6 +3443,7 @@ let editOrderItemVariationPassingUserLoggedOn orderItemId  (user:UserLoggedOnSes
     // )
 
 let editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId categoryId  (user:UserLoggedOnSession) =
+    log.Debug (sprintf "editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn %d %d" orderItemId categoryId)
     Redirection.FOUND Path.home
     
     // warbler ( fun x ->
@@ -3332,6 +3461,7 @@ let editOrderItemVariationByIngredientCategoryPasssingUserLoggedOn orderItemId c
     // )
 
 let addWithoutIngredientVariation orderItemId ingredientId encodedBackUrl  (user: UserLoggedOnSession) =
+    log.Debug (sprintf "addWithoutIngredientVariation %d %d" orderItemId ingredientId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d " "addWithoutIngredientVariation" orderItemId ingredientId)
@@ -3357,6 +3487,7 @@ let addWithoutIngredientVariation orderItemId ingredientId encodedBackUrl  (user
     // editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeAllInvisibleIngredients orderItemId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "removeAllInvisibleIngredients %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "removeAllInvisibleIngredients" orderItemId)
@@ -3376,6 +3507,7 @@ let removeAllInvisibleIngredients orderItemId encodedBackUrl (user:UserLoggedOnS
     // editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeAllAllergenic orderItemId  encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "removeAllAllergenic %d" orderItemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "removeAllAllergenic" orderItemId)
@@ -3395,6 +3527,7 @@ let removeAllAllergenic orderItemId  encodedBackUrl (user:UserLoggedOnSession) =
     // editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let addDiminuishIngredientVariation orderItemId ingredientId encodedBackUrl (user:UserLoggedOnSession)=
+    log.Debug (sprintf "addDiminuishIngredientVariation %d %d" orderItemId ingredientId)
     Redirection.FOUND Path.home
     // log.Debug(sprintf "%s %d %d " "addDiminuishIngredientVariation" orderItemId ingredientId )
     // let ctx = Db.getContext()
@@ -3418,6 +3551,7 @@ let addDiminuishIngredientVariation orderItemId ingredientId encodedBackUrl (use
     // editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user:UserLoggedOnSession)=
+    log.Debug (sprintf "addIncreaseIngredientVariation %d %d" orderItemId ingredientId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "addIncreaseIngredientVariation"  orderItemId  ingredientId)
@@ -3447,6 +3581,7 @@ let addIncreaseIngredientVariation orderItemId ingredientId encodedBackUrl (user
     // editOrderItemVariationPassingUserLoggedOn orderItemId  user
 
 let removeIngredientVariation variationId orderitemId  encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "removeIngredientVariation %d %d" variationId orderitemId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d " "removeIngredientVariation" variationId orderitemId)
@@ -3469,6 +3604,7 @@ let removeIngredientVariation variationId orderitemId  encodedBackUrl (user:User
     // editOrderItemVariationPassingUserLoggedOn orderitemId  user
 
 let increaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "increaseUnitaryIngredientVariation %d" variationId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "increaseUnitaryIngredientVariation" variationId)
@@ -3483,6 +3619,7 @@ let increaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLogg
     // editOrderItemVariationPassingUserLoggedOn variation.Orderitemid  user
 
 let decreaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLoggedOnSession) =
+    log.Debug (sprintf "decreaseUnitaryIngredientVariation %d" variationId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -3496,6 +3633,7 @@ let decreaseUnitaryIngredientVariation variationId encodedBackUrl (user:UserLogg
     // editOrderItemVariationPassingUserLoggedOn variation.Orderitemid  user
 
 let deleteUser id  =
+    log.Debug (sprintf "deleteUser %d" id)
     warbler (fun x ->
         Redirection.FOUND Path.home
         )
@@ -3517,6 +3655,7 @@ let deleteUser id  =
     // )
 
 let deleteCourseCategory id =
+    log.Debug (sprintf "deleteCourseCategory %d" id)
     Redirection.FOUND Path.home
     
     // let ctx =  Db.getContext()
@@ -3528,7 +3667,8 @@ let deleteCourseCategory id =
     //     log.Error("Error in deleteCourseCategory", ex)
     //     Redirection.found Path.Errors.unableToCompleteOperation
 
-let deleteIngredientCategory id = 
+let deleteIngredientCategory id =
+    log.Debug (sprintf "deleteIngredientCategory %d" id)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -3552,6 +3692,7 @@ let printWholeOrderInvoiceAsWordformat orderId =
     failwith "unimplemented"
 
 let printSubOrderInvoice subOrderId =
+    log.Debug (sprintf "printSubOrderInvoice %d" subOrderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "printSubOrderInvoice" subOrderId)
@@ -3639,6 +3780,7 @@ let printSubOrderInvoice subOrderId =
     // ]
 
 let printWholeOrderInvoice orderId =
+    log.Debug (sprintf "printWholeOrderInvoice %d" orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "printWholeOrderInvoice" orderId)
@@ -3726,6 +3868,7 @@ let printWholeOrderInvoice orderId =
     // ]
 
 let printWholeOrderReceipt orderId =
+    log.Debug (sprintf "printWholeOrderReceipt %d" orderId)
     Redirection.FOUND Path.home
     
     // try
@@ -3766,6 +3909,7 @@ type PaymentItemsLiquidValues = {
 }
 
 let subOrderPaymentItems subOrderId orderId  =
+    log.Debug (sprintf "subOrderPaymentItems %d %d" subOrderId orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "subOrderPaymentItems" subOrderId )
@@ -3848,6 +3992,7 @@ type PaymentItemsLiquidValuesForOrder =
     }
 
 let wholeOrderPaymentItems  orderId  =
+    log.Debug (sprintf "wholeOrderPaymentItems %d" orderId)
     warbler (fun x ->
     Redirection.FOUND Path.home)
         
@@ -3882,6 +4027,7 @@ let wholeOrderPaymentItems  orderId  =
     // )
 
 let removePaymentItemOfSubOrder paymentItemId subOrderId orderId   =
+    log.Debug (sprintf "removePaymentItemOfSubOrder %d %d %d" paymentItemId subOrderId orderId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -3894,6 +4040,7 @@ let removePaymentItemOfSubOrder paymentItemId subOrderId orderId   =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let removePaymentItemOfOrder paymentItemId  orderId   =
+    log.Debug (sprintf "removePaymentItemOfOrder %d %d" paymentItemId orderId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -3906,6 +4053,7 @@ let removePaymentItemOfOrder paymentItemId  orderId   =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let setSubOrderAsPaid subOrderId orderId (user:UserLoggedOnSession) =
+    log.Debug (sprintf "setSubOrderAsPaid %d %d" subOrderId orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "setSubOrderAsPaid" subOrderId)
@@ -3921,6 +4069,7 @@ let setSubOrderAsPaid subOrderId orderId (user:UserLoggedOnSession) =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let printReceipt subOrderId orderId =
+    log.Debug (sprintf "printReceipt %d %d" subOrderId orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "printReceipt" subOrderId orderId )
@@ -3949,6 +4098,7 @@ let printReceipt subOrderId orderId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let setSubOrderAsNotPaid subOrderId orderId (user:UserLoggedOnSession) =
+    log.Debug (sprintf "setSubOrderAsNotPaid %d %d" subOrderId orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d"  "setSubOrderAsNotPaid" subOrderId orderId)
@@ -3959,6 +4109,7 @@ let setSubOrderAsNotPaid subOrderId orderId (user:UserLoggedOnSession) =
     // Redirection.found (sprintf Path.Orders.subdivideDoneOrder orderId)
 
 let deleteSubOrder subOrderId orderId (user:UserLoggedOnSession) =
+    log.Debug (sprintf "deleteSubOrder %d %d" subOrderId orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "deleteSubOrder" subOrderId orderId)
@@ -3988,6 +4139,7 @@ type LiquidWrapperOrderItemsWithGenericCourses = { orderitemdetailswrapped: Orde
 //     ctx.SubmitUpdates()
 
 let colapseDoneOrder id (user: UserLoggedOnSession) =
+    log.Debug (sprintf "colapseDoneOrder %d" id)
     Redirection.FOUND Path.home
     
     // log.Debug(printf "%s %d" "colapseDoneOrder" id)
@@ -4028,7 +4180,8 @@ let colapseDoneOrder id (user: UserLoggedOnSession) =
     //     )
     // ]
 
-let subdivideDoneOrderRef id (user: UserLoggedOnSession)  = 
+let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
+    log.Debug (sprintf "subdivideDoneOrderRef %d" id)   
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "subdivideDoneOrderRef" id)
@@ -4074,6 +4227,7 @@ let subdivideDoneOrderRef id (user: UserLoggedOnSession)  =
     // ]
 
 let splitOrderItemInToUnitaryOrderItems id (user:UserLoggedOnSession) =
+    log.Debug (sprintf "splitOrderItemInToUnitaryOrderItems %d" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "splitOrderItemInToUnitaryOrderItems X" id)
@@ -4129,6 +4283,7 @@ let splitOrderItemInToUnitaryOrderItems id (user:UserLoggedOnSession) =
     //     Redirection.found Path.Errors.unableToCompleteOperation
             
 let editDoneOrder id (user:UserLoggedOnSession) =
+    log.Debug (sprintf "editDoneOrder %d" id)   
     Redirection.FOUND Path.home
     
     // let thisUrl = sprintf Path.Orders.editDoneOrder id
@@ -4183,7 +4338,10 @@ let editDoneOrder id (user:UserLoggedOnSession) =
     //     ]
     // | _ -> Redirection.FOUND Path.home
 
-let optimizeVoided = warbler (fun _ ->
+let optimizeVoided =
+    log.Debug "optimizeVoided"
+    
+    warbler (fun _ ->
     
     // let ctx = Db.getContext()
     // let voidedOrders = Db.Orders.getVoidedOrders ctx
@@ -4194,6 +4352,7 @@ let optimizeVoided = warbler (fun _ ->
 )
 
 let deArchiveLatestOrder (user:UserLoggedOnSession) =
+    log.Debug "deArchiveLatestOrder"
     Redirection.FOUND Path.home
     
     // log.Debug("deArchiveLatestOrder")
@@ -4219,6 +4378,7 @@ let deArchiveLatestOrder (user:UserLoggedOnSession) =
     // Redirection.found Path.Orders.seeDoneOrders
 
 let switchCourseCategoryVisibility categoryId  =
+    log.Debug (sprintf "switchCourseCategoryVisibility %d" categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d\n" "switchCourseCategoryVisibility" categoryId )
@@ -4231,6 +4391,7 @@ let switchCourseCategoryVisibility categoryId  =
     // Redirection.found Path.Courses.adminCategories
 
 let rejectOrderItem orderItemId (user:UserLoggedOnSession) =
+    log.Debug (sprintf "rejectOrderItem %d" orderItemId)
     Redirection.FOUND Path.home
     // warbler (fun x ->
     //     Redirection.FOUND Path.home
@@ -4264,7 +4425,8 @@ let rejectOrderItem orderItemId (user:UserLoggedOnSession) =
     //     ]
     // | false -> Redirection.FOUND Path.Orders.orderItemsProgress
 
-let standardComments = 
+let standardComments =
+    log.Debug "standardComments"
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4285,13 +4447,15 @@ let standardComments =
     // ]
 
 let removeStandardComment id =
+    log.Debug (sprintf "removeStandardComment %d" id)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
     // let _ = Db.removeStandardComment id ctx
     // Redirection.FOUND Path.Admin.standardComments
 
-let resetDiscount orderId = 
+let resetDiscount orderId =
+    log.Debug (sprintf "resetDiscount %d" orderId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d\n" "resetDiscount" orderId)
@@ -4308,6 +4472,7 @@ let resetDiscount orderId =
     // Redirection.FOUND Path.Orders.seeDoneOrders
 
 let unVoidLatestVoidedRef backUrl   =
+    log.Debug (sprintf "unVoidLatestVoidedRef %s" backUrl)
     Redirection.FOUND Path.home
     
     // loggedOn (session (function 
@@ -4363,6 +4528,7 @@ let removeStandardCommentForCourse commentForCourseId =
     // Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId)
 
 let standardCommentsForCourse courseId =
+    log.Debug (sprintf "standardCommentsForCourse %d" courseId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4388,6 +4554,7 @@ let standardCommentsForCourse courseId =
     // ]
 
 let standardVariationsForCourse courseId =
+    log.Debug (sprintf "standardVariationsForCourse %d" courseId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4421,6 +4588,7 @@ let standardVariationsForCourse courseId =
 //     stateGroupMapping
 
 let selectStandardCommentsForOrderItem orderItemId =
+    log.Debug (sprintf "selectStandardCommentsForOrderItem %d" orderItemId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4433,6 +4601,7 @@ let selectStandardCommentsForOrderItem orderItemId =
     //     | _ -> Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId)
 
 let addStandardCommentToOrderItem commentId orderItemId  =
+    log.Debug (sprintf "addStandardCommentToOrderItem %d %d" commentId orderItemId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4441,6 +4610,7 @@ let addStandardCommentToOrderItem commentId orderItemId  =
     // Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem orderItemId)
 
 let addStandardVariationToOrderItem standardVariationId orderItemId =
+    log.Debug (sprintf "addStandardVariationToOrderItem %d %d" standardVariationId orderItemId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4450,12 +4620,14 @@ let addStandardVariationToOrderItem standardVariationId orderItemId =
     // Redirection.FOUND (sprintf Path.Orders.editOrderItemVariation orderItemId )
 
 let removeExistingCommentToOrderItem id =
+    log.Debug (sprintf "removeExistingCommentToOrderItem %d" id)
     Redirection.FOUND Path.home
     // let ctx = Db.getContext()
     // let _ = Db.removeExistingCommentToOrderItem id ctx
     // Redirection.FOUND (sprintf Path.Orders.selectStandardCommentsAndVariationsForOrderItem id)
 
 let makeSubCourseCategory id =
+    log.Debug (sprintf "makeSubCourseCategory %d" id)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4480,6 +4652,7 @@ let makeSubCourseCategory id =
     // ]
 
 let mergeSubCourseCategoryToFather categoryId =
+    log.Debug (sprintf "mergeSubCourseCategoryToFather %d" categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug("mergeSubCourseCategoryToFather")
@@ -4491,6 +4664,7 @@ let mergeSubCourseCategoryToFather categoryId =
     // Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated father.Categoryid 0)
     
 let manageStandardVariation id =
+    log.Debug (sprintf "manageStandardVariation %d" id)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4519,6 +4693,7 @@ let manageStandardVariation id =
     // ]
 
 let manageStandardVariationByIngredientCategory standardVariationId ingredientCategoryId =
+    log.Debug (sprintf "manageStandardVariationByIngredientCategory %d %d" standardVariationId ingredientCategoryId)
     Redirection.FOUND Path.home
     
     // choose [
@@ -4535,6 +4710,7 @@ let manageStandardVariationByIngredientCategory standardVariationId ingredientCa
     // ]
 
 let manageStandardVariations =
+    log.Debug "manageStandardVariations"
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4561,6 +4737,7 @@ let manageStandardVariations =
     // ]
 
 let removeStandardVariation variationId =
+    log.Debug (sprintf "removeStandardVariation %d" variationId)
     Redirection.FOUND Path.home
     
     // log.Debug("removeStandardVariation")
@@ -4569,6 +4746,7 @@ let removeStandardVariation variationId =
     // Redirection.FOUND Path.Admin.manageStandardVariations
 
 let removeStandardVariationItem id =
+    log.Debug (sprintf "removeStandardVariationItem %d" id)
     Redirection.FOUND Path.home
     
     // try
@@ -4585,6 +4763,7 @@ let removeStandardVariationItem id =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let removeStandardVariationForCourse variationId courseId =
+    log.Debug "removeStandardVariationForCourse"
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "removeStandardVariationForCourse %d %d" variationId courseId)
@@ -4598,6 +4777,7 @@ let removeStandardVariationForCourse variationId courseId =
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
 let selectOrderFromWhichMoveOrderItemsRef targetOrderId  =
+    log.Debug (sprintf "selectOrderFromWhichMoveOrderItemsRef %d" targetOrderId)
     Redirection.FOUND Path.home
     
     // log.Debug("selectOrderFromWhichMoveOrderItemsRef")
@@ -4790,6 +4970,7 @@ let webPart =
         pathScan Path.Courses.switchCourseCategoryVisibility (fun categoryId -> canManageCourses (switchCourseCategoryVisibility categoryId ))
         path Path.Courses.manageAllCategories >=> canManageCourses manageCategories
         pathScan Path.Courses.editCourse (fun id -> canManageCourses (editCourse id))
+        // pathScan Path.Courses.addCourseByCategory (fun id -> canManageCourses (createCourseByCatgory ((decimal)id)))
         pathScan Path.Courses.addCourseByCategory (fun id -> canManageCourses (createCourseByCatgory ((decimal)id)))
         path Path.Courses.adminCategories >=> canManageCourses adminCategories 
         path Path.Admin.allUsers >=> admin ordinaryUsers
