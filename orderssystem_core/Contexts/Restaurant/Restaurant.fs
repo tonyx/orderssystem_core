@@ -10,6 +10,7 @@ open System
 
 type Printer  =
     {
+        Id: Guid
         Name: string
         Types: List<DishTypes>
     }

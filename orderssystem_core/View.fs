@@ -1,5 +1,6 @@
 module OrdersSystem.View
 
+open OrdersSystem.Contexts.Restaurant
 open Suave.Form
 open FSharp.Data
 open Suave.Html
@@ -1824,20 +1825,21 @@ let about =
         Text("Orders System. Copyright: Antonio Lucca/Luckysoft. Tonyx1@gmail.com. This software is released under the terms of the General Public License 3")
     ]
 
-// let adminPrinters (printers: Db.Printer list)=
-//     [
-//         h2 (local.ManagePrinters)
-//         br[]
-//         tag "p" [] [ (a (Path.Admin.recognizePrinters) ["class","buttonX"] [Text(local.DetectPrinters)])]
-//
-//         ulAttr ["id","item-list"] [
-//             for printer in printers ->
-//             tag "p" [] 
-//                 [
-//                     (a (sprintf Path.Admin.managePrinter printer.Printerid -1) ["class","buttonX"] [Text(printer.Name)])
-//                 ]
-//         ]
-//     ]
+let adminPrinters (printers: Printer list)=
+    [
+        h2 (local.ManagePrinters)
+        br[]
+        tag "p" [] [ (a (Path.Admin.recognizePrinters) ["class","buttonX"] [Text(local.DetectPrinters)])]
+
+        ulAttr ["id","item-list"] [
+            for printer in printers ->
+            tag "p" [] 
+                [
+                    // FOCUS
+                    (a (sprintf Path.Admin.managePrinter "this should be the admin id" (printer.Id.ToString()) ) ["class","buttonX"] [Text(printer.Name)])
+                ]
+        ]
+    ]
 
 // let ingredientCatgoriesAdministrationPage  (allIngredientCategories:Db.IngredientCategory list)   =
 //     [
@@ -2281,17 +2283,19 @@ let createRole (user:UserLoggedOnSession) =
 //             ]
 //     ]
 
-let ingredientAdminLInk user = 
-        match (user.Role,user.CanManageAllCourses) with
+let ingredientAdminLInk (user: Models.User.User) =
+        printf "the role of the user: %s" user.Role
+        match (user.Role,user.CanManageAllDishes) with
         | ("admin",_) | (_,true) -> tag "p" [] [a Path.Admin.allIngredientCategories ["class","buttonX"] [Text local.ManageIngredients]]
         | _ -> em ""
 
-let printersAdminLink user = 
+let printersAdminLink (user: Models.User.User) =
+        printf "entering in printer link admin"
         match user.Role with
         | "admin"   -> tag "p" [] [a Path.Admin.printers ["class","buttonX"] [Text local.ManagePrinters]]
         | _ -> em ""
 
-let info user = 
+let info (user: Models.User.User) = 
         match user.Role with
         | "admin"   -> tag "p" [] [a Path.Admin.info ["class","buttonX"] [Text local.Info]]
         | _ -> em ""
@@ -2301,32 +2305,32 @@ let allOrdersLink user =
     | "admin"  -> tag "p" [] [a Path.Orders.allOrders ["class","buttonX"] [Text local.AllTheOrders]]
     | _ -> em ""
 
-let categoriesLink user = 
-    match (user.Role,user.CanManageAllCourses) with 
+let categoriesLink (user: Models.User.User) = 
+    match (user.Role,user.CanManageAllDishes) with 
     | ("admin",_) | (_,true)  -> tag "p" [] [a Path.Courses.adminCategories  ["class","buttonX"] [Text local.Courses ]]
     | _ -> em ""
 
-let rolesLink user =
+let rolesLink (user: Models.User.User) =
     match user.Role with
     | "admin" -> tag "p" [] [a Path.Admin.roles   ["class","buttonX"] [Text local.ManageRoles]]
     | _ -> em ""
 
-let allUsersLink user = 
+let allUsersLink (user: Models.User.User) = 
     match user.Role with
     | "admin" ->  tag "p" [] [a (Path.Admin.allUsers) ["class","buttonX"] [Text local.ManageOrdinaryUsers]]
     | _ -> em  ""
 
-let standardCommentsLink user =
+let standardCommentsLink (user: Models.User.User) =
     match user.Role with
     | "admin" ->  tag "p" [] [a (Path.Admin.standardComments) ["class","buttonX"] [Text local.StandardComments]]
     | _ -> em""
 
-let standardVariationsLink user =
+let standardVariationsLink (user: Models.User.User) =
     match user.Role with
     | "admin" ->  tag "p" [] [a (Path.Admin.manageStandardVariations) ["class","buttonX"] [Text local.StandardVariations]]
     | _ -> em ""
 
-let temporaryUsersLink user =
+let temporaryUsersLink (user: Models.User.User) =
     match user.Role with
     | "admin" ->  tag "p" [] [a (Path.Admin.temporaryUsers) ["class","buttonX"] [Text local.ManageTemporaryUsers]]
     | _ -> em  ""
@@ -2341,7 +2345,7 @@ let temporaryUsersLink user =
 //     | true -> tag "p" [] [a (Path.Admin.optimizeVoided) ["class","buttonX"] [Text local.Optimization]]
 //     | _ -> em ""
 
-let deleteObjectsPage user =
+let deleteObjectsPage (user: Models.User.User) =
     match user.Role = "admin"  with
     | true -> tag "p" [] [a (Path.Admin.deleteObjects) ["class","buttonX"] [Text local.Deletions]]
     | _ -> em ""
@@ -2360,30 +2364,33 @@ let logOffButton =
 //         Text("it works")
 //     ]
 let controlPanel (user:UserLoggedOnSession) (dbUser: Models.User.User)=
+    printf "XXXXXX. entered in controlPanel userLoggedOn A %A\n"  (user.Username)
+    printf "XXXXXX. entered in controlPanel userLoggedOn B %A\n"  (dbUser.Username)
+    printf "XXXXXX. entered in controlPanel userLoggedOn userrole %A\n"  (dbUser.Role)
     let orderItemsProgressLink = tag "p" [] [a (Path.Orders.orderItemsProgress) ["class","buttonX"] [Text local.OrderItemStates]]
     [
         br []
         br []
         br []
-        info user
-        printersAdminLink user
-        ingredientAdminLInk user
-        categoriesLink user
-        rolesLink user
-        allUsersLink user
-        temporaryUsersLink user
+        info dbUser
+        printersAdminLink dbUser
+        ingredientAdminLInk dbUser
+        categoriesLink dbUser
+        rolesLink dbUser
+        allUsersLink dbUser
+        temporaryUsersLink dbUser
         orderItemsProgressLink
         
         // seeDoneOrdersLink  dbUser
         
         changePasswordButton
         myOrdersButtonSingles
-        deleteObjectsPage user
+        deleteObjectsPage dbUser
         
         // optimizeVoidedLink dbUser
         
-        standardCommentsLink user
-        standardVariationsLink user
+        standardCommentsLink dbUser
+        standardVariationsLink dbUser
     ]
 
 // let coursesAndCategoriesManagement  (categories:Db.CourseCategories list) =

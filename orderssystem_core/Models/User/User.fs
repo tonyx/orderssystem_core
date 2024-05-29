@@ -8,15 +8,18 @@ open Sharpino.Core
 type User 
     (guid: Guid, 
     username: string, 
-    password: string, 
+    password: string,
+    role: string,
     active: bool, 
     temporary: bool, 
-    role: Option<Guid>,
+    optionalRoleId: Option<Guid>,
     canManageAllDishes: bool,
     canManageAllOrders: bool) = 
 
     member val CreationDate = DateTime.UtcNow with get
     member val Username = username with get
+    // member val Role = role with get
+    member this.Role = role
     member val Password = (passHash password) with get
     member val Id = guid with get
     member val Active = active with get
@@ -24,13 +27,16 @@ type User
     member val CanManageAllDishes = canManageAllDishes with get
     member val CanManageAllOrders = canManageAllOrders with get
 
-    member val Role = role
+    member val OptionalRoleId = optionalRoleId
 
-    member this.SetRole (role: Guid) =
-        User (guid, username, password, active, temporary, Some role, canManageAllDishes, canManageAllOrders) |> Ok
-
-    member this.VoidRole () =
-        User (guid, username, password, active, temporary, None, canManageAllDishes, canManageAllOrders) |> Ok
+    member this.SetOptionalRoleId (optRolId: Guid) =
+        User (guid, username, password, role, active, temporary, Some optRolId, canManageAllDishes, canManageAllOrders) |> Ok
+    
+    member this.SetRole (rol: string) =
+        User (guid, username, password, rol, active, temporary, this.OptionalRoleId, canManageAllDishes, canManageAllOrders) |> Ok 
+    
+    member this.VoidOptionalRoleId () =
+        User (guid, username, password, role, active, temporary, None, canManageAllDishes, canManageAllOrders) |> Ok
 
     static member Validate (username: string, password: string) = 
         if username.Length < 3 then
@@ -40,19 +46,19 @@ type User
         else
             Ok ()
     member this.Deactivate () =
-        User(guid, username, password, false, true, this.Role, canManageAllDishes, canManageAllOrders) |> Ok
+        User(guid, username, password, role, false, true, this.OptionalRoleId, canManageAllDishes, canManageAllOrders) |> Ok
 
     member this.SetDishManager () =
-        User(guid, username, password, active, temporary, this.Role, true, canManageAllOrders) |> Ok
+        User(guid, username, password, role, active, temporary, this.OptionalRoleId, true, canManageAllOrders) |> Ok
 
     member this.SetOrderManager () =
-        User(guid, username, password, active, temporary, this.Role, canManageAllDishes, true) |> Ok
+        User(guid, username, password, role, active, temporary, this.OptionalRoleId, canManageAllDishes, true) |> Ok
 
     member this.UnSetDishManager () =
-        User(guid, username, password, active, temporary, this.Role, false, canManageAllOrders) |> Ok
+        User(guid, username, password, role, active, temporary, this.OptionalRoleId, false, canManageAllOrders) |> Ok
 
     member this.UnSetOrderManager () =
-        User(guid, username, password, active, temporary, this.Role, canManageAllDishes, false) |> Ok
+        User(guid, username, password, role, active, temporary, this.OptionalRoleId, canManageAllDishes, false) |> Ok
 
     member this.Authenticate (password: string) = 
         if this.Password = password then
@@ -63,31 +69,29 @@ type User
     member this.ChangePassword (newPassword: string) =
         result {
             let! _ = User.Validate(this.Username, newPassword)
-            return User(guid, this.Username, newPassword, active, temporary, this.Role, canManageAllDishes, canManageAllOrders)
+            return User(guid, this.Username, newPassword, role, active, temporary, this.OptionalRoleId, canManageAllDishes, canManageAllOrders)
         }
         
-        
-    member this.Update (id, username, password, isActive, isTemporary, role, canManageAllDishes, canManageAllOrders) =
+    member this.Update (id, username, password, role, isActive, isTemporary, optRoleId, canManageAllDishes, canManageAllOrders) =
         result {
             let! idMatches =
                 this.Id = id
                 |> Result.ofBool "User id does not match"
             let! _ = User.Validate(username, password)
-            return User(id, username, password, isActive, isTemporary, role, canManageAllDishes, canManageAllOrders)
+            return User(id, username, password, role, isActive, isTemporary, optRoleId, canManageAllDishes, canManageAllOrders)
         }
 
-    static member mkUser (username: string, password: string) =
+    static member MkUser (username: string, password: string, role: string) =
         result {
             let! _ = User.Validate(username, password)
-            return User(Guid.NewGuid(), username, password, active = true, temporary = false, role = None, canManageAllDishes = true, canManageAllOrders = true)
+            return User(Guid.NewGuid(), username, password, role, active = true, temporary = false, optionalRoleId = None, canManageAllDishes = true, canManageAllOrders = true)
         }
 
-    static member mkTemporaryUser (username: string, password: string) =
+    static member MkTemporaryUser (username: string, password: string) =
         result {
             let! _ = User.Validate(username, password)
-            return User(Guid.NewGuid(), username, password, active = true, temporary = true, role = None, canManageAllDishes = true, canManageAllOrders =  true)
+            return User(Guid.NewGuid(), username, password, "temporary", active = true, temporary = true, optionalRoleId = None, canManageAllDishes = true, canManageAllOrders =  true)
         }
-         
 
     override this.ToString() = sprintf "User(%s)" this.Username
 
@@ -99,12 +103,12 @@ type User
              u.Password = this.Password && 
              u.Active = this.Active && 
              u.Temporary = this.Temporary &&
-             u.Role = this.Role &&
+             u.OptionalRoleId = this.OptionalRoleId &&
              u.CanManageAllDishes = this.CanManageAllDishes &&
              u.CanManageAllOrders = this.CanManageAllOrders
         | _ -> false
     override this.GetHashCode() = 
-        hash (this.Id, this.Username, this.Password, this.Active, this.Temporary, this.Role, this.CanManageAllDishes, this.CanManageAllOrders)
+        hash (this.Id, this.Username, this.Password, this.Active, this.Temporary, this.OptionalRoleId, this.CanManageAllDishes, this.CanManageAllOrders)
 
     static member Deserialize(json: string) =
         globalSerializer.Deserialize<User> json

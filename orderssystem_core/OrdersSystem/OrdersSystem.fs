@@ -1,4 +1,5 @@
 namespace OrdersSystem
+open OrdersSystem.Contexts.Restaurant
 open OrdersSystem.Models
 open Sharpino
 open Sharpino.MemoryStorage
@@ -83,7 +84,7 @@ module OrdersSystem =
                     let userExists =
                         users.Length > 0 && users |> List.exists (fun x -> x.Username = "administrator")
                     if not userExists then
-                        let! firstAdministrator = User.mkUser ("administrator", "administrator")
+                        let! firstAdministrator = User.MkUser ("administrator", "administrator", "admin")
                         let result =
                             (RestaurantCommands.AddUserRef firstAdministrator.Id)
                             |> runInitAndCommand<Restaurant, RestaurantEvents, User, string>  eventStore eventBroker firstAdministrator
@@ -191,7 +192,7 @@ module OrdersSystem =
                 let! users = this.GetAllUsers ()
                 let existingRoles = 
                     users 
-                    |>> (fun x -> x.Role)
+                    |>> (fun x -> x.OptionalRoleId)
                     |> List.fold (fun acc x -> 
                         match x with
                         | Some r -> r :: acc
@@ -485,7 +486,8 @@ module OrdersSystem =
                 return state
             }
 
-        member this.CreateUser (username: string, password: string, roles: List<Guid>) L=
+        // todo: see what to do with optionalRoleIds
+        member this.CreateUser (username: string, password: string, roles: List<Guid>) =
             result {
                 let! existingUsers = this.GetAllUsers ()
                 let! notAlreadyExists =
@@ -494,7 +496,7 @@ module OrdersSystem =
                     |> not
                     |> Result.ofBool (sprintf "User with name '%s' already exists" username)
 
-                let! user = User.mkUser (username, password)
+                let! user = User.MkUser (username, password, "") // todo: see what to do with string based role 
                 return!
                     user.Id
                     |> RestaurantCommands.AddUserRef
@@ -633,7 +635,22 @@ module OrdersSystem =
                     allOrderItems
                     |> List.filter (fun x -> x.OrderId = orderId)
                 return orderItemsOfOrder
-            }    
+            }
+        
+        member this.AddPrinter (printer: Printer) =
+            result {
+                let addPrinter = RestaurantCommands.AddPrinter printer
+                return!
+                    addPrinter
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            } 
+            
+        member this.GetPrinters () =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                return restaurant.Printers
+            }
+            
             
             
             

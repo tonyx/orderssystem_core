@@ -94,9 +94,9 @@ let session f =
                 f (CartIdOnly cartId)
             // | _, Some username, Some role, Some userid, Some roleid,Some temporary,Some canmanagecourses,Some canmanageallorders ->
             | _, Some username, _, Some userid, _ ,Some temporary,Some canmanagecourses,Some canmanageallorders -> // focus I am faking
-                log.Debug (sprintf "XXx. %s is logged on" username)
+                log.Debug (sprintf "QQQQQQ.. %s is logged on" username)
                 printf "XXx. is logged on\n"
-                f (UserLoggedOn {Username = username; Role = ""; UserId = userid; RoleId = 0 ;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
+                f (UserLoggedOn {Username = username; Role = "admin"; UserId = userid; RoleId = 0 ;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
             | _ -> 
                 printf "XXx. is not logged on"
                 f NoSession)
@@ -133,7 +133,8 @@ let canManageIngredients f_success =
 let canManageIngredientsPassingUserLoggedOn f_success  =
     loggedOn (session (function
         | UserLoggedOn { Role = "admin"; Username=username; UserId = userid; RoleId=roleid; Temporary=false  } -> f_success { CanManageAllCourses = true; Role = "admin"; Username=username; UserId = userid; RoleId=roleid; Temporary=false; CanManageAllOrders = true  }
-        | UserLoggedOn { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false; CanManageAllOrders = canManageAllOrders } -> f_success { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders }
+        // | UserLoggedOn { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false; CanManageAllOrders = canManageAllOrders } -> f_success { CanManageAllCourses = true; Role=role; Username=username; UserId=userid; RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders }
+        | UserLoggedOn { CanManageAllCourses = true; Role="admin"; Username=username; UserId=userid; RoleId=roleid;Temporary=false; CanManageAllOrders = canManageAllOrders } -> f_success { CanManageAllCourses = true; Role= "admin"; Username=username; UserId=userid; RoleId=roleid;Temporary=false;CanManageAllOrders=canManageAllOrders }
         | UserLoggedOn _ -> FORBIDDEN "Only for admin or enabled users"
         | _ -> UNAUTHORIZED "Not logged in"
     ))
@@ -277,14 +278,17 @@ let returnPathOrHome =
 
 // FOCUS:::: the canmanagecourses and canmanageallorders are hardcoded to true. they could be part ot the user
 let authenticateUserWithSharpino (user: OrdersSystem.Models.User.User) =
+    printf "XXXXXXX. UseRole %s\n" user.Role
     authenticated Cookie.CookieLife.Session false 
     >=> session (function
         | CartIdOnly cartId ->
             sessionStore (fun store -> store.set "cartid" "")
         | _ -> succeed)
     >=> sessionStore (fun store ->
+        printf "XXXXXXX. Entered in sessionStore\n"
         store.set "username" user.Username
-        >=> store.set "role" user.Role
+        // >=> store.set "role" user.Role
+        >=> store.set "role" "admin"
         >=> store.set "userid" user.Id
         
         // >=> store.set "roleid" user.Role // FOCUS
@@ -619,32 +623,41 @@ let controlPanel (userLoggedOn:UserLoggedOnSession) =
     log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
     // let ctx = Db.getContext()
     printf "going to get user here\n"
+    printf "XXXX. userloggedon %A\n" userLoggedOn.UserId
     let user = (ordersSystem.GetUser userLoggedOn.UserId).OkValue // todo: FOCUS FIX result
+    printf "XXXXXXX. password %A\n" user.Password
+    printf "user got %A\n" user
     printf "got user here\n"
+    printf "XXXX. user Role got:%A\n" (user.Role)
     // let user = Db.getUserById userLoggedOn.UserId ctx
+    // View.controlPanel userLoggedOn user |> html
     View.controlPanel userLoggedOn user |> html
 )
 
-let controlPanelRef  =
-    log.Debug("XXXX. controlPanel")
-    printf "XXXX. controlPanel"
-    
-    // Redirection.FOUND Path.home
-    
-    warbler (fun _ ->
-    loggedOn (session (function 
-        | UserLoggedOn userLoggedOn ->
-            log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
-            // let ctx = Db.getContext()
-            // let user = Db.getUserById userLoggedOn.UserId ctx
-            
-            let user = (ordersSystem.GetUser userLoggedOn.UserId).OkValue
-            log.Debug("YYYY. got user!!!!!")
-            View.controlPanel userLoggedOn user |> html
-        | _ -> FORBIDDEN "not logged on"
-        )
-    )
-)
+// let controlPanelRef  =
+//     log.Debug("XXXX. controlPanel")
+//     printf "XXXX. controlPanel"
+//     
+//     // Redirection.FOUND Path.home
+//     
+//     warbler (fun _ ->
+//     loggedOn (session (function 
+//         | UserLoggedOn userLoggedOn ->
+//             log.Debug(sprintf "controlPanel by user:%s" userLoggedOn.Username)
+//             // let ctx = Db.getContext()
+//             // let user = Db.getUserById userLoggedOn.UserId ctx
+//             
+//             printf "YYYY. userloggedon %A\n" userLoggedOn.UserId
+//             let user = (ordersSystem.GetUser userLoggedOn.UserId).OkValue
+//             log.Debug("YYYY. got user!!!!!")
+//             printf "YYYY. got user!!!!! %A\n" user  
+//             printf "YYYY. got user role!!!!! %A\n" (user.Role)
+//             printf "YYYY. got user Id!!!!! %A\n" (user.Id)
+//             View.controlPanel userLoggedOn user |> html
+//         | _ -> FORBIDDEN "not logged on"
+//         )
+//     )
+// )
 
 // FOCUS: porting OrdersSystem.GetOrderDetails
 let userEnabledToSeeWholeDoneOrers userId = 
@@ -1039,8 +1052,8 @@ type MyPrinterModel =
     }
 
 // FOCUS no printer in domain model  (yet)
-let managePrinter printerId categoryId =
-    log.Debug (sprintf "%s %d %d" "managePrinter" printerId categoryId)
+let managePrinter (printerId: string) (categoryId: string) =
+    log.Debug (sprintf "%s %A %A" "managePrinter" printerId categoryId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "managePrinter" printerId categoryId)
@@ -1160,7 +1173,11 @@ let resetPrinters =
 
 let adminPrinters =
     log.Debug("adminPrinters")
-    Redirection.FOUND Path.home
+    
+    warbler (fun  _ ->
+        let printers = ordersSystem.GetPrinters().OkValue // todo: FOCUS FIX result
+        View.adminPrinters printers |> html
+    )
     
     // log.Debug("adminPrinters")
     // let ctx = Db.getContext()
@@ -4920,7 +4937,10 @@ let webPart =
         pathScan Path.Admin.switchVisibilityOfIngredientCategory (fun (id,encodedBackUrl) -> canManageIngredients (switchVisbilityOfIngredientCategory id encodedBackUrl))
         pathScan Path.Admin.switchVisibilityOfIngredient (fun (idCategory,idIngredient) -> admin (switchVisbilityOfIngredient idCategory idIngredient))
         
-        
+       
+        // FOCUS it was anyUserExceptTemporary
+        path Path.home >=> anyUserPassingUserLoggedOn controlPanel
+  
         path Path.Orders.allOrders >=> adminPassingUserLoggedOn allOrders // >=> noCache
         
         

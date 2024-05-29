@@ -121,8 +121,10 @@
 
     <!-- using direct reference -->
 <!--    -->
-<!--    <PackageReference Include="Sharpino" Version="2.2.3" />-->
-<!--    <PackageReference Include="Sharpino.Core" Version="2.0.4" />-->
+    
+    <PackageReference Include="Sharpino" Version="2.2.4" />
+    
+    <PackageReference Include="Sharpino.Core" Version="2.0.4" />
 
 
     <!-- <PackageReference Include="Sharpino" Version="2.2.2" /> -->
@@ -157,9 +159,9 @@
     
   </ItemGroup>
 
- <ItemGroup>
-    <ProjectReference Include="..\..\..\realsharpino\Sharpino\Sharpino.Lib\Sharpino.Lib.fsproj" />
-  </ItemGroup> 
+<!-- <ItemGroup>-->
+<!--    <ProjectReference Include="..\..\..\realsharpino\Sharpino\Sharpino.Lib\Sharpino.Lib.fsproj" />-->
+<!--  </ItemGroup> -->
 
 
 </Project>

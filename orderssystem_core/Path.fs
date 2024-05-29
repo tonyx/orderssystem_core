@@ -6,6 +6,7 @@ type IntPath3 = PrintfFormat< (int  -> int -> int ->  string),unit,string,string
 type IntPath4 = PrintfFormat< (int  -> int -> int -> int -> string),unit,string,string,(int*int*int*int)>
 
 type StrPath = PrintfFormat<(string -> string),unit,string,string,string>
+type StrPath2 = PrintfFormat<(string -> string -> string),unit,string,string,(string*string)>
 type IntStrPath = PrintfFormat<(int -> string -> string),unit,string,string,(int*string)>
 type Int2StrPath = PrintfFormat<(int -> int -> string -> string),unit,string,string,(int*int*string)>
 type Int3StrPath = PrintfFormat<(int -> int -> int -> string -> string),unit,string,string,(int*int*int*string)>
@@ -129,7 +130,7 @@ module Admin =
     let editIngredientCategoryPaginated: IntPath2 = "/admin/ingredientCategoryPaginated/%d/%d"
     let resetPrinters = "/admin/resetPrinters"
     let recognizePrinters = "/admin/recognizePrinters"
-    let managePrinter: IntPath2 = "/admin/managePrinter/%d/%d"
+    let managePrinter: StrPath2 = "/admin/managePrinter/%s/%s"
     let info = "/admin/info"
     let printers = "/admin/printers"
     let allIngredientCategories = "/admin/allIngredientCategories"

@@ -10,13 +10,14 @@ open Sharpino.Core
 type UserEvents =
     | PasswordChanged of string
     | Deactivated
-    | RoleSet of Guid
-    | RoleVoided 
+    | RoleSet of string
+    | OptionalRoleIdSet of Guid
+    | OptionalRoleIdVoided 
     | DishManagerSet
     | DishManagerUnSet
     | OrderManagerSet
     | OrderManagerUnSet
-    | Updated of  Guid * string * string * bool * bool * Option<Guid> * bool * bool 
+    | Updated of  Guid * string * string * string * bool * bool * Option<Guid> * bool * bool 
         interface Event<User>  with
             member this.Process user =
                 match this with
@@ -24,10 +25,12 @@ type UserEvents =
                     user.ChangePassword newPassword
                 | Deactivated ->
                     user.Deactivate ()
+                | OptionalRoleIdSet role ->
+                    user.SetOptionalRoleId role
                 | RoleSet role ->
                     user.SetRole role
-                | RoleVoided  ->
-                    user.VoidRole ()
+                | OptionalRoleIdVoided  ->
+                    user.VoidOptionalRoleId ()
                 | DishManagerSet ->
                     user.SetDishManager ()
                 | DishManagerUnSet ->
@@ -36,8 +39,8 @@ type UserEvents =
                     user.SetOrderManager ()
                 | OrderManagerUnSet ->
                     user.UnSetOrderManager ()
-                | Updated (guid, username, newPassword, active, temporary, role, canManageAllDishes, canManageAllOrders) ->
-                    user.Update(guid, username, newPassword, active, temporary, role, canManageAllDishes, canManageAllOrders)
+                | Updated (guid, username, newPassword, role, active, temporary, optRoleId, canManageAllDishes, canManageAllOrders) ->
+                    user.Update(guid, username, newPassword, role, active, temporary, optRoleId, canManageAllDishes, canManageAllOrders)
         member this.Serialize = 
             globalSerializer.Serialize this
         static member Deserialize json = 
