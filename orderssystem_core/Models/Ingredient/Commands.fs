@@ -9,8 +9,7 @@ open FsToolkit.ErrorHandling
 open Sharpino.Core
 
 type IngredientCommands =
-    | AddIngredientType of IngredientTypes
-    | RemoveIngredientType of IngredientTypes
+    | SetIngredientType of Guid
     | UpdateName of String
     | AddIngredientMeasureType of IngredientMeasureType
     | RemoveIngredientMeasureType of IngredientMeasureType
@@ -22,12 +21,9 @@ type IngredientCommands =
         interface Command<Ingredient, IngredientEvents>  with
             member this.Execute ingredient = 
                 match this with
-                | AddIngredientType ingredientType -> 
-                    ingredient.AddIngredientType ingredientType
-                    |> Result.map (fun _ -> [IngredientTypeAdded ingredientType])
-                | RemoveIngredientType ingredientType -> 
-                    ingredient.RemoveIngredientType ingredientType
-                    |> Result.map (fun _ -> [IngredientTypeRemoved ingredientType])
+                | SetIngredientType guid -> 
+                    ingredient.SetIngredientTypeId guid
+                    |> Result.map (fun _ -> [IngredientTypeSet guid])
                 | UpdateName name -> 
                     ingredient.UpdateName name
                     |> Result.map (fun _ -> [NameUpdated name])

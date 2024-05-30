@@ -5,6 +5,8 @@ open Sharpino
 open FsToolkit.ErrorHandling
 open Sharpino.Core
 
+open Microsoft.FSharp.Reflection
+
     type IngredientMeasureType =
         | Grams
         | Kilograms
@@ -12,24 +14,13 @@ open Sharpino.Core
         | Milliliters
         | Pieces
         | Other of string
-
-    type IngredientCategories =
-        | Meat
-        | Fish
-        | Vegetable
-        | Fruit
-        | Dairy
-        | Grain
-        | Other of string
-
-    type IngredientTypes =
-        | Meat
-        | Fish
-        | Vegetable
-        | Fruit
-        | Dairy
-        | Grain
-        | Other of string
+        
+    type IngredientType =
+        {
+            Id: Guid
+            Name: string
+            Visible: bool
+        }
 
     type IngredientPrice =
         {
@@ -46,24 +37,24 @@ open Sharpino.Core
         {
             Id: Guid
             Name: string
-            IngredientTypes: List<IngredientTypes>
+            IngredientType: Guid
             IngredientMeasureTypes: List<IngredientMeasureType>
             Active: bool
             IngredientPrices: List<IngredientPrice>
 
         }
 
-    type Ingredient private (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasureTypes: List<IngredientMeasureType>, active: bool, ingredientPrices: List<IngredientPrice>) =
+    type Ingredient private (id: Guid, name: string, ingredientTypeId: Guid, ingredientMeasureTypes: List<IngredientMeasureType>, active: bool, ingredientPrices: List<IngredientPrice>) =
         let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
-        member this.IngredientTypes = ingredientTypes
+        member this.IngredientTypeId = ingredientTypeId
         member this.IngredientMeasureTypes = ingredientMeasureTypes
         member this.IngredientPrices = ingredientPrices
         member this.Active = active
 
-        new (id: Guid, name: string, ingredientTypes: List<IngredientTypes>, ingredientMeasures: List<IngredientMeasureType>) =
-            Ingredient (id, name, ingredientTypes, ingredientMeasures, true, [])
+        new (id: Guid, name: string, ingredientType: Guid, ingredientMeasures: List<IngredientMeasureType>) =
+            Ingredient (id, name, ingredientType, ingredientMeasures, true, [])
 
 
         member this.AddIngredientPrice (ingredientPrice: IngredientPrice) =
@@ -78,7 +69,7 @@ open Sharpino.Core
                     |> List.contains ingredientPrice
                     |> not
                     |> Result.ofBool "IngredientPrice already exists"
-                return Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices)
+                return Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices)
             }
 
         member this.RemoveIngredientPrice (ingredientPrice: IngredientPrice) =
@@ -87,27 +78,11 @@ open Sharpino.Core
                     this.IngredientPrices 
                     |> List.contains ingredientPrice
                     |> Result.ofBool "IngredientPrice does not exist"
-                return Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, active, ingredientPrices |> List.filter ((<>) ingredientPrice))
+                return Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices |> List.filter ((<>) ingredientPrice))
             }
 
-        member this.AddIngredientType (ingredientType: IngredientTypes) =
-            result {
-                do! 
-                    this.IngredientTypes 
-                    |> List.contains ingredientType
-                    |> not
-                    |> Result.ofBool "IngredientType already exists"
-                return Ingredient (id, name, ingredientType :: ingredientTypes, ingredientMeasureTypes)
-            }
-
-        member this.RemoveIngredientType (ingredientType: IngredientTypes) =
-            result {
-                do! 
-                    this.IngredientTypes 
-                    |> List.contains ingredientType
-                    |> Result.ofBool "IngredientType does not exist"
-                return Ingredient (id, name, ingredientTypes |> List.filter ((<>) ingredientType), ingredientMeasureTypes)
-            }
+        member this.SetIngredientTypeId (ingredientTypeId: Guid) =
+            Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes) |> Ok
 
         member this.UpdateName (newName: string) =
             result {
@@ -116,7 +91,7 @@ open Sharpino.Core
                     |> String.IsNullOrWhiteSpace
                     |> not
                     |> Result.ofBool "Name cannot be empty"
-                return Ingredient (id, newName, ingredientTypes, ingredientMeasureTypes)
+                return Ingredient (id, newName, ingredientTypeId, ingredientMeasureTypes)
             }
 
         member this.Update (ingredient: Ingredient) =
@@ -128,7 +103,7 @@ open Sharpino.Core
             }
 
         member this.Deactivate () =
-            Ingredient (id, name, ingredientTypes, ingredientMeasureTypes, false, ingredientPrices) |> Ok
+            Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes, false, ingredientPrices) |> Ok
 
         member this.AddIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
             result {
@@ -137,7 +112,7 @@ open Sharpino.Core
                     |> List.contains ingredientMeasure
                     |> not
                     |> Result.ofBool "IngredientMeasure already exists"
-                return Ingredient (id, name, ingredientTypes, ingredientMeasure :: ingredientMeasureTypes)
+                return Ingredient (id, name, ingredientTypeId, ingredientMeasure :: ingredientMeasureTypes)
             }
 
         member this.RemoveIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
@@ -146,19 +121,19 @@ open Sharpino.Core
                     this.IngredientMeasureTypes 
                     |> List.contains ingredientMeasure
                     |> Result.ofBool "IngredientMeasure does not exist"
-                return Ingredient (id, name, ingredientTypes, ingredientMeasureTypes |> List.filter ((<>) ingredientMeasure))
+                return Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes |> List.filter ((<>) ingredientMeasure))
             }
         member this.ToIngredienTO  =
             {   
                 Id = this.Id; 
                 Name = this.Name; 
-                IngredientTypes = this.IngredientTypes; 
+                IngredientType = this.IngredientTypeId; 
                 IngredientMeasureTypes = this.IngredientMeasureTypes 
                 Active = this.Active;
                 IngredientPrices = this.IngredientPrices
             }
         static member FromIngredientTO (ingredientTO: IngredientTO) =
-            Ingredient (ingredientTO.Id, ingredientTO.Name, ingredientTO.IngredientTypes, ingredientTO.IngredientMeasureTypes, ingredientTO.Active, ingredientTO.IngredientPrices)
+            Ingredient (ingredientTO.Id, ingredientTO.Name, ingredientTO.IngredientType, ingredientTO.IngredientMeasureTypes, ingredientTO.Active, ingredientTO.IngredientPrices)
 
         static member SnapshotsInterval =
             15

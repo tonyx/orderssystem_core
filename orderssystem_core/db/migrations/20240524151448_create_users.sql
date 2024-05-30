@@ -8,8 +8,6 @@ CREATE TABLE public.events_01_users (
                                           aggregate_id uuid NOT NULL,
                                           event text NOT NULL,
                                           published boolean NOT NULL DEFAULT false,
-                                          kafkaoffset BIGINT,
-                                          kafkapartition INTEGER,
                                           "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -57,7 +55,6 @@ CREATE SEQUENCE public.aggregate_events_01_users_id_seq
 CREATE TABLE public.aggregate_events_01_users (
                                                     id integer DEFAULT nextval('public.aggregate_events_01_users_id_seq') NOT NULL,
                                                     aggregate_id uuid NOT NULL,
-                                                    aggregate_state_id uuid,
                                                     event_id integer
 );
 
@@ -98,33 +95,13 @@ DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_users_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_users_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_users(aggregate_id, event_id, aggregate_state_id )
+INSERT INTO aggregate_events_01_users(aggregate_id, event_id)
 VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;
-
--- CREATE OR REPLACE PROCEDURE set_classic_optimistic_lock_01_users() AS $$ BEGIN 
---     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'aggregate_events_01_users_aggregate_id_state_id_unique') THEN
--- ALTER TABLE aggregate_events_01_users
---     ADD CONSTRAINT aggregate_events_01_users_aggregate_id_state_id_unique UNIQUE (aggregate_state_id);
--- END IF;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE PROCEDURE un_set_classic_optimistic_lock_01_users() AS $$
--- BEGIN
---     ALTER TABLE aggregate_events_01_users
---     DROP CONSTRAINT IF EXISTS aggregate_events_01_users_aggregate_id_state_id_unique; 
---     -- You can have more SQL statements as needed
--- END;
-
--- $$ LANGUAGE plpgsql;
-
-
-
 
 
 

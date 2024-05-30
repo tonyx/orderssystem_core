@@ -3,6 +3,8 @@ module OrdersSystem.App
 open System
 
 open System.Linq
+open OrdersSystem.Contexts.Restaurant
+open OrdersSystem.Models.Ingredient
 open Xceed.Words.NET
 open System.Drawing
 open FSharp.Data
@@ -141,7 +143,7 @@ let canManageIngredientsPassingUserLoggedOn f_success  =
 
 let admin f_success =
     loggedOn (session (function
-        | UserLoggedOn { Role = "admin" } -> f_success
+        | UserLoggedOn { Role = "admin" } -> f_success  
         | UserLoggedOn _ -> FORBIDDEN "Only for admin"
         | _ -> UNAUTHORIZED "Not logged in"
     ))
@@ -944,9 +946,55 @@ let editIngredient id  pageNumberBack =
     //         )
     // ]
 
-let editIngredientCategoryPaginated (idCategory:int) (pageNumber: int) =
-    log.Debug (sprintf "%s %d %d" "editIngredientCategoryPaginated" idCategory pageNumber)
-    Redirection.FOUND Path.home
+let editIngredientCategoryPaginated (strIdCategory: string) (pageNumber: int) =
+    
+    log.Debug (sprintf "%s %A %A" "editIngredientCategoryPaginated" strIdCategory pageNumber)
+    
+    let (res, idCategory) = Guid.TryParse strIdCategory
+    match res with
+    | false ->
+        log.Error (sprintf "error parsing %s" strIdCategory)
+        Redirection.FOUND Path.Errors.unableToCompleteOperation
+    | true ->
+        // let ingredientsOfCurrentPagewithTotals = (ordersSystem.GetAllIngredientOfACategoryByPage (idCategory, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)) 
+             
+        GET >=> warbler (fun _ ->
+            let res =
+                result {
+                    let! (ingredientsOfCurrentPage, totalOfIngredientOfTheType) =
+                        ordersSystem.GetAllIngredientOfACategoryByPage (idCategory, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)
+                    let numberOfPages = (totalOfIngredientOfTheType - 1) / Globals.NUM_DB_ITEMS_IN_A_PAGE
+                    let! ingredientCategory = ordersSystem.GetIngredientType idCategory
+                    return (View.seeIngredientsOfACategoryPaginated ingredientCategory ingredientsOfCurrentPage numberOfPages pageNumber |> html)
+                }
+            match res with
+            | Ok x -> x
+            | _ -> Redirection.FOUND Path.Errors.unableToCompleteOperation
+        
+            // match ingredientsOfCurrentPagewithTotals with
+            // | Ok (ingredientsOfCurrentPage, nTotal) ->
+            //         let numberOfPages = (nTotal - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+            //         let ingredientCategory = ordersSystem.GetCategoryOfIngredients idCategory
+                    
+            // let (ingredientsOfCurrentPage, nTotal) =
+            //     ordersSystem.GetAllIngredientOfACategoryByPage (idCategory, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)
+                    
+                    // Db.getAllIngredientsOfACategoryByPage idCategory pageNumber ctx
+            // let numberOfAllIngredientOfACategory = Db.getNumbeOfAllIngredientsOfACategory idCategory ctx
+            
+            // let numberOfPages = (numberOfAllIngredientOfACategory - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+            // let ingredientCategory = Db.getCategoryOfIngredients idCategory ctx
+            // View.seeIngredientsOfACategoryPaginated ingredientCategory ingredientsOfCurrentPage numberOfPages pageNumber |> html
+            
+            )
+        
+        
+            
+    
+    
+    
+    
+    // Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "editIngredientCategoryPaginated" idCategory pageNumber)
     // let ctx = Db.getContext()
@@ -968,8 +1016,8 @@ let editIngredientCategoryPaginated (idCategory:int) (pageNumber: int) =
     // ]
 
 // will ditch ingredient categories
-let editIngredientCategory (idCategory: int) (user: UserLoggedOnSession) =
-    log.Debug (sprintf "%s %d" "editIngredientCategory" idCategory)
+let editIngredientCategory (idCategory: string) (user: UserLoggedOnSession) =
+    log.Debug (sprintf "%s %A" "editIngredientCategory" idCategory)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "editIngredientCategory" idCategory)
@@ -1144,21 +1192,30 @@ let managePrinter (printerId: string) (categoryId: string) =
     // ]
 
 let recognizePrinters =
+    printf "XXXXX. recognize printers\n"
     log.Debug "recognizePrinters"
-    Redirection.FOUND Path.home
     
-    // log.Debug("recognizePrinters")
-    // warbler (fun _ -> 
-    //     try
-    //         let ctx = Db.getContext()
-    //         let printerNames = [for i in System.Drawing.Printing.PrinterSettings.InstalledPrinters do yield i]
-    //         printerNames |> List.iter (fun printerName -> Db.createPrinter printerName ctx)
-    //         Redirection.FOUND Path.Admin.printers
-    //     with
-    //     | ex -> 
-    //         log.Error(sprintf "recognizePrinters %s" ex.Message)
-    //         Redirection.FOUND Path.Admin.printers
-    // )
+    warbler (fun _ -> 
+        try
+            // let ctx = Db.getContext()
+            let printerNames = [for i in System.Drawing.Printing.PrinterSettings.InstalledPrinters do yield i]
+            printerNames
+            |> List.iter
+                   (fun printerName ->
+                        let printer:Printer = {
+                            Id = Guid.NewGuid()
+                            Name = printerName
+                            Types = []
+                        }
+                        ordersSystem.AddPrinter printer |> ignore
+                )
+            Redirection.FOUND Path.Admin.printers
+                
+        with
+        | ex -> 
+            log.Error(sprintf "recognizePrinters %s" ex.Message)
+            Redirection.FOUND Path.Admin.printers
+    )
 
 let resetPrinters =
     log.Debug "resetPrinters"
@@ -1194,27 +1251,39 @@ let about =
 
 let adminIngredientCategories =
     log.Debug "adminIngredientCategories"
-    Redirection.FOUND Path.home
-    
-    // log.Debug("adminIngredientCategories")
-    // let ctx = Db.getContext()
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let ctx = Db.getContext()
-    //         let allIngredientCategories = Db.getAllIngredientCategories ctx
-    //         View.ingredientCatgoriesAdministrationPage allIngredientCategories  |> html)
-    //     POST >=> bindToForm Form.ingredientCategory ( fun form -> 
-    //         try
-    //             let visibility = (form.Visibility = Form.VISIBLE)  
-    //             let description = match form.Comment with | Some X -> X | _ -> ""
-    //             let _ = Db.newIngredientCatgory form.Name visibility description ctx
-    //             Redirection.FOUND Path.Admin.allIngredientCategories
-    //         with
-    //         | ex ->
-    //             log.Error("Error in adminIngredientCategories", ex)
-    //             Redirection.FOUND Path.Errors.unableToCompleteOperation
-    //     )
-    // ]
+   
+    // TODO FIX THIS
+    match Ok () with
+        | Error e ->
+            log.Error (sprintf "Error in adminIngredientCategories %s" e)
+            Redirection.FOUND Path.Errors.unableToCompleteOperation
+        | Ok ingredientTypes ->     
+            choose [
+                GET >=> warbler (fun _ ->
+                    match ordersSystem.GetIngredientTypes() with
+                    | Ok ingredientTypes -> View.ingredientCatgoriesAdministrationPage ingredientTypes |> html
+                    | Error e -> 
+                        log.Error (sprintf "Error in adminIngredientCategories %s" e)
+                        Redirection.FOUND Path.Errors.unableToCompleteOperation
+                ) 
+                
+                POST >=> bindToForm Form.ingredientCategory ( fun form -> 
+                    try
+                        let visibility = (form.Visibility = Form.VISIBLE)  
+                        let ingredientType: IngredientType = { Id = Guid.NewGuid(); Name = form.Name; Visible = visibility  }
+                        let added = ordersSystem.AddIngredientType ingredientType
+                        match added with
+                        | Error e ->
+                            log.Error (sprintf "Error in adminIngredientCategories %s" e)
+                            Redirection.FOUND Path.Errors.unableToCompleteOperation
+                        | Ok _ ->
+                            Redirection.FOUND Path.Admin.allIngredientCategories
+                    with
+                    | ex ->
+                        log.Error("Error in adminIngredientCategories", ex)
+                        Redirection.FOUND Path.Errors.unableToCompleteOperation
+                )
+            ]
 
 let adminRoles  =
     log.Debug("adminRoles")
@@ -5006,7 +5075,9 @@ let webPart =
         path Path.Admin.visibleIngredientCategories >=> canManageIngredients visibleingredientCategories
         pathScan Path.Admin.editIngredientCategory (fun id -> (canManageIngredientsPassingUserLoggedOn (editIngredientCategory id)))
         pathScan Path.Admin.editIngredientPrices  (fun id -> admin  (editIngredientPrices id))
+        
         pathScan Path.Admin.editIngredientCategoryPaginated (fun (categoryid, pageNumber) -> (canManageIngredients (editIngredientCategoryPaginated categoryid pageNumber)))
+        
         path Path.Admin.addRole >=> adminPassingUserLoggedOn createRole
         path Path.Admin.roleEnablerObserverCategoriesByCheckBoxes >=> admin roleEnablerObserverCategoriesByCheckBoxes
         pathScan Path.Admin.roleEnablerObserverCategoriesByCheckBoxesByRoleAndCat (fun (roleId,catId) -> admin (roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId catId))

@@ -1,6 +1,7 @@
 module OrdersSystem.View
 
 open OrdersSystem.Contexts.Restaurant
+open OrdersSystem.Models.Ingredient
 open Suave.Form
 open FSharp.Data
 open Suave.Html
@@ -1841,69 +1842,77 @@ let adminPrinters (printers: Printer list)=
         ]
     ]
 
-// let ingredientCatgoriesAdministrationPage  (allIngredientCategories:Db.IngredientCategory list)   =
-//     [
-//         tag "h1" [] [Text local.AllCategoriesOfIngredients]
-//         tag "p" [] [ (a (Path.Admin.visibleIngredientCategories) ["class","buttonX"] [Text(local.SeeOnlyVisibles)])]
-//         renderForm
-//             { 
-//                 Form = Form.ingredientCategory
-//                 Fieldsets = 
-//                     [ 
-//                         { 
-//                             Legend = local.NewCategory
-//                             Fields = 
-//                                 [ 
-//                                     { 
-//                                         Label = local.Name
-//                                         Html = formInput (fun f -> <@ f.Name @>) [] 
-//                                     }
-//                                     { 
-//                                         Label = local.Description 
-//                                         Html = formInput (fun f -> <@ f.Comment @>) [] 
-//                                     } 
-//                                     { 
-//                                         Label = local.Visibility 
-//                                         Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
-//                                     } 
-//                                 ] 
-//                         }   
-//                     ]
-//                 SubmitText = local.CreateNewCategory 
-//             }
-//         br []
-//         br []
-//
-//         tag "h2" [] [Text local.ExistingCategories ]
-//         // ulAttr ["id","item-list"] [
-//         table [
-//             for ingredientCategory in allIngredientCategories  -> 
-//             // let visibility = match ingredientCategory.Visibility with | true -> "VISIBILE" | _ -> "NASCOSTO"
-//             let visibility = ""
-//             let buttonClass = match ingredientCategory.Visibility with | true -> "buttonEnabled" | _ ->  "buttonY"
-//
-//             tr 
-//                  [
-//             // tag "p" [] 
-//                     td [
-//                         a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategory.Ingredientcategoryid 0) ["class",buttonClass] 
-//                             [Text (ingredientCategory.Name + " "+visibility  )]
-//                     ]
-//                     td [
-//                         a (sprintf Path.Admin.switchVisibilityOfIngredientCategory
-//                             ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories))  ["class","buttonX"] [Text(local.SwitchVisibility)]
-//                     ]
-//                 ]
-//             ]
-//
-//         // ]
-//         tag "p" [] 
-//             [
-//                 br[]
-//                 br[]
-//                 a ((Path.home))  [] [Text(local.GoBack)]
-//             ]
-//     ]
+let ingredientCatgoriesAdministrationPage  (allIngredientCategories:IngredientType list)   =
+    
+    [
+        tag "h1" [] [Text local.AllCategoriesOfIngredients]
+        tag "p" [] [ (a (Path.Admin.visibleIngredientCategories) ["class","buttonX"] [Text(local.SeeOnlyVisibles)])]
+        renderForm
+            { 
+                Form = Form.ingredientCategory
+                Fieldsets = 
+                    [ 
+                        { 
+                            Legend = local.NewCategory
+                            Fields = 
+                                [ 
+                                    { 
+                                        Label = local.Name
+                                        Html = formInput (fun f -> <@ f.Name @>) [] 
+                                    }
+                                    { 
+                                        Label = local.Visibility 
+                                        Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
+                                    } 
+                                ] 
+                        }   
+                    ]
+                SubmitText = local.CreateNewCategory 
+            }
+        br []
+        br []
+
+        tag "h2" [] [Text local.ExistingCategories ]
+        // ulAttr ["id","item-list"] [
+        table [
+            // Todo: ok ingredientCategory and ingredientType are the same concept: decide
+            for ingredientCategory in allIngredientCategories  -> 
+
+            tr [
+                td [
+                    
+                    a (sprintf Path.Admin.editIngredientCategoryPaginated (ingredientCategory.Id.ToString()) 0) ["class","buttonX"] 
+                            [Text (ingredientCategory.Name  )]
+                    // Text(ingredientCategory.Name)
+                ]
+            ]
+            ]
+        ]
+            
+                           
+            
+            // tr 
+            //      [
+            // // tag "p" [] 
+            //         td [
+            //             a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategory.Ingredientcategoryid 0) ["class",buttonClass] 
+            //                 [Text (ingredientCategory.Name + " "+visibility  )]
+            //         ]
+            //         td [
+            //             a (sprintf Path.Admin.switchVisibilityOfIngredientCategory
+            //                 ingredientCategory.Ingredientcategoryid (WebUtility.UrlEncode Path.Admin.allIngredientCategories))  ["class","buttonX"] [Text(local.SwitchVisibility)]
+            //         ]
+            //     ]
+            // ]
+
+        // ]
+        // tag "p" [] 
+    //         [
+    //             br[]
+    //             br[]
+    //             a ((Path.home))  [] [Text(local.GoBack)]
+    //         ]
+    // ]
 
 let addQrUser = 
     [
@@ -2364,9 +2373,11 @@ let logOffButton =
 //         Text("it works")
 //     ]
 let controlPanel (user:UserLoggedOnSession) (dbUser: Models.User.User)=
+    
     printf "XXXXXX. entered in controlPanel userLoggedOn A %A\n"  (user.Username)
     printf "XXXXXX. entered in controlPanel userLoggedOn B %A\n"  (dbUser.Username)
     printf "XXXXXX. entered in controlPanel userLoggedOn userrole %A\n"  (dbUser.Role)
+    
     let orderItemsProgressLink = tag "p" [] [a (Path.Orders.orderItemsProgress) ["class","buttonX"] [Text local.OrderItemStates]]
     [
         br []
@@ -3183,77 +3194,87 @@ let chooseDateForDecrementHistory ingredientId  =
 //         a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategoryId 0 ) [] [Text(local.GoBack)]
 //     ]
 
-// let seeIngredientsOfACategoryPaginated (category:Db.IngredientCategory) (allIngredientOfCategory:Db.Ingredient list) numberOfPages pageNumber =
-//     let nextPageLink ingCatId i = 
-//         if (i<numberOfPages) 
-//             then [a (sprintf Path.Admin.editIngredientCategoryPaginated ingCatId (i+1)) ["class","noredstyle"] [Text (">")]] 
-//         else []
-//     let previosPageLink ingCatId i = 
-//         if (i>0) 
-//             then [a (sprintf Path.Admin.editIngredientCategoryPaginated ingCatId (i - 1)) ["class","noredstyle"] [Text ("<")]] 
-//         else []
-//     [
-//         h2 (local.AllIngredientsOfCategory+": " + category.Name)
-//         a (sprintf Path.Admin.editIngredientCategory category.Ingredientcategoryid) ["class","buttonX"] [Text(local.AddNew)]
-//         br []
-//         renderForm 
-//             { 
-//                 Form = Form.searchCourse
-//                 Fieldsets =
-//                     [ 
-//                         { 
-//                             Legend = local.SearchByName 
-//                             Fields = 
-//                                 [
-//                                     {
-//                                         Label = local.Name
-//                                         Html = formInput (fun f -> <@ f.Name @>) []
-//                                     }
-//                                 ]
-//                         }
-//                     ]
-//                 SubmitText = local.Search
-//             }
-//
-//         br []
-//         table [
-//             for ingredient in allIngredientOfCategory ->
-//             tr [
-//                 td [
-//                     a (sprintf Path.Admin.editIngredient ingredient.Ingredientid pageNumber)  ["class",(if ingredient.Visibility then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
-//                 ]
-//                 td [
-//                     a (sprintf Path.Admin.editIngredientPrices ingredient.Ingredientid)  ["class","buttonX"] [Text(local.Prices)]
-//                 ]
-//                 td [
-//                     (if (ingredient.Checkavailabilityflag) then
-//                         (div [] [ Text (ingredient.Availablequantity |> string)])
-//                     else 
-//                         a (sprintf Path.Admin.viewIngredientUsage ingredient.Ingredientid pageNumber)  ["class",(if ingredient.Visibility then "buttonX" else "buttonY")] [Text(local.ViewUsages)]
-//                     )
-//                 ]
-//                 td [
-//                     a (sprintf Path.Admin.fillIngredient ingredient.Ingredientid pageNumber)  ["class","buttonX"] [Text(local.Load)]
-//                 ]
-//             ]
-//         ]
-//         div []  
-//             ((previosPageLink category.Ingredientcategoryid pageNumber) @ 
-//                 (
-//                     [0 .. numberOfPages] 
-//                     |> (List.map (fun i -> 
-//                         if (i = pageNumber) then
-//                             ((a (sprintf Path.Admin.editIngredientCategoryPaginated category.Ingredientcategoryid i)) ["class","redstyle"] [Text ((i |> string)+" ")])
-//                         else 
-//                             ((a (sprintf Path.Admin.editIngredientCategoryPaginated category.Ingredientcategoryid i)) ["class","noredstyle"] [Text ((i |> string)+" ")]))
-//                     )
-//                 ) 
-//                 @ nextPageLink category.Ingredientcategoryid pageNumber
-//             )
-//         br []
-//         br []
-//         (a  Path.Admin.allIngredientCategories ["class", "buttonX"] [Text(local.GoBack)])
-//     ]
+let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientOfCategory:Models.Ingredient.Ingredient list) numberOfPages pageNumber =
+    let nextPageLink ingCatId i = 
+        if (i<numberOfPages) 
+            then [a (sprintf Path.Admin.editIngredientCategoryPaginated ingCatId (i+1)) ["class","noredstyle"] [Text (">")]] 
+        else []
+    let previosPageLink ingCatId i = 
+        if (i>0) 
+            then [a (sprintf Path.Admin.editIngredientCategoryPaginated ingCatId (i - 1)) ["class","noredstyle"] [Text ("<")]] 
+        else []
+    [
+        h2 (local.AllIngredientsOfCategory+": " + category.Name)
+        
+        br []
+        renderForm 
+            {
+                // todo be a search of anything: "course" means nothing
+                Form = Form.searchCourse
+                Fieldsets =
+                    [ 
+                        { 
+                            Legend = local.SearchByName 
+                            Fields = 
+                                [
+                                    {
+                                        Label = local.Name
+                                        Html = formInput (fun f -> <@ f.Name @>) []
+                                    }
+                                ]
+                        }
+                    ]
+                SubmitText = local.Search
+            }
+        br []
+        table [
+            for ingredient in allIngredientOfCategory ->
+            tr [
+                td [
+                    // a (sprintf Path.Admin.editIngredient ingredient.Id pageNumber)  ["class",(if ingredient.Visibility then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
+                    Text("blabl")
+                    // a (sprintf Path.Admin.editIngredient ingredient.Id pageNumber)  ["class",(if true then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
+                ]
+                td [
+                    Text("blabl")
+                    // a (sprintf Path.Admin.editIngredientPrices ingredient.Id)  ["class","buttonX"] [Text(local.Prices)]
+                ]
+                td [
+                    // (if (ingredient.Checkavailabilityflag) then
+                    (if true then
+                        // (div [] [ Text (ingredient.Availablequantity |> string)])
+                        (div [] [ Text ("unavailable" |> string)])
+                    else 
+                        // a (sprintf Path.Admin.viewIngredientUsage ingredient.Id pageNumber)  ["class",(if ingredient.Visibility then "buttonX" else "buttonY")] [Text(local.ViewUsages)]
+                        Text("blabl")
+                        // a (sprintf Path.Admin.viewIngredientUsage ingredient.Id pageNumber)  ["class",(if true then "buttonX" else "buttonY")] [Text(local.ViewUsages)]
+                    )
+                ]
+                td [
+                    // a (sprintf Path.Admin.fillIngredient ingredient.Ingredientid pageNumber)  ["class","buttonX"] [Text(local.Load)]
+                    Text("blabl")
+                    // a (sprintf Path.Admin.fillIngredient ingredient.Id pageNumber)  ["class","buttonX"] [Text(local.Load)]
+                ]
+            ]
+        ]
+    //     div []  
+    //         ((previosPageLink category.Id pageNumber) @ 
+    //             (
+    //                 [0 .. numberOfPages] 
+    //                 |> (List.map (fun i -> 
+    //                     if (i = pageNumber) then
+    //                         ((a (sprintf Path.Admin.editIngredientCategoryPaginated category.Id i)) ["class","redstyle"] [Text ((i |> string)+" ")])
+    //                     else 
+    //                         ((a (sprintf Path.Admin.editIngredientCategoryPaginated category.Id i)) ["class","noredstyle"] [Text ((i |> string)+" ")]))
+    //                 )
+    //             ) 
+    //             @ nextPageLink category.Id pageNumber
+    //         )
+    //     br []
+    //     br []
+    
+        (a  Path.Admin.allIngredientCategories ["class", "buttonX"] [Text(local.GoBack)])
+    ]
 
 // let ordersListbySingles (userView: Db.UsersView)  (myOrders: Db.Orderdetail list )  (otherOrders: Db.Orderdetail list)   
 //     (mapOfStates: Map<int,Db.State>) statesEnabledForUser initStateId (outGroupsOfOrders: Map<int,Db.OrderOutGroup list>)  =

@@ -2,13 +2,7 @@ module OrdersSystem.Models.OrderItemEvents
 open OrdersSystem.Models.OrderItem
 open OrdersSystem.Commons
 open System
-open OrdersSystem.Models.Dish
-open Sharpino
 open Sharpino.Core
-open FSharpPlus
-open FsToolkit.ErrorHandling
-open Sharpino.Core
-open Suave
 
 type OrderItemEvents =
     | VariationAdded of Variation

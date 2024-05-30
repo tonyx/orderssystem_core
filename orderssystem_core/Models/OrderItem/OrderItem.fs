@@ -46,7 +46,8 @@ type OrderItem (id: Guid, orderId: Guid, dishId: Guid, quantity: int, comment: s
     
     static member Deserialize(json: string)     =
         globalSerializer.Deserialize<OrderItem> json
-        
+       
+    ///      
     static member StorageName = "_orderItems"
     static member Version = "01"
     

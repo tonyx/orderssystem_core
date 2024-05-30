@@ -17,30 +17,30 @@ SET row_security = off;
 
 
 --
--- Name: insert_01_dishes_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_dishes_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_dishes_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_dishes_aggregate_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_dishes_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_dishes_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_dishes(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
+INSERT INTO aggregate_events_01_dishes(aggregate_id, event_id)
+VALUES(aggregate_id, event_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;
 
 
 --
--- Name: insert_01_dishes_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_dishes_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_dishes_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_dishes_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -54,20 +54,20 @@ $$;
 
 
 --
--- Name: insert_01_ingredients_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_ingredients_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_ingredients_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_ingredients_aggregate_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_ingredients_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_ingredients_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_ingredients(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
+INSERT INTO aggregate_events_01_ingredients(aggregate_id, event_id)
+VALUES(aggregate_id, event_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;
@@ -91,30 +91,30 @@ $$;
 
 
 --
--- Name: insert_01_orderitems_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_orderitems_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_orderitems_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_orderitems_aggregate_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_orderItems_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_orderItems_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_orderItems(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
+INSERT INTO aggregate_events_01_orderItems(aggregate_id, event_id)
+VALUES(aggregate_id, event_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;
 
 
 --
--- Name: insert_01_orderitems_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_orderitems_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_orderitems_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_orderitems_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -138,10 +138,10 @@ DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_orders_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_orders_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_orders(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
+INSERT INTO aggregate_events_01_orders(aggregate_id, event_id)
+VALUES(aggregate_id, event_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;
@@ -220,30 +220,30 @@ $$;
 
 
 --
--- Name: insert_01_tables_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_tables_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_tables_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_tables_aggregate_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_tables_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_tables_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_tables(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
+INSERT INTO aggregate_events_01_tables(aggregate_id, event_id)
+VALUES(aggregate_id, event_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;
 
 
 --
--- Name: insert_01_tables_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_tables_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_tables_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_tables_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -267,9 +267,9 @@ DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_users_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_users_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_users(aggregate_id, event_id, aggregate_state_id )
+INSERT INTO aggregate_events_01_users(aggregate_id, event_id)
 VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
@@ -316,7 +316,6 @@ SET default_table_access_method = heap;
 CREATE TABLE public.aggregate_events_01_dishes (
     id integer DEFAULT nextval('public.aggregate_events_01_dishes_id_seq'::regclass) NOT NULL,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     event_id integer
 );
 
@@ -340,7 +339,6 @@ CREATE SEQUENCE public.aggregate_events_01_ingredients_id_seq
 CREATE TABLE public.aggregate_events_01_ingredients (
     id integer DEFAULT nextval('public.aggregate_events_01_ingredients_id_seq'::regclass) NOT NULL,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     event_id integer
 );
 
@@ -436,7 +434,6 @@ CREATE SEQUENCE public.aggregate_events_01_tables_id_seq
 CREATE TABLE public.aggregate_events_01_tables (
     id integer DEFAULT nextval('public.aggregate_events_01_tables_id_seq'::regclass) NOT NULL,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     event_id integer
 );
 
@@ -460,7 +457,6 @@ CREATE SEQUENCE public.aggregate_events_01_users_id_seq
 CREATE TABLE public.aggregate_events_01_users (
     id integer DEFAULT nextval('public.aggregate_events_01_users_id_seq'::regclass) NOT NULL,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     event_id integer
 );
 
@@ -474,8 +470,6 @@ CREATE TABLE public.events_01_dishes (
     aggregate_id uuid NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -503,8 +497,6 @@ CREATE TABLE public.events_01_ingredients (
     aggregate_id uuid NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -532,8 +524,6 @@ CREATE TABLE public.events_01_orderitems (
     aggregate_id uuid NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -561,8 +551,6 @@ CREATE TABLE public.events_01_orders (
     aggregate_id uuid NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -589,8 +577,6 @@ CREATE TABLE public.events_01_restaurant (
     id integer NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -647,8 +633,6 @@ CREATE TABLE public.events_01_tables (
     aggregate_id uuid NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -676,8 +660,6 @@ CREATE TABLE public.events_01_users (
     aggregate_id uuid NOT NULL,
     event text NOT NULL,
     published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -726,7 +708,6 @@ CREATE TABLE public.snapshots_01_dishes (
     snapshot text NOT NULL,
     event_id integer,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -752,7 +733,6 @@ CREATE TABLE public.snapshots_01_ingredients (
     snapshot text NOT NULL,
     event_id integer,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -778,7 +758,6 @@ CREATE TABLE public.snapshots_01_orderitems (
     snapshot text NOT NULL,
     event_id integer,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -804,7 +783,6 @@ CREATE TABLE public.snapshots_01_orders (
     snapshot text NOT NULL,
     event_id integer,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -880,7 +858,6 @@ CREATE TABLE public.snapshots_01_tables (
     snapshot text NOT NULL,
     event_id integer,
     aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
     "timestamp" timestamp without time zone NOT NULL
 );
 

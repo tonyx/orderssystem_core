@@ -4,9 +4,7 @@ CREATE TABLE public.events_01_orderItems (
                                              id integer NOT NULL,
                                              aggregate_id uuid NOT NULL,
                                              event text NOT NULL,
-                                             published boolean NOT NULL DEFAULT false,
-                                             kafkaoffset BIGINT,
-                                             kafkapartition INTEGER,
+                                             published boolean NOT NULL DEFAULT false, -- not used
                                              "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -31,7 +29,6 @@ CREATE TABLE public.snapshots_01_orderItems (
                                                 snapshot text NOT NULL,
                                                 event_id integer, -- the initial snapshot has no event_id associated so it can be null
                                                 aggregate_id uuid NOT NULL,
-                                                aggregate_state_id uuid,
                                                 "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -66,8 +63,7 @@ ALTER TABLE ONLY public.aggregate_events_01_orderItems
 
 CREATE OR REPLACE FUNCTION insert_01_orderItems_event_and_return_id(
     IN event_in TEXT,
-    IN aggregate_id uuid,
-    IN aggregate_state_id uuid
+    IN aggregate_id uuid
 )
 RETURNS int
        
@@ -84,8 +80,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION insert_01_orderItems_aggregate_event_and_return_id(
     IN event_in TEXT,
-    IN aggregate_id uuid, 
-    in aggregate_state_id uuid
+    IN aggregate_id uuid
 )
 RETURNS int
     
@@ -95,10 +90,10 @@ DECLARE
 inserted_id integer;
     event_id integer;
 BEGIN
-    event_id := insert_01_orderItems_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
+    event_id := insert_01_orderItems_event_and_return_id(event_in, aggregate_id);
 
-INSERT INTO aggregate_events_01_orderItems(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
+INSERT INTO aggregate_events_01_orderItems(aggregate_id, event_id)
+VALUES(aggregate_id, event_id) RETURNING id INTO inserted_id;
 return event_id;
 END;
 $$;

@@ -21,6 +21,7 @@
     <!-- those works with sharpino -->
 
     <Compile Include="Commons.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Models/User/User.fs" />
     <Compile Include="Models/User/Events.fs" />
     <Compile Include="Models/User/Commands.fs" />
@@ -59,7 +60,6 @@
     
 <!--    <Compile Include="Db.fs" />-->
     
-    <Compile Include="Utils.fs" />
     <Compile Include="DbWrappedEntities.fs" />
     <Compile Include="Path.fs" />
     <Compile Include="Forms.fs" />

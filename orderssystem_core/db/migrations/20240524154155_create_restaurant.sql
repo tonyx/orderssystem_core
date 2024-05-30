@@ -4,8 +4,6 @@ CREATE TABLE public.events_01_restaurant (
                                           id integer NOT NULL,
                                           event text NOT NULL,
                                           published boolean NOT NULL DEFAULT false,
-                                          kafkaoffset BIGINT,
-                                          kafkapartition INTEGER,
                                           "timestamp" timestamp without time zone NOT NULL
 );
 
@@ -59,22 +57,6 @@ BEGIN
 END;
 $$;
 
--- CREATE OR REPLACE PROCEDURE set_classic_optimistic_lock_01_restaurant() AS $$
--- BEGIN 
---     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'context_events_01_restaurant_context_state_id_unique') THEN
--- ALTER TABLE events_01_restaurant
---     ADD CONSTRAINT context_events_01_restaurant_context_state_id_unique UNIQUE (context_state_id);
--- END IF;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE PROCEDURE un_set_classic_optimistic_lockcontext_events_01_restaurant() AS $$
--- BEGIN
---     ALTER TABLE eventscontext_events_01_restaurant
---     DROP CONSTRAINT IF EXISTS context_eventscontext_events_01_restaurant_context_state_id_unique; 
--- END;
--- $$ LANGUAGE plpgsql;
 
 -- migrate:down
-
 

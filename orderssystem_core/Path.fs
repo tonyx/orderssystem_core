@@ -1,7 +1,7 @@
 module OrdersSystem.Path
 
 type IntPath = PrintfFormat<(int -> string),unit,string,string,int>
-type IntPath2 = PrintfFormat<(int  -> int -> string),unit,string,string,(int*int)>
+type IntPath2 = PrintfFormat<(int  -> int -> string), unit, string, string, (int*int)>
 type IntPath3 = PrintfFormat< (int  -> int -> int ->  string),unit,string,string,(int*int*int)>
 type IntPath4 = PrintfFormat< (int  -> int -> int -> int -> string),unit,string,string,(int*int*int*int)>
 
@@ -10,6 +10,8 @@ type StrPath2 = PrintfFormat<(string -> string -> string),unit,string,string,(st
 type IntStrPath = PrintfFormat<(int -> string -> string),unit,string,string,(int*string)>
 type Int2StrPath = PrintfFormat<(int -> int -> string -> string),unit,string,string,(int*int*string)>
 type Int3StrPath = PrintfFormat<(int -> int -> int -> string -> string),unit,string,string,(int*int*int*string)>
+
+type StrIntPath = PrintfFormat<(string -> int -> string), unit, string, string, string * int >
 
 let withParam (key,value) path = sprintf "%s?%s=%s" path key value
 let with2Params (key1,value1) (key2,value2) path = sprintf "%s?%s=%s&%s=%s" path key1 value1 key2 value2
@@ -126,8 +128,10 @@ module Admin =
     let editIngredientPrices: IntPath = "/admin/editIngredientPrices/%d"
     let loadIngredient: IntPath2 = "/admin/loadIngredient/%d/%d"
     let switchVisibilityOfIngredient: IntPath2 = "/admin/switchIngVisibilityOfIngredient/%d/%d"
-    let editIngredientCategory: IntPath = "/admin/ingredientCategory/%d"
-    let editIngredientCategoryPaginated: IntPath2 = "/admin/ingredientCategoryPaginated/%d/%d"
+    // let editIngredientCategory: IntPath = "/admin/ingredientCategory/%d"
+    let editIngredientCategory: StrPath = "/admin/ingredientCategory/%s"
+    // let editIngredientCategoryPaginated: IntPath2 = "/admin/ingredientCategoryPaginated/%d/%d"
+    let editIngredientCategoryPaginated: StrIntPath = "/admin/ingredientCategoryPaginated/%s/%d"
     let resetPrinters = "/admin/resetPrinters"
     let recognizePrinters = "/admin/recognizePrinters"
     let managePrinter: StrPath2 = "/admin/managePrinter/%s/%s"

@@ -1,4 +1,6 @@
 module OrdersSystem.Utils
+open Microsoft.FSharp.Reflection
+
 
 open OrdersSystem
 // open ExpressionOptimizer
@@ -77,3 +79,8 @@ let fillAlignComma (x: decimal) =
     let leftAdjust = [1 .. pad] |> List.fold (fun x _ -> x + "_") ""
     let adjustPrice = leftAdjust + pric
     adjustPrice
+    
+let getUnionCaseNames<'T> () =
+    FSharpType.GetUnionCases(typeof<'T>)
+    |> Array.map (fun case -> case.Name)
+    

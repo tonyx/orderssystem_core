@@ -8,8 +8,7 @@ open FsToolkit.ErrorHandling
 open Sharpino.Core
 
 type IngredientEvents =
-    | IngredientTypeAdded of IngredientTypes
-    | IngredientTypeRemoved of IngredientTypes
+    | IngredientTypeSet of Guid
     | NameUpdated of String
     | Deactivated 
     | IngredientMeasureTypeAdded of IngredientMeasureType
@@ -21,10 +20,8 @@ type IngredientEvents =
         interface Event<Ingredient>  with
             member this.Process ingredient =
                 match this with
-                | IngredientTypeAdded ingredientType -> 
-                    ingredient.AddIngredientType ingredientType
-                | IngredientTypeRemoved ingredientType -> 
-                    ingredient.RemoveIngredientType ingredientType
+                | IngredientTypeSet ingredientType -> 
+                    ingredient.SetIngredientTypeId ingredientType
                 | NameUpdated name -> 
                     ingredient.UpdateName name
                 | IngredientMeasureTypeAdded ingredientMeasure -> 
