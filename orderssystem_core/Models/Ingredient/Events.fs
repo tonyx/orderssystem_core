@@ -13,9 +13,13 @@ type IngredientEvents =
     | Deactivated 
     | IngredientMeasureTypeAdded of IngredientMeasureType
     | IngredientMeasureTypeRemoved of IngredientMeasureType
-    | IngredientUpdated of Ingredient
     | IngredientPriceAdded of IngredientPrice
     | IngredientPriceRemoved of IngredientPrice
+    | AllergenSet of bool
+    | UpdatePolicySet of UpdatePolicy
+    | StockIncreased of float
+    | StockDecreased of float
+    | VisibilitySet of bool
 
         interface Event<Ingredient>  with
             member this.Process ingredient =
@@ -34,8 +38,17 @@ type IngredientEvents =
                     ingredient.AddIngredientPrice ingredientPrice
                 | IngredientPriceRemoved ingredientPrice ->
                     ingredient.RemoveIngredientPrice ingredientPrice
-                | IngredientUpdated ingredient ->
-                    ingredient.Update ingredient
+                | AllergenSet x ->
+                    ingredient.SetAllergen x
+                | UpdatePolicySet x ->
+                    ingredient.SetUpdatePolicy x
+                | StockIncreased x ->
+                    ingredient.IncreaseStock x
+                | StockDecreased x ->
+                    ingredient.DecreaseStock x
+                | VisibilitySet x ->
+                    ingredient.SetVisibility x
+                     
                 
 
     member this.Serialize =

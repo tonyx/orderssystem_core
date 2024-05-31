@@ -33,18 +33,53 @@ open Microsoft.FSharp.Reflection
         static member mkIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
             { IngredientId = ingredientId; Price = price; Quantity = quantity; MeasuringSystem = measuringSystem }
 
-    type IngredientTO =
-        {
-            Id: Guid
-            Name: string
-            IngredientType: Guid
-            IngredientMeasureTypes: List<IngredientMeasureType>
-            Active: bool
-            IngredientPrices: List<IngredientPrice>
-
-        }
-
-    type Ingredient private (id: Guid, name: string, ingredientTypeId: Guid, ingredientMeasureTypes: List<IngredientMeasureType>, active: bool, ingredientPrices: List<IngredientPrice>) =
+    type UpdatePolicy =
+        | NoUpdate
+        | UpdateOnOrder
+        | UpdateOnStock
+        | UpdateOnOrderAndStock
+        with
+        static member FromString (x: string) =
+            match x with
+            | "NoUpdate" -> NoUpdate
+            | "UpdateOnOrder" -> UpdateOnOrder
+            | "UpdateOnStock" -> UpdateOnStock
+            | "UpdateOnOrderAndStock" -> UpdateOnOrderAndStock
+            | _ ->
+                NoUpdate
+        static member GetCases() =
+            ["NoUpdate"; "UpdateOnOrder"; "UpdateOnStock"; "UpdateOnOrderAndStock"]
+                
+    type CheckUpdatePolicy =
+        | NoCheck
+        | Alert
+        | Block
+        | BlockAndAlert
+        with
+        static member FromString (local: string, x: string) =
+            match x with
+            | "NoCheck" -> NoCheck
+            | "Alert" -> Alert
+            | "Block" -> Block
+            | "BlockAndAlert" -> BlockAndAlert
+            | _ -> NoCheck
+        static member GetCases() =
+            ["NoCheck"; "Alert"; "Block"; "BlockAndAlert"]    
+     
+    type Ingredient 
+        (id: Guid,
+         name: string,
+         description: Option<string>,
+         ingredientTypeId: Guid,
+         ingredientMeasureTypes: List<IngredientMeasureType>,
+         active: bool, 
+         ingredientPrices: List<IngredientPrice>,
+         stock: float,
+         hasAllergen: bool,
+         updatePolicy: UpdatePolicy,
+         visible: bool
+         ) =
+        
         let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
@@ -52,10 +87,11 @@ open Microsoft.FSharp.Reflection
         member this.IngredientMeasureTypes = ingredientMeasureTypes
         member this.IngredientPrices = ingredientPrices
         member this.Active = active
-
-        new (id: Guid, name: string, ingredientType: Guid, ingredientMeasures: List<IngredientMeasureType>) =
-            Ingredient (id, name, ingredientType, ingredientMeasures, true, [])
-
+        member this.HasAllergen = hasAllergen
+        member this.UpdatePolicy = updatePolicy
+        member this.Stock = stock
+        member this.Visible = visible
+        member this.Description = description
 
         member this.AddIngredientPrice (ingredientPrice: IngredientPrice) =
             result {
@@ -69,7 +105,7 @@ open Microsoft.FSharp.Reflection
                     |> List.contains ingredientPrice
                     |> not
                     |> Result.ofBool "IngredientPrice already exists"
-                return Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices)
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices, stock, hasAllergen, updatePolicy, visible)
             }
 
         member this.RemoveIngredientPrice (ingredientPrice: IngredientPrice) =
@@ -78,11 +114,16 @@ open Microsoft.FSharp.Reflection
                     this.IngredientPrices 
                     |> List.contains ingredientPrice
                     |> Result.ofBool "IngredientPrice does not exist"
-                return Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices |> List.filter ((<>) ingredientPrice))
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices |> List.filter ((<>) ingredientPrice), stock,  hasAllergen, updatePolicy, visible)
             }
+        member this.SetAllergen (x: bool) =
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, x, updatePolicy, visible) |> Ok
+            
+        member this.SetUpdatePolicy (x: UpdatePolicy) =
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, x, visible) |> Ok
 
         member this.SetIngredientTypeId (ingredientTypeId: Guid) =
-            Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, visible) |> Ok
 
         member this.UpdateName (newName: string) =
             result {
@@ -91,19 +132,31 @@ open Microsoft.FSharp.Reflection
                     |> String.IsNullOrWhiteSpace
                     |> not
                     |> Result.ofBool "Name cannot be empty"
-                return Ingredient (id, newName, ingredientTypeId, ingredientMeasureTypes)
+                return Ingredient (id, newName, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, visible)
             }
-
-        member this.Update (ingredient: Ingredient) =
+       
+        member this.SetVisibility (x: bool) =
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, x) |> Ok
+        
+        member this.IncreaseStock (quantity: float) =
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock + quantity, hasAllergen, updatePolicy, visible) |> Ok
+        
+        member this.DecreaseStock (quantity: float) =
             result {
-                do! 
-                    ingredient.Id = this.Id
-                    |> Result.ofBool "Ingredient Id does not match"
-                return ingredient
-            }
+                do!
+                    match updatePolicy with
+                    | NoUpdate -> true
+                    | UpdateOnOrder -> true 
+                    | UpdateOnStock -> 
+                        stock - quantity >= 0
+                    | UpdateOnOrderAndStock ->
+                        stock - quantity >= 0
+                    |> Result.ofBool "Stock cannot be negative"
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock - quantity, hasAllergen, updatePolicy, visible) 
+                }
 
         member this.Deactivate () =
-            Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes, false, ingredientPrices) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, false, ingredientPrices, stock, hasAllergen, updatePolicy, visible) |> Ok
 
         member this.AddIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
             result {
@@ -112,7 +165,7 @@ open Microsoft.FSharp.Reflection
                     |> List.contains ingredientMeasure
                     |> not
                     |> Result.ofBool "IngredientMeasure already exists"
-                return Ingredient (id, name, ingredientTypeId, ingredientMeasure :: ingredientMeasureTypes)
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasure:: ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, visible)
             }
 
         member this.RemoveIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
@@ -121,19 +174,8 @@ open Microsoft.FSharp.Reflection
                     this.IngredientMeasureTypes 
                     |> List.contains ingredientMeasure
                     |> Result.ofBool "IngredientMeasure does not exist"
-                return Ingredient (id, name, ingredientTypeId, ingredientMeasureTypes |> List.filter ((<>) ingredientMeasure))
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes |> List.filter ((<>) ingredientMeasure), active, ingredientPrices, stock, hasAllergen, updatePolicy, visible)
             }
-        member this.ToIngredienTO  =
-            {   
-                Id = this.Id; 
-                Name = this.Name; 
-                IngredientType = this.IngredientTypeId; 
-                IngredientMeasureTypes = this.IngredientMeasureTypes 
-                Active = this.Active;
-                IngredientPrices = this.IngredientPrices
-            }
-        static member FromIngredientTO (ingredientTO: IngredientTO) =
-            Ingredient (ingredientTO.Id, ingredientTO.Name, ingredientTO.IngredientType, ingredientTO.IngredientMeasureTypes, ingredientTO.Active, ingredientTO.IngredientPrices)
 
         static member SnapshotsInterval =
             15

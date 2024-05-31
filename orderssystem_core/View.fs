@@ -1697,63 +1697,60 @@ let createCourse visibleCategories   =
 //         ]
 //     ]
 
-// let ingredientsOfACategory message (category:Db.IngredientCategory) (allIngredientOfCategory: (Db.Ingredient) list)  =
-//     [
-//         tag "h1" [] [Text (local.Category+category.Name+ " ("+local.All+")")]
-//         div ["id", "register-message"] 
-//             [
-//                 Text message
-//             ]
-//         h2 local.NewIngredient
-//         renderForm
-//             { 
-//                 Form = Form.ingredient
-//                 Fieldsets = 
-//                     [ { Legend = local.Ingredient
-//                         Fields = 
-//                             [ 
-//                                 { 
-//                                     Label = local.Name
-//                                     Html = formInput (fun f -> <@ f.Name @>) [] 
-//                                 }
-//                                 {   Label = local.Description
-//                                     Html = formInput (fun f -> <@ f.Comment @>) [] 
-//                                 } 
-//                                 { 
-//                                     Label = local.Allergen
-//                                     Html = selectInput (fun f -> <@ f.Allergene @>) yesOrNo (Some "NO") 
-//                                 } 
-//                                 { 
-//                                     Label = local.Visibility
-//                                     Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
-//                                 } 
-//                                 { 
-//                                     Label = local.UpdateAvailability
-//                                     Html = selectInput (fun f -> <@ f.UpdateAvailabilityFlag @>) yesOrNo (Some "NO") 
-//                                 } 
-//                                 { 
-//                                     Label = local.AvailablQuantity
-//                                     Html = formInput (fun f -> <@ f.AvailableQuantity @>) ["Value", "0"]  
-//                                 } 
-//                                 { 
-//                                     Label = local.MeasuringSystem
-//                                     Html = selectInput (fun f -> <@ f.UnitOfMeasure @>) unit_of_measures_drop_box (None)  
-//                                 } 
-//                                 { 
-//                                     Label = local.CheckAvailability
-//                                     Html = selectInput (fun f -> <@ f.CheckAvailabilityFlag @>) yesOrNo (Some "NO") 
-//                                 } 
-//                             ] 
-//                         } 
-//                     ]
-//                 SubmitText = local.Submit 
-//             }
-//         br []
-//         div [] 
-//             [
-//                 (a (sprintf  Path.Admin.editIngredientCategoryPaginated category.Ingredientcategoryid 0))  [] [Text(local.GoBack)]
-//             ]
-//     ]
+let ingredientsOfACategory message (category:Models.Ingredient.IngredientType) (allIngredientOfCategory: Models.Ingredient.Ingredient list)  =
+    let updatePolicies =
+        UpdatePolicy.GetCases()
+        |> List.map (fun x -> (x, x))
+    let checkUpdatePolicies =
+        CheckUpdatePolicy.GetCases()
+        |> List.map (fun x -> (x, x))
+    [
+        tag "h1" [] [Text (local.Category+category.Name+ " ("+local.All+")")]
+        div ["id", "register-message"] 
+            [
+                Text message
+            ]
+        renderForm
+             { 
+                 Form = Form.ingredient
+                 Fieldsets = 
+                     [ { Legend = local.Ingredient
+                         Fields = 
+                             [ 
+                                 { 
+                                     Label = local.Name
+                                     Html = formInput (fun f -> <@ f.Name @>) [] 
+                                 }
+                                 {   Label = local.Description
+                                     Html = formInput (fun f -> <@ f.Description @>) [] 
+                                 } 
+                                 { 
+                                     Label = local.Allergen
+                                     Html = selectInput (fun f -> <@ f.Allergene @>) yesOrNo (Some "NO") 
+                                 } 
+                                 { 
+                                     Label = local.Visibility
+                                     Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
+                                 }
+                                 {
+                                     Label = local.UpdateAvailability
+                                     Html = selectInput (fun f -> <@ f.UpdatePolicy @>) updatePolicies (Some (UpdatePolicy.NoUpdate.ToString())) 
+                                 }
+                                 { 
+                                     Label = local.CheckAvailability
+                                     Html = selectInput (fun f -> <@ f.CheckUpdatePolicy @>) checkUpdatePolicies (Some (CheckUpdatePolicy.NoCheck.ToString())) 
+                                 } 
+                             ] 
+                         } 
+                     ]
+                 SubmitText = local.Submit 
+             }
+        br []
+        div [] 
+             [
+                 // (a (sprintf  Path.Admin.editIngredientCategoryPaginated category.Id 0))  [] [Text(local.GoBack)]
+             ]
+     ]
 
 
 // let visibleIngreientCategoriesAdministrationPage (visibleIngredientCategories:Db.IngredientCategory list)  =
@@ -3205,6 +3202,9 @@ let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientO
         else []
     [
         h2 (local.AllIngredientsOfCategory+": " + category.Name)
+        // a (sprintf Path.Admin.editIngredientCategory category.Id) ["class","buttonX"] [Text(local.AddNew)]
+        a (sprintf Path.Admin.editIngredientCategory (category.Id.ToString())) ["class","buttonX"] [Text(local.AddNew)]
+
         
         br []
         renderForm 

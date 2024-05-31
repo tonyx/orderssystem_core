@@ -13,11 +13,15 @@ type IngredientCommands =
     | UpdateName of String
     | AddIngredientMeasureType of IngredientMeasureType
     | RemoveIngredientMeasureType of IngredientMeasureType
-    | Deactivate
     | AddIngredientPrice of IngredientPrice
     | RemoveIngredientPrice of IngredientPrice
-    | UpdateIngredient of Ingredient
-
+    | Deactivate
+    | SetAllergen of bool
+    | SetUpdatePolicy of UpdatePolicy
+    | IncreaseStock of float
+    | DecreaseStock of float
+    | SetVisibility of bool
+    
         interface Command<Ingredient, IngredientEvents>  with
             member this.Execute ingredient = 
                 match this with
@@ -39,11 +43,23 @@ type IngredientCommands =
                 | RemoveIngredientPrice ingredientPrice ->
                     ingredient.RemoveIngredientPrice ingredientPrice
                     |> Result.map (fun _ -> [IngredientPriceRemoved ingredientPrice])
-                | UpdateIngredient ingredient ->
-                    ingredient.Update ingredient
-                    |> Result.map (fun _ -> [IngredientUpdated ingredient])
-
                 | Deactivate -> 
                     ingredient.Deactivate ()
                     |> Result.map (fun _ -> [Deactivated])
+                | SetAllergen x ->
+                    ingredient.SetAllergen x
+                    |> Result.map (fun _ -> [AllergenSet x])
+                | SetUpdatePolicy x ->
+                    ingredient.SetUpdatePolicy x
+                    |> Result.map (fun _ -> [UpdatePolicySet x])
+                | IncreaseStock x ->
+                    ingredient.IncreaseStock x
+                    |> Result.map (fun _ -> [StockIncreased x])
+                | DecreaseStock x ->
+                    ingredient.DecreaseStock x
+                    |> Result.map (fun _ -> [StockDecreased x])
+                | SetVisibility x ->
+                    ingredient.SetVisibility x
+                    |> Result.map (fun _ -> [VisibilitySet x])
+                    
             member this.Undoer = None

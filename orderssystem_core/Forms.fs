@@ -126,21 +126,20 @@ let ingredientCategory: Form<IngredientCategory> =
         TextProp ((fun f -> <@ f.Name @>), [])
     ],[])
 
-type Ingredient = {
+type IngredientForm = {
     Name: string
-    Comment: string option
+    Description: string option
     Visibility: string
     Allergene: string
-    AvailableQuantity: decimal
-    UpdateAvailabilityFlag: string
-    CheckAvailabilityFlag: string
-    UnitOfMeasure: string
+    // AvailableQuantity: decimal
+    UpdatePolicy: string
+    CheckUpdatePolicy: string
 }
 
-let ingredient:Form<Ingredient> =
+let ingredient:Form<IngredientForm> =
     Form ([
         TextProp ((fun f -> <@ f.Name@>), [])
-        DecimalProp ((fun f -> <@ f.AvailableQuantity@>), [min 0.0M; step 0.01M])
+        // DecimalProp ((fun f -> <@ f.AvailableQuantity@>), [min 0.0M; step 0.01M])
     ],[]
     )
 

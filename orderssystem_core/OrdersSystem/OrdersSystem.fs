@@ -308,17 +308,17 @@ module OrdersSystem =
                     |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
             }
 
-        member this.UpdateIngredient (ingredient: Ingredient) =
-            result {
-                let! ingredientExists =
-                    this.GetIngredient ingredient.Id
-                    |> Result.map (fun _ -> ())
-
-                let updateIngredient = IngredientCommands.UpdateIngredient ingredient
-                return!
-                    updateIngredient
-                    |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
-            }
+        // member this.UpdateIngredient (ingredient: Ingredient) =
+        //     result {
+        //         let! ingredientExists =
+        //             this.GetIngredient ingredient.Id
+        //             |> Result.map (fun _ -> ())
+        //
+        //         let updateIngredient = IngredientCommands.UpdateIngredient ingredient
+        //         return!
+        //             updateIngredient
+        //             |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
+        //     }
 
         member this.GetOrder id =
             result {
@@ -534,26 +534,24 @@ module OrdersSystem =
                     updateDish
                     |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
             }
-            
-        member this.CreateIngredient (name: string, ingredientCategoryId: Guid) =
+
+        member this.CreateIngredient (ingredient: Ingredient)  =
             result {
                 let! existingIngredients = this.GetAllIngredients ()
                 let! notAlreadyExists =
                     existingIngredients
-                    |> List.exists (fun x -> x.Name = name)
+                    |> List.exists (fun x -> x.Name = ingredient.Name && x.Description = ingredient.Description)
                     |> not
-                    |> Result.ofBool (sprintf "Ingredient with name '%s' already exists" name)
-
+                    |> Result.ofBool (sprintf "Ingredient with name '%s' and description %A already exists" ingredient.Name ingredient.Description)
                 let id = Guid.NewGuid()
-                let ingredient = Ingredient (id, name, ingredientCategoryId, [])
-
+                
                 let! result =
                     id
                     |> RestaurantCommands.AddIngredientRef
                     |> runInitAndCommand<Restaurant, RestaurantEvents, Ingredient, string> eventStore eventBroker ingredient
-
-                return result
+                return result    
             }
+            
 
         member this.CreateTable (description: Option<string>, number: int, seats: int) =
             result {
@@ -661,11 +659,25 @@ module OrdersSystem =
             
         member this.GetAllIngredientsOfACategory (ingredientCategoryId: Guid) =
             result {
+                let! existingCategories =
+                    this.GetIngredientTypes ()
+                do! 
+                    existingCategories
+                    |> List.exists (fun x -> x.Id = ingredientCategoryId)
+                    |> Result.ofBool (sprintf "IngredientType with id '%A' does not exist" ingredientCategoryId)    
+                
                 let! ingredients = this.GetAllIngredients ()
                 let ingredientsOfCategory = 
                     ingredients |> List.filter (fun x -> x.IngredientTypeId = ingredientCategoryId)
                 return ingredientsOfCategory
             }
+            
+        member this.FindIngredientByName (name: string) =
+            result {
+                let! ingredients = this.GetAllIngredients ()
+                let filtered = ingredients |> List.filter (fun x -> x.Name.ToLower().Contains (name.ToLower()))
+                return filtered
+            }    
             
         member this.GetAllIngredientOfACategoryByPage (ingredientCategoryId: Guid, page: int, pageSize: int) =
             result {
@@ -675,7 +687,7 @@ module OrdersSystem =
                 let sortedIngredients = 
                     ingredients |> List.sortBy (fun x -> x.Name)    
                 let ingredientsOfCategory =
-                    if sortedIngredients.Length = 0 then // sortedIngredients.Length  < page * pageSize then
+                    if sortedIngredients.Length = 0 then 
                         []
                     else if (sortedIngredients.Length - (page * pageSize)) <= pageSize then
                         sortedIngredients |> List.skip (page * pageSize) 
@@ -684,7 +696,7 @@ module OrdersSystem =
                 return (ingredientsOfCategory, nTotals)
             }
             
-        member this.GetIngredientTypes () =
+        member this.GetIngredientTypes (): Result<List<IngredientType>, string> =
             result {
                 let! (_, restaurant) = restaurantViewer ()
                 return restaurant.IngredientTypes
