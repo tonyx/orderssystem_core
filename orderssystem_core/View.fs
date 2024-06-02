@@ -1,6 +1,7 @@
 module OrdersSystem.View
 
 open OrdersSystem.Contexts.Restaurant
+open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
 open Suave.Form
 open FSharp.Data
@@ -42,7 +43,7 @@ let local = LocalizationX.Load ("Local_"+Settings.Localization+".xml")
 
 
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-log4net.Config.BasicConfigurator.Configure() |> ignore
+// log4net.Config.BasicConfigurator.Configure() |> ignore
 
 log.Debug "XXXX. This is the view"
 
@@ -1632,12 +1633,74 @@ let createCourse visibleCategories   =
 //         ]
 //     ]
 
-// let editIngredient message (ingredient:Db.Ingredient) (allIngredientCategories: Db.IngredientCategory list) (backPageNumber:int) =
-//     let allIngredientCategoriesIdName = List.map (fun (x:Db.IngredientCategory) -> ((decimal)x.Ingredientcategoryid, x.Name)) allIngredientCategories
-//     let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated ingredient.Ingredientcategoryid backPageNumber)
-//
-//     [
-//          //tag "h1" [] [Text (local.Ingredient + " " + ingredient.Name)]
+let editIngredient message (ingredient:Models.Ingredient.Ingredient) (allIngredientCategories: IngredientType list) (backPageNumber:int) =
+    let allIngredientCategoriesIdName =
+        allIngredientCategories |> List.map (fun (x:IngredientType) -> (x.Id.ToString(), x.Name))
+    let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated (ingredient.Id.ToString()) backPageNumber)
+    let updatePolicyOptions = UpdatePolicy.GetCases () |> List.map (fun x -> (x, x))
+    let checkUpdatePolicyOptions = CheckUpdatePolicy.GetCases () |> List.map (fun x -> (x, x))
+    [
+         div ["id", "register-message"] 
+             [
+                 Text message
+             ]
+         tag "h1" [] [Text (local.Ingredient + " " + ingredient.Name)]
+         h2 (local.ModifyIngredient + " " + ingredient.Name)
+         renderForm
+             { 
+                 Form = Form.ingredientEdit
+                 Fieldsets = 
+                     [ 
+                         { 
+                             Legend = local.Ingredient
+                             Fields =
+                                 let desc = match ingredient.Description with Some x -> x | None -> ""
+                                 [ 
+                                     { 
+                                         Label = local.Name
+                                         Html = formInput (fun f -> <@ f.Name @>) ["value",ingredient.Name] 
+                                     }
+                                     
+                                     { 
+                                         Label = local.Description
+                                         Html = formInput (fun f -> <@ f.Comment @>) ["value", desc] 
+                                     } 
+                                     
+                                     { 
+                                         Label = local.Category
+                                         Html = selectInput (fun f -> <@ (f.Category) @>) allIngredientCategoriesIdName (Some (ingredient.IngredientTypeId.ToString())) 
+                                     }
+                                     
+                                     { 
+                                         Label = local.Allergen
+                                         Html = selectInput (fun f -> <@ f.Allergene @>) yesOrNo (if (ingredient.HasAllergen ) then (Some "YES") else (Some "NO")) 
+                                     }
+                                     {
+                                         Label =  local.Visibility
+                                         Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (if (ingredient.Visible) then (Some "VISIBLE") else (Some "INVISIBLE"))
+                                     }
+                                     
+                                     { 
+                                         Label = local.UpdateAvailability
+                                         Html = selectInput (fun f -> <@ f.UpdateAvailabilityFlag @>) updatePolicyOptions (Some (ingredient.UpdatePolicy.ToString())) // (if (ingredient.Updateavailabilityflag) then (Some "YES") else (Some "NO")) 
+                                     }
+                                     
+                                     { 
+                                         Label = local.CheckAvailability
+                                         Html = selectInput (fun f -> <@ f.CheckAvailabilityFlag @>) checkUpdatePolicyOptions (Some (ingredient.CheckUpdatePolicy.ToString()))
+                                     }
+                                 ] 
+                         } 
+                     ]
+                 SubmitText = local.Update 
+             }
+         br []
+         div [] [
+             a (backUrl) [] [Text(local.GoBack)]
+         ]
+    ]
+         
+         // tag "h1" [] [Text (local.Ingredient + " " + ingredient.Name)]
 //
 //         div ["id", "register-message"] 
 //             [
@@ -2224,70 +2287,73 @@ let createRole (user:UserLoggedOnSession) =
 //             ]
 //     ]
         
-// let coursesAdministrationPage  (categories: Db.CourseCategories list) (courses: Db.Coursedetails list) =
-//     [
-//         tag "h1" [] [Text local.CourseCategoriesManagement ] 
-//         br []
-//
-//         tag "p" [] [a Path.Courses.addCategory ["class","buttonX"] [Text (local.AddCategory)]]
-//         br []
-//         renderForm 
-//             {  
-//                 Form = Form.searchCourse
-//                 Fieldsets =
-//                     [ 
-//                         { 
-//                             Legend = local.SearchCourse 
-//                             Fields = 
-//                                 [
-//                                     {
-//                                         Label = local.Name
-//                                         Html = formInput (fun f -> <@ f.Name @>) []
-//                                     }
-//                                 ]
-//                         }
-//                     ]
-//                 SubmitText = local.Search
-//             }
-//         br  []
-//
-//         table
-//             [
-//                 for category in categories  -> 
-//                     let (enabledview,buttonVisibility) = 
-//                         match category.Visibile with
-//                         | true -> ("visibile","buttonEnabled")
-//                         | false -> ("nascosto","buttonY")
-//
-//                     tr [
-//                     tag "p" [] 
-//                         [  
-//                             td [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated category.Categoryid 0) ["class",buttonVisibility]  [Text(category.Name)]]
-//                             td (if (category.Abstract) then [(Text(local.IsAbstract))] else [(Text(""))])
-//                             td [a (sprintf Path.Courses.switchCourseCategoryVisibility category.Categoryid) ["class","buttonX"]  [Text(local.Visibility)]]
-//                             td [a (sprintf Path.Courses.editCategory category.Categoryid) ["class","buttonX"]  [Text(local.Modify )]]
-//                         ]
-//                     ]
-//             ]
-//
-//         br []
-//         table
-//             [
-//                 for course in courses  -> 
-//                     let buttonStyle =
-//                         match course.Visibility with
-//                         | true -> "buttonX"
-//                         | false -> "buttonY"
-//                     tr 
-//                         [
-//                             td 
-//                                 [
-//                                     td [a (sprintf Path.Courses.editCourse course.Courseid) ["class",buttonStyle] [Text(course.Name)]]
-//                                     td [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated course.Categoryid 0) ["class","buttonX"] [Text(course.Coursecategoryname)]]
-//                                 ]
-//                         ]
-//             ]
-//     ]
+let coursesAdministrationPage  (categories: DishType list) (dishes: Dish list) =
+    [
+        tag "h1" [] [Text local.CourseCategoriesManagement ] 
+        br []
+
+        tag "p" [] [a Path.Courses.addCategory ["class","buttonX"] [Text (local.AddCategory)]]
+        br []
+        renderForm 
+            {  
+                Form = Form.searchCourse
+                Fieldsets =
+                    [ 
+                        { 
+                            Legend = local.SearchCourse 
+                            Fields = 
+                                [
+                                    {
+                                        Label = local.Name
+                                        Html = formInput (fun f -> <@ f.Name @>) []
+                                    }
+                                ]
+                        }
+                    ]
+                SubmitText = local.Search
+            }
+        br  []
+
+        table
+            [
+                for category in categories  -> 
+                    let (enabledview,buttonVisibility) = 
+                        match category.Visible with
+                        | true -> ("visibile","buttonEnabled")
+                        | false -> ("nascosto","buttonY")
+
+                    tr [
+                    tag "p" [] 
+                        [
+                            // Text(category.Name)
+                            td [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated ((category.DishTypeId).ToString()) 0) ["class",buttonVisibility]  [Text(category.Name)]]
+                            // td (if (category.Abstract) then [(Text(local.IsAbstract))] else [(Text(""))])
+                            
+                            // td [a (sprintf Path.Courses.switchCourseCategoryVisibility category.Categoryid) ["class","buttonX"]  [Text(local.Visibility)]]
+                            // td [a (sprintf Path.Courses.editCategory category.Categoryid) ["class","buttonX"]  [Text(local.Modify )]]
+                        ]
+                    ]
+            ]
+
+        br []
+        table
+            [
+                for course in dishes  -> 
+                    let buttonStyle =
+                        match course.Visible with
+                        | true -> "buttonX"
+                        | false -> "buttonY"
+                    tr 
+                        [
+                            td 
+                                [
+                                    Text(course.Name)
+                                    // td [a (sprintf Path.Courses.editCourse ((course.Id).ToString())) ["class",buttonStyle] [Text(course.Name)]]
+                                    // td [a (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated course.DishType 0) ["class","buttonX"] [Text(course.Coursecategoryname)]]
+                                ]
+                        ]
+            ]
+    ]
 
 let ingredientAdminLInk (user: Models.User.User) =
         printf "the role of the user: %s" user.Role
@@ -3204,7 +3270,6 @@ let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientO
         h2 (local.AllIngredientsOfCategory+": " + category.Name)
         // a (sprintf Path.Admin.editIngredientCategory category.Id) ["class","buttonX"] [Text(local.AddNew)]
         a (sprintf Path.Admin.editIngredientCategory (category.Id.ToString())) ["class","buttonX"] [Text(local.AddNew)]
-
         
         br []
         renderForm 
@@ -3231,12 +3296,13 @@ let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientO
             for ingredient in allIngredientOfCategory ->
             tr [
                 td [
-                    // a (sprintf Path.Admin.editIngredient ingredient.Id pageNumber)  ["class",(if ingredient.Visibility then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
-                    Text("blabl")
+                    let ingDesc = ingredient.Description |> Option.defaultValue ""  |> fun x -> if x =  "" then x else " (" + x + ")"
+                    a (sprintf Path.Admin.editIngredient (ingredient.Id.ToString()) pageNumber)  ["class",(if ingredient.Visible then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name + ingDesc)]
+                    // Text(ingredient.Name)
                     // a (sprintf Path.Admin.editIngredient ingredient.Id pageNumber)  ["class",(if true then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
                 ]
                 td [
-                    Text("blabl")
+                    Text("prices")
                     // a (sprintf Path.Admin.editIngredientPrices ingredient.Id)  ["class","buttonX"] [Text(local.Prices)]
                 ]
                 td [
@@ -3252,7 +3318,7 @@ let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientO
                 ]
                 td [
                     // a (sprintf Path.Admin.fillIngredient ingredient.Ingredientid pageNumber)  ["class","buttonX"] [Text(local.Load)]
-                    Text("blabl")
+                    Text(local.Load)
                     // a (sprintf Path.Admin.fillIngredient ingredient.Id pageNumber)  ["class","buttonX"] [Text(local.Load)]
                 ]
             ]

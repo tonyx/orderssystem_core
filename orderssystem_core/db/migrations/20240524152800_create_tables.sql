@@ -80,7 +80,6 @@ $$;
 CREATE OR REPLACE FUNCTION insert_01_tables_aggregate_event_and_return_id(
     IN event_in TEXT,
     IN aggregate_id uuid
---     in aggregate_state_id uuid
 )
 RETURNS int
     

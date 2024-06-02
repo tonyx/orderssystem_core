@@ -66,8 +66,7 @@ ALTER TABLE ONLY public.aggregate_events_01_roles
 
 CREATE OR REPLACE FUNCTION insert_01_roles_event_and_return_id(
     IN event_in TEXT,
-    IN aggregate_id uuid,
-    IN aggregate_state_id uuid
+    IN aggregate_id uuid
 )
 RETURNS int
        

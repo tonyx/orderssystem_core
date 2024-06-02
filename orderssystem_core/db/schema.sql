@@ -74,10 +74,10 @@ $$;
 
 
 --
--- Name: insert_01_ingredients_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_ingredients_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_ingredients_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_ingredients_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -128,10 +128,10 @@ $$;
 
 
 --
--- Name: insert_01_orders_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_orders_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_orders_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_orders_aggregate_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -203,10 +203,10 @@ $$;
 
 
 --
--- Name: insert_01_roles_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_roles_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_roles_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_roles_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -257,10 +257,10 @@ $$;
 
 
 --
--- Name: insert_01_users_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: insert_01_users_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.insert_01_users_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
+CREATE FUNCTION public.insert_01_users_aggregate_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE

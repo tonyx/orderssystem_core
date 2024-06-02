@@ -125,6 +125,69 @@ module OrdersSystem =
                 return state
             }
 
+        member this.GetDishType (id: Guid) =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                do! 
+                    restaurant.DishTypes |>> (fun x -> x.DishTypeId)
+                    |> List.contains id 
+                    |> Result.ofBool (sprintf "DishType with id '%A' does not exist" id)
+                    
+                let! result =
+                    restaurant.DishTypes
+                    |> List.tryFind (fun x -> x.DishTypeId = id)
+                    |> Result.ofOption (sprintf "DishType with id '%A' does not exist" id)
+                return result
+            }
+        
+        member this.CreateDishType (dishType: DishType)  =
+            result {
+                let! existingDishTypes = this.GetallDishTypes ()
+                let! notAlreadyExists =
+                    existingDishTypes
+                    |> List.exists (fun x -> x.Name = dishType.Name)
+                    |> not
+                    |> Result.ofBool (sprintf "DishType with name '%s' already exists" dishType.Name)
+                
+                let! result =
+                    dishType
+                    |> RestaurantCommands.AddDishType
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker 
+                return result
+            }
+       
+        member this.GetallDishTypes (): Result<List<DishType>, string> =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                return restaurant.DishTypes
+            } 
+            
+        member this.GetDishTpe (id: Guid) =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                do! 
+                    restaurant.DishTypes |>> (fun x -> x.DishTypeId)
+                    |> List.contains id 
+                    |> Result.ofBool (sprintf "DishType with id '%A' does not exist" id)
+                    
+                let! result =
+                    restaurant.DishTypes
+                    |> List.tryFind (fun x -> x.DishTypeId = id)
+                    |> Result.ofOption (sprintf "DishType with id '%A' does not exist" id)
+                return result
+            } 
+      
+        member this.GetDishType (name: string)  =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                let dishType = 
+                    restaurant.DishTypes
+                    |> List.tryFind (fun x -> x.Name = name)
+                return!
+                    dishType
+                    |> Result.ofOption (sprintf "DishType with name '%s' does not exist" name)
+            }
+             
         member this.GetUserByName userName: Result<User, string>  =
             result {
                 let! (_, restaurant) = restaurantViewer ()
@@ -308,17 +371,32 @@ module OrdersSystem =
                     |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
             }
 
-        // member this.UpdateIngredient (ingredient: Ingredient) =
-        //     result {
-        //         let! ingredientExists =
-        //             this.GetIngredient ingredient.Id
-        //             |> Result.map (fun _ -> ())
-        //
-        //         let updateIngredient = IngredientCommands.UpdateIngredient ingredient
-        //         return!
-        //             updateIngredient
-        //             |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
-        //     }
+        member this.UpdateIngredient (ingredient: Ingredient) =
+            printf "going to upgrade ingredient 100\n"
+            result {
+                let! ingredientExists =
+                    this.GetIngredient ingredient.Id
+                    |> Result.map (fun _ -> ())
+        
+                let updateIngredient =
+                    IngredientCommands.Update
+                        (ingredient.Name,
+                         ingredient.Description,
+                         ingredient.IngredientTypeId,
+                         ingredient.IngredientMeasureTypes,
+                         ingredient.Active,
+                         ingredient.IngredientPrices,
+                         ingredient.Stock,
+                         ingredient.HasAllergen,
+                         ingredient.UpdatePolicy,
+                         ingredient.CheckUpdatePolicy, ingredient.Visible)
+                printf "going to upgrade ingredient 200\n"
+                let result =
+                    updateIngredient
+                    |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
+                printf "upgraded ingredient  200 %A\n" result
+                return! result
+            }
 
         member this.GetOrder id =
             result {
@@ -390,11 +468,11 @@ module OrdersSystem =
                 return filtered
             }
             
-        member this.GetAllDishesOfACertainType (category: DishTypes) =
+        member this.GetAllDishesOfACertainType (category: Guid) =
             result {
                 let! dishes = this.GetAllDishes ()
                 let dishesOfCategory = 
-                    dishes |> List.filter (fun x -> x.DishTypes |> List.contains category)
+                    dishes |> List.filter (fun x -> x.DishType  = category)
                 return dishesOfCategory
             }
         
@@ -410,11 +488,11 @@ module OrdersSystem =
                     dishes |> List.filter (fun x -> x.Visible)
                 return dishes
             }
-        member this.GetVisibleDishesByCategory (category: DishTypes) =
+        member this.GetVisibleDishesByCategory (category: Guid) =
             result {
                 let! dishes = this.GetAllVisibleDishes ()
                 let visibleDishes = 
-                    dishes |> List.filter (fun x -> x.DishTypes |> List.contains category)
+                    dishes |> List.filter (fun x -> x.DishType = category)
                 return dishes
             }    
 
@@ -503,7 +581,7 @@ module OrdersSystem =
                     |> runInitAndCommand<Restaurant, RestaurantEvents, User, string> eventStore eventBroker user
             }
 
-        member this.CreateDish (name: string, dishTypes: List<DishTypes>, ingredientAndQuantities: List<IngredientAndQuantity>) =
+        member this.CreateDish (name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>) =
             result {
                 let! existingDishes = this.GetAllDishes ()
                 let! notAlreadyExists =
@@ -513,7 +591,7 @@ module OrdersSystem =
                     |> Result.ofBool (sprintf "Dish with name '%s' already exists" name)
 
                 let id = Guid.NewGuid()
-                let dish = Dish (id, name, dishTypes, ingredientAndQuantities)
+                let dish = Dish (id, name, dishType, ingredientAndQuantities)
 
                 let! result =
                     id
@@ -523,30 +601,32 @@ module OrdersSystem =
                 return result
             }
             
-        member this.UpdateDish (dish: DishTO) =
+        member this.ChangeDishTypeToDish (dishId: Guid, typeId: Guid) =
             result {
+                
                 let! dishExists =
-                    this.GetDish dish.Id
-                    |> Result.map (fun _ -> ())
-
-                let updateDish = DishCommands.Update dish
-                return!
-                    updateDish
-                    |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
-            }
+                    this.GetDish dishId
+                
+                let! result =
+                    typeId
+                    |> DishCommands.SetDishType 
+                    |> runAggregateCommand<Dish, DishEvents, string> dishId eventStore eventBroker
+                return result
+            }    
 
         member this.CreateIngredient (ingredient: Ingredient)  =
+            printf "Creating ingredient %A\n" ingredient
             result {
                 let! existingIngredients = this.GetAllIngredients ()
+                
                 let! notAlreadyExists =
                     existingIngredients
                     |> List.exists (fun x -> x.Name = ingredient.Name && x.Description = ingredient.Description)
                     |> not
                     |> Result.ofBool (sprintf "Ingredient with name '%s' and description %A already exists" ingredient.Name ingredient.Description)
-                let id = Guid.NewGuid()
                 
                 let! result =
-                    id
+                    ingredient.Id    
                     |> RestaurantCommands.AddIngredientRef
                     |> runInitAndCommand<Restaurant, RestaurantEvents, Ingredient, string> eventStore eventBroker ingredient
                 return result    
@@ -664,7 +744,7 @@ module OrdersSystem =
                 do! 
                     existingCategories
                     |> List.exists (fun x -> x.Id = ingredientCategoryId)
-                    |> Result.ofBool (sprintf "IngredientType with id '%A' does not exist" ingredientCategoryId)    
+                    |> Result.ofBool (sprintf "IngredientType QQQ with id '%A' does not exist" ingredientCategoryId)    
                 
                 let! ingredients = this.GetAllIngredients ()
                 let ingredientsOfCategory = 
@@ -677,7 +757,15 @@ module OrdersSystem =
                 let! ingredients = this.GetAllIngredients ()
                 let filtered = ingredients |> List.filter (fun x -> x.Name.ToLower().Contains (name.ToLower()))
                 return filtered
-            }    
+            }
+        member this.FindIngredientByNameAndDescription (name: string) (description: Option<string>) =
+            result {
+                let! ingredients = this.GetAllIngredients ()
+                let filtered = 
+                    ingredients 
+                    |> List.filter (fun x -> x.Name = name && x.Description = description)
+                return filtered     
+            }
             
         member this.GetAllIngredientOfACategoryByPage (ingredientCategoryId: Guid, page: int, pageSize: int) =
             result {
@@ -695,6 +783,25 @@ module OrdersSystem =
                         sortedIngredients |> List.skip (page * pageSize) |> List.take pageSize
                 return (ingredientsOfCategory, nTotals)
             }
+        
+        member this.GetAllIngredientOfACategoryByPageFilteredByName (ingredientCategoryId: Guid, page: int, pageSize: int, name: string ) =
+            result {
+                let! ingredients =
+                    this.GetAllIngredientsOfACategory ingredientCategoryId
+                let filtered = ingredients |> List.filter (fun x -> x.Name.ToLower().Contains (name.ToLower()))    
+                let nTotals = ingredients.Length    
+                let sortedIngredients = 
+                    filtered |> List.sortBy (fun x -> x.Name)    
+                let ingredientsOfCategory =
+                    if sortedIngredients.Length = 0 then 
+                        []
+                    else if (sortedIngredients.Length - (page * pageSize)) <= pageSize then
+                        sortedIngredients |> List.skip (page * pageSize) 
+                    else
+                        sortedIngredients |> List.skip (page * pageSize) |> List.take pageSize
+                return (ingredientsOfCategory, nTotals)
+            }
+              
             
         member this.GetIngredientTypes (): Result<List<IngredientType>, string> =
             result {

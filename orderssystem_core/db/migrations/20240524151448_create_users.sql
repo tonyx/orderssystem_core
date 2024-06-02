@@ -84,8 +84,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION insert_01_users_aggregate_event_and_return_id(
     IN event_in TEXT,
-    IN aggregate_id uuid, 
-    in aggregate_state_id uuid
+    IN aggregate_id uuid
 )
 RETURNS int
     

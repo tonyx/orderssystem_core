@@ -11,10 +11,10 @@ open Sharpino.Core
 open Ingredient
 
 type RoleCommands =
-    | AddEnabler of DishTypes
-    | AddObserver of DishTypes
-    | RemoveEnabler of DishTypes
-    | RemoveObserver of DishTypes
+    | AddEnabler of Guid
+    | AddObserver of Guid
+    | RemoveEnabler of Guid
+    | RemoveObserver of Guid
     | Deactivate
     interface Command<Role, RoleEvents> with
         member this.Execute role = 

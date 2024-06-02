@@ -20,7 +20,7 @@ type IngredientEvents =
     | StockIncreased of float
     | StockDecreased of float
     | VisibilitySet of bool
-
+    | Updated of string * Option<string> * Guid * List<IngredientMeasureType> * bool * List<IngredientPrice> * float * bool * UpdatePolicy * CheckUpdatePolicy * bool
         interface Event<Ingredient>  with
             member this.Process ingredient =
                 match this with
@@ -48,8 +48,8 @@ type IngredientEvents =
                     ingredient.DecreaseStock x
                 | VisibilitySet x ->
                     ingredient.SetVisibility x
-                     
-                
+                | Updated (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) ->
+                    ingredient.Update (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
 
     member this.Serialize =
         globalSerializer.Serialize this

@@ -13,7 +13,7 @@ type Printer  =
     {
         Id: Guid
         Name: string
-        Types: List<DishTypes>
+        Types: List<Guid>
     }
 
 module Restaurant =
@@ -26,8 +26,9 @@ module Restaurant =
         printers: List<Printer>,
         rolesReferences: List<Guid>,
         orderItemReferences: List<Guid>,
-        ingredientTypes: List<IngredientType>) =
-
+        ingredientTypes: List<IngredientType>,
+        dishTypes: List<DishType>) =
+        
         member this.DishRefs = dishReferences
         member this.IngredientRefs = ingredientReferences
         member this.TableRefs = tablesReferences
@@ -37,9 +38,10 @@ module Restaurant =
         member this.RoleRefs = rolesReferences
         member this.OrderItemRefs = orderItemReferences
         member this.IngredientTypes = ingredientTypes
+        member this.DishTypes = dishTypes
 
         static member Zero =
-            Restaurant ([], [], [], [], [], [], [], [], [])
+            Restaurant ([], [], [], [], [], [], [], [], [], [])
         member this.AddDishRef (id: Guid) =
             result {
                 let! notAlreadyExists =
@@ -48,7 +50,7 @@ module Restaurant =
                     |> not
                     |> Result.ofBool (sprintf "A dish with id '%A' already exists" id)    
                 return 
-                    Restaurant (id :: this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                    Restaurant (id :: this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.AddIngredientRef (id: Guid) =
             result {
@@ -57,7 +59,7 @@ module Restaurant =
                     |> List.contains id
                     |> not
                     |> Result.ofBool (sprintf "An ingredient with id '%A' already exists" id)
-                return Restaurant (this.DishRefs, id :: this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, id :: this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.RemoveIngredientRef (id: Guid) =
             result {
@@ -65,7 +67,7 @@ module Restaurant =
                     this.IngredientRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "An ingredient with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs |> List.filter (fun  x -> x <> id), this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs |> List.filter (fun  x -> x <> id), this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
 
         member this.RemoveDishRef (id: Guid) =
@@ -74,7 +76,7 @@ module Restaurant =
                     this.DishRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "A dish with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs |> List.filter (fun  x -> x <> id), this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs |> List.filter (fun  x -> x <> id), this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.AddPrinter (printer: Printer) =
             result {
@@ -83,7 +85,7 @@ module Restaurant =
                     |> List.exists (fun x -> x.Name = printer.Name)
                     |> not
                     |> Result.ofBool (sprintf "A printer with name '%s' already exists" printer.Name)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, printer :: this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, printer :: this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
 
         member this.RemovePrinter (name: string) =
@@ -92,7 +94,7 @@ module Restaurant =
                     this.Printers
                     |> List.exists (fun x -> x.Name = name)
                     |> Result.ofBool (sprintf "A printer with name '%s' does not exist" name)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers |> List.filter (fun x -> x.Name <> name), this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers |> List.filter (fun x -> x.Name <> name), this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.UpdatePrinter (printer: Printer) =
             result {
@@ -100,7 +102,7 @@ module Restaurant =
                     this.Printers
                     |> List.exists (fun x -> x.Name = printer.Name)
                     |> Result.ofBool (sprintf "A printer with name '%s' does not exist" printer.Name)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers |> List.map (fun x -> if x.Name = printer.Name then printer else x), this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers |> List.map (fun x -> if x.Name = printer.Name then printer else x), this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.GetAllPrinters ()  =
             this.Printers
@@ -112,7 +114,7 @@ module Restaurant =
                     |> List.contains id
                     |> not
                     |> Result.ofBool (sprintf "A table with id '%A' already exists" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, id :: this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, id :: this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.RemoveTableRef (id: Guid) =
             result {
@@ -120,7 +122,7 @@ module Restaurant =
                     this.TableRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "A table with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs |> List.filter (fun  x -> x <> id), this.OrderRefs,  this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs |> List.filter (fun  x -> x <> id), this.OrderRefs,  this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.AddOrderRef (id: Guid) =
             result {
@@ -129,7 +131,7 @@ module Restaurant =
                     |> List.contains id
                     |> not
                     |> Result.ofBool (sprintf "An order with id '%A' already exists" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, id :: this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, id :: this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.RemoveOrderRef (id: Guid) =
             result {
@@ -137,7 +139,7 @@ module Restaurant =
                     this.OrderRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "An order with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs |> List.filter (fun  x -> x <> id), this.UsersRefs, this.Printers, this.RoleRefs , this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs |> List.filter (fun  x -> x <> id), this.UsersRefs, this.Printers, this.RoleRefs , this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.AddUserRef (id: Guid) =
             result {
@@ -146,7 +148,7 @@ module Restaurant =
                     |> List.contains id
                     |> not
                     |> Result.ofBool (sprintf "A user with id '%A' already exists" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, id :: this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, id :: this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
 
         member this.RemoveUserRef (id: Guid) =
@@ -155,7 +157,7 @@ module Restaurant =
                     this.UsersRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "A user with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs |> List.filter (fun  x -> x <> id), this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs |> List.filter (fun  x -> x <> id), this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.AddRoleRef (id: Guid) =
             result {
@@ -164,7 +166,7 @@ module Restaurant =
                     |> List.contains id
                     |> not
                     |> Result.ofBool (sprintf "A role with id '%A' already exists" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, id :: this.RoleRefs, this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, id :: this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
 
         member this.RemoveRoleRef (id: Guid) =
@@ -173,7 +175,7 @@ module Restaurant =
                     this.RoleRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "A role with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs |> List.filter (fun  x -> x <> id), this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs |> List.filter (fun  x -> x <> id), this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.AddOrderItemRef (id: Guid) =
             result {
@@ -182,7 +184,7 @@ module Restaurant =
                     |> List.contains id
                     |> not
                     |> Result.ofBool (sprintf "An order item with id '%A' already exists" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, id :: this.OrderItemRefs, this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, id :: this.OrderItemRefs, this.IngredientTypes, this.DishTypes)
             }
         member this.RemoveOrderItemRef (id: Guid) =
             result {
@@ -190,7 +192,7 @@ module Restaurant =
                     this.OrderItemRefs
                     |> List.contains id
                     |> Result.ofBool (sprintf "An order item with id '%A' does not exist" id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs |> List.filter (fun  x -> x <> id), this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs |> List.filter (fun  x -> x <> id), this.IngredientTypes, this.DishTypes)
             }
         member this.AddIngredientType  (ingredientType: IngredientType) =
             result {
@@ -204,13 +206,42 @@ module Restaurant =
                     |> List.exists (fun x -> x.Id = ingredientType.Id)
                     |> not
                     |> Result.ofBool (sprintf "An ingredient type with id '%A' already exists" ingredientType.Id)
-                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, ingredientType :: this.IngredientTypes)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, ingredientType :: this.IngredientTypes, this.DishTypes)
             }
+        member this.AddDishType (dishType: DishType) =
+            result {
+                let! notAlreadyExists =
+                    this.DishTypes
+                    |> List.exists (fun (x: DishType) -> x.Name = dishType.Name)
+                    |> not
+                    |> Result.ofBool (sprintf "A dish type with name '%s' already exists" dishType.Name)
+                let! isNotUsed =
+                    this.DishTypes
+                    |> List.exists (fun (x: DishType) -> x.DishTypeId = dishType.DishTypeId)
+                    |> not
+                    |> Result.ofBool (sprintf "A dish type with id '%A' already exists" dishType.DishTypeId)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, dishType :: this.DishTypes)    
+            }
+            
+        member this.GetDishType (name: string) =
+            this.DishTypes
+            |> List.tryFind (fun x -> x.Name = name)
+            |> Result.ofOption (sprintf "A dish type with name '%s' does not exist" name)    
+       
+        member this.GetDishType (id: Guid) =
+            this.DishTypes
+            |> List.tryFind (fun x -> x.DishTypeId = id)
+            |> Result.ofOption (sprintf "A dish type with id '%A' does not exist" id) 
+       
+        member this.FindDishType (name: string) =
+            this.DishTypes
+            |> List.tryFind (fun x -> x.Name.Contains name) 
+            
         member this.GetIngredientType (name: string) =
             this.IngredientTypes
             |> List.tryFind (fun x -> x.Name = name)
             |> Result.ofOption (sprintf "An ingredient type with name '%s' does not exist" name)
-         
+        
         member this.GetIngredientType (id: Guid) =
             this.IngredientTypes
             |> List.tryFind (fun x -> x.Id = id)
@@ -227,6 +258,5 @@ module Restaurant =
         member this.Serialize  =
             this
             |> globalSerializer.Serialize
-
 
 

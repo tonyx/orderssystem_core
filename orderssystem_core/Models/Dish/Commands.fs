@@ -10,25 +10,17 @@ open Sharpino.Core
 open Ingredient
 
 type DishCommands =
-    | AddDishType of DishTypes
-    | RemoveDishType of DishTypes
     | AddIngredientAndQuantity of IngredientAndQuantity
     | RemoveIngredient of Guid
     | UpdateName of String
     | Deactivate
     | SetVisible
     | SetInvisible
-    | Update of DishTO
+    | SetDishType of Guid
 
         interface Command<Dish, DishEvents>  with
             member this.Execute dish = 
                 match this with
-                | AddDishType dishType -> 
-                    dish.AddDishType dishType
-                    |> Result.map (fun _ -> [DishTypeAdded dishType])
-                | RemoveDishType dishType -> 
-                    dish.RemoveDishType dishType
-                    |> Result.map (fun _ -> [DishTypeRemoved dishType])
                 | AddIngredientAndQuantity ingredient -> 
                     dish.AddIngredientAndQuantity ingredient
                     |> Result.map (fun _ -> [IngredientAndQuantityAdded ingredient])
@@ -47,8 +39,8 @@ type DishCommands =
                 | SetInvisible ->
                     dish.SetInvisible ()
                     |> Result.map (fun _ -> [InvisibleSet])
-                | Update dishTo ->
-                    dish.Update dishTo
-                    |> Result.map (fun _ -> [Updated dishTo])
+                | SetDishType guid ->
+                    dish.SetDishType guid
+                    |> Result.map (fun _ -> [DishTypeSet guid])
 
             member this.Undoer = None

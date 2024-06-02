@@ -10,10 +10,10 @@ open Sharpino.Core
 open Ingredient
 
 type RoleEvents =
-    | EnablerAdded of DishTypes
-    | ObserverAdded of DishTypes
-    | EnablerRemoved of DishTypes
-    | ObserverRemoved of DishTypes
+    | EnablerAdded of Guid // see dishtypeid
+    | ObserverAdded of Guid
+    | EnablerRemoved of Guid
+    | ObserverRemoved of Guid
     | Deactivated
 
     interface Event<Role> with

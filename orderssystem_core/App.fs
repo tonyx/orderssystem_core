@@ -4,6 +4,7 @@ open System
 
 open System.Linq
 open OrdersSystem.Contexts.Restaurant
+open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
 open Xceed.Words.NET
 open System.Drawing
@@ -50,7 +51,7 @@ open Sharpino.Storage
 
 
 
-log4net.Config.BasicConfigurator.Configure() |> ignore
+// log4net.Config.BasicConfigurator.Configure() |> ignore
 
 
 let _ = 
@@ -896,24 +897,96 @@ let editIngredientPrices id =
     // ]
 
 // FOCUS: ported OrdersSystem.GetIngredientPrices
-let editIngredient id  pageNumberBack =
-    log.Debug (sprintf "editIngredient %d" id)  
-    Redirection.FOUND Path.home
+let editIngredient (strId: string)  (pageNumberBack: int) =
+    printf "XXXX. editIngredient %s\n" strId
+    let guid = System.Guid.Parse strId 
+    log.Debug(sprintf "%A editIngredient" strId)
+    choose [
+        GET >=> warbler (fun _ ->
+            let ingredient = (ordersSystem.GetIngredient guid).OkValue 
+            let visibleIngredientCategories = (ordersSystem.GetIngredientTypes ()).OkValue |> List.filter (fun x -> x.Visible) 
+            let theCategoryOfIngredient = (ordersSystem.GetIngredientType ingredient.IngredientTypeId).OkValue
+            
+            let allSelectableCategories = 
+                match theCategoryOfIngredient.Visible with
+                | true -> visibleIngredientCategories
+                | false -> theCategoryOfIngredient::visibleIngredientCategories
     
-    // log.Debug(sprintf "%s %d" "editIngredient" id)
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let ctx = Db.getContext()
-    //         let ingredient = Db.getIngredientById id ctx
-    //         let visibleIngredientCategories = Db.getAllVisibleIngredientCategories ctx
-    //         let theCategoryOfIngredient = Db.getIngredientCatgory ingredient.Ingredientcategoryid ctx
-    //         let allSelectableCategories = 
-    //             match theCategoryOfIngredient.Visibility with
-    //             | true -> visibleIngredientCategories
-    //             | false -> theCategoryOfIngredient::visibleIngredientCategories
-    //
-    //         let ingredient = Db.getIngredientById id ctx
-    //         View.editIngredient "" ingredient allSelectableCategories pageNumberBack |> html)
+            let ingredient = (ordersSystem.GetIngredient guid).OkValue
+            View.editIngredient "" ingredient allSelectableCategories pageNumberBack |> html)
+        POST >=> bindToForm Form.ingredientEdit (fun form ->
+            printf "XXXXX: entered in post\n"
+            let ingredient = (ordersSystem.GetIngredient guid).OkValue 
+            let existing = (ordersSystem.FindIngredientByName form.Name).OkValue
+            let allIngredientCategories = (ordersSystem.GetIngredientTypes ()).OkValue
+            match existing with
+            | h::_ when (h.Id <> guid) ->
+                printf "XXXx. here 100\n"
+                let allIngredientOfCategory = (ordersSystem.GetAllIngredientsOfACategory h.IngredientTypeId).OkValue
+                let message = local.NameIsUsed
+                printf "XXXx. here 200\n"
+                let category = (ordersSystem.GetIngredientType h.IngredientTypeId).OkValue
+                printf "XXXx. here 300\n"
+                // View.ingredientsOfACategory message category allIngredientOfCategory  |> html
+                View.editIngredient "" ingredient allIngredientCategories pageNumberBack  |> html
+            | h:: _ ->    
+                printf "YYYYY. here 100\n"
+                let allIngredientOfCategory = (ordersSystem.GetAllIngredientsOfACategory h.IngredientTypeId).OkValue
+                let message = local.NameIsUsed
+                printf "XXXx. here 200\n"
+                let category = (ordersSystem.GetIngredientType h.IngredientTypeId).OkValue
+                printf "XXXx. here 300\n"
+                let ingredientChanged =
+                    let policy = UpdatePolicy.FromString form.UpdateAvailabilityFlag
+                    Ingredient (guid, form.Name, form.Comment, h.IngredientTypeId, h.IngredientMeasureTypes, h.Active, h.IngredientPrices, h.Stock,  form.Allergene = Form.YES, policy, h.CheckUpdatePolicy, h.Visible) // form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES)
+                printf "XXx. going to update!!!!!\n"
+                let ingredientUpdate =
+                        ordersSystem.UpdateIngredient ingredientChanged
+                            // (guid, form.Name, form.Description, form.Allergene = Form.YES, form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES, form.UnitOfMeasure)
+                printf "updated???\n"            
+                // View.ingredientsOfACategory message category allIngredientOfCategory  |> html
+                Redirection.found (sprintf Path.Admin.editIngredientCategoryPaginated (h.IngredientTypeId.ToString()) pageNumberBack)
+                // View.editIngredient "" ingredient allIngredientCategories pageNumberBack  |> html
+            | _ ->
+                printf "ZZZZZ. here 100\n"
+                try
+                    let visibility = (form.Visibility = Form.VISIBLE)
+                    let description = match form.Comment with | Some X -> X | _ -> ""
+                    printf "guid %A\n" guid
+                    let h = (ordersSystem.GetIngredient guid).OkValue
+                    let ingredientChanged =
+                        let policy = UpdatePolicy.FromString form.UpdateAvailabilityFlag
+                        Ingredient (guid, form.Name, form.Comment, h.IngredientTypeId, h.IngredientMeasureTypes, h.Active, h.IngredientPrices, h.Stock,  form.Allergene = Form.YES, policy, h.CheckUpdatePolicy, h.Visible) // form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES)
+                    printf "XXx. going to update!!!!!\n"
+                    let ingredientUpdate =
+                            ordersSystem.UpdateIngredient ingredientChanged
+                                // (guid, form.Name, form.Description, form.Allergene = Form.YES, form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES, form.UnitOfMeasure)
+                    printf "updated???\n"            
+                    Redirection.found (sprintf Path.Admin.editIngredientCategoryPaginated (h.IngredientTypeId.ToString()) pageNumberBack)
+                  
+                     
+                    // let ingredient = Db.getIngredientById id ctx
+                    // ordersSystem.UpdateIngredient (guid, form.Name, description, form.Allergene = Form.YES, visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES, form.UnitOfMeasure)    
+                    // ingredient.Name <- form.Name
+                    // ingredient.Description <-description
+                    // ingredient.Allergen <- (form.Allergene = Form.YES) // 
+                    // ingredient.Visibility <- visibility
+                    // let oriCategory = ingredient.Ingredientcategoryid
+                    // ingredient.Ingredientcategoryid <- (int)form.Category
+                    // ingredient.Updateavailabilityflag <- (form.UpdateAvailabilityFlag = Form.YES)
+                    // ingredient.Checkavailabilityflag <- (form.CheckAvailabilityFlag = Form.YES)
+                    // ingredient.Unitmeasure <- (form.UnitOfMeasure)
+                    // ctx.SubmitUpdates()
+                    // Redirection.found (sprintf Path.Admin.editIngredientCategoryPaginated oriCategory pageNumberBack)
+                    // Redirection.FOUND Path.Errors.unableToCompleteOperation
+                with
+                | ex ->
+                    printf "XXXXXXX c'e' stato un errore %A" ex
+                    log.Error("Error in editIngredient", ex)
+                    Redirection.FOUND Path.Errors.unableToCompleteOperation
+            )
+    ]
+    
     //     POST >=> bindToForm Form.ingredientEdit (fun form ->
     //         let ctx = Db.getContext()
     //         let existing = Db.findIngredientByName form.Name ctx
@@ -946,6 +1019,8 @@ let editIngredient id  pageNumberBack =
     //         )
     // ]
 
+    //    Redirection.FOUND Path.home
+    
 let editIngredientCategoryPaginated (strIdCategory: string) (pageNumber: int) =
     
     log.Debug (sprintf "%s %A %A" "editIngredientCategoryPaginated" strIdCategory pageNumber)
@@ -957,19 +1032,30 @@ let editIngredientCategoryPaginated (strIdCategory: string) (pageNumber: int) =
         Redirection.FOUND Path.Errors.unableToCompleteOperation
     | true ->
         // let ingredientsOfCurrentPagewithTotals = (ordersSystem.GetAllIngredientOfACategoryByPage (idCategory, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)) 
-             
-        GET >=> warbler (fun _ ->
-            let res =
-                result {
-                    let! (ingredientsOfCurrentPage, totalOfIngredientOfTheType) =
-                        ordersSystem.GetAllIngredientOfACategoryByPage (idCategory, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)
-                    let numberOfPages = (totalOfIngredientOfTheType - 1) / Globals.NUM_DB_ITEMS_IN_A_PAGE
-                    let! ingredientCategory = ordersSystem.GetIngredientType idCategory
-                    return (View.seeIngredientsOfACategoryPaginated ingredientCategory ingredientsOfCurrentPage numberOfPages pageNumber |> html)
-                }
-            match res with
-            | Ok x -> x
-            | _ -> Redirection.FOUND Path.Errors.unableToCompleteOperation
+        choose [     
+            GET >=> warbler (fun _ ->
+                let res =
+                    result {
+                        let! (ingredientsOfCurrentPage, totalOfIngredientOfTheType) =
+                            ordersSystem.GetAllIngredientOfACategoryByPage (idCategory, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)
+                        let numberOfPages = (totalOfIngredientOfTheType - 1) / Globals.NUM_DB_ITEMS_IN_A_PAGE
+                        let! ingredientCategory = ordersSystem.GetIngredientType idCategory
+                        return (View.seeIngredientsOfACategoryPaginated ingredientCategory ingredientsOfCurrentPage numberOfPages pageNumber |> html)
+                    }
+                match res with
+                | Ok x -> x
+                | _ -> Redirection.FOUND Path.Errors.unableToCompleteOperation
+                )
+            POST >=> bindToForm Form.searchIngredient (fun form ->
+                printf "entered in POST!!\n"
+                let (ingredientsOfCurrentPage, nTotal) = (ordersSystem.GetAllIngredientOfACategoryByPageFilteredByName (idCategory, 0, Globals.NUM_DB_ITEMS_IN_A_PAGE, form.Name)).OkValue
+                // let ingredientsOfCurrentpage = Db.getAllIngredientsOfACategoryByPageWithNameSearch idCategory 0 form.Name ctx
+                // let numberOfAllIngredientOfACategory = ordersSystem.GetAllIngredientsOfACategory idCategory
+                let numberOfPages = (nTotal - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+                let ingredientCategory = (ordersSystem.GetIngredientType idCategory).OkValue
+                View.seeIngredientsOfACategoryPaginated ingredientCategory ingredientsOfCurrentPage numberOfPages 0 |> html
+            )
+         
         
             // match ingredientsOfCurrentPagewithTotals with
             // | Ok (ingredientsOfCurrentPage, nTotal) ->
@@ -986,12 +1072,8 @@ let editIngredientCategoryPaginated (strIdCategory: string) (pageNumber: int) =
             // let ingredientCategory = Db.getCategoryOfIngredients idCategory ctx
             // View.seeIngredientsOfACategoryPaginated ingredientCategory ingredientsOfCurrentPage numberOfPages pageNumber |> html
             
-            )
-        
-        
             
-    
-    
+        ] 
     
     
     // Redirection.FOUND Path.home
@@ -1038,7 +1120,8 @@ let editIngredientCategory (idCategory: string) (user: UserLoggedOnSession) =
              
             POST >=> bindToForm Form.ingredient
                 (fun form ->
-                    let ingredientFound = (ordersSystem.FindIngredientByName form.Name).OkValue
+                    let ingredientFound = (ordersSystem.FindIngredientByNameAndDescription form.Name form.Description).OkValue
+                    // let ingredientFound = (ordersSystem.FindIngredientByName form.Name).OkValue
                     let ingredientType = (ordersSystem.GetIngredientType guidCategoryId).OkValue
             
                     if (ingredientFound.Length > 0) then
@@ -1046,8 +1129,21 @@ let editIngredientCategory (idCategory: string) (user: UserLoggedOnSession) =
                         let message = "ingrediente "+form.Name + " "+local.AlreadyExists
                         View.ingredientsOfACategory message ingredientType allIngredientOfCategory   |> html
                     else
-                        Redirection.FOUND Path.Errors.unableToCompleteOperation
-                )
+                        let isVisible = (form.Visibility = Form.VISIBLE)
+                        let isAllergene = (form.Allergene = Form.YES)
+                        let description = form.Description
+                        let updatePolicy = UpdatePolicy.FromString form.UpdatePolicy
+                        let checkUpdatePolicy = UpdatePolicy.FromString form.CheckUpdatePolicy
+                        let ingredientId = Guid.NewGuid()
+                        let newIngredient = Ingredient (ingredientId, form.Name, description, guidCategoryId, [], true, [], 0.0 , isAllergene, updatePolicy, CheckUpdatePolicy.NoCheck, isVisible) //, checkUpdatePolicy, form.UnitOfMeasure)
+                        printf "XXXX. Going to create ingredient %A\n" (form.Name)
+                        let ingredientAdded = ordersSystem.CreateIngredient newIngredient
+                        printf "XXXX. Ingredient added %A" ingredientAdded
+                        // Redirection.FOUND Path.home
+                        
+                        Redirection.FOUND ((sprintf  Path.Admin.editIngredientCategoryPaginated idCategory 0)) 
+                        // Redirection.FOUND Path.Errors.unableToCompleteOperation
+                ) 
         ]            
         //         | None ->
         //             try
@@ -1357,21 +1453,20 @@ let adminRoles  =
 
 let adminCategories  = 
     log.Debug("adminCategories")
-    Redirection.FOUND Path.home
-    // log.Debug("adminCategories")
-    // let ctx = Db.getContext()
-    // choose [
-    //         GET >=> 
-    //             warbler (fun _ ->
-    //                 let coursesCategories = Db.Courses.getAllRootCategories ctx
-    //                 View.coursesAdministrationPage  coursesCategories [] |> html
-    //             )
-    //         POST >=> bindToForm Form.searchCourse (fun form ->
-    //             let coursesCategories = Db.Courses.getAllRootCategories ctx
-    //             let resultSearch = Db.Courses.searchCourses form.Name ctx
-    //             View.coursesAdministrationPage  coursesCategories resultSearch |> html
-    //         )
-    // ]
+    choose [
+            GET >=> 
+                warbler (fun _ ->
+                    let coursesCategories = (ordersSystem.GetallDishTypes ()).OkValue
+                    
+                    // let coursesCategories = Db.Courses.getAllRootCategories ctx
+                    View.coursesAdministrationPage  coursesCategories [] |> html
+                )
+            POST >=> bindToForm Form.searchCourse (fun form ->
+                let coursesCategories = (ordersSystem.GetallDishTypes()).OkValue
+                let resultSearch = (ordersSystem.FindDishByName form.Name).OkValue
+                View.coursesAdministrationPage  coursesCategories resultSearch |> html
+            )
+    ]
 
 // FOCUS: porting OrdersSystem.GetAllOrders
 let allOrders (userLoggedOn:UserLoggedOnSession) =
@@ -1558,7 +1653,7 @@ let manageAllCoursesOfACategory categoryId =
 
 // FOCUS: easy to filter dishes by category
 let manageAllCoursesOfACategoryPaginated categoryId pageNumber =
-    log.Debug (sprintf "%s %d %d" "manageAllCoursesOfACategoryPaginated" categoryId pageNumber)
+    log.Debug (sprintf "%s %A %d" "manageAllCoursesOfACategoryPaginated" categoryId pageNumber)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d %d" "manageAllCoursesOfACategoryPaginated" categoryId categoryId )
@@ -1739,32 +1834,33 @@ let editTemporaryUser id   =
     // | None -> never
 
 let createCategory =
-    log.Debug "createCategory"
-    Redirection.FOUND Path.home
     
-    // log.Debug("createCategory")
-    // choose [
-    //     GET >=> (View.createCourseCategory ""  |> html)
-    //     POST >=> bindToForm Form.courseCategoryEdit (fun form ->
-    //         let ctx = Db.getContext()
-    //         match Db.Courses.tryFindCategoryByName form.Name ctx with
-    //         | Some existing ->
-    //             local.ACategoryNamed + form.Name + local.AlreadyExists 
-    //             |> View.createCourseCategory
-    //             |> html
-    //         | None ->
-    //             try
-    //                 let categoryName  = form.Name |> Sanitizer.GetSafeHtmlFragment
-    //                 let visibility = (form.Visibility = Form.VISIBLE)
-    //                 let isAbstract = (form.Abstract = Form.ABSTRACT)
-    //                 let _  = Db.newCategory categoryName visibility isAbstract ctx
-    //                 Redirection.FOUND Path.Courses.adminCategories
-    //             with
-    //             | ex ->
-    //                 log.Error("Error in createCategory", ex)
-    //                 Redirection.FOUND Path.Errors.unableToCompleteOperation
-    //         )
-    // ]
+    choose [
+        GET >=> (View.createCourseCategory ""  |> html)
+        POST >=> bindToForm Form.courseCategoryEdit (fun form ->
+            match (ordersSystem.GetDishType form.Name) with
+            // match Db.Courses.tryFindCategoryByName form.Name ctx with
+            | Ok existing ->
+                local.ACategoryNamed + form.Name + local.AlreadyExists 
+                |> View.createCourseCategory
+                |> html
+            | Error _ ->
+                try
+                    let categoryName  = form.Name |> Sanitizer.GetSafeHtmlFragment
+                    let visibility = (form.Visibility = Form.VISIBLE)
+                    let isAbstract = (form.Abstract = Form.ABSTRACT)
+                    let dishType: DishType = {DishTypeId = Guid.NewGuid(); Name = categoryName; Visible = true}
+                    printf "XXX. adding category %s\n" categoryName
+                    let added = (ordersSystem.CreateDishType dishType).OkValue
+                    printf "XXXX. Added  %A\n" added
+                    Redirection.FOUND Path.Courses.adminCategories
+                with
+                | ex ->
+                    log.Error("Error in createCategory", ex)
+                    printf "XXXX. Error in createCategory %A\n" ex
+                    Redirection.FOUND Path.Errors.unableToCompleteOperation
+            )
+    ]
 
 
 let setEnablerStatesForUser (statesId: int list) (userId:int) =

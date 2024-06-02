@@ -4,6 +4,7 @@ open OrdersSystem.Contexts.Restaurant
 open FSharpPlus
 open OrdersSystem.Commons
 open FsToolkit.ErrorHandling
+open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
 open Sharpino.Definitions
 open Sharpino.Utils
@@ -31,6 +32,7 @@ type RestaurantEvents =
     | OrderItemRefAdded of Guid
     | OrderItemRefRemoved of Guid
     | IngredientTypeAdded of IngredientType
+    | DishTypeAdded of DishType
 
     interface Event<Restaurant> with
         member this.Process restaurant =
@@ -71,6 +73,8 @@ type RestaurantEvents =
                 restaurant.RemoveOrderItemRef id
             | IngredientTypeAdded ingredientType ->
                 restaurant.AddIngredientType ingredientType
+            | DishTypeAdded dishType ->
+                restaurant.AddDishType dishType
 
     member this.Serialize =
         globalSerializer.Serialize this

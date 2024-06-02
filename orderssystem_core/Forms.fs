@@ -214,17 +214,16 @@ type IngredientEdit = {
     Name: string
     Comment: string option
     Visibility: string
-    Category: decimal
+    Category: string
     Allergene: string
     UpdateAvailabilityFlag: string
     CheckAvailabilityFlag: string
-    UnitOfMeasure: string
 }
 
 let ingredientEdit:Form<IngredientEdit> =
     Form ([
         TextProp ((fun f -> <@ f.Name@>), [])
-        DecimalProp ((fun f -> <@ f.Category @>), [])
+        // DecimalProp ((fun f -> <@ f.Category @>), [])
     ],[]
     )
 
@@ -236,7 +235,8 @@ type IngredientLoad = {
 let ingredientLoad:Form<IngredientLoad> =
     Form (
         [
-            DecimalProp ((fun f -> <@ f.Quantity @>),[min 0.01M; step 0.01M])
+            // DecimalProp ((fun f -> <@ f.Quantity @>),[min 0.01M; step 0.01M])
+            // System.Guid ((fun f -> <@ f.Quantity @>), []) // [min 0.01M; step 0.01M])
         ],
         []
     )

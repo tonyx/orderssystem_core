@@ -6,7 +6,7 @@ open FsToolkit.ErrorHandling
 open Sharpino.Core
 open Dish
 
-type Role (guid: Guid, roleName: string, enabler: List<DishTypes>, observer: List<DishTypes>, active: bool) =
+type Role (guid: Guid, roleName: string, enabler: List<Guid>, observer: List<Guid>, active: bool) =
     member this.Id = guid
     member this.RoleName = roleName
     member this.Enabler = enabler
@@ -17,7 +17,7 @@ type Role (guid: Guid, roleName: string, enabler: List<DishTypes>, observer: Lis
     new (guid: Guid, roleName: string) =
         Role (guid, roleName, [], [], true)
 
-    member this.AddEnabler (dishType: DishTypes) =
+    member this.AddEnabler (dishType: Guid) =
         result {
             do! 
                 this.Enabler 
@@ -30,7 +30,7 @@ type Role (guid: Guid, roleName: string, enabler: List<DishTypes>, observer: Lis
     member this.Deactivate () =
         Role (guid, roleName, enabler, observer, false) |> Ok
 
-    member this.AddObserver (dishType: DishTypes) =
+    member this.AddObserver (dishType: Guid) =
         result {
             do! 
                 this.Observer 
@@ -40,7 +40,7 @@ type Role (guid: Guid, roleName: string, enabler: List<DishTypes>, observer: Lis
             return Role (guid, roleName, enabler, dishType :: observer, active)
         }
 
-    member this.RemoveEnabler (dishType: DishTypes) =
+    member this.RemoveEnabler (dishType: Guid) =
         result {
             do! 
                 this.Enabler 
@@ -49,7 +49,7 @@ type Role (guid: Guid, roleName: string, enabler: List<DishTypes>, observer: Lis
             return Role (guid, roleName, enabler |> List.filter (fun x -> x <> dishType), observer, active)
         }
 
-    member this.RemoveObserver (dishType: DishTypes) =
+    member this.RemoveObserver (dishType: Guid) =
         result {
             do! 
                 this.Observer 

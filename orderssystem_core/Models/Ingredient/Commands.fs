@@ -21,6 +21,7 @@ type IngredientCommands =
     | IncreaseStock of float
     | DecreaseStock of float
     | SetVisibility of bool
+    | Update of string * Option<string> * Guid * List<IngredientMeasureType> * bool * List<IngredientPrice> * float * bool * UpdatePolicy * CheckUpdatePolicy * bool
     
         interface Command<Ingredient, IngredientEvents>  with
             member this.Execute ingredient = 
@@ -61,5 +62,8 @@ type IngredientCommands =
                 | SetVisibility x ->
                     ingredient.SetVisibility x
                     |> Result.map (fun _ -> [VisibilitySet x])
+                | Update (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) ->
+                    ingredient.Update (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+                    |> Result.map (fun _ -> [Updated (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)])
                     
             member this.Undoer = None

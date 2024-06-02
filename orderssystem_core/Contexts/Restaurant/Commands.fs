@@ -6,6 +6,7 @@ open OrdersSystem.Contexts.RestaurantEvents
 open FSharpPlus
 open OrdersSystem.Commons
 open FsToolkit.ErrorHandling
+open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
 open Sharpino.Definitions
 open Sharpino.Utils
@@ -32,6 +33,7 @@ type RestaurantCommands =
     | AddOrderItemRef of Guid
     | RemoveOrderItemRef of Guid
     | AddIngredientType of IngredientType
+    | AddDishType of DishType
 
     interface Command<Restaurant, RestaurantEvents> with
         member this.Execute restaurant =
@@ -90,5 +92,8 @@ type RestaurantCommands =
             | AddIngredientType ingredientType ->
                 restaurant.AddIngredientType ingredientType
                 |> Result.map (fun r -> [IngredientTypeAdded ingredientType])
+            | AddDishType dishType ->
+                restaurant.AddDishType dishType
+                |> Result.map (fun r -> [DishTypeAdded dishType])
 
         member this.Undoer = None

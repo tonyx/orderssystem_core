@@ -62,8 +62,7 @@ ALTER TABLE ONLY public.aggregate_events_01_ingredients
 
 CREATE OR REPLACE FUNCTION insert_01_ingredients_event_and_return_id(
     IN event_in TEXT,
-    IN aggregate_id uuid,
-    IN aggregate_state_id uuid
+    IN aggregate_id uuid
 )
 RETURNS int
        
@@ -98,22 +97,6 @@ return event_id;
 END;
 $$;
 
--- CREATE OR REPLACE PROCEDURE set_classic_optimistic_lock_01_ingredients() AS $$
--- BEGIN 
---     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'aggregate_events_01_ingredients_aggregate_id_state_id_unique') THEN
--- ALTER TABLE aggregate_events_01_ingredients
---     ADD CONSTRAINT aggregate_events_01_ingredients_aggregate_id_state_id_unique UNIQUE (aggregate_state_id);
--- END IF;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE PROCEDURE un_set_classic_optimistic_lock_01_ingredients() AS $$
--- BEGIN
---     ALTER TABLE aggregate_events_01_ingredients
---     DROP CONSTRAINT IF EXISTS aggregate_events_01_ingredients_aggregate_id_state_id_unique; 
---     -- You can have more SQL statements as needed
--- END;
--- $$ LANGUAGE plpgsql;
 
 
 
