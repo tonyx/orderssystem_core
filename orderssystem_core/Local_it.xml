@@ -30,7 +30,7 @@
         <SubCategories>Sottocategoria</SubCategories> 
         <LogOn>Log on</LogOn> 
         <CouldNotFindTheRequestedResource>Impossibile trovare la pagina richiesta </CouldNotFindTheRequestedResource> 
-        <SearchCourse>Perca piatto</SearchCourse> 
+        <SearchCourse>Cerca piatto</SearchCourse> 
         <PageNotFound>Pagina non trovata</PageNotFound> 
         <ModifySelectableStandardVariations>Modifica variazioni standard selezionabili</ModifySelectableStandardVariations> 
         <SelectableStandardVariations>Variazioni standard selezionabili</SelectableStandardVariations> 

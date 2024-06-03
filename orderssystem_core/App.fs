@@ -1706,10 +1706,31 @@ let manageCategories =
     // View.seeCategories allCategories |> html)
 
 // FOCUS: UPDATE
-let editCourse (id: string)  =
+let editCourse (id: string) =
     log.Debug(sprintf "%s %A " "editCourse" id)
    
-    let courseCategories = (ordersSystem.GetallDishTypes ()).OkValue |> List.filter (fun x -> x.Visible)
+    let courseCategoriesFormData = (ordersSystem.GetallDishTypes ()).OkValue |> List.filter (fun x -> x.Visible) |> List.map (fun x -> (x.DishTypeId.ToString(), x.Name))
+    let standardCommentsOfDish = (ordersSystem.GetStandardCommentsForDish (Guid.Parse id)).OkValue
+    let allStandardComments = (ordersSystem.GetStandardComments ()).OkValue
+    let visibleIngredientCategories = (ordersSystem.GetIngredientTypes ()).OkValue |> List.filter (fun x -> x.Visible)
+    let ingredientsAndQuantitiesOfOfDish = (ordersSystem.GetIngredientsOfDish (Guid.Parse id)).OkValue
+    let dish = (ordersSystem.GetDish (Guid.Parse id)).OkValue
+    let standardVariationsOfDish = (ordersSystem.GetStandardVariationsForDish (Guid.Parse id)).OkValue
+    
+    choose [
+        GET >=> warbler (fun _ ->
+            View.editCourse
+                dish
+                courseCategoriesFormData
+                visibleIngredientCategories
+                ingredientsAndQuantitiesOfOfDish
+                standardCommentsOfDish
+                allStandardComments
+                standardVariationsOfDish
+                ""
+            |> html
+        )
+    ]
     
     // log.Debug(sprintf "%s %d " "editCourse" id)
     // let ctx = Db.getContext()
@@ -1749,7 +1770,7 @@ let editCourse (id: string)  =
     //             )
     // ]
     
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
     
 let editCourseCategory (id: string) =
     log.Debug(sprintf "%A %A " "editDishCategory" id)
@@ -3319,7 +3340,7 @@ let roleEnablerObserverCategoriesByCheckBoxes   =
 type NamesAndMeasures =  { names: IndexNameRecord list; measures: IndexUnitMeasureMap list; message: string}
 
 let selectIAllngredientCatForCourse courseId  =
-    log.Debug (sprintf "selectIAllngredientCatForCourse %d" courseId)
+    log.Debug (sprintf "selectIAllngredientCatForCourse %s" courseId)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "selectIAllngredientCatForCourse %d" courseId )
@@ -3358,9 +3379,35 @@ let selectIAllngredientCatForCourse courseId  =
     // ]
 
 let selectIngredientCatForCourse courseId categoryId message =
-    log.Debug (sprintf "selectIngredientCatForCourse %d %d" courseId categoryId)
-    Redirection.FOUND Path.home
+    let guidCategoryId = Guid.Parse categoryId
+    log.Debug (sprintf "selectIngredientCatForCourse %s %s" courseId categoryId)
     
+    // choose [
+    //     GET >=> warbler (fun _ ->
+    //         // let visibleIngredients = (ordersSystem.GetAllIngredientsOfACategory guidCategoryId).OkValue |> List.filter (fun x -> x.Visible)
+    //         // let alreadyTakenIngredients = (ordersSystem.GetIngredientsOfDish courseId).OkValue |> List.map (fun x -> x.IngredientId)
+    //           
+    //         
+    //         
+    //         )
+    // ]
+    
+    
+    
+    Redirection.FOUND Path.home
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
     // log.Debug(sprintf "selectIngredientCatForCourse courseId: %d, categoryId: %d " categoryId)
     // let ctx = Db.getContext()
     // choose [
@@ -3418,11 +3465,11 @@ let createCourseByCatgory (strId: string) =
                     View.createCourseByCategory (local.TheName+ form.Name + "esiste già") viscategorypairs strId |> html
     
                 | Error _ ->
-                    let description = match form.Description with | Some X -> X | _ -> ""
+                    // let description = match form.Description with | Some X -> X | _ -> ""
                     let dishId = Guid.NewGuid()
-                    let dish = Dish (dishId, form.Name, guidId, [], true, form.Visibile = Form.VISIBLE, form.Price, []) 
-                    let course = (ordersSystem.CreateDish dish).OkValue
-                    let retPath = sprintf Path.Courses.editCourse (dishId.ToString()) // course.Courseid
+                    let dish = Dish (dishId, form.Name, form.Description, guidId, [], true, form.Visibile = Form.VISIBLE, form.Price, [], []) 
+                    let courseCreated = (ordersSystem.CreateDish dish).OkValue
+                    let retPath = sprintf Path.Courses.editCourse (dishId.ToString())
                     
                     Redirection.FOUND retPath
             with
@@ -4826,7 +4873,7 @@ let removeStandardCommentForCourse commentForCourseId =
     // Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId)
 
 let standardCommentsForCourse courseId =
-    log.Debug (sprintf "standardCommentsForCourse %d" courseId)
+    log.Debug (sprintf "standardCommentsForCourse %s" courseId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
@@ -4852,7 +4899,7 @@ let standardCommentsForCourse courseId =
     // ]
 
 let standardVariationsForCourse courseId =
-    log.Debug (sprintf "standardVariationsForCourse %d" courseId)
+    log.Debug (sprintf "standardVariationsForCourse %s" courseId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()

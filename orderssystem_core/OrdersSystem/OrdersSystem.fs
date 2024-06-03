@@ -310,6 +310,17 @@ module OrdersSystem =
                 return state
             }
 
+        member this.GetIngredientsOfDish (id: Guid) =
+            result {
+                let! dish = this.GetDish id
+                let ingredientsOfDish = dish.IngredientAndQuantities
+                let! ingredients =
+                    ingredientsOfDish
+                    |> List.traverseResultM (fun x -> this.GetIngredient x.IngredientId) // return result
+                let result: List<Ingredient * List<IngredientMeasureItemType>>  =
+                    List.zip ingredients (ingredientsOfDish |>> (fun x -> x.PossibleAlternativeQuantities))
+                return result    
+            }
 
         member this.GetTable id =
             result {
@@ -368,25 +379,32 @@ module OrdersSystem =
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
             }
 
-        member this.AddIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
+        member this.AddIngredientPrice (ingredientId: Guid, ingredientPrice: IngredientPrice) =
             result {
                 let! ingredient = this.GetIngredient ingredientId
-                let ingredientPrice = IngredientPrice.mkIngredientPrice (ingredientId, price, quantity, measuringSystem)
                 let addIngredientPrice = IngredientCommands.AddIngredientPrice ingredientPrice
                 return!
                     addIngredientPrice
                     |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
             }
 
-        member this.RemoveIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
+        member this.RemoveIngredientPrice (ingredientId: Guid, ingredientPrice: Guid) =
             result {
                 let! ingredient = this.GetIngredient ingredientId
-                let ingredientPrice = IngredientPrice.mkIngredientPrice (ingredientId, price, quantity, measuringSystem)
                 let removeIngredientPrice = IngredientCommands.RemoveIngredientPrice ingredientPrice
                 return!
                     removeIngredientPrice
                     |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
-            }
+            } 
+        // member this.RemoveIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
+        //     result {
+        //         let! ingredient = this.GetIngredient ingredientId
+        //         let ingredientPrice = IngredientPrice.mkIngredientPrice (ingredientId, price, quantity, measuringSystem)
+        //         let removeIngredientPrice = IngredientCommands.RemoveIngredientPrice ingredientPrice
+        //         return!
+        //             removeIngredientPrice
+        //             |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
+        //     }
         
         member this.UpdateDish (dish: Dish) =
             result {
@@ -402,7 +420,9 @@ module OrdersSystem =
                          dish.Active,
                          dish.Visible,
                          dish.Price,
-                         dish.StandardComments)
+                         dish.StandardComments,
+                         dish.StandardVariations
+                         )
                 let result =
                     updateDish
                     |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
@@ -619,7 +639,7 @@ module OrdersSystem =
                     |> runInitAndCommand<Restaurant, RestaurantEvents, User, string> eventStore eventBroker user
             }
 
-        member this.CreateDish (name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, price: decimal) =
+        member this.CreateDish (name: string, description: Option<string>, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, price: decimal) =
             result {
                 let! existingDishes = this.GetAllDishes ()
                 let! notAlreadyExists =
@@ -629,7 +649,7 @@ module OrdersSystem =
                     |> Result.ofBool (sprintf "Dish with name '%s' already exists" name)
 
                 let id = Guid.NewGuid()
-                let dish = Dish (id, name, dishType, ingredientAndQuantities, true, true, price, [])
+                let dish = Dish (id, name, description, dishType, ingredientAndQuantities, true, true, price, [], [])
 
                 let! result =
                     id
@@ -685,7 +705,67 @@ module OrdersSystem =
                     |> runInitAndCommand<Restaurant, RestaurantEvents, Ingredient, string> eventStore eventBroker ingredient
                 return result    
             }
+     
+        member this.GetStandardComments () =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                return restaurant.StandardComments
+            }
+        member this.GetAllStandardVariations () =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                return restaurant.StandardVariations
+            }
+        member this.GetStandardComment (id: Guid) =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                do! 
+                    restaurant.StandardComments
+                    |> List.map (fun x -> x.CommentId)
+                    |> List.contains id 
+                    |> Result.ofBool (sprintf "StandardComment with id '%A' does not exist" id)
+                
+                let comment = restaurant.StandardComments |> List.find (fun x -> x.CommentId = id)
+                return comment
+            }
+       
+        member this.GetStandardVariation (id: Guid) =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                do! 
+                    restaurant.StandardVariations
+                    |> List.map (fun x -> x.Id)
+                    |> List.contains id 
+                    |> Result.ofBool (sprintf "StandardVariation with id '%A' does not exist" id)
+                
+                let variation = restaurant.StandardVariations |> List.find (fun x -> x.Id = id)
+                return variation
+            }     
+        
+        member this.GetStandardCommentsForDish (dishId: Guid) =
+            result {
+                let! dish = this.GetDish dishId
+                let  dishStandardCommentsIds = dish.StandardComments
+                let comments =
+                    dishStandardCommentsIds
+                    |> List.map (fun x -> this.GetStandardComment x)
+                    |> List.filter (fun x -> (x |> Result.isOk))
+                    |> List.map (fun x -> x.OkValue)
+                return comments    
+            }
+       
             
+        member this.GetStandardVariationsForDish (dishId: Guid) =
+            result {
+                let! dish = this.GetDish dishId
+                let  dishStandardVariationsIds = dish.StandardVariations
+                let variations =
+                    dishStandardVariationsIds
+                    |> List.map (fun x -> this.GetStandardVariation x)
+                    |> List.filter (fun x -> (x |> Result.isOk))
+                    |> List.map (fun x -> x.OkValue)
+                return variations    
+            }
 
         member this.CreateTable (description: Option<string>, number: int, seats: int) =
             result {

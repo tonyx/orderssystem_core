@@ -5,8 +5,6 @@ open Sharpino
 open FsToolkit.ErrorHandling
 open Sharpino.Core
 
-open Microsoft.FSharp.Reflection
-
     type IngredientMeasureType =
         | Grams
         | Kilograms
@@ -24,15 +22,38 @@ open Microsoft.FSharp.Reflection
 
     type IngredientPrice =
         {
-            IngredientId: Guid
+            Id: Guid
             Price: float
             Quantity: float
             MeasuringSystem: IngredientMeasureType
         }
-        with 
-        static member mkIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
-            { IngredientId = ingredientId; Price = price; Quantity = quantity; MeasuringSystem = measuringSystem }
-
+        with
+        static member mkIngredientPrice (price: float, quantity: float, measuringSystem: IngredientMeasureType) =
+            { Id = Guid.NewGuid(); Price = price; Quantity = quantity; MeasuringSystem = measuringSystem }
+        
+    type VariationType =
+        | Abundant
+        | Scarce
+        | Add of Option<IngredientPrice>
+        | Remove of Option<IngredientPrice>
+        
+    type IngredientVariation =
+        {
+            IngredientId: Guid
+            VariationType: VariationType
+        }
+        with
+        static member mkIngredientVariation (ingredientId: Guid, variationType: VariationType) =
+            { IngredientId = ingredientId; VariationType = variationType }    
+    
+    type StandardVariation =
+        {
+            Id: Guid
+            Name: string
+            Description: Option<string>
+            IngredientVariations: List<IngredientVariation>
+        }
+        
     type UpdatePolicy =
         | NoUpdate
         | UpdateOnOrder
@@ -110,14 +131,15 @@ open Microsoft.FSharp.Reflection
                 return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
             }
 
-        member this.RemoveIngredientPrice (ingredientPrice: IngredientPrice) =
+        member this.RemoveIngredientPrice (ingredientPriceId: Guid) =
             result {
                 do! 
                     this.IngredientPrices 
-                    |> List.contains ingredientPrice
+                    |> List.exists (fun x -> x.Id = ingredientPriceId)
                     |> Result.ofBool "IngredientPrice does not exist"
-                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices |> List.filter ((<>) ingredientPrice), stock,  hasAllergen, updatePolicy, checkUpdatePolicy, visible)
-            }
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices |> List.filter (fun x -> x.Id <> ingredientPriceId), stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+            }    
+           
         member this.SetAllergen (x: bool) =
             Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, x, updatePolicy, checkUpdatePolicy, visible) |> Ok
             

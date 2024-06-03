@@ -3,6 +3,7 @@ module OrdersSystem.View
 open OrdersSystem.Contexts.Restaurant
 open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
+open OrdersSystem.Shared
 open Suave.Form
 open FSharp.Data
 open Suave.Html
@@ -260,9 +261,157 @@ let editCourseCategory  (courseCategory: DishType) message = [
 //     ]
 
 
+let editCourse  (course : OrdersSystem.Models.Dish.Dish) (courseCategoriesForm: List<string * string>)  (ingredientCategories: List<IngredientType>)
+    (ingredientsOfTheCourse: List<Ingredient * List<IngredientMeasureItemType>>) (commentsForCourse: List<StandardComment>) (allStandardComments: List<StandardComment>) 
+    (standardVariationForCourseDetails : List<OrdersSystem.Models.Ingredient.StandardVariation>)  (message: string) =
+    [
+         Text("here you go")
+         h2 ("Edit: " + course.Name)
+         div ["id", "register-message"] 
+             [
+                 Text message
+             ]
+         renderForm
+             { 
+                 Form = Form.course
+                 Fieldsets = 
+                     [  
+                         { 
+                             Legend = local.Course
+                             Fields = 
+                                 [ 
+                                     { 
+                                         Label = local.Name
+                                         Html =  formInput 
+                                             (fun f -> <@ f.Name  @>) 
+                                             ["value", course.Name] 
+                                     }
+                                     { 
+                                         Label = local.Description
+                                         Html = formInput 
+                                             (fun f -> <@ f.Description @>) 
+                                             ["value", course.Description |> Option.defaultValue ""] 
+                                     } 
+                                     { 
+                                         Label = local.Price
+                                         Html = formInput 
+                                             (fun f -> <@ f.Price @>) 
+                                             ["value", formatDec course.Price ] 
+                                     }
+                                     { 
+                                         Label = local.Visibility
+                                         Html = selectInput 
+                                             (fun f -> <@ f.Visibile @>) visibilityType 
+                                             (Some (if course.Visible then "VISIBLE" else "INVISIBLE")) 
+                                     } 
+                                     { 
+                                         Label = local.Category
+                                         Html = selectInput 
+                                             (fun f -> <@ f.CategoryId @>) courseCategoriesForm 
+                                             (Some (course.DishType.ToString()))  
+                                     } 
+                                 ] 
+                         } 
+                     ]
+                 SubmitText = local.SaveChanges 
+             }
+         br []    
+         h2 local.ExistingIngredients
+         if (ingredientsOfTheCourse |> List.length > 0) then
+             table
+                 [
+                     for existingIngredient in ingredientsOfTheCourse ->
+                         tr 
+                             [
+                                 td 
+                                     [
+                                         Text((existingIngredient |> fst).Name)
+                                     ]
+                                 td 
+                                     [
+                                         Text("to do")
+                                         // Text(if existingIngredient.Item2 |> List.length > 0 then (sprintf "%s %.2f" local.Quantity (existingIngredient.Item2 |> List.head).Quantity) else "")
+                                     ]
+                                 td 
+                                     [
+                                         Text("to do")
+                                         // a (sprintf Path.Courses.deleteIngredientToCourse  course.Id existingIngredient.Item1.Id) ["class","buttonX"]
+                                         //        [Text (local.Remove)]
+                                    ]                                
+                     
+                            ]
+                ]
+         
+        else
+        Text local.NoIngredients
+        br []
+        h2 local.CategoriesOfIngredientsYouCanAdd
+        div ["class", "outline-box"]
+            [
+                 for ingredientCategory in ingredientCategories ->
+                     tag "p" [] 
+                         [
+                             a (sprintf Path.Courses.selectIngredientCategoryForCourseEdit  
+                                 (course.Id.ToString()) (ingredientCategory.Id.ToString())) ["class","buttonX"]
+                                 [Text (local.AddAmong+" "+ingredientCategory.Name)] 
+                         ]
+            ]
+        tag "p" [] 
+            [
+                 a (sprintf Path.Courses.selectAllIngredientsForCourseEdit (course.Id.ToString()))   ["class","buttonX"] [Text (local.AddAmongAll) ] 
+            ]
+        h2 (local.SelectableComments)
+        if (commentsForCourse.Length > 0) then
+             table 
+                 [
+                     for commentforcourse in commentsForCourse ->
+                         tr 
+                             [
+                                 td 
+                                     [
+                                         Text(commentforcourse.Text)
+                                     ]
+                             ]
+                 ]
+        else    
+             Text local.NoComments
+             br []
+        br []
+        a (sprintf Path.Admin.standardCommentsForCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.Modify)]
+        br []
+        br []
+        
+        h2 local.SelectableStandardVariations
+        if (standardVariationForCourseDetails.Length > 0) then
+             table 
+                 [
+                     for standardVariationForCourseDetail in standardVariationForCourseDetails ->
+                         tr 
+                             [
+                                 td 
+                                     [
+                                         Text(standardVariationForCourseDetail.Name)
+                                     ]
+                             ]
+                 ]
+        else    
+             Text local.NoStandardVariations
+             br []
+        br []
+        
+        a (sprintf Path.Admin.standardVariationsForCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.Modify)]
+        br []
+        tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+        div [] 
+            [
+                 a Path.home [] [Text local.MainPage ]
+            ]
+        script ["type","text/javascript"; "src","/backbutton.js"] [] 
+  ] 
+    
 // let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.IngredientCategory list) 
 //     (ingredientsOfTheCourse:Db.IngredientOfCourse list) (commentsForCourse:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) 
-//     (standardVariationForCourseDetails:Db.StandardVariationForCourseDetails list)  message = 
+//     (standardVariationForCourseDetails:Db.StandardVariationForCourseDetails list)  message =
 //         [ 
 //
 //             h2 ("Edit: " + course.Name)
@@ -365,21 +514,21 @@ let editCourseCategory  (courseCategory: DishType) message = [
 //                     a (sprintf Path.Courses.selectAllIngredientsForCourseEdit course.Courseid)   ["class","buttonX"] [Text (local.AddAmongAll) ] 
 //                 ]
 //
-//             h2 (local.SelectableComments)
-//             if (commentsForCourse.Length > 0) then
+//             h2 (local.selectablecomments)
+//             if (commentsforcourse.length > 0) then
 //                 table 
 //                     [
-//                         for commentForCourse in commentsForCourse ->
+//                         for commentforcourse in commentsforcourse ->
 //                             tr 
 //                                 [
 //                                     td 
 //                                         [
-//                                             Text(commentForCourse.Comment)
+//                                             text(commentforcourse.comment)
 //                                         ]
 //                                 ]
 //                     ]
 //             else    
-//                 Text local.NoComments
+//                 text local.nocomments
 //                 br []
 //             br []
 //
@@ -1134,13 +1283,13 @@ let createCourseByCategory message visibleCategories (categoryId: string) =
                                         Html = formInput (fun f -> <@ f.Name @>) []
                                     }
                                     { 
-                                        Label = local.Price
-                                        Html = formInput (fun f -> <@ f.Price @>) [] 
-                                    }
-                                    { 
                                         Label = local.Description
                                         Html = formInput (fun f -> <@ f.Description @>) [] 
                                     } 
+                                    { 
+                                        Label = local.Price
+                                        Html = formInput (fun f -> <@ f.Price @>) [] 
+                                    }
                                     { 
                                         Label = local.Visibility
                                         Html = selectInput (fun f -> <@ f.Visibile @>) visibilityType (Some "VISIBLE") 
@@ -1154,6 +1303,7 @@ let createCourseByCategory message visibleCategories (categoryId: string) =
                     ]
                 SubmitText = local.Add 
             }
+        br []    
         div [] 
             [
                 a Path.home [] [Text local.MainPage]

@@ -14,13 +14,25 @@ type IngredientEvents =
     | IngredientMeasureTypeAdded of IngredientMeasureType
     | IngredientMeasureTypeRemoved of IngredientMeasureType
     | IngredientPriceAdded of IngredientPrice
-    | IngredientPriceRemoved of IngredientPrice
+    | IngredientPriceRemoved of Guid
     | AllergenSet of bool
     | UpdatePolicySet of UpdatePolicy
     | StockIncreased of float
     | StockDecreased of float
     | VisibilitySet of bool
-    | Updated of string * Option<string> * Guid * List<IngredientMeasureType> * bool * List<IngredientPrice> * float * bool * UpdatePolicy * CheckUpdatePolicy * bool
+    | Updated of
+        string *
+        Option<string> *
+        Guid *
+        List<IngredientMeasureType> *
+        bool *
+        List<IngredientPrice> *
+        float *
+        bool *
+        UpdatePolicy *
+        CheckUpdatePolicy *
+        bool
+        
         interface Event<Ingredient>  with
             member this.Process ingredient =
                 match this with

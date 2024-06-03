@@ -17,7 +17,7 @@ type DishCommands =
     | SetVisible
     | SetInvisible
     | SetDishType of Guid
-    | Update of string * Guid * List<IngredientAndQuantity> * bool * bool * decimal * List<Guid>
+    | Update of string * Guid * List<IngredientAndQuantity> * bool * bool * decimal * List<Guid> * List<Guid>
 
         interface Command<Dish, DishEvents>  with
             member this.Execute dish = 
@@ -43,8 +43,8 @@ type DishCommands =
                 | SetDishType guid ->
                     dish.SetDishType guid
                     |> Result.map (fun _ -> [DishTypeSet guid])
-                | Update (name, dishType, ingredientRefs, active, visible, price, standardComments ) ->
-                    dish.Update (name, dishType, ingredientRefs, active, visible, price, standardComments)
-                    |> Result.map (fun _ -> [Updated (name, dishType, ingredientRefs, active, visible, price, standardComments )])
+                | Update (name, dishType, ingredientRefs, active, visible, price, standardComments, standardVariations ) ->
+                    dish.Update (name, dishType, ingredientRefs, active, visible, price, standardComments, standardVariations)
+                    |> Result.map (fun _ -> [Updated (name, dishType, ingredientRefs, active, visible, price, standardComments, standardVariations )])
             member this.Undoer = None
             

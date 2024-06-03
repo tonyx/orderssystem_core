@@ -14,7 +14,7 @@ type IngredientCommands =
     | AddIngredientMeasureType of IngredientMeasureType
     | RemoveIngredientMeasureType of IngredientMeasureType
     | AddIngredientPrice of IngredientPrice
-    | RemoveIngredientPrice of IngredientPrice
+    | RemoveIngredientPrice of Guid
     | Deactivate
     | SetAllergen of bool
     | SetUpdatePolicy of UpdatePolicy

@@ -29,7 +29,6 @@ type Course = {
     Description :  string option
     Price : decimal
     Visibile: string 
-    // CategoryId: decimal
     CategoryId: string
 }
 
