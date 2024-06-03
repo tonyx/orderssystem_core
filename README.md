@@ -8,9 +8,10 @@ These instructions will show you how to get you a copy of the project up and run
  
 Typical users can be managers, employees and customers of restaurants, pubs, bars that need to automate the process of collecting orders, printing orders, and delivering fiscal receipts.
 
-## Important note:
+## Security notes:
 At the moment Npgsql library and Sqlprovider must stay pinned to version 6.0.11 and 1.1.65.
-For security reason only trusted users must be allowed.
+An upgrade is on the way.
+At the moment it is recommended allowing only trusted users and secure netwoks.
  
 ## General description.
  
