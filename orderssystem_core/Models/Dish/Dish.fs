@@ -1,6 +1,7 @@
 
 module OrdersSystem.Models.Dish
 open OrdersSystem.Commons
+open OrdersSystem.Shared
 open System
 open Sharpino
 open FSharpPlus
@@ -28,7 +29,7 @@ open Sharpino.Core
             PossibleAlternativeQuantities: List<IngredientMeasureItemType>
         }
 
-    type Dish (id: Guid, name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, active: bool, visible: bool) =
+    type Dish (id: Guid, name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, active: bool, visible: bool, price: decimal, standardComments: List<Guid>) =
 
         member this.Id = id
         member this.Name = name
@@ -38,21 +39,23 @@ open Sharpino.Core
         member this.Visible = visible
         member this.Active = active
         member this.DishType = dishType
-
-        new (id: Guid, name: string, dishType: Guid, ingredientRefs: List<IngredientAndQuantity>) =
-            Dish (id, name, dishType, ingredientRefs, true, true) 
+        member this.Price = price
+        member this.StandardComments = standardComments
+        
+        new (id: Guid, name: string, dishType: Guid, ingredientRefs: List<IngredientAndQuantity>, price: decimal) =
+            Dish (id, name, dishType, ingredientRefs, true, true, price, []) 
 
         member this.SetVisible () =
-            Dish (id, name, dishType, ingredientAndQuantities, this.Active, true) |> Ok
+            Dish (id, name, dishType, ingredientAndQuantities, this.Active, true, price, standardComments) |> Ok
 
         member this.SetInvisible () =
-            Dish (id, name, dishType, ingredientAndQuantities, this.Active, false) |> Ok            
+            Dish (id, name, dishType, ingredientAndQuantities, this.Active, false, price, standardComments) |> Ok            
 
         member this.SetDishType (newDishType: Guid) =
-            Dish (id, name, newDishType, ingredientAndQuantities, this.Active, this.Visible) |> Ok 
+            Dish (id, name, newDishType, ingredientAndQuantities, this.Active, this.Visible, price, standardComments) |> Ok 
 
         member this.Deactivate () =
-            Dish (id, name, dishType, ingredientAndQuantities, false, this.Visible) |> Ok
+            Dish (id, name, dishType, ingredientAndQuantities, false, this.Visible, price, standardComments) |> Ok
         member this.UpdateName (newName: string) =
             result {
                 do! 
@@ -60,8 +63,22 @@ open Sharpino.Core
                     |> String.IsNullOrWhiteSpace
                     |> not
                     |> Result.ofBool "Name cannot be empty"
-                return Dish (id, newName, dishType, this.IngredientAndQuantities)
+                return Dish (id, newName, dishType,  ingredientAndQuantities, this.Active, this.Visible, price, standardComments)
             }
+            
+        member this.Update (name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, active: bool, visible: bool, price: decimal, standardComments: List<Guid>) =
+            result {
+                do! 
+                    name
+                    |> String.IsNullOrWhiteSpace
+                    |> not
+                    |> Result.ofBool "Name cannot be empty"
+                do!
+                    price > 0.0M
+                    |> Result.ofBool "Price must be positive"
+                return Dish (id, name, dishType, ingredientAndQuantities, active, visible, price, standardComments)
+            }
+            
         member this.AddIngredientAndQuantity (ingredientAndQuantity: IngredientAndQuantity) =
             result {
                 do! 
@@ -70,7 +87,7 @@ open Sharpino.Core
                     |> List.contains ingredientAndQuantity.IngredientId
                     |> not
                     |> Result.ofBool "Ingredient already exists"
-                return Dish (id, name, dishType, ingredientAndQuantity :: ingredientAndQuantities, this.Active, this.Visible)
+                return Dish (id, name, dishType, ingredientAndQuantity :: ingredientAndQuantities, this.Active, this.Visible, price, standardComments)
             }
         member this.RemoveIngredient (ingredientId: Guid) =
             result {
@@ -79,13 +96,25 @@ open Sharpino.Core
                     |>> (fun x -> x.IngredientId)
                     |> List.contains ingredientId
                     |> Result.ofBool "Ingredient does not exist"
-                return Dish (id, name, dishType, ingredientAndQuantities |> List.filter (fun x -> x.IngredientId <> ingredientId), this.Active, this.Visible)
+                return Dish (id, name, dishType, ingredientAndQuantities |> List.filter (fun x -> x.IngredientId <> ingredientId), this.Active, this.Visible, price, standardComments)
             }
-        // member this.ToDishTO  =
-        //     { Id = id; Name = name; DishTypes = dishTypes }
-        //
-        // static member FromDishTO (dishTO: DishTO) =
-        //     Dish (dishTO.Id, dishTO.Name, dishTO.DishTypes, [])
+        member this.AddStandardComment (standardCommentId: Guid) =
+            result {
+                do! 
+                    this.StandardComments
+                    |> List.contains standardCommentId
+                    |> not
+                    |> Result.ofBool "StandardComment already exists"
+                return Dish (id, name, dishType, ingredientAndQuantities, this.Active, this.Visible, price, standardCommentId :: standardComments)
+            }
+        member this.RemoveStandardComment (standardCommentId: Guid) =
+            result {
+                do! 
+                    this.StandardComments
+                    |> List.contains standardCommentId
+                    |> Result.ofBool "StandardComment does not exist"
+                return Dish (id, name, dishType, ingredientAndQuantities, this.Active, this.Visible, price, standardComments |> List.filter ((<>) standardCommentId))
+            }
 
         member this.Serialize =
             this |> globalSerializer.Serialize

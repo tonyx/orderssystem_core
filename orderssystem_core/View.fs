@@ -170,49 +170,50 @@ type Session =
 //         }
 // ]
 
-// let editCourseCategory  (courseCategory: Db.CourseCategories) message = [
-//     h2 local.EditCategory
-//
-//     div ["id", "register-message"] 
-//         [
-//             Text message
-//         ]
-//
-//     renderForm
-//         { 
-//             Form = Form.courseCategoryEdit
-//             Fieldsets = 
-//                 [ 
-//                     { 
-//                         Legend = local.Course
-//                         Fields = 
-//                             [ 
-//                                 { 
-//                                     Label = local.Name
-//                                     Html =  formInput 
-//                                         (fun f -> <@ f.Name  @>) 
-//                                         ["value", courseCategory.Name] }
-//                                 { 
-//                                     Label = local.Visibility
-//                                     Html = Suave.Form.selectInput (fun f -> <@ f.Visibility @>) visibilityType
-//                                         (match courseCategory.Visibile with true -> Some "VISIBLE" | _ -> Some "INVISIBLE" ) 
-//                                 } 
-//                                 { 
-//                                     Label = local.IsAbstract
-//                                     Html = Suave.Form.selectInput (fun f -> <@ f.Abstract @>) abstractType
-//                                         (match courseCategory.Abstract with true -> Some "ABSTRACT" | _ -> Some "CONCRETE" ) 
-//                                 } 
-//                             ] 
-//                     } 
-//                 ]
-//             SubmitText = local.SaveChanges 
-//         }
-//     br []
-//     div [] 
-//         [
+let editCourseCategory  (courseCategory: DishType) message = [
+    h2 local.EditCategory
+
+    div ["id", "register-message"] 
+        [
+            Text message
+        ]
+
+    renderForm
+         { 
+             Form = Form.courseCategoryEdit
+             Fieldsets = 
+                 [ 
+                     { 
+                         Legend = local.Course
+                         Fields = 
+                             [ 
+                                 { 
+                                     Label = local.Name
+                                     Html =  formInput 
+                                         (fun f -> <@ f.Name  @>) 
+                                         ["value", courseCategory.Name] }
+                                 { 
+                                     Label = local.Visibility
+                                     Html = Suave.Form.selectInput (fun f -> <@ f.Visibility @>) visibilityType
+                                         (match courseCategory.Visible with true -> Some "VISIBLE" | _ -> Some "INVISIBLE" ) 
+                                 } 
+                             ] 
+                     } 
+                 ]
+             SubmitText = local.SaveChanges 
+         }
+    br []
+    div []
+        [
+            a Path.Courses.adminCategories [] [Text local.GoBack]
+        ]
+        
+// br []
+// div [] 
+//        [
 //             a Path.Courses.adminCategories [] [Text local.GoBack]
-//         ]
-// ]
+//        ]
+]
 
 // let addIngredientToCourse (selectableIngredients:Db.Ingredient list) (course:Db.Course) message = 
 //     let ingredientsIdNameMap = selectableIngredients |> List.map (fun (x:Db.Ingredient) -> ((decimal)x.Ingredientid,x.Name))
@@ -1094,11 +1095,12 @@ let createCourseCategory msg  = [
                                 { 
                                     Label = local.Visibility
                                     Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
-                                } 
-                                { 
-                                    Label = local.IsAbstract
-                                    Html = selectInput (fun f -> <@ f.Abstract @>) abstractType (Some "CONCRETE") 
-                                } 
+                                }
+                                
+                                // { 
+                                //     Label = local.IsAbstract
+                                //     Html = selectInput (fun f -> <@ f.Abstract @>) abstractType (Some "CONCRETE") 
+                                // } 
 
                             ] 
                     } 
@@ -1110,7 +1112,7 @@ let createCourseCategory msg  = [
     ]
 ]
 
-let createCourseByCategory message visibleCategories categoryId  = 
+let createCourseByCategory message visibleCategories (categoryId: string) =
     [
         h2 local.CreateNewCourse
 
@@ -1316,6 +1318,63 @@ let createCourse visibleCategories   =
 //     | None -> [ Text("an error occurred, unexisting category")]
 
 
+ //
+let seeAllCoursesPaginated (category: DishType)   (courses: List<Dish>) (numberOfPages: int) (pageNumber: int) =
+    let nextPageLink (cat:DishType) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated ((cat.DishTypeId).ToString()) (i + 1)) ["class","noredstyle"] [Text (">")]] else []
+    let previousPageLink  (cat: DishType) i = if (i>0) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated (cat.DishTypeId.ToString()) (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
+    [
+        Text("hello world")
+        h2 (category.Name+" ("+local.All+")"); 
+        tag "p" [] [ a (sprintf Path.Courses.manageVisibleCoursesOfACategoryPaginated (category.DishTypeId.ToString()) 0) 
+            ["class", "buttonX"] [Text (local.AllVisibleCoursesOfCategory)]]
+        tag "p" [] [ a (sprintf Path.Courses.addCourseByCategory (category.DishTypeId.ToString()))
+            ["class","buttonX"] [Text (local.AddNew)] ]
+        
+        br []
+        div [] [Text(local.CoursesOfType+category.Name)]
+        br []
+        renderForm 
+             { 
+                 Form = Form.searchCourse
+                 Fieldsets =
+                     [ 
+                         { 
+                             Legend = local.SearchByName
+                             Fields = 
+                                 [
+                                     {
+                                         Label = local.Name
+                                         Html = formInput (fun f -> <@ f.Name @>) []
+                                     }
+                                 ]
+                         }
+                     ]
+                 SubmitText = local.Search 
+             }
+        table [
+             for course in courses  ->           
+             tr [
+                 td [
+                     a (sprintf Path.Courses.editCourse (course.Id.ToString())  ) [] [Text (course.Name) ]
+                 ]
+                 td [
+                     Text((course.Price |> string)  )
+                     Text("price here" )
+                 ]
+             ]
+         ]
+         // div ["class","redstyle"] ((previousPageLink theCategory pageNumber) @ (([0 .. numberOfPages] |> (List.map (fun i ->
+         //     if (i = pageNumber) then
+         //         ((a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid i)) ["class","redstyle"] [Text (((i |> string)+" "))])
+         //     else 
+         //     ((a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated theCategory.Categoryid i)) ["class","noredstyle"] [Text (((i |> string)))])
+         //
+         //     )) 
+         // ) @ (nextPageLink theCategory pageNumber)))
+         // div [] [a Path.Courses.adminCategories [] [Text local.GoBack]]
+
+    ]
+ 
 // let seeAllCoursesPaginated (category:Db.CourseCategories option) (subCategories:Db.FatherSonCategoriesDetails list) (father:Db.CourseCategories option) (courses: Db.Coursedetails list) (numberOfPages: int) (pageNumber: int) =
 //     let nextPageLink (cat:Db.CourseCategories) i = if (i<numberOfPages) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i + 1)) ["class","noredstyle"] [Text (">")]] else []
 //     let previousPageLink  (cat:Db.CourseCategories) i = if (i>0) then [a ( sprintf Path.Courses.manageAllCoursesOfACategoryPaginated cat.Categoryid (i - 1)) ["class","noredstyle"] [Text ("<")]] else []
@@ -2330,7 +2389,7 @@ let coursesAdministrationPage  (categories: DishType list) (dishes: Dish list) =
                             // td (if (category.Abstract) then [(Text(local.IsAbstract))] else [(Text(""))])
                             
                             // td [a (sprintf Path.Courses.switchCourseCategoryVisibility category.Categoryid) ["class","buttonX"]  [Text(local.Visibility)]]
-                            // td [a (sprintf Path.Courses.editCategory category.Categoryid) ["class","buttonX"]  [Text(local.Modify )]]
+                            td [a (sprintf Path.Courses.editCategory ((category.DishTypeId).ToString())) ["class","buttonX"]  [Text(local.Modify )]]
                         ]
                     ]
             ]

@@ -29,14 +29,15 @@ type Course = {
     Description :  string option
     Price : decimal
     Visibile: string 
-    CategoryId: decimal
+    // CategoryId: decimal
+    CategoryId: string
 }
 
 let course : Form<Course> = 
     Form ([ 
             TextProp ((fun f -> <@ f.Name @>), [ maxLength 100 ])
             DecimalProp ((fun f -> <@ f.Price @>), [ min 0.01M; step 0.01M ])
-            DecimalProp ((fun f -> <@ f.CategoryId @>), [ ])
+            TextProp ((fun f -> <@ f.CategoryId @>), [ ])
             ],
         [])
 
@@ -298,7 +299,6 @@ type UserEdit = {
 type CourseCategory = {
     Name: string
     Visibility: string
-    Abstract: string
 }
 
 let courseCategoryEdit : Form<CourseCategory> = 
@@ -306,7 +306,6 @@ let courseCategoryEdit : Form<CourseCategory> =
         [ 
             TextProp ((fun f -> <@ f.Name @>), [ maxLength 30 ] )
             TextProp ((fun f -> <@ f.Visibility @>), [] )
-            TextProp ((fun f -> <@ f.Abstract @>), [] )
             ],[ ]
     )
 

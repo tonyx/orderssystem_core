@@ -5,6 +5,7 @@ open OrdersSystem.Contexts.Restaurant.Restaurant
 open OrdersSystem.Contexts.RestaurantEvents
 open FSharpPlus
 open OrdersSystem.Commons
+open OrdersSystem.Shared
 open FsToolkit.ErrorHandling
 open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
@@ -34,6 +35,10 @@ type RestaurantCommands =
     | RemoveOrderItemRef of Guid
     | AddIngredientType of IngredientType
     | AddDishType of DishType
+    | UpdateDishType of DishType
+    | AddStandardComment of string
+    | UpdateStandardComment of StandardComment
+    | RemoveStandardComment of Guid
 
     interface Command<Restaurant, RestaurantEvents> with
         member this.Execute restaurant =
@@ -95,5 +100,17 @@ type RestaurantCommands =
             | AddDishType dishType ->
                 restaurant.AddDishType dishType
                 |> Result.map (fun r -> [DishTypeAdded dishType])
-
+            | UpdateDishType dishType ->
+                restaurant.UpdateDishType dishType
+                |> Result.map (fun r -> [DishTypeUpdated dishType])
+            | AddStandardComment comment ->
+                restaurant.AddStandardComment comment
+                |> Result.map (fun r -> [StandardCommentAdded comment])
+            | UpdateStandardComment comment ->
+                restaurant.UpdateStandardComment comment
+                |> Result.map (fun r -> [StandardCommentUpdated comment])
+            | RemoveStandardComment guid ->
+                restaurant.RemoveStandardComment guid
+                |> Result.map (fun r -> [StandardCommentRemoved guid])    
+                
         member this.Undoer = None

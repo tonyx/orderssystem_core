@@ -21,6 +21,8 @@ open OrdersSystem.Contexts.Restaurant.Restaurant
 open OrdersSystem.Contexts.RestaurantEvents
 open OrdersSystem.Models.User
 open OrdersSystem.Models.Order
+open OrdersSystem.Shared
+
 open System
 
 module OrdersSystem =
@@ -152,6 +154,21 @@ module OrdersSystem =
                 let! result =
                     dishType
                     |> RestaurantCommands.AddDishType
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker 
+                return result
+            }
+        member this.UpdateDishType (dishType: DishType) =
+            result {
+                let! existingDishTypes = this.GetallDishTypes ()
+                let! notAlreadyExists =
+                    existingDishTypes
+                    |> List.exists (fun x -> x.Name = dishType.Name)
+                    |> not
+                    |> Result.ofBool (sprintf "DishType with name '%s' already exists" dishType.Name)
+                
+                let! result =
+                    dishType
+                    |> RestaurantCommands.UpdateDishType
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker 
                 return result
             }
@@ -370,6 +387,27 @@ module OrdersSystem =
                     removeIngredientPrice
                     |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
             }
+        
+        member this.UpdateDish (dish: Dish) =
+            result {
+                let! dishExists =
+                    this.GetDish dish.Id
+                    |> Result.map (fun _ -> ())
+        
+                let updateDish =
+                    DishCommands.Update
+                        (dish.Name,
+                         dish.DishType,
+                         dish.IngredientAndQuantities,
+                         dish.Active,
+                         dish.Visible,
+                         dish.Price,
+                         dish.StandardComments)
+                let result =
+                    updateDish
+                    |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
+                return! result
+            }    
 
         member this.UpdateIngredient (ingredient: Ingredient) =
             printf "going to upgrade ingredient 100\n"
@@ -581,7 +619,7 @@ module OrdersSystem =
                     |> runInitAndCommand<Restaurant, RestaurantEvents, User, string> eventStore eventBroker user
             }
 
-        member this.CreateDish (name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>) =
+        member this.CreateDish (name: string, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, price: decimal) =
             result {
                 let! existingDishes = this.GetAllDishes ()
                 let! notAlreadyExists =
@@ -591,10 +629,26 @@ module OrdersSystem =
                     |> Result.ofBool (sprintf "Dish with name '%s' already exists" name)
 
                 let id = Guid.NewGuid()
-                let dish = Dish (id, name, dishType, ingredientAndQuantities)
+                let dish = Dish (id, name, dishType, ingredientAndQuantities, true, true, price, [])
 
                 let! result =
                     id
+                    |> RestaurantCommands.AddDishRef
+                    |> runInitAndCommand<Restaurant, RestaurantEvents, Dish, string> eventStore eventBroker dish
+
+                return result
+            }
+        member this.CreateDish (dish: Dish) =
+            result {
+                let! existingDishes = this.GetAllDishes ()
+                let! notAlreadyExists =
+                    existingDishes
+                    |> List.exists (fun x -> x.Name = dish.Name)
+                    |> not
+                    |> Result.ofBool (sprintf "Dish with name '%s' already exists" dish.Name)
+
+                let! result =
+                    dish.Id
                     |> RestaurantCommands.AddDishRef
                     |> runInitAndCommand<Restaurant, RestaurantEvents, Dish, string> eventStore eventBroker dish
 
@@ -801,7 +855,28 @@ module OrdersSystem =
                         sortedIngredients |> List.skip (page * pageSize) |> List.take pageSize
                 return (ingredientsOfCategory, nTotals)
             }
-              
+        member this.GetAllDishesOfACategory (categoryId: Guid) =
+            result {
+                let! dishes = this.GetAllDishes ()
+                let dishesOfCategory = 
+                    dishes |> List.filter (fun x -> x.DishType = categoryId)
+                return dishesOfCategory
+            }
+        member this.GetAllDishesOfACategoryByPage (categoryId: Guid, page: int, pageSize: int) =
+            result {
+                let! dishes = this.GetAllDishesOfACategory categoryId
+                let nTotals = dishes.Length    
+                let sortedDishes = 
+                    dishes |> List.sortBy (fun x -> x.Name)    
+                let dishesOfCategory =
+                    if sortedDishes.Length = 0 then 
+                        []
+                    else if (sortedDishes.Length - (page * pageSize)) <= pageSize then
+                        sortedDishes |> List.skip (page * pageSize) 
+                    else
+                        sortedDishes |> List.skip (page * pageSize) |> List.take pageSize
+                return (dishesOfCategory, nTotals)
+            }    
             
         member this.GetIngredientTypes (): Result<List<IngredientType>, string> =
             result {
@@ -817,6 +892,26 @@ module OrdersSystem =
                 return!
                     ingredientType
                     |> Result.ofOption (sprintf "IngredientType with id '%A' does not exist" id)
-            }    
+            }
+        member this.AddStandardComment (comment: string) =
+            result {
+                let addStandardComment = RestaurantCommands.AddStandardComment comment
+                return!
+                    addStandardComment
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }
             
-            
+        member this.UpdateStandardComment (standardComment: StandardComment) =
+            result {
+                let updateStandardComment = RestaurantCommands.UpdateStandardComment standardComment
+                return!
+                    updateStandardComment
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }
+        member this.RemoveStandardComment (id: Guid) =
+            result {
+                let removeStandardComment = RestaurantCommands.RemoveStandardComment id
+                return!
+                    removeStandardComment
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }

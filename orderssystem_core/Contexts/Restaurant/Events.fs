@@ -3,7 +3,7 @@ namespace OrdersSystem.Contexts.RestaurantEvents
 open OrdersSystem.Contexts.Restaurant
 open FSharpPlus
 open OrdersSystem.Commons
-open FsToolkit.ErrorHandling
+open OrdersSystem.Shared
 open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
 open Sharpino.Definitions
@@ -33,6 +33,10 @@ type RestaurantEvents =
     | OrderItemRefRemoved of Guid
     | IngredientTypeAdded of IngredientType
     | DishTypeAdded of DishType
+    | DishTypeUpdated of DishType
+    | StandardCommentAdded of string
+    | StandardCommentUpdated of StandardComment
+    | StandardCommentRemoved of Guid
 
     interface Event<Restaurant> with
         member this.Process restaurant =
@@ -75,6 +79,14 @@ type RestaurantEvents =
                 restaurant.AddIngredientType ingredientType
             | DishTypeAdded dishType ->
                 restaurant.AddDishType dishType
+            | DishTypeUpdated dishType ->
+                restaurant.UpdateDishType dishType
+            | StandardCommentAdded text ->
+                restaurant.AddStandardComment text
+            | StandardCommentUpdated comment ->
+                restaurant.UpdateStandardComment comment
+            | StandardCommentRemoved guid ->
+                restaurant.RemoveStandardComment guid 
 
     member this.Serialize =
         globalSerializer.Serialize this

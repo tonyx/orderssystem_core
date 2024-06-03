@@ -1652,38 +1652,35 @@ let manageAllCoursesOfACategory categoryId =
     // View.seeAllCourses category allCourses |> html
 
 // FOCUS: easy to filter dishes by category
-let manageAllCoursesOfACategoryPaginated categoryId pageNumber =
+let manageAllCoursesOfACategoryPaginated (categoryId: string) pageNumber =
     log.Debug (sprintf "%s %A %d" "manageAllCoursesOfACategoryPaginated" categoryId pageNumber)
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
+    let categoriIdGuid = Guid.Parse categoryId
     
-    // log.Debug(sprintf "%s %d %d" "manageAllCoursesOfACategoryPaginated" categoryId categoryId )
-    // let ctx = Db.getContext()
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let coursesOfPage = Db.Courses.getAllCoursesDetailsByCategoryAndPage categoryId pageNumber ctx
-    //         let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
-    //         let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
-    //         let subCategories = Db.getAllSubCourseCategories categoryId ctx
-    //         let father = Db.tryGetCourseCategoryFather categoryId ctx
-    //
-    //         let category = Db.Courses.tryGetCategoryById categoryId ctx
-    //         View.seeAllCoursesPaginated category subCategories father coursesOfPage numberOfPages pageNumber |> html)
-    //
-    //     POST >=> bindToForm Form.searchCourse (fun form -> 
-    //         let coursesOfPage = Db.Courses.getAllCoursesDetailsByCategoryWithTextNameSearch categoryId form.Name ctx
-    //         let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
-    //         let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
-    //
-    //         let father = Db.tryGetCourseCategoryFather categoryId ctx
-    //         let subCategories = Db.getAllSubCourseCategories categoryId ctx
-    //         let category = Db.Courses.tryGetCategoryById categoryId ctx
-    //         View.seeAllCoursesPaginated category subCategories father coursesOfPage numberOfPages pageNumber |> html
-    //     )
-    // ]
+    choose [
+        GET >=> warbler (fun _ ->
+            let (coursesOfPage, nTotal) = (ordersSystem.GetAllDishesOfACategoryByPage (categoriIdGuid, pageNumber, Globals.NUM_DB_ITEMS_IN_A_PAGE)).OkValue
+            let numberOfPages = (nTotal - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+            let category = (ordersSystem.GetDishType categoriIdGuid).OkValue
+            View.seeAllCoursesPaginated category coursesOfPage numberOfPages pageNumber |> html)
+    
+        // POST >=> bindToForm Form.searchCourse (fun form -> 
+        //     let coursesOfPage = Db.Courses.getAllCoursesDetailsByCategoryWithTextNameSearch categoryId form.Name ctx
+        //     let numberOfAllCourses = Db.Courses.getNumberOfAllCoursesOfACategory categoryId ctx
+        //     let numberOfPages = (numberOfAllCourses - 1)/Globals.NUM_DB_ITEMS_IN_A_PAGE
+        //
+        //     let father = Db.tryGetCourseCategoryFather categoryId ctx
+        //     let subCategories = Db.getAllSubCourseCategories categoryId ctx
+        //     let category = Db.Courses.tryGetCategoryById categoryId ctx
+        //     View.seeAllCoursesPaginated category subCategories father coursesOfPage numberOfPages pageNumber |> html
+        // )
+    ]
+    
+    // Redirection.FOUND Path.home
 
 // FOCUS: easy to filter dishes by category
-let manageVisibleCoursesOfACategoryPaginated categoryId pageNumber =
-    log.Debug (sprintf "%s %d %d" "manageVisibleCoursesOfACategoryPaginated" categoryId pageNumber) 
+let manageVisibleCoursesOfACategoryPaginated (categoryId: string) pageNumber =
+    log.Debug (sprintf "%s %A %d" "manageVisibleCoursesOfACategoryPaginated" categoryId pageNumber) 
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "manageVisibleCoursesOfACategoryPaginated" categoryId)
@@ -1709,10 +1706,10 @@ let manageCategories =
     // View.seeCategories allCategories |> html)
 
 // FOCUS: UPDATE
-let editCourse id  =
-    log.Debug(sprintf "%s %d " "editCourse" id)
-    
-    Redirection.FOUND Path.home
+let editCourse (id: string)  =
+    log.Debug(sprintf "%s %A " "editCourse" id)
+   
+    let courseCategories = (ordersSystem.GetallDishTypes ()).OkValue |> List.filter (fun x -> x.Visible)
     
     // log.Debug(sprintf "%s %d " "editCourse" id)
     // let ctx = Db.getContext()
@@ -1752,11 +1749,43 @@ let editCourse id  =
     //             )
     // ]
     
-// categories are fixed    
-let editCourseCategory id =
-    log.Debug(sprintf "%s %d " "editCourseCategory" id)
     Redirection.FOUND Path.home
     
+let editCourseCategory (id: string) =
+    log.Debug(sprintf "%A %A " "editDishCategory" id)
+    let guid = Guid.Parse(id) // todo handle error
+    
+    let dishType = ordersSystem.GetDishType guid
+    match dishType with
+    | Ok theDishtype ->
+        choose [
+            GET >=> warbler (fun _ ->
+                View.editCourseCategory theDishtype "" |> html
+            )
+            POST >=> bindToForm Form.courseCategoryEdit (fun form ->
+                match (ordersSystem.GetDishType form.Name) with
+                | Ok existing ->
+                    local.ACategoryNamed + form.Name + local.AlreadyExists 
+                    |> View.editCourseCategory theDishtype
+                    |> html
+                | _ ->
+                    try
+                        let categoryName  = form.Name |> Sanitizer.GetSafeHtmlFragment
+                        let visibility = (form.Visibility = Form.VISIBLE)
+                        let dishType = { DishTypeId = theDishtype.DishTypeId; Name = form.Name; Visible = visibility } 
+                        let dishType: DishType = {DishTypeId = guid; Name = categoryName; Visible = visibility}
+                        let updated = (ordersSystem.UpdateDishType dishType).OkValue
+                        Redirection.FOUND Path.Courses.adminCategories
+                    with
+                    | ex ->
+                        log.Error("Error in editCourseCategory", ex)
+                        Redirection.FOUND Path.Errors.unableToCompleteOperation
+                )
+        ]
+    | _ ->
+        Redirection.FOUND Path.Errors.unableToCompleteOperation
+        
+        
     // log.Debug(sprintf "%s %d " "editCourseCategory" id)
     // let ctx = Db.getContext()
     // match Db.Courses.tryGetCourseCategory id ctx with
@@ -1788,6 +1817,7 @@ let editCourseCategory id =
     //     ]
     // | None -> 
     //     never
+    // Redirection.FOUND Path.home
         
 // user update is ok in domain model etc... but let's see if it should be based on list of fiels, the To or the data itself
 let editUser id =
@@ -1848,16 +1878,12 @@ let createCategory =
                 try
                     let categoryName  = form.Name |> Sanitizer.GetSafeHtmlFragment
                     let visibility = (form.Visibility = Form.VISIBLE)
-                    let isAbstract = (form.Abstract = Form.ABSTRACT)
-                    let dishType: DishType = {DishTypeId = Guid.NewGuid(); Name = categoryName; Visible = true}
-                    printf "XXX. adding category %s\n" categoryName
+                    let dishType: DishType = {DishTypeId = Guid.NewGuid(); Name = categoryName; Visible = visibility}
                     let added = (ordersSystem.CreateDishType dishType).OkValue
-                    printf "XXXX. Added  %A\n" added
                     Redirection.FOUND Path.Courses.adminCategories
                 with
                 | ex ->
                     log.Error("Error in createCategory", ex)
-                    printf "XXXX. Error in createCategory %A\n" ex
                     Redirection.FOUND Path.Errors.unableToCompleteOperation
             )
     ]
@@ -3371,11 +3397,43 @@ let selectIngredientCatForCourse courseId categoryId message =
     // ]
 
 
-let createCourseByCatgory id =
+let createCourseByCatgory (strId: string) =
+    let guidId = Guid.Parse strId
     log.Debug "createCourseByCatgory"
-    Redirection.FOUND Path.home
+    choose [
+        GET >=> warbler (fun _ -> 
+            // let visibleCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun (g:Db.CourseCategories) -> (decimal)g.Categoryid,g.Name)
+            let visibleCategories = (ordersSystem.GetallDishTypes ()).OkValue |> List.map (fun g -> g.DishTypeId.ToString() ,g.Name)
+            html (View.createCourseByCategory "" visibleCategories strId))
+    
+        POST >=> bindToForm Form.course (fun form ->
+            try
+                let visibleCategories =
+                    (ordersSystem.GetallDishTypes ()).OkValue
+                let viscategorypairs = visibleCategories |> List.map (fun g -> g.DishTypeId.ToString() ,g.Name)     
+                // let visibleCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun (g:Db.CourseCategories) -> (decimal)g.Categoryid,g.Name)
+                match (ordersSystem.GetDishByName form.Name) with   
+                // match Db.Courses.tryFindCourseByName form.Name ctx with
+                | Ok _ -> 
+                    View.createCourseByCategory (local.TheName+ form.Name + "esiste già") viscategorypairs strId |> html
+    
+                | Error _ ->
+                    let description = match form.Description with | Some X -> X | _ -> ""
+                    let dishId = Guid.NewGuid()
+                    let dish = Dish (dishId, form.Name, guidId, [], true, form.Visibile = Form.VISIBLE, form.Price, []) 
+                    let course = (ordersSystem.CreateDish dish).OkValue
+                    let retPath = sprintf Path.Courses.editCourse (dishId.ToString()) // course.Courseid
+                    
+                    Redirection.FOUND retPath
+            with
+            | ex ->
+                log.Error("Error in createCourseByCatgory", ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+    ]
     // log.Debug( sprintf "createCourseByCatgory %d")
     // let ctx = Db.getContext()
+    
     // choose [
     //     GET >=> warbler (fun _ -> 
     //         let visibleCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun (g:Db.CourseCategories) -> (decimal)g.Categoryid,g.Name)
@@ -3399,6 +3457,7 @@ let createCourseByCatgory id =
     //             Redirection.FOUND Path.Errors.unableToCompleteOperation
     //     )
     // ]
+    // Redirection.FOUND Path.home
 
 let archiveOrder id (user:UserLoggedOnSession) =
     log.Debug (sprintf "archiveOrder %d" id)
@@ -5213,7 +5272,7 @@ let webPart =
         path Path.Courses.manageAllCategories >=> canManageCourses manageCategories
         pathScan Path.Courses.editCourse (fun id -> canManageCourses (editCourse id))
         // pathScan Path.Courses.addCourseByCategory (fun id -> canManageCourses (createCourseByCatgory ((decimal)id)))
-        pathScan Path.Courses.addCourseByCategory (fun id -> canManageCourses (createCourseByCatgory ((decimal)id)))
+        pathScan Path.Courses.addCourseByCategory (fun id -> canManageCourses (createCourseByCatgory id))
         path Path.Courses.adminCategories >=> canManageCourses adminCategories 
         path Path.Admin.allUsers >=> admin ordinaryUsers
         path Path.Admin.temporaryUsers >=> admin temporaryUsers

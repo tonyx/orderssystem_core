@@ -21,6 +21,7 @@
     <!-- those works with sharpino -->
 
     <Compile Include="Commons.fs" />
+    <Compile Include="Shared.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Models/User/User.fs" />
     <Compile Include="Models/User/Events.fs" />

@@ -15,6 +15,7 @@ type DishEvents =
     | VisibleSet
     | Deactivated
     | DishTypeSet of Guid
+    | Updated of string * Guid * List<IngredientAndQuantity> * bool * bool * decimal * List<Guid>
     
         interface Event<Dish>  with
             member this.Process dish =
@@ -32,8 +33,9 @@ type DishEvents =
                 | VisibleSet ->
                     dish.SetVisible ()
                 | DishTypeSet guid ->
-                    dish.SetDishType guid    
-
+                    dish.SetDishType guid
+                | Updated (name, dishType, ingredientRefs, active, visible, price, standardComments) ->
+                    dish.Update (name, dishType, ingredientRefs, active, visible, price, standardComments)
     
     member this.Serialize =
         globalSerializer.Serialize this
