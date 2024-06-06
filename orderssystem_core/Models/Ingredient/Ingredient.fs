@@ -11,7 +11,16 @@ open Sharpino.Core
         | Liters
         | Milliliters
         | Pieces
-        | Other of string
+        static member FromString (x: string) =
+            match x with
+            | "Grams" -> Grams
+            | "Kilograms" -> Kilograms
+            | "Liters" -> Liters
+            | "Milliliters" -> Milliliters
+            | "Pieces" -> Pieces
+            | _ -> Grams
+        static member GetCases() =
+            ["Grams"; "Kilograms"; "Liters"; "Milliliters"; "Pieces"]    
         
     type IngredientType =
         {
@@ -25,11 +34,10 @@ open Sharpino.Core
             Id: Guid
             Price: float
             Quantity: float
-            MeasuringSystem: IngredientMeasureType
         }
         with
-        static member mkIngredientPrice (price: float, quantity: float, measuringSystem: IngredientMeasureType) =
-            { Id = Guid.NewGuid(); Price = price; Quantity = quantity; MeasuringSystem = measuringSystem }
+        static member mkIngredientPrice (price: float, quantity: float) =
+            { Id = Guid.NewGuid(); Price = price; Quantity = quantity }
         
     type VariationType =
         | Abundant
@@ -92,7 +100,7 @@ open Sharpino.Core
          name: string,
          description: Option<string>,
          ingredientTypeId: Guid,
-         ingredientMeasureTypes: List<IngredientMeasureType>,
+         ingredientMeasureType: IngredientMeasureType,
          active: bool, 
          ingredientPrices: List<IngredientPrice>,
          stock: float,
@@ -102,11 +110,10 @@ open Sharpino.Core
          visible: bool
          ) =
         
-        // let stateId = Guid.NewGuid()
         member this.Id = id
         member this.Name = name
         member this.IngredientTypeId = ingredientTypeId
-        member this.IngredientMeasureTypes = ingredientMeasureTypes
+        member this.IngredientMeasureType = ingredientMeasureType
         member this.IngredientPrices = ingredientPrices
         member this.Active = active
         member this.HasAllergen = hasAllergen
@@ -118,17 +125,12 @@ open Sharpino.Core
 
         member this.AddIngredientPrice (ingredientPrice: IngredientPrice) =
             result {
-                let! measureSystemIsCompatible = 
-                    this.IngredientMeasureTypes 
-                    |> List.contains ingredientPrice.MeasuringSystem
-                    |> Result.ofBool "Measuring system is not compatible with ingredient"
-
                 do! 
                     this.IngredientPrices 
                     |> List.contains ingredientPrice
                     |> not
                     |> Result.ofBool "IngredientPrice already exists"
-                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrice :: ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrice :: ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
             }
 
         member this.RemoveIngredientPrice (ingredientPriceId: Guid) =
@@ -137,17 +139,17 @@ open Sharpino.Core
                     this.IngredientPrices 
                     |> List.exists (fun x -> x.Id = ingredientPriceId)
                     |> Result.ofBool "IngredientPrice does not exist"
-                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices |> List.filter (fun x -> x.Id <> ingredientPriceId), stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices |> List.filter (fun x -> x.Id <> ingredientPriceId), stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
             }    
            
         member this.SetAllergen (x: bool) =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, x, updatePolicy, checkUpdatePolicy, visible) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, x, updatePolicy, checkUpdatePolicy, visible) |> Ok
             
         member this.SetUpdatePolicy (x: UpdatePolicy) =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, x, checkUpdatePolicy, visible) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, x, checkUpdatePolicy, visible) |> Ok
 
         member this.SetIngredientTypeId (ingredientTypeId: Guid) =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
 
         member this.UpdateName (newName: string) =
             result {
@@ -156,13 +158,13 @@ open Sharpino.Core
                     |> String.IsNullOrWhiteSpace
                     |> not
                     |> Result.ofBool "Name cannot be empty"
-                return Ingredient (id, newName, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+                return Ingredient (id, newName, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
             }
         member this.Update     
              (name: string,
              description: Option<string>,
              ingredientTypeId: Guid,
-             ingredientMeasureTypes: List<IngredientMeasureType>,
+             ingredientMeasureType: IngredientMeasureType,
              active: bool, 
              ingredientPrices: List<IngredientPrice>,
              stock: float,
@@ -171,14 +173,14 @@ open Sharpino.Core
              checkUpdatePolicy: CheckUpdatePolicy,
              visible: bool
             ) =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
             
        
         member this.SetVisibility (x: bool) =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, x) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, x) |> Ok
         
         member this.IncreaseStock (quantity: float) =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock + quantity, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock + quantity, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
         
         member this.DecreaseStock (quantity: float) =
             result {
@@ -191,30 +193,30 @@ open Sharpino.Core
                     | UpdateOnOrderAndStock ->
                         stock - quantity >= 0
                     |> Result.ofBool "Stock cannot be negative"
-                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock - quantity, hasAllergen, updatePolicy, checkUpdatePolicy, visible) 
+                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock - quantity, hasAllergen, updatePolicy, checkUpdatePolicy, visible) 
                 }
 
         member this.Deactivate () =
-            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes, false, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
+            Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType, false, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) |> Ok
 
-        member this.AddIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
-            result {
-                do! 
-                    this.IngredientMeasureTypes 
-                    |> List.contains ingredientMeasure
-                    |> not
-                    |> Result.ofBool "IngredientMeasure already exists"
-                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasure:: ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
-            }
+        // member this.AddIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
+        //     result {
+        //         do! 
+        //             this.IngredientMeasureType 
+        //             |> List.contains ingredientMeasure
+        //             |> not
+        //             |> Result.ofBool "IngredientMeasure already exists"
+        //         return Ingredient (id, name, description, ingredientTypeId, ingredientMeasure:: ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+        //     }
 
-        member this.RemoveIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
-            result {
-                do! 
-                    this.IngredientMeasureTypes 
-                    |> List.contains ingredientMeasure
-                    |> Result.ofBool "IngredientMeasure does not exist"
-                return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureTypes |> List.filter ((<>) ingredientMeasure), active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
-            }
+        // member this.RemoveIngredientMeasureType (ingredientMeasure: IngredientMeasureType) =
+        //     result {
+        //         do! 
+        //             this.IngredientMeasureType 
+        //             |> List.contains ingredientMeasure
+        //             |> Result.ofBool "IngredientMeasure does not exist"
+        //         return Ingredient (id, name, description, ingredientTypeId, ingredientMeasureType |> List.filter ((<>) ingredientMeasure), active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+        //     }
 
         static member SnapshotsInterval =
             15

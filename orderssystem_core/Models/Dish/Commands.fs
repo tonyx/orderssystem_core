@@ -17,6 +17,10 @@ type DishCommands =
     | SetVisible
     | SetInvisible
     | SetDishType of Guid
+    | AddStandardComment of Guid
+    | RemoveStandardComment of Guid
+    | AddStandardVariation of Guid
+    | RemoveStandardVariation of Guid
     | Update of string * Guid * List<IngredientAndQuantity> * bool * bool * decimal * List<Guid> * List<Guid>
 
         interface Command<Dish, DishEvents>  with
@@ -43,6 +47,18 @@ type DishCommands =
                 | SetDishType guid ->
                     dish.SetDishType guid
                     |> Result.map (fun _ -> [DishTypeSet guid])
+                | AddStandardComment guid ->
+                    dish.AddStandardComment guid
+                    |> Result.map (fun _ -> [StandardCommentAdded guid])    
+                | RemoveStandardComment guid ->
+                    dish.RemoveStandardComment guid
+                    |> Result.map (fun _ -> [StandardCommentRemoved guid])
+                | AddStandardVariation guid ->
+                    dish.AddStandardVariation guid
+                    |> Result.map (fun _ -> [StandardVariationAdded guid])
+                | RemoveStandardVariation guid ->
+                    dish.RemoveStandardVariation guid
+                    |> Result.map (fun _ -> [StandardVariationRemoved guid])
                 | Update (name, dishType, ingredientRefs, active, visible, price, standardComments, standardVariations ) ->
                     dish.Update (name, dishType, ingredientRefs, active, visible, price, standardComments, standardVariations)
                     |> Result.map (fun _ -> [Updated (name, dishType, ingredientRefs, active, visible, price, standardComments, standardVariations )])

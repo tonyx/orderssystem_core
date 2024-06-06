@@ -91,47 +91,47 @@ type Session =
 //         script ["type","text/javascript"; "src","/copytoclipboard.js"] []
 //     ]
 
-// let standardComments (comments:Db.StandardComment list) = 
-//     [
-//         h2 local.StandardComments
-//         renderForm 
-//             {
-//                 Form = Form.comment
-//                 Fieldsets =
-//                     [  
-//                         { 
-//                             Legend = local.StandardComments
-//                             Fields =
-//                                 [
-//                                     { 
-//                                         Label = local.NewComment
-//                                         Html = formInput
-//                                             (fun f -> <@ f.Comment @>) []
-//                                     }
-//                                 ]
-//                         }
-//                     ]
-//                 SubmitText = local.Insert
-//             }
-//
-//         br []
-//         table 
-//             [
-//                 for comment in comments ->
-//                 tr 
-//                     [
-//                         td 
-//                             [
-//                                 Text (comment.Comment)
-//                             ]
-//                         td 
-//                             [
-//                                 a (sprintf Path.Admin.removeStandardComment comment.Standardcommentid) ["class","buttonX"]
-//                                     [Text local.Remove]
-//                             ]
-//                     ]
-//             ]
-//     ]
+let standardComments (comments: StandardComment list) = 
+    [
+        h2 local.StandardComments
+        renderForm 
+            {
+                Form = Form.comment
+                Fieldsets =
+                    [  
+                        { 
+                            Legend = local.StandardComments
+                            Fields =
+                                [
+                                    { 
+                                        Label = local.NewComment
+                                        Html = formInput
+                                            (fun f -> <@ f.Comment @>) []
+                                    }
+                                ]
+                        }
+                    ]
+                SubmitText = local.Insert
+            }
+
+        br []
+        table 
+            [
+                for comment in comments ->
+                tr 
+                    [
+                        td 
+                            [
+                                Text (comment.Text)
+                            ]
+                        td 
+                            [
+                                a (sprintf Path.Admin.removeStandardComment (comment.CommentId.ToString())) ["class","buttonX"]
+                                    [Text local.Remove]
+                            ]
+                    ]
+            ]
+    ]
 
 // let editUser (user:Db.User) = [
 //     h2 (local.EditUser + user.Username)
@@ -262,7 +262,7 @@ let editCourseCategory  (courseCategory: DishType) message = [
 
 
 let editCourse  (course : OrdersSystem.Models.Dish.Dish) (courseCategoriesForm: List<string * string>)  (ingredientCategories: List<IngredientType>)
-    (ingredientsOfTheCourse: List<Ingredient * List<IngredientMeasureItemType>>) (commentsForCourse: List<StandardComment>) (allStandardComments: List<StandardComment>) 
+    (ingredientsOfTheCourse: List<Ingredient * IngredientMeasureItemType>) (commentsForCourse: List<StandardComment>) (allStandardComments: List<StandardComment>) 
     (standardVariationForCourseDetails : List<OrdersSystem.Models.Ingredient.StandardVariation>)  (message: string) =
     [
          Text("here you go")
@@ -317,52 +317,52 @@ let editCourse  (course : OrdersSystem.Models.Dish.Dish) (courseCategoriesForm: 
              }
          br []    
          h2 local.ExistingIngredients
-         if (ingredientsOfTheCourse |> List.length > 0) then
-             table
-                 [
-                     for existingIngredient in ingredientsOfTheCourse ->
-                         tr 
-                             [
-                                 td 
-                                     [
-                                         Text((existingIngredient |> fst).Name)
-                                     ]
-                                 td 
-                                     [
-                                         Text("to do")
-                                         // Text(if existingIngredient.Item2 |> List.length > 0 then (sprintf "%s %.2f" local.Quantity (existingIngredient.Item2 |> List.head).Quantity) else "")
-                                     ]
-                                 td 
-                                     [
-                                         Text("to do")
-                                         // a (sprintf Path.Courses.deleteIngredientToCourse  course.Id existingIngredient.Item1.Id) ["class","buttonX"]
-                                         //        [Text (local.Remove)]
-                                    ]                                
-                     
-                            ]
-                ]
-         
-        else
-        Text local.NoIngredients
-        br []
-        h2 local.CategoriesOfIngredientsYouCanAdd
-        div ["class", "outline-box"]
-            [
-                 for ingredientCategory in ingredientCategories ->
-                     tag "p" [] 
+         table
+             [
+                 for existingIngredient in ingredientsOfTheCourse ->
+                     tr 
                          [
-                             a (sprintf Path.Courses.selectIngredientCategoryForCourseEdit  
-                                 (course.Id.ToString()) (ingredientCategory.Id.ToString())) ["class","buttonX"]
-                                 [Text (local.AddAmong+" "+ingredientCategory.Name)] 
-                         ]
+                             td 
+                                 [
+                                     Text((existingIngredient |> fst).Name)
+                                 ]
+                             td 
+                                 [
+                                     Text("to do")
+                                     // Text(if existingIngredient.Item2 |> List.length > 0 then (sprintf "%s %.2f" local.Quantity (existingIngredient.Item2 |> List.head).Quantity) else "")
+                                 ]
+                             td 
+                                 [
+                                     Text("to do")
+                                     // a (sprintf Path.Courses.deleteIngredientToCourse  course.Id existingIngredient.Item1.Id) ["class","buttonX"]
+                                     //        [Text (local.Remove)]
+                                ]                                
+                 
+                        ]
             ]
-        tag "p" [] 
-            [
-                 a (sprintf Path.Courses.selectAllIngredientsForCourseEdit (course.Id.ToString()))   ["class","buttonX"] [Text (local.AddAmongAll) ] 
-            ]
-        h2 (local.SelectableComments)
-        if (commentsForCourse.Length > 0) then
-             table 
+             
+            // else
+            //     Text local.NoIngredients
+            // ]
+         br []
+         h2 local.CategoriesOfIngredientsYouCanAdd
+         div ["class", "outline-box"]
+                [
+                     for ingredientCategory in ingredientCategories ->
+                         tag "p" [] 
+                             [
+                                 a (sprintf Path.Courses.selectIngredientCategoryForCourseEdit  
+                                     (course.Id.ToString()) (ingredientCategory.Id.ToString())) ["class","buttonX"]
+                                     [Text (local.AddAmong+" "+ingredientCategory.Name)] 
+                             ]
+                ]
+         tag "p" [] 
+                [
+                     a (sprintf Path.Courses.selectAllIngredientsForCourseEdit (course.Id.ToString()))   ["class","buttonX"] [Text (local.AddAmongAll) ] 
+                ]
+         h2 (local.SelectableComments)
+            // if (commentsForCourse.Length > 0) then
+         table 
                  [
                      for commentforcourse in commentsForCourse ->
                          tr 
@@ -373,40 +373,40 @@ let editCourse  (course : OrdersSystem.Models.Dish.Dish) (courseCategoriesForm: 
                                      ]
                              ]
                  ]
-        else    
-             Text local.NoComments
-             br []
-        br []
-        a (sprintf Path.Admin.standardCommentsForCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.Modify)]
-        br []
-        br []
-        
-        h2 local.SelectableStandardVariations
-        if (standardVariationForCourseDetails.Length > 0) then
-             table 
-                 [
-                     for standardVariationForCourseDetail in standardVariationForCourseDetails ->
-                         tr 
-                             [
-                                 td 
-                                     [
-                                         Text(standardVariationForCourseDetail.Name)
-                                     ]
-                             ]
-                 ]
-        else    
-             Text local.NoStandardVariations
-             br []
-        br []
-        
-        a (sprintf Path.Admin.standardVariationsForCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.Modify)]
-        br []
-        tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
-        div [] 
+            // else    
+            //      Text local.NoComments
+            //      br []
+         br []
+         a (sprintf Path.Admin.standardCommentsForCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.Modify)]
+         br []
+         br []
+            
+         h2 local.SelectableStandardVariations
+            // if (standardVariationForCourseDetails.Length > 0) then
+         table 
             [
-                 a Path.home [] [Text local.MainPage ]
-            ]
-        script ["type","text/javascript"; "src","/backbutton.js"] [] 
+                 for standardVariationForCourseDetail in standardVariationForCourseDetails ->
+                     tr 
+                         [
+                             td 
+                                 [
+                                     Text(standardVariationForCourseDetail.Name)
+                                 ]
+                         ]
+             ]
+            // else    
+            //      Text local.NoStandardVariations
+            //      br []
+         br []
+            
+         a (sprintf Path.Admin.standardVariationsForCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.Modify)]
+         br []
+         tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+         div [] 
+                [
+                     a Path.home [] [Text local.MainPage ]
+                ]
+         script ["type","text/javascript"; "src","/backbutton.js"] [] 
   ] 
     
 // let editCourse  (course : Db.Course) courseCategories  (ingredientCategories:Db.IngredientCategory list) 
@@ -1608,47 +1608,47 @@ let seeAllCoursesPaginated (category: DishType)   (courses: List<Dish>) (numberO
 //         ]
 //     | None -> [ Text("an error occurred, unexisting category")]
 
-// let manageStandardVariations (standardVariations:Db.StandardVariation list) msg =
-//     [
-//         h2 local.StandardVariations
-//         h2(msg)
-//         renderForm 
-//             { 
-//                 Form = Form.standardVariation
-//                 Fieldsets =
-//                     [ 
-//                         { 
-//                             Legend = local.StandardVariation
-//                             Fields = 
-//                                 [
-//                                     {
-//                                         Label = local.Name
-//                                         Html = formInput (fun f -> <@ f.Name @>) []
-//                                     }
-//                                 ]
-//                         }
-//                     ]
-//                 SubmitText = local.Add
-//             }
-//         br []
-//         br []
-//
-//         h2 local.ExistingStandardVariation 
-//
-//
-//         table  [
-//             for variation in standardVariations ->  
-//             tr [
-//                     td [
-//                         (a (sprintf Path.Admin.manageStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(variation.Name )])
-//                     ]
-//                     td [
-//                         (a (sprintf Path.Admin.removeStandardVariation variation.Standardvariationid) ["class","buttonX"] [Text(local.Remove)])
-//                     ]
-//
-//             ]
-//         ]
-//     ]
+let manageStandardVariations (standardVariations: List<OrdersSystem.Models.Ingredient.StandardVariation>) msg =
+    [
+        h2 local.StandardVariations
+        h2(msg)
+        renderForm 
+            { 
+                Form = Form.standardVariation
+                Fieldsets =
+                    [ 
+                        { 
+                            Legend = local.StandardVariation
+                            Fields = 
+                                [
+                                    {
+                                        Label = local.Name
+                                        Html = formInput (fun f -> <@ f.Name @>) []
+                                    }
+                                ]
+                        }
+                    ]
+                SubmitText = local.Add
+            }
+        br []
+        br []
+
+        h2 local.ExistingStandardVariation 
+
+
+        table  [
+            for variation in standardVariations ->  
+            tr [
+                    td [
+                        (a (sprintf Path.Admin.manageStandardVariation (variation.Id.ToString())) ["class","buttonX"] [Text(variation.Name )])
+                    ]
+                    td [
+                        (a (sprintf Path.Admin.removeStandardVariation (variation.Id.ToString())) ["class","buttonX"] [Text(local.Remove)])
+                    ]
+        
+            ]
+        ]
+    ]
 
 // let manageStandardVariation (standardVariation:Db.StandardVariation) (standardVariationItemDetails:Db.StandardVariationItemDetails list) (ingredientCategories:Db.IngredientCategory list) (ingredientsYouCanAdd:Db.Ingredient list) specificCustomAddQuantitiesForIngredients  =
 //     let flatListOfIngredientButtons = (ingredientCategories |> List.map (fun (x:Db.IngredientCategory) -> 
@@ -1848,6 +1848,7 @@ let editIngredient message (ingredient:Models.Ingredient.Ingredient) (allIngredi
     let backUrl = (sprintf Path.Admin.editIngredientCategoryPaginated (ingredient.Id.ToString()) backPageNumber)
     let updatePolicyOptions = UpdatePolicy.GetCases () |> List.map (fun x -> (x, x))
     let checkUpdatePolicyOptions = CheckUpdatePolicy.GetCases () |> List.map (fun x -> (x, x))
+    let ingredientMeasureTypes = IngredientMeasureType.GetCases () |> List.map (fun x -> (x, x))
     [
          div ["id", "register-message"] 
              [
@@ -1878,6 +1879,10 @@ let editIngredient message (ingredient:Models.Ingredient.Ingredient) (allIngredi
                                      { 
                                          Label = local.Category
                                          Html = selectInput (fun f -> <@ (f.Category) @>) allIngredientCategoriesIdName (Some (ingredient.IngredientTypeId.ToString())) 
+                                     }
+                                     {
+                                         Label = "measure type"
+                                         Html = selectInput (fun f -> <@ f.IngredientMeasureType @>) ingredientMeasureTypes (Some (ingredient.IngredientMeasureType.ToString()))
                                      }
                                      
                                      { 
@@ -1970,6 +1975,7 @@ let editIngredient message (ingredient:Models.Ingredient.Ingredient) (allIngredi
 //     ]
 
 let ingredientsOfACategory message (category:Models.Ingredient.IngredientType) (allIngredientOfCategory: Models.Ingredient.Ingredient list)  =
+    let measureTypes = IngredientMeasureType.GetCases() |> List.map (fun x -> (x, x))
     let updatePolicies =
         UpdatePolicy.GetCases()
         |> List.map (fun x -> (x, x))
@@ -2003,6 +2009,10 @@ let ingredientsOfACategory message (category:Models.Ingredient.IngredientType) (
                                  { 
                                      Label = local.Visibility
                                      Html = selectInput (fun f -> <@ f.Visibility @>) visibilityType (Some "VISIBLE") 
+                                 }
+                                 {
+                                     Label = "measure type"
+                                     Html = selectInput (fun f -> <@ f.IngredientMeasureType @>) measureTypes (Some (IngredientMeasureType.Pieces.ToString()))
                                  }
                                  {
                                      Label = local.UpdateAvailability
@@ -3390,81 +3400,98 @@ let chooseDateForDecrementHistory ingredientId  =
             }
     ]
 
-// let editIngredientPrices (ingredient: Db.Ingredient) (ingredientPrices: Db.IngredientPriceDetail list) msg =
-//     let ingredientCategoryId = ingredient.Ingredientcategoryid
-//     [
-//         h2(local.AddIngredientPrice + ingredient.Name + ". " + local.MeasuringSystem + ": " + ingredient.Unitmeasure)
-//         h2(msg)
-//         renderForm 
-//             { 
-//                 Form = Form.ingredientPrice
-//                 Fieldsets =
-//                     [ 
-//                         { 
-//                             Legend = local.Add
-//                             Fields = 
-//                                 [
-//                                     {
-//                                         Label = local.AddPrice
-//                                         Html = formInput (fun f -> <@ f.AddPrice @>) []
-//                                     }
-//                                     {
-//                                         Label = local.SubtractPrice
-//                                         Html = formInput (fun f -> <@ f.SubtractPrice @>) []
-//                                     }
-//                                     {
-//                                         Label = local.Quantity
-//                                         Html = formInput (fun f -> <@ f.Quantity @>) []
-//                                     }
-//                                     {
-//                                         Label = local.IsDefaultAddQuantity
-//                                         Html = selectInput (fun f -> <@ f.IsDefaultAdd @>) yesOrNo (None)  
-//                                     }
-//                                     {
-//                                         Label = local.IsDefaultSubtractQuantity
-//                                         Html = selectInput (fun f -> <@ f.IsDefaultSubtract @>) yesOrNo (None)
-//                                     }
-//                                 ]
-//                         }
-//                     ]
-//                 SubmitText = local.Add
-//             }
-//         br []
-//         table [
-//             for ingredientPrice in ingredientPrices ->
-//             let isDefaultAdd = ingredientPrice.Isdefaultadd
-//             let isDefaultSubtract = ingredientPrice.Isdefaultsubtract
-//
-//             let textToDisplay2 =       
-//                 match (isDefaultAdd,isDefaultSubtract) with
-//                 | (true,true) -> local.IsDefaultAddAndSubtractQuantity
-//                 | (true,false) -> local.IsDefaultAddQuantity
-//                 | (false,true) -> local.IsDefaultSubtractQuantity
-//                 | (false,false) -> "" 
-//
-//             tr [
-//                 td [
-//                     Text(sprintf "%s (%s) %.2f." local.Quantity ingredient.Unitmeasure ingredientPrice.Quantity)
-//                 ]
-//                 td [
-//                     Text(sprintf "%s %.2f." local.AddPrice ingredientPrice.Addprice)
-//                 ]
-//                 td [
-//                     Text(sprintf "%s %.2f." local.SubtractPrice ingredientPrice.Subtractprice)
-//                 ]
-//
-//                 td [
-//                     Text(sprintf "%s" textToDisplay2)
-//                 ]
-//
-//                 td [
-//                     (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(local.Remove)]) 
-//                 ]
-//             ]
-//         ]
-//         br []
-//         a (sprintf Path.Admin.editIngredientCategoryPaginated ingredientCategoryId 0 ) [] [Text(local.GoBack)]
-//     ]
+let editIngredientPrices (ingredient: Ingredient) msg =
+// (ingredientPrices: Db.IngredientPriceDetail list) msg =
+    let ingredientCategoryId = ingredient.IngredientTypeId
+    [
+        h2(local.AddIngredientPrice + ingredient.Name + ". " + local.MeasuringSystem + ": " + ingredient.IngredientMeasureType.ToString())
+        h2(msg)
+        renderForm 
+            { 
+                Form = Form.ingredientPrice
+                Fieldsets =
+                    [ 
+                        { 
+                            Legend = local.Add
+                            Fields = 
+                                [
+                                    {
+                                        Label = local.Price
+                                        Html = formInput (fun f -> <@ f.AddPrice @>) []
+                                    }
+                                    // {
+                                    //     Label = local.SubtractPrice
+                                    //     Html = formInput (fun f -> <@ f.SubtractPrice @>) []
+                                    // }
+                                    {
+                                        Label = local.Quantity
+                                        Html = formInput (fun f -> <@ f.Quantity @>) []
+                                    }
+                                    // {
+                                    //     Label = local.IsDefaultAddQuantity
+                                    //     Html = selectInput (fun f -> <@ f.IsDefaultAdd @>) yesOrNo (None)  
+                                    // }
+                                    // {
+                                    //     Label = local.IsDefaultSubtractQuantity
+                                    //     Html = selectInput (fun f -> <@ f.IsDefaultSubtract @>) yesOrNo (None)
+                                    // }
+                                ]
+                        }
+                    ]
+                SubmitText = local.Add
+            }
+        br []
+        table [
+            for ingredientPrice in ingredient.IngredientPrices ->
+                tr [
+                    td [
+                        Text(sprintf "%s %.2f. - %s - %.2f" local.Quantity ingredientPrice.Quantity local.Price ingredientPrice.Price)
+                    ]
+                    td [
+                         (a (sprintf Path.Admin.deleteIngredientPrice (ingredient.Id.ToString()) (ingredientPrice.Id.ToString())) ["class","buttonX"] [Text(local.Remove)]) 
+                    ]
+                ]
+            
+        ]
+           
+           
+            
+        // br []
+        // table [
+        //     for ingredientPrice in ingredientPrices ->
+        //     let isDefaultAdd = ingredientPrice.Isdefaultadd
+        //     let isDefaultSubtract = ingredientPrice.Isdefaultsubtract
+        //
+        //     let textToDisplay2 =       
+        //         match (isDefaultAdd,isDefaultSubtract) with
+        //         | (true,true) -> local.IsDefaultAddAndSubtractQuantity
+        //         | (true,false) -> local.IsDefaultAddQuantity
+        //         | (false,true) -> local.IsDefaultSubtractQuantity
+        //         | (false,false) -> "" 
+        //
+        //     tr [
+        //         td [
+        //             Text(sprintf "%s (%s) %.2f." local.Quantity ingredient.Unitmeasure ingredientPrice.Quantity)
+        //         ]
+        //         td [
+        //             Text(sprintf "%s %.2f." local.AddPrice ingredientPrice.Addprice)
+        //         ]
+        //         td [
+        //             Text(sprintf "%s %.2f." local.SubtractPrice ingredientPrice.Subtractprice)
+        //         ]
+        //
+        //         td [
+        //             Text(sprintf "%s" textToDisplay2)
+        //         ]
+        //
+        //         td [
+        //             (a (sprintf Path.Admin.deleteIngredientPrice ingredientPrice.Ingredientpriceid) ["class","buttonX"] [Text(local.Remove)]) 
+        //         ]
+        //     ]
+        // ]
+        br []
+        a (sprintf Path.Admin.editIngredientCategoryPaginated (ingredientCategoryId.ToString()) 0 ) [] [Text(local.GoBack)]
+    ]
 
 let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientOfCategory:Models.Ingredient.Ingredient list) numberOfPages pageNumber =
     let nextPageLink ingCatId i = 
@@ -3508,11 +3535,11 @@ let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientO
                     let ingDesc = ingredient.Description |> Option.defaultValue ""  |> fun x -> if x =  "" then x else " (" + x + ")"
                     a (sprintf Path.Admin.editIngredient (ingredient.Id.ToString()) pageNumber)  ["class",(if ingredient.Visible then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name + ingDesc)]
                     // Text(ingredient.Name)
-                    // a (sprintf Path.Admin.editIngredient ingredient.Id pageNumber)  ["class",(if true then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
+                    // a (sprintf Path.Admin.editIngredient (ingredient.Id.ToString()) pageNumber)  ["class",(if true then "buttonXSmallSizeFont" else "buttonYSmallSizeFont")] [Text(ingredient.Name)]
                 ]
                 td [
-                    Text("prices")
-                    // a (sprintf Path.Admin.editIngredientPrices ingredient.Id)  ["class","buttonX"] [Text(local.Prices)]
+                    // Text("prices")
+                    a (sprintf Path.Admin.editIngredientPrices (ingredient.Id.ToString()))  ["class","buttonX"] [Text(local.Prices)]
                 ]
                 td [
                     // (if (ingredient.Checkavailabilityflag) then
@@ -3575,6 +3602,48 @@ let seeIngredientsOfACategoryPaginated (category:IngredientType) (allIngredientO
 //             script ["type","text/javascript"; "src","/autorefresh.js"] []
 //         ]
 
+
+
+let standardCommentsForCourse (course: Dish) (commentsForCourse: List<StandardComment> ) (allStandardComments: List<StandardComment>) =
+    let selectableStandardComments = allStandardComments |> List.map (fun (x: StandardComment) -> (x.CommentId.ToString(), x.Text))
+    [
+         h2 (local.AddStandardCommentFor + " " + course.Name)
+         renderForm 
+             {
+                 Form = Form.commentForCourse
+                 Fieldsets =
+                     [ 
+                         {   
+                             Legend = local.StandardComments
+                             Fields =
+                                 [
+                                     { 
+                                         Label = local.AddSelectableComment
+                                         Html = selectInput (fun f -> <@ f.CommentForCourse @>) selectableStandardComments  (None)
+                                     }
+                                 ]
+                         }
+                     ]
+                 SubmitText = local.Insert
+             }
+         h2 local.ExistingComments
+         ulAttr ["id","item-list"] [
+             for commentForCourse in commentsForCourse ->
+                 tag "p" [] 
+                     [
+                         Text(commentForCourse.Text)
+                         a (sprintf Path.Admin.removeStandardCommentForCourse (course.Id.ToString())  (commentForCourse.CommentId.ToString()) ) ["class","buttonX"]  [Text (local.Remove)]
+                     ]
+             ]
+    ]
+         
+        
+    
+    
+    
+    
+    
+    
 // let standardCommentsForCourse (course:Db.Course) (commentsForCourseDetails:Db.CommentForCourseDetails list) (allStandardComments:Db.StandardComment list) =
 //     let selectableStandardComments = allStandardComments |> List.map (fun x -> ((decimal)x.Standardcommentid,x.Comment))
 //     [

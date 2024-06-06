@@ -11,8 +11,6 @@ open Sharpino.Core
 type IngredientCommands =
     | SetIngredientType of Guid
     | UpdateName of String
-    | AddIngredientMeasureType of IngredientMeasureType
-    | RemoveIngredientMeasureType of IngredientMeasureType
     | AddIngredientPrice of IngredientPrice
     | RemoveIngredientPrice of Guid
     | Deactivate
@@ -21,7 +19,7 @@ type IngredientCommands =
     | IncreaseStock of float
     | DecreaseStock of float
     | SetVisibility of bool
-    | Update of string * Option<string> * Guid * List<IngredientMeasureType> * bool * List<IngredientPrice> * float * bool * UpdatePolicy * CheckUpdatePolicy * bool
+    | Update of string * Option<string> * Guid * IngredientMeasureType * bool * List<IngredientPrice> * float * bool * UpdatePolicy * CheckUpdatePolicy * bool
     
         interface Command<Ingredient, IngredientEvents>  with
             member this.Execute ingredient = 
@@ -32,12 +30,7 @@ type IngredientCommands =
                 | UpdateName name -> 
                     ingredient.UpdateName name
                     |> Result.map (fun _ -> [NameUpdated name])
-                | AddIngredientMeasureType ingredientMeasure -> 
-                    ingredient.AddIngredientMeasureType ingredientMeasure
-                    |> Result.map (fun _ -> [IngredientMeasureTypeAdded ingredientMeasure])
-                | RemoveIngredientMeasureType ingredientMeasure -> 
-                    ingredient.RemoveIngredientMeasureType ingredientMeasure
-                    |> Result.map (fun _ -> [IngredientMeasureTypeRemoved ingredientMeasure])
+                    
                 | AddIngredientPrice ingredientPrice ->
                     ingredient.AddIngredientPrice ingredientPrice
                     |> Result.map (fun _ -> [IngredientPriceAdded ingredientPrice])

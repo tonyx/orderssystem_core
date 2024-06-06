@@ -37,6 +37,8 @@ type RestaurantEvents =
     | StandardCommentAdded of string
     | StandardCommentUpdated of StandardComment
     | StandardCommentRemoved of Guid
+    | StandardVariationAdded of StandardVariation
+    | StandardVariationRemoved of Guid
 
     interface Event<Restaurant> with
         member this.Process restaurant =
@@ -86,7 +88,12 @@ type RestaurantEvents =
             | StandardCommentUpdated comment ->
                 restaurant.UpdateStandardComment comment
             | StandardCommentRemoved guid ->
-                restaurant.RemoveStandardComment guid 
+                restaurant.RemoveStandardComment guid
+            | StandardVariationAdded standardVariation ->
+                restaurant.AddStandardVariation standardVariation
+            | StandardVariationRemoved guid ->
+                restaurant.removeStandardVariation guid
+                
 
     member this.Serialize =
         globalSerializer.Serialize this

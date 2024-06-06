@@ -17,17 +17,13 @@ open Sharpino.Core
         } 
 
     type IngredientMeasureItemType =
-        | Grams of float
-        | Kilograms of float
-        | Liters of float
-        | Milliliters of float
-        | Pieces of int
-        | Other of string 
+        | Specific of  IngredientMeasureType * float
+        | Other of string
 
     type IngredientAndQuantity =
         {
             IngredientId: Guid
-            PossibleAlternativeQuantities: List<IngredientMeasureItemType>
+            Quantity: IngredientMeasureItemType
         }
 
     type Dish

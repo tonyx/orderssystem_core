@@ -91,7 +91,6 @@ module OrdersSystem =
                             (RestaurantCommands.AddUserRef firstAdministrator.Id)
                             |> runInitAndCommand<Restaurant, RestaurantEvents, User, string>  eventStore eventBroker firstAdministrator
                         printf "Administrator created %A\n" result
-                        // return result
                         return ()
                     else
                         return ()
@@ -317,8 +316,8 @@ module OrdersSystem =
                 let! ingredients =
                     ingredientsOfDish
                     |> List.traverseResultM (fun x -> this.GetIngredient x.IngredientId) // return result
-                let result: List<Ingredient * List<IngredientMeasureItemType>>  =
-                    List.zip ingredients (ingredientsOfDish |>> (fun x -> x.PossibleAlternativeQuantities))
+                let result: List<Ingredient * IngredientMeasureItemType>  =
+                    List.zip ingredients (ingredientsOfDish |>> (fun x -> x.Quantity))
                 return result    
             }
 
@@ -431,6 +430,7 @@ module OrdersSystem =
 
         member this.UpdateIngredient (ingredient: Ingredient) =
             printf "going to upgrade ingredient 100\n"
+            printf "QQQQ policy %A \n" (ingredient.CheckUpdatePolicy.ToString())
             result {
                 let! ingredientExists =
                     this.GetIngredient ingredient.Id
@@ -441,13 +441,14 @@ module OrdersSystem =
                         (ingredient.Name,
                          ingredient.Description,
                          ingredient.IngredientTypeId,
-                         ingredient.IngredientMeasureTypes,
+                         ingredient.IngredientMeasureType,
                          ingredient.Active,
                          ingredient.IngredientPrices,
                          ingredient.Stock,
                          ingredient.HasAllergen,
                          ingredient.UpdatePolicy,
-                         ingredient.CheckUpdatePolicy, ingredient.Visible)
+                         ingredient.CheckUpdatePolicy,
+                         ingredient.Visible)
                 printf "going to upgrade ingredient 200\n"
                 let result =
                     updateIngredient
@@ -690,6 +691,7 @@ module OrdersSystem =
 
         member this.CreateIngredient (ingredient: Ingredient)  =
             printf "Creating ingredient %A\n" ingredient
+            printf "ingredient policy %A\n" (ingredient.CheckUpdatePolicy.ToString())
             result {
                 let! existingIngredients = this.GetAllIngredients ()
                 
@@ -705,12 +707,33 @@ module OrdersSystem =
                     |> runInitAndCommand<Restaurant, RestaurantEvents, Ingredient, string> eventStore eventBroker ingredient
                 return result    
             }
+        member this.AddIngredientQuantityToDish (dishId: Guid, ingredientAndQuantity: IngredientAndQuantity) =
+            result {
+                let! dish = this.GetDish dishId
+                let addIngredientToDish = DishCommands.AddIngredientAndQuantity ingredientAndQuantity
+                return!
+                    addIngredientToDish
+                    |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
+            }    
      
         member this.GetStandardComments () =
             result {
                 let! (_, restaurant) = restaurantViewer ()
                 return restaurant.StandardComments
             }
+        
+        // member this.GetStandardCommentsForDish (dishId: Guid) =
+        //     result {
+        //         let! dish = this.GetDish dishId
+        //         let dishStandardCommentsIds = dish.StandardComments
+        //         let comments =
+        //             dishStandardCommentsIds
+        //             |> List.map (fun x -> this.GetStandardComment x)
+        //             |> List.filter (fun x -> (x |> Result.isOk))
+        //             |> List.map (fun x -> x.OkValue)
+        //         return comments     
+        //     }
+            
         member this.GetAllStandardVariations () =
             result {
                 let! (_, restaurant) = restaurantViewer ()
@@ -766,6 +789,26 @@ module OrdersSystem =
                     |> List.map (fun x -> x.OkValue)
                 return variations    
             }
+        
+        member this.AddStandardCommentForDish (commentId: Guid, dishId: Guid) =
+            result {
+                let! dish = this.GetDish dishId
+                let! comment = this.GetStandardComment commentId
+                let addStandardComment = DishCommands.AddStandardComment commentId
+                return!
+                    addStandardComment
+                    |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
+            }
+        
+        member this.RemoveStandardCommentForDish (commentId: Guid, dishId: Guid) =
+            result {
+                let! dish = this.GetDish dishId
+                let! comment = this.GetStandardComment commentId
+                let removeStandardComment = DishCommands.RemoveStandardComment commentId
+                return!
+                    removeStandardComment
+                    |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
+            }    
 
         member this.CreateTable (description: Option<string>, number: int, seats: int) =
             result {
@@ -869,6 +912,12 @@ module OrdersSystem =
                 return!
                     addIngredientType
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }
+            
+        member this.GetAllIngredientTypes () =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                return restaurant.IngredientTypes
             }
             
         member this.GetAllIngredientsOfACategory (ingredientCategoryId: Guid) =
@@ -994,4 +1043,28 @@ module OrdersSystem =
                 return!
                     removeStandardComment
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }
+        member this.AddStandardVariation (standardVariation: StandardVariation) =
+            result {
+                let addStandardVariation = RestaurantCommands.AddStandardVariation standardVariation
+                return! 
+                    addStandardVariation
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker   
+            }
+        member this.RemoveStandardVariation (id: Guid) =
+            result {
+                let removeStandardVariation = RestaurantCommands.RemoveStandardVariation id
+                return! 
+                    removeStandardVariation
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker   
+            }
+        member this.FindStandardVariation (name: string) =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                let standardVariation = 
+                    restaurant.StandardVariations
+                    |> List.tryFind (fun x -> x.Name = name)
+                return!
+                    standardVariation
+                    |> Result.ofOption (sprintf "StandardVariation with name '%s' does not exist" name)
             }

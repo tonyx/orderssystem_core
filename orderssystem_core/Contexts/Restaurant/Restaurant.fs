@@ -228,7 +228,26 @@ module Restaurant =
                 let id = Guid.NewGuid()
                 let standardComment = {CommentId = id; Text = text}
                 return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, standardComment :: this.StandardComments, this.StandardVariations)
-                }
+            }
+            
+        member this.AddStandardVariation (standardVariation:  StandardVariation) =
+            result {
+                do! 
+                    this.StandardVariations
+                    |> List.exists (fun x -> x.Id = standardVariation.Id || x.Name = standardVariation.Name)
+                    |> not
+                    |> Result.ofBool (sprintf "A standard variation with id '%A' or name '%A' already exists" standardVariation.Id standardVariation.Name)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, this.StandardComments, standardVariation :: this.StandardVariations)     
+            }
+            
+        member this.removeStandardVariation (id: Guid) =
+            result {
+                let! chckExists =
+                    this.StandardVariations
+                    |> List.exists (fun x -> x.Id = id)
+                    |> Result.ofBool (sprintf "A standard variation with id '%A' does not exist" id)
+                return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, this.StandardComments, this.StandardVariations |> List.filter (fun x -> x.Id <> id))
+            }    
         
         member this.UpdateStandardComment (standardComment: StandardComment) =
             result {
@@ -238,6 +257,9 @@ module Restaurant =
                     |> Result.ofOption (sprintf "A standard comment with id '%A' does not exist" standardComment.CommentId)
                 return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, this.StandardComments |> List.map (fun x -> if x.CommentId = standardComment.CommentId then standardComment else x), this.StandardVariations)    
             }
+            
+        member this.GetStandardComments () =
+            this.StandardComments
         
         member this.RemoveStandardComment (id: Guid) =
             result {

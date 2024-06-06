@@ -53,19 +53,18 @@ let priceAdjustment: Form<PriceAdjustment> =
         ],
         [] )
 
-type IngredientPrice = {
+type IngredientPriceForm = {
     AddPrice: decimal
-    SubtractPrice: decimal
-    IsDefaultAdd: string
-    IsDefaultSubtract: string
+    // SubtractPrice: decimal
+    // IsDefaultAdd: string
+    // IsDefaultSubtract: string
     Quantity: decimal
 }
 
-let ingredientPrice: Form<IngredientPrice> =
+let ingredientPrice: Form<IngredientPriceForm> =
     Form (
         [ 
             DecimalProp ((fun f -> <@ f.AddPrice @>), [ min 0.01M; step 0.01M ])
-            DecimalProp ((fun f -> <@ f.SubtractPrice @>), [ min 0.01M; step 0.01M ])
         ], [] )
 
 type OrderItem = {
@@ -134,6 +133,7 @@ type IngredientForm = {
     // AvailableQuantity: decimal
     UpdatePolicy: string
     CheckUpdatePolicy: string
+    IngredientMeasureType: string
 }
 
 let ingredient:Form<IngredientForm> =
@@ -144,7 +144,7 @@ let ingredient:Form<IngredientForm> =
     )
 
 type IngredientSelector = {
-    IngredientBySelect: decimal 
+    IngredientBySelect: string 
 //    IngredientByText: string
     Quantity: decimal option
 }
@@ -186,7 +186,7 @@ let printerOutGroupForStates:Form<PrinterOutGroupForStates> =
 
 let ingredientSelector:Form<IngredientSelector> = 
     Form ([
-        DecimalProp ((fun f -> <@f.IngredientBySelect@> ),[])
+        TextProp ((fun f -> <@f.IngredientBySelect@> ),[])
     ],[]
     )
 
@@ -217,6 +217,7 @@ type IngredientEdit = {
     Category: string
     Allergene: string
     UpdateAvailabilityFlag: string
+    IngredientMeasureType: string
     CheckAvailabilityFlag: string
 }
 
@@ -383,12 +384,12 @@ let subCourseCategory : Form<SubCourseCategory> =
     )
 
 type CommentForCourse = {
-    CommentForCourse: decimal
+    CommentForCourse: string
 }
 
 let commentForCourse:Form<CommentForCourse>  =
     Form (
-        [DecimalProp ((fun f -> <@ f.CommentForCourse @>),[])],[]
+        [TextProp ((fun f -> <@ f.CommentForCourse @>),[])],[]
     )
 
 type VariationForCourse = {

@@ -11,8 +11,6 @@ type IngredientEvents =
     | IngredientTypeSet of Guid
     | NameUpdated of String
     | Deactivated 
-    | IngredientMeasureTypeAdded of IngredientMeasureType
-    | IngredientMeasureTypeRemoved of IngredientMeasureType
     | IngredientPriceAdded of IngredientPrice
     | IngredientPriceRemoved of Guid
     | AllergenSet of bool
@@ -24,7 +22,7 @@ type IngredientEvents =
         string *
         Option<string> *
         Guid *
-        List<IngredientMeasureType> *
+        IngredientMeasureType *
         bool *
         List<IngredientPrice> *
         float *
@@ -40,10 +38,6 @@ type IngredientEvents =
                     ingredient.SetIngredientTypeId ingredientType
                 | NameUpdated name -> 
                     ingredient.UpdateName name
-                | IngredientMeasureTypeAdded ingredientMeasure -> 
-                    ingredient.AddIngredientMeasureType ingredientMeasure
-                | IngredientMeasureTypeRemoved ingredientMeasure -> 
-                    ingredient.RemoveIngredientMeasureType ingredientMeasure
                 | Deactivated ->
                     ingredient.Deactivate ()
                 | IngredientPriceAdded ingredientPrice ->
@@ -60,8 +54,8 @@ type IngredientEvents =
                     ingredient.DecreaseStock x
                 | VisibilitySet x ->
                     ingredient.SetVisibility x
-                | Updated (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) ->
-                    ingredient.Update (name, description, ingredientTypeId, ingredientMeasureTypes, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
+                | Updated (name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible) ->
+                    ingredient.Update (name, description, ingredientTypeId, ingredientMeasureType, active, ingredientPrices, stock, hasAllergen, updatePolicy, checkUpdatePolicy, visible)
 
     member this.Serialize =
         globalSerializer.Serialize this

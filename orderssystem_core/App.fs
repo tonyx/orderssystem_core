@@ -6,6 +6,7 @@ open System.Linq
 open OrdersSystem.Contexts.Restaurant
 open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
+open OrdersSystem.Shared
 open Xceed.Words.NET
 open System.Drawing
 open FSharp.Data
@@ -58,10 +59,16 @@ let _ =
     QuestPDF.Settings.License <- LicenseType.Community
 
 type Stritem = {entry: string}
-type IndexNameRecord = {name: string; index: int}
+
+// type IndexNameRecord = {name: string; index: int} // experimenting
+
+
+type IndexNameRecord = {name: string; index: string}
+
 type IndexNameDataRecord = {index: int; name: string; data: string}
 type NameDataRecord = {name: string; data: string}
-type IndexUnitMeasureMap = {index: int; unitmeasure: string}
+// type IndexUnitMeasureMap = {index: int; unitmeasure: string}
+type IndexUnitMeasureMap = {index: string; unitmeasure: string}
 type TwoIndexNameRecord = {index1: int; index2: int; enablers: Stritem list;observers: Stritem list}
 type PerRoleCategories = {roleid: int; categories: string list}
 type ManyRolesCategories = {rolecategories: PerRoleCategories}
@@ -74,7 +81,8 @@ type OrderaAdSuborderList = {orderandorderitems: OrderAndOrderitemslist list; ta
 
 let ordersSystem = OrdersSystem ()
 
-let tenderCodes = [{index=1;name="CONTANTI"};{index=2;name="CREDITO"};{index=3;name="ASSEGNI"};{index=4;name="BUONI"};{index=5;name="CARTA DI CREDITO"}]
+let tenderCodes = [{index="1";name="CONTANTI"};{index="2";name="CREDITO"};{index="3";name="ASSEGNI"};{index="4";name="BUONI"};{index="5";name="CARTA DI CREDITO"}]
+// let tenderCodes = [{index=1;name="CONTANTI"};{index=2;name="CREDITO"};{index=3;name="ASSEGNI"};{index=4;name="BUONI"};{index=5;name="CARTA DI CREDITO"}]
 
 let log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -530,8 +538,14 @@ let deletePrinter id =
     // Db.safeRemovePrinter id ctx
     // Redirection.found Path.Admin.printers
 
-let deleteIngredientPrice id =
+let deleteIngredientPrice (strIngredientId: string) (strIngredientPriceId: string) =
     log.Debug("deleteIngredientPrice")
+    
+    let ingredientId = Guid.Parse strIngredientId
+    let ingredientPriceId = Guid.Parse strIngredientPriceId
+    
+    let removed = ordersSystem.RemoveIngredientPrice (ingredientId, ingredientPriceId)
+    Redirection.found (sprintf Path.Admin.editIngredientPrices strIngredientId)
     
     // log.Debug("deleteIngredientPrice")
     // let ctx = Db.getContext()
@@ -545,7 +559,7 @@ let deleteIngredientPrice id =
     //     log.Error("Error in deleteIngredientPrice", ex)
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
     
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
 
 let deleteCourseCategories =
     log.Debug("deleteCourseCategories")
@@ -870,18 +884,36 @@ let fillIngredient id pageNumberBack (user:UserLoggedOnSession) =
     // ]
 
 // FOCUS: add and remove ingredient prices are implemented in orderssystem
-let editIngredientPrices id =
-    log.Debug (sprintf "editIngredientPrices %d" id)
-    Redirection.FOUND Path.home
+let editIngredientPrices (id: string) =
     
-    // log.Debug(sprintf "editIngredientPrices %d" id)
+    log.Debug(sprintf "editIngredientPrices %s" id)
+    let strId = Guid.Parse id
     // let ctx = Db.getContext()
-    // let ingredient = Db.getIngredientById id ctx
+    let ingredient = (ordersSystem.GetIngredient strId).OkValue
+        // order Db.getIngredientById id ctx
+        
+    let ingredientPrices = ingredient.IngredientPrices
+    
     // let ingredientPricesDetails = Db.getIngredientPricesDetails id ctx
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         View.editIngredientPrices ingredient ingredientPricesDetails "" |> html
-    //     )
+    choose [
+        GET >=> warbler (fun _ ->
+            View.editIngredientPrices ingredient "" |> html
+        )
+        POST >=> bindToForm Form.ingredientPrice (fun form ->
+            try
+                let ingredientPrice: IngredientPrice = { Id =  Guid.NewGuid(); Price = (float)form.AddPrice; Quantity = (int)form.Quantity }
+                let result = ordersSystem.AddIngredientPrice (strId, ingredientPrice)
+                match result with
+                    | Ok _ -> Redirection.found (sprintf Path.Admin.editIngredientPrices id)
+                    | _ -> View.editIngredientPrices ingredient local.AnErrorOccurred |> html
+            with
+            | ex ->
+                log.Error("Error in editIngredientPrices", ex)
+                View.editIngredientPrices ingredient local.AnErrorOccurred |> html
+            )
+   ]
+   
+    // Redirection.FOUND Path.home
     //     POST >=> bindToForm Form.ingredientPrice (fun form -> 
     //         try
     //             let isDefaultSubtract = (form.IsDefaultSubtract = Form.YES) //"YES"
@@ -915,53 +947,46 @@ let editIngredient (strId: string)  (pageNumberBack: int) =
             let ingredient = (ordersSystem.GetIngredient guid).OkValue
             View.editIngredient "" ingredient allSelectableCategories pageNumberBack |> html)
         POST >=> bindToForm Form.ingredientEdit (fun form ->
-            printf "XXXXX: entered in post\n"
+            printf "XXXX: update availabilty flag %A\n" form.UpdateAvailabilityFlag
+            printf "XXXX: check availabilty flag %A\n" form.CheckAvailabilityFlag
+            
             let ingredient = (ordersSystem.GetIngredient guid).OkValue 
             let existing = (ordersSystem.FindIngredientByName form.Name).OkValue
             let allIngredientCategories = (ordersSystem.GetIngredientTypes ()).OkValue
+            
             match existing with
             | h::_ when (h.Id <> guid) ->
-                printf "XXXx. here 100\n"
                 let allIngredientOfCategory = (ordersSystem.GetAllIngredientsOfACategory h.IngredientTypeId).OkValue
                 let message = local.NameIsUsed
-                printf "XXXx. here 200\n"
                 let category = (ordersSystem.GetIngredientType h.IngredientTypeId).OkValue
-                printf "XXXx. here 300\n"
-                // View.ingredientsOfACategory message category allIngredientOfCategory  |> html
                 View.editIngredient "" ingredient allIngredientCategories pageNumberBack  |> html
             | h:: _ ->    
-                printf "YYYYY. here 100\n"
                 let allIngredientOfCategory = (ordersSystem.GetAllIngredientsOfACategory h.IngredientTypeId).OkValue
                 let message = local.NameIsUsed
-                printf "XXXx. here 200\n"
                 let category = (ordersSystem.GetIngredientType h.IngredientTypeId).OkValue
-                printf "XXXx. here 300\n"
                 let ingredientChanged =
                     let policy = UpdatePolicy.FromString form.UpdateAvailabilityFlag
-                    Ingredient (guid, form.Name, form.Comment, h.IngredientTypeId, h.IngredientMeasureTypes, h.Active, h.IngredientPrices, h.Stock,  form.Allergene = Form.YES, policy, h.CheckUpdatePolicy, h.Visible) // form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES)
-                printf "XXx. going to update!!!!!\n"
+                    let checkUpdatePolicy = CheckUpdatePolicy.FromString form.CheckAvailabilityFlag
+                    printf "YYYYYY %A" (checkUpdatePolicy.ToString())
+                    Ingredient (guid, form.Name, form.Comment, h.IngredientTypeId, h.IngredientMeasureType, h.Active, h.IngredientPrices, h.Stock,  form.Allergene = Form.YES, policy, checkUpdatePolicy, h.Visible) // form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES)
                 let ingredientUpdate =
                         ordersSystem.UpdateIngredient ingredientChanged
                             // (guid, form.Name, form.Description, form.Allergene = Form.YES, form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES, form.UnitOfMeasure)
-                printf "updated???\n"            
                 // View.ingredientsOfACategory message category allIngredientOfCategory  |> html
                 Redirection.found (sprintf Path.Admin.editIngredientCategoryPaginated (h.IngredientTypeId.ToString()) pageNumberBack)
                 // View.editIngredient "" ingredient allIngredientCategories pageNumberBack  |> html
             | _ ->
-                printf "ZZZZZ. here 100\n"
                 try
                     let visibility = (form.Visibility = Form.VISIBLE)
                     let description = match form.Comment with | Some X -> X | _ -> ""
-                    printf "guid %A\n" guid
                     let h = (ordersSystem.GetIngredient guid).OkValue
                     let ingredientChanged =
                         let policy = UpdatePolicy.FromString form.UpdateAvailabilityFlag
-                        Ingredient (guid, form.Name, form.Comment, h.IngredientTypeId, h.IngredientMeasureTypes, h.Active, h.IngredientPrices, h.Stock,  form.Allergene = Form.YES, policy, h.CheckUpdatePolicy, h.Visible) // form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES)
-                    printf "XXx. going to update!!!!!\n"
+                        let checkUpdatePolicy = CheckUpdatePolicy.FromString form.CheckAvailabilityFlag
+                        printf "YYYYYY %A" (checkUpdatePolicy.ToString())
+                        Ingredient (guid, form.Name, form.Comment, h.IngredientTypeId, h.IngredientMeasureType, h.Active, h.IngredientPrices, h.Stock,  form.Allergene = Form.YES, policy, checkUpdatePolicy, h.Visible) // form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES)
                     let ingredientUpdate =
-                            ordersSystem.UpdateIngredient ingredientChanged
-                                // (guid, form.Name, form.Description, form.Allergene = Form.YES, form.Visibility, form.Category, form.UpdateAvailabilityFlag = Form.YES, form.CheckAvailabilityFlag = Form.YES, form.UnitOfMeasure)
-                    printf "updated???\n"            
+                        ordersSystem.UpdateIngredient ingredientChanged
                     Redirection.found (sprintf Path.Admin.editIngredientCategoryPaginated (h.IngredientTypeId.ToString()) pageNumberBack)
                   
                      
@@ -1133,9 +1158,10 @@ let editIngredientCategory (idCategory: string) (user: UserLoggedOnSession) =
                         let isAllergene = (form.Allergene = Form.YES)
                         let description = form.Description
                         let updatePolicy = UpdatePolicy.FromString form.UpdatePolicy
-                        let checkUpdatePolicy = UpdatePolicy.FromString form.CheckUpdatePolicy
+                        let checkUpdatePolicy = CheckUpdatePolicy.FromString form.CheckUpdatePolicy
+                        let ingredientMeasureType = IngredientMeasureType.FromString form.IngredientMeasureType
                         let ingredientId = Guid.NewGuid()
-                        let newIngredient = Ingredient (ingredientId, form.Name, description, guidCategoryId, [], true, [], 0.0 , isAllergene, updatePolicy, CheckUpdatePolicy.NoCheck, isVisible) //, checkUpdatePolicy, form.UnitOfMeasure)
+                        let newIngredient = Ingredient (ingredientId, form.Name, description, guidCategoryId, ingredientMeasureType, true, [], 0.0 , isAllergene, updatePolicy, checkUpdatePolicy, isVisible) //, checkUpdatePolicy, form.UnitOfMeasure)
                         printf "XXXX. Going to create ingredient %A\n" (form.Name)
                         let ingredientAdded = ordersSystem.CreateIngredient newIngredient
                         printf "XXXX. Ingredient added %A" ingredientAdded
@@ -1653,6 +1679,7 @@ let manageAllCoursesOfACategory categoryId =
 
 // FOCUS: easy to filter dishes by category
 let manageAllCoursesOfACategoryPaginated (categoryId: string) pageNumber =
+    printf "QQQQQQ - manage all courses paginated\n"
     log.Debug (sprintf "%s %A %d" "manageAllCoursesOfACategoryPaginated" categoryId pageNumber)
     // Redirection.FOUND Path.home
     let categoriIdGuid = Guid.Parse categoryId
@@ -3378,30 +3405,61 @@ let selectIAllngredientCatForCourse courseId  =
     //     )
     // ]
 
-let selectIngredientCatForCourse courseId categoryId message =
+let selectIngredientCatForCourse courseId (categoryId: string) message =
+    printf "AAAAAAAA. entered in selectIngredientCatForCourse\n"
     let guidCategoryId = Guid.Parse categoryId
     log.Debug (sprintf "selectIngredientCatForCourse %s %s" courseId categoryId)
     
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         // let visibleIngredients = (ordersSystem.GetAllIngredientsOfACategory guidCategoryId).OkValue |> List.filter (fun x -> x.Visible)
-    //         // let alreadyTakenIngredients = (ordersSystem.GetIngredientsOfDish courseId).OkValue |> List.map (fun x -> x.IngredientId)
-    //           
-    //         
-    //         
-    //         )
-    // ]
+    choose [
+        GET >=> warbler (fun _ ->
+            let visibleIngredients = (ordersSystem.GetAllIngredientsOfACategory guidCategoryId).OkValue |> List.filter (fun x -> x.Visible)
+            // let myMap = visibleIngredients |> List.map (fun (x:Ingredient)   -> {index=x.Id.ToString(); name=x.Name })
+            
+            // let myMap = visibleIngredients |> List.map (fun (x:Ingredient)   -> {index = 123; name=x.Name })
+            let myMap = visibleIngredients |> List.map (fun (x:Ingredient)   -> {index = x.Id.ToString(); name=x.Name })
+            
+            let indexUnitsOfMeasures = List.map (fun (x: Ingredient) -> {index=x.Id.ToString() ; unitmeasure = "gr."}) visibleIngredients // unit of measure is not implemented yet as it is a list now
+            let o = { names = myMap; measures=indexUnitsOfMeasures; message = ""}
+            DotLiquid.page ("ingredientToCourse.html") o 
+            )
+        POST >=> bindToForm Form.ingredientSelector (fun form ->
+            try
+                printf "ZZZZZ CAGATA!!!.  * . SelectIngredientCatForCourse POST\n"
+                // log.Debug("selectIngredientCatForCourse POST")
+                let selectedIng = form.IngredientBySelect
+                let selectedQuantity = form.Quantity
+                
+                printf "QQQQWWWWWWWW. selected ingredient %A\n" selectedIng
+                printf "QQQQWWWWWWWW. selected quantity %A\n" selectedQuantity
+                
+                let ingMeasureTypeForIngredient =
+                    (ordersSystem.GetIngredient (Guid.Parse selectedIng)).OkValue.IngredientMeasureType
+                    
+                let selectedMeasureForIngredient: IngredientMeasureItemType =
+                    match selectedQuantity with
+                    | None -> Other ""
+                    | Some x -> Specific (ingMeasureTypeForIngredient, (float) x)  
+                    
+                let ingQuantity: IngredientAndQuantity =
+                    {
+                        IngredientId = Guid.Parse selectedIng
+                        Quantity = selectedMeasureForIngredient
+                    }
+                let added = ordersSystem.AddIngredientQuantityToDish ((Guid.Parse courseId), ingQuantity)
+                
+                let retPath = sprintf Path.Courses.editCourse courseId 
+                Redirection.FOUND retPath
+            with
+            | ex ->
+                log.Error("Error in selectIngredientCatForCourse", ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+    ]
     
     
     
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
 
-    
-    
-    
-    
-    
-    
     
     
     
@@ -4772,14 +4830,26 @@ let rejectOrderItem orderItemId (user:UserLoggedOnSession) =
 
 let standardComments =
     log.Debug "standardComments"
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let comments = Db.getAllStandardComments ctx
-    //         View.standardComments comments |> html
-    //     )
+    choose [
+        GET >=> warbler (fun _ ->
+            let comments = (ordersSystem.GetStandardComments ()).OkValue
+            View.standardComments comments |> html)
+            
+        POST >=> bindToForm Form.comment (fun form ->
+            try
+                let _ = ordersSystem.AddStandardComment form.Comment
+                Redirection.FOUND Path.Admin.standardComments
+            with
+            | ex -> 
+                log.Error(sprintf "%A" ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+            )
+        
+       
+        
     //     POST >=> bindToForm Form.comment (fun form ->
     //         try
     //             let _ = Db.addStandardComment form.Comment ctx
@@ -4789,15 +4859,13 @@ let standardComments =
     //             log.Error(sprintf "%A" ex)
     //             Redirection.FOUND Path.Errors.unableToCompleteOperation
     //     )
-    // ]
+    ]
 
-let removeStandardComment id =
-    log.Debug (sprintf "removeStandardComment %d" id)
-    Redirection.FOUND Path.home
-    
-    // let ctx = Db.getContext()
-    // let _ = Db.removeStandardComment id ctx
-    // Redirection.FOUND Path.Admin.standardComments
+let removeStandardComment (id: string) =
+    let strGuid = Guid.Parse id
+    log.Debug (sprintf "removeStandardComment %s" id)
+    let removed = (ordersSystem.RemoveStandardComment strGuid).OkValue
+    Redirection.FOUND Path.Admin.standardComments
 
 let resetDiscount orderId =
     log.Debug (sprintf "resetDiscount %d" orderId)
@@ -4862,19 +4930,34 @@ let qrUserImageGenRef  =
     //     DotLiquid.page("qrCode.html") o
     // ) 
 
-let removeStandardCommentForCourse commentForCourseId =
-    Redirection.FOUND Path.home
-    
-    // let ctx = Db.getContext()
-    // let standardComment = Db.getStandardCommentForCourse commentForCourseId ctx
-    // standardComment.Delete()
-    // ctx.SubmitUpdates()
-    // let courseId = standardComment.Courseid
-    // Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId)
+let removeStandardCommentForCourse (strDishId: string) (strCommentId: string) =
+    let removed = (ordersSystem.RemoveStandardCommentForDish (Guid.Parse strCommentId, Guid.Parse strDishId)).OkValue
+    Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse strDishId)
 
-let standardCommentsForCourse courseId =
+let standardCommentsForCourse (courseId: string) =
+    let guidCourseId = Guid.Parse courseId
     log.Debug (sprintf "standardCommentsForCourse %s" courseId)
-    Redirection.FOUND Path.home
+    choose [
+        GET >=> warbler (fun _ -> 
+                let commentsForCourseDetails = (ordersSystem.GetStandardCommentsForDish guidCourseId).OkValue
+                let allStandardComments = (ordersSystem.GetStandardComments ()).OkValue
+                let dish = (ordersSystem.GetDish guidCourseId).OkValue
+                let commentsThatCanBeAdded = allStandardComments |> List.filter (fun x -> not (List.exists (fun y -> y.CommentId = x.CommentId) commentsForCourseDetails))
+                View.standardCommentsForCourse dish commentsForCourseDetails commentsThatCanBeAdded |> html
+            )
+        POST >=> bindToForm Form.commentForCourse (fun form ->
+            try
+                let commentId = Guid.Parse form.CommentForCourse
+                let _ = (ordersSystem.AddStandardCommentForDish (commentId, guidCourseId)).OkValue
+                Redirection.FOUND (sprintf Path.Admin.standardCommentsForCourse courseId)
+            with
+            | ex -> 
+                log.Error(sprintf "%A" ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+    )
+            
+    ]
+    // Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
     // let course = Db.Courses.getCourse courseId ctx
@@ -4904,6 +4987,7 @@ let standardVariationsForCourse courseId =
     
     // let ctx = Db.getContext()
     // let course = Db.Courses.getCourse courseId ctx
+    
     // choose [
     //     GET >=> warbler (fun _ ->
     //         let standardVariationsForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails courseId ctx
@@ -4912,15 +4996,15 @@ let standardVariationsForCourse courseId =
     //         let selectableStandardVariations = allStandardVariations |> (List.filter (fun x -> (not (List.contains x.Standardvariationid existingVariationForCourseIds) )))
     //         View.standardVariationsForCourse course standardVariationsForCourseDetails selectableStandardVariations |> html
     //     )
-    //     POST >=> bindToForm Form.variationForCourse (fun form ->
-    //         try
-    //             let _ = Db.StandardVariations.addStandardVariationForCourse ((int )form.VariationForCourse) courseId ctx
-    //             Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
-    //         with
-    //         | ex -> 
-    //             log.Error(sprintf "%A" ex)
-    //             Redirection.FOUND Path.Errors.unableToCompleteOperation
-    //     )
+        // POST >=> bindToForm Form.variationForCourse (fun form ->
+        //     try
+        //         let _ = Db.StandardVariations.addStandardVariationForCourse ((int )form.VariationForCourse) courseId ctx
+        //         Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
+        //     with
+        //     | ex -> 
+        //         log.Error(sprintf "%A" ex)
+        //         Redirection.FOUND Path.Errors.unableToCompleteOperation
+        // )
     // ]
 
 // let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetailsWrapped list) =
@@ -5008,34 +5092,42 @@ let mergeSubCourseCategoryToFather categoryId =
     // let _ = Db.safeDeleteCourseCategory categoryId ctx
     // Redirection.FOUND (sprintf Path.Courses.manageAllCoursesOfACategoryPaginated father.Categoryid 0)
     
-let manageStandardVariation id =
-    log.Debug (sprintf "manageStandardVariation %d" id)
-    Redirection.FOUND Path.home
+let manageStandardVariation (id: string) =
+    let variationId = Guid.Parse id
+    log.Debug (sprintf "manageStandardVariation %A" id)
     
     // let ctx = Db.getContext()
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let standardVariation = Db.getStandardVariation id ctx
-    //         let ingredientCategories = Db.getAllIngredientCategories ctx
-    //         let variationItemDetails = Db.StandardVariations.getStandardVariationItemDetails id ctx
-    //         let (allIngredients:Db.Ingredient list) = Db.getAllIngredients ctx
-    //
-    //         let specificCustomAddQuantitiesForIngredients = allIngredients |> List.map (fun (x:Db.Ingredient) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
-    //         View.manageStandardVariation standardVariation variationItemDetails ingredientCategories allIngredients specificCustomAddQuantitiesForIngredients  |> html
-    //     )
-    //
-    //     POST >=> bindToForm Form.ingredientVariation (fun form -> 
-    //         try
-    //             match form.Quantity with
-    //             | Globals.SENZA -> Db.StandardVariations.addRemoveIngredientStandardVariationItem id ((int) form.IngredientBySelect) ctx
-    //             | _ -> Db.StandardVariations.addAddIngredientStandardVariationItem id ((int)form.IngredientBySelect) form.Quantity ctx
-    //             Redirection.FOUND (sprintf Path.Admin.manageStandardVariation id )
-    //         with
-    //         | ex -> 
-    //             log.Error(sprintf "%A" ex)
-    //             Redirection.FOUND Path.Errors.unableToCompleteOperation
-    //     )
-    // ]
+    choose [
+        GET >=> warbler (fun _ ->
+            let standardVariation = (ordersSystem.GetStandardVariation variationId).OkValue
+           
+            let ingredientCategories = (ordersSystem.GetAllIngredientTypes()).OkValue
+            let variationItemDetails = standardVariation.IngredientVariations
+            let allIngredients = (ordersSystem.GetAllIngredients ()).OkValue
+           
+           // let ingredientCategories = Db.getAllIngredientCategories ctx
+            // let variationItemDetails = Db.StandardVariations.getStandardVariationItemDetails id ctx
+            // let (allIngredients:Db.Ingredient list) = Db.getAllIngredients ctx
+   
+            // let specificCustomAddQuantitiesForIngredients = allIngredients |> List.map (fun (x:Db.Ingredient) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
+            // View.manageStandardVariation standardVariation variationItemDetails ingredientCategories allIngredients specificCustomAddQuantitiesForIngredients  |> html
+            
+            Redirection.FOUND Path.home
+            // Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+    
+        // POST >=> bindToForm Form.ingredientVariation (fun form -> 
+        //     try
+        //         match form.Quantity with
+        //         | Globals.SENZA -> Db.StandardVariations.addRemoveIngredientStandardVariationItem id ((int) form.IngredientBySelect) ctx
+        //         | _ -> Db.StandardVariations.addAddIngredientStandardVariationItem id ((int)form.IngredientBySelect) form.Quantity ctx
+        //         Redirection.FOUND (sprintf Path.Admin.manageStandardVariation id )
+        //     with
+        //     | ex -> 
+        //         log.Error(sprintf "%A" ex)
+        //         Redirection.FOUND Path.Errors.unableToCompleteOperation
+        // )
+    ]
 
 let manageStandardVariationByIngredientCategory standardVariationId ingredientCategoryId =
     log.Debug (sprintf "manageStandardVariationByIngredientCategory %d %d" standardVariationId ingredientCategoryId)
@@ -5056,14 +5148,36 @@ let manageStandardVariationByIngredientCategory standardVariationId ingredientCa
 
 let manageStandardVariations =
     log.Debug "manageStandardVariations"
-    Redirection.FOUND Path.home
     
-    // let ctx = Db.getContext()
-    // choose [
-    //     GET >=> warbler (fun _ -> 
-    //         let allStandardVariations = Db.getAllStandardVariations ctx
-    //         View.manageStandardVariations allStandardVariations "" |> html
-    //     )
+    choose [
+        GET >=> warbler (fun _ -> 
+            let allStandardVariations = (ordersSystem.GetAllStandardVariations ()).OkValue
+            View.manageStandardVariations allStandardVariations "" |> html
+        )
+        POST >=> bindToForm Form.standardVariation  (fun form ->
+            try
+                let existing = ordersSystem.FindStandardVariation form.Name
+                match existing with 
+                    | Ok X -> 
+                        let allStandardVariations = (ordersSystem.GetAllStandardVariations ()).OkValue
+                        View.manageStandardVariations allStandardVariations "esiste gia'" |> html
+                    | _ ->
+                        let standardVariation: StandardVariation =
+                            {
+                                Id = Guid.NewGuid()
+                                Name = form.Name
+                                Description = "" |> Some
+                                IngredientVariations = []
+                            }
+                        let _ = ordersSystem.AddStandardVariation standardVariation
+                        Redirection.FOUND Path.Admin.manageStandardVariations
+            with
+            | ex -> 
+                log.Error(sprintf "%A" ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+        
+    ]
     //     POST >=> bindToForm Form.standardVariation  (fun form ->
     //         try
     //             let existing = Db.tryGetStandardVariationByName form.Name ctx
@@ -5080,9 +5194,11 @@ let manageStandardVariations =
     //             Redirection.FOUND Path.Errors.unableToCompleteOperation
     //     )
     // ]
+    
+    //  Redirection.FOUND Path.home
 
-let removeStandardVariation variationId =
-    log.Debug (sprintf "removeStandardVariation %d" variationId)
+let removeStandardVariation (variationId: string) =
+    log.Debug (sprintf "removeStandardVariation %A" variationId)
     Redirection.FOUND Path.home
     
     // log.Debug("removeStandardVariation")
@@ -5199,7 +5315,7 @@ let webPart =
         pathScan Path.Orders.addStandardVariationToOrderItem (fun (variationId,orderItemId) -> loggedOn (addStandardVariationToOrderItem variationId orderItemId))
         pathScan Path.Orders.selectStandardCommentsAndVariationsForOrderItem (fun id -> loggedOn (selectStandardCommentsForOrderItem id))
         pathScan Path.Admin.standardCommentsForCourse (fun id -> admin (standardCommentsForCourse id))
-        pathScan Path.Admin.removeStandardCommentForCourse (fun id -> admin (removeStandardCommentForCourse id))
+        pathScan Path.Admin.removeStandardCommentForCourse (fun (dishId, commentId) -> admin (removeStandardCommentForCourse dishId commentId))
         pathScan Path.Admin.removeStandardComment (fun id -> admin  (removeStandardComment id))
         path Path.Admin.standardComments >=> standardComments
         
@@ -5231,7 +5347,7 @@ let webPart =
 
         path Path.Orders.dearchiveLatestOrder >=> anyUserPassingUserLoggedOn deArchiveLatestOrder
         pathScan Path.Admin.removePrinter (fun id -> admin (deletePrinter id))
-        pathScan Path.Admin.deleteIngredientPrice (fun id -> admin (deleteIngredientPrice id))
+        pathScan Path.Admin.deleteIngredientPrice (fun (ingredientId, ingredientPriceId) -> admin (deleteIngredientPrice ingredientId ingredientPriceId))
         pathScan Path.Admin.deleteIngredient (fun id -> admin (deleteIngredient id))
         path Path.Admin.deleteIngredients >=> canManageIngredients deleteIngredientsBySelection
         pathScan Path.Admin.deleteRole (fun id -> admin (deleteUserRole id))
