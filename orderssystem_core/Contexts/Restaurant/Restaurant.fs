@@ -240,7 +240,7 @@ module Restaurant =
                 return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, this.StandardComments, standardVariation :: this.StandardVariations)     
             }
             
-        member this.removeStandardVariation (id: Guid) =
+        member this.RemoveStandardVariation (id: Guid) =
             result {
                 let! chckExists =
                     this.StandardVariations
@@ -248,7 +248,16 @@ module Restaurant =
                     |> Result.ofBool (sprintf "A standard variation with id '%A' does not exist" id)
                 return Restaurant (this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, this.StandardComments, this.StandardVariations |> List.filter (fun x -> x.Id <> id))
             }    
-        
+      
+        member this.UpdateStandardVariation (standardVariation: StandardVariation)  =
+            result {
+                do! 
+                    this.StandardVariations
+                    |> List.exists (fun x -> x.Id = standardVariation.Id)
+                    |> Result.ofBool (sprintf "A standard variation with id '%A' does not exist" standardVariation.Id)
+                return Restaurant(this.DishRefs, this.IngredientRefs, this.TableRefs, this.OrderRefs, this.UsersRefs, this.Printers, this.RoleRefs, this.OrderItemRefs, this.IngredientTypes, this.DishTypes, this.StandardComments, this.StandardVariations |> List.map (fun x -> if x.Id = standardVariation.Id then standardVariation else x))    
+            }
+         
         member this.UpdateStandardComment (standardComment: StandardComment) =
             result {
                 let! chckExists =

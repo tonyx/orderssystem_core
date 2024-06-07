@@ -14,6 +14,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="autocompleteEditStandardVariationIng.js" />
+    <Content Include="autocompleteEditOrderIteming.js" />
+    <Content Include="autocompleteDelCourses.js" />
+    <Content Include="autocompleteDelIngredients.js" />
+    <Content Include="autorefresh.js" />
+    <Content Include="backbutton.js" />
+    <Content Include="confirmRemove.js" />
+    <Content Include="compytoclipboard.js" />
+    <Content Include="jquery-3.1.1.min.js" />
+    <Content Include="jquery-ui.js" />
+    <Content Include="printer_state_category.js" />
+    <!-- those include probably are not necessary : to be investigated-->
+    
+    
     <None Include="log4net.config" CopyToOutputDirectory="PreserveNewest" />
     <None Include="appSettings.json" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="AssemblyInfo.fs" />

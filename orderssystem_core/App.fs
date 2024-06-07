@@ -5096,26 +5096,26 @@ let manageStandardVariation (id: string) =
     let variationId = Guid.Parse id
     log.Debug (sprintf "manageStandardVariation %A" id)
     
-    // let ctx = Db.getContext()
     choose [
         GET >=> warbler (fun _ ->
             let standardVariation = (ordersSystem.GetStandardVariation variationId).OkValue
            
             let ingredientCategories = (ordersSystem.GetAllIngredientTypes()).OkValue
             let variationItemDetails = standardVariation.IngredientVariations
+            let variationDetailsWithNames = variationItemDetails |> List.map (fun x -> (x, (ordersSystem.GetIngredient x.IngredientId).OkValue.Name))
             let allIngredients = (ordersSystem.GetAllIngredients ()).OkValue
-           
-           // let ingredientCategories = Db.getAllIngredientCategories ctx
-            // let variationItemDetails = Db.StandardVariations.getStandardVariationItemDetails id ctx
-            // let (allIngredients:Db.Ingredient list) = Db.getAllIngredients ctx
-   
-            // let specificCustomAddQuantitiesForIngredients = allIngredients |> List.map (fun (x:Db.Ingredient) -> (x.Ingredientid,Db.getIngredientPrices x.Ingredientid ctx)) |> Map.ofList
-            // View.manageStandardVariation standardVariation variationItemDetails ingredientCategories allIngredients specificCustomAddQuantitiesForIngredients  |> html
-            
-            Redirection.FOUND Path.home
-            // Redirection.FOUND Path.Errors.unableToCompleteOperation
+            let specificCustomAddQuantitiesForIngredients = allIngredients |> List.map (fun x -> (x.Id, x.IngredientPrices)) |> Map.ofList     
+            View.manageStandardVariation standardVariation variationDetailsWithNames ingredientCategories allIngredients specificCustomAddQuantitiesForIngredients  |> html
         )
-    
+        
+        POST >=> bindToForm Form.ingredientVariation (fun form ->
+            let ingredientId = Guid.Parse form.IngredientBySelect
+            let variationType = VariationType.FromString (form.Quantity)
+            let newIngredientVariation = {Id = Guid.NewGuid(); IngredientId = ingredientId; VariationType = variationType}
+            let added = ordersSystem.AddIngredientVariationToStandardVariation (variationId, newIngredientVariation)
+            Redirection.FOUND (sprintf Path.Admin.manageStandardVariation id )
+            
+            ) 
         // POST >=> bindToForm Form.ingredientVariation (fun form -> 
         //     try
         //         match form.Quantity with
@@ -5130,7 +5130,7 @@ let manageStandardVariation (id: string) =
     ]
 
 let manageStandardVariationByIngredientCategory standardVariationId ingredientCategoryId =
-    log.Debug (sprintf "manageStandardVariationByIngredientCategory %d %d" standardVariationId ingredientCategoryId)
+    log.Debug (sprintf "manageStandardVariationByIngredientCategory %s %s" standardVariationId ingredientCategoryId)
     Redirection.FOUND Path.home
     
     // choose [

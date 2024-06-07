@@ -44,16 +44,25 @@ open Sharpino.Core
         | Scarce
         | Add of Option<IngredientPrice>
         | Remove of Option<IngredientPrice>
+        static member FromString (x: string) =
+            match x with
+            | "Abundant" -> Abundant
+            | "Scarce" -> Scarce
+            | "Add" -> Add None
+            | "Remove" -> Remove None
+            | _ -> Abundant
         
     type IngredientVariation =
         {
+            Id: Guid
             IngredientId: Guid
             VariationType: VariationType
         }
         with
         static member mkIngredientVariation (ingredientId: Guid, variationType: VariationType) =
-            { IngredientId = ingredientId; VariationType = variationType }    
-    
+            { Id = Guid.NewGuid(); IngredientId = ingredientId; VariationType = variationType }    
+  
+     
     type StandardVariation =
         {
             Id: Guid

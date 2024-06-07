@@ -1068,3 +1068,25 @@ module OrdersSystem =
                     standardVariation
                     |> Result.ofOption (sprintf "StandardVariation with name '%s' does not exist" name)
             }
+        member this.AddIngredientVariationToStandardVariation  (standardVariationId: Guid, ingredientVariation: IngredientVariation) =
+            result {
+                let! standardVariation = this.GetStandardVariation standardVariationId
+                let newStandarVariation =
+                    {
+                        standardVariation with
+                            IngredientVariations =
+                                if (standardVariation.IngredientVariations |>> (fun x -> x.IngredientId)) |> List.contains ingredientVariation.IngredientId then 
+                                    ingredientVariation :: (standardVariation.IngredientVariations |> List.filter (fun x -> x.IngredientId <> ingredientVariation.IngredientId))
+                                else
+                                    ingredientVariation :: standardVariation.IngredientVariations
+                    }
+              
+                let updateStandardVariation = RestaurantCommands.UpdateStandardVariation newStandarVariation  
+                return!
+                    updateStandardVariation
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }
+            
+            
+            
+            

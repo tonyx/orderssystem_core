@@ -17,6 +17,17 @@ let intPairsMapToJavascriptString l =
         | _ -> acc
 
     "new Map([" +  (javascriptIntTolistPairsMap l "") + "]);"
+    
+let strPairsMapToJavascriptString l =
+    let javascriptListPairs l = l |> List.fold (fun acc (x,y)  -> acc + "['"+x.ToString()+"',"+y.ToString()+"],") ""
+    // let javascriptListPairs l = l |> List.fold (fun acc (x,y)  -> acc + "["+(string)x+","+(string)y+"],") ""
+
+    let rec javascriptStrTolistPairsMap l acc =
+        match l with
+        | (A : System.Guid, B : ((System.Guid * float) List)):: T -> javascriptStrTolistPairsMap T  acc+"[" + "'"+(string) A + "'"  + ", " + "new Map(["+ (javascriptListPairs B ) +  "])],"
+        | _ -> acc
+
+    "new Map([" +  (javascriptStrTolistPairsMap l "") + "]);"
 
 let unbundleVat price rate =
     let unbundlerMultiplier = 100M/(100M+rate)

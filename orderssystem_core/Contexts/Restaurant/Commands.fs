@@ -41,6 +41,7 @@ type RestaurantCommands =
     | RemoveStandardComment of Guid
     | AddStandardVariation of StandardVariation
     | RemoveStandardVariation of Guid
+    | UpdateStandardVariation of StandardVariation
      
     interface Command<Restaurant, RestaurantEvents> with
         member this.Execute restaurant =
@@ -118,7 +119,11 @@ type RestaurantCommands =
                 restaurant.AddStandardVariation standardVariation
                 |> Result.map (fun r -> [StandardVariationAdded standardVariation])    
             | RemoveStandardVariation  guid ->
-                restaurant.removeStandardVariation guid
+                restaurant.RemoveStandardVariation guid
                 |> Result.map (fun r -> [StandardVariationRemoved guid])
+            | UpdateStandardVariation standardVariation ->
+                restaurant.UpdateStandardVariation standardVariation
+                |> Result.map (fun r -> [StandardVariationUpdated standardVariation])
+                
                 
         member this.Undoer = None

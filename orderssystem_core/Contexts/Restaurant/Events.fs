@@ -39,6 +39,7 @@ type RestaurantEvents =
     | StandardCommentRemoved of Guid
     | StandardVariationAdded of StandardVariation
     | StandardVariationRemoved of Guid
+    | StandardVariationUpdated of StandardVariation
 
     interface Event<Restaurant> with
         member this.Process restaurant =
@@ -92,7 +93,9 @@ type RestaurantEvents =
             | StandardVariationAdded standardVariation ->
                 restaurant.AddStandardVariation standardVariation
             | StandardVariationRemoved guid ->
-                restaurant.removeStandardVariation guid
+                restaurant.RemoveStandardVariation guid
+            | StandardVariationUpdated standardVariation ->
+                restaurant.UpdateStandardVariation standardVariation
                 
 
     member this.Serialize =

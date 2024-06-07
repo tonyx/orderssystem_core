@@ -200,14 +200,14 @@ let addIngredient:Form<AddIngredient> =
         DecimalProp ((fun f -> <@f.IngredientBySelect @> ),[])
     ],[])
 
-type IngredientVariation = {
-    IngredientBySelect: decimal
+type IngredientVariationForm = {
+    IngredientBySelect: string
     Quantity: string
 }
 
-let ingredientVariation:Form<IngredientVariation> = 
+let ingredientVariation:Form<IngredientVariationForm> = 
     Form ([
-        DecimalProp ((fun f -> <@f.IngredientBySelect @> ),[])
+        TextProp ((fun f -> <@f.IngredientBySelect @> ),[])
     ],[])
 
 type IngredientEdit = {
@@ -401,11 +401,11 @@ let variationForCourse:Form<VariationForCourse>  =
         [DecimalProp ((fun f -> <@ f.VariationForCourse @>),[])],[]
     )
 
-type StandardVariation = {
+type StandardVariationForm = {
     Name: string
 }
 
-let standardVariation: Form<StandardVariation> =
+let standardVariation: Form<StandardVariationForm> =
     Form (
         [
             TextProp ((fun f -> <@f.Name@>),[])

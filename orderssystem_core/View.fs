@@ -131,7 +131,16 @@ let standardComments (comments: StandardComment list) =
                             ]
                     ]
             ]
+        tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+        script ["type","text/javascript"; "src","/backbutton.js"] [] 
     ]
+         
+         // tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+         // div [] 
+         //        [
+         //             a Path.home [] [Text local.MainPage ]
+         //        ]
+         // script ["type","text/javascript"; "src","/backbutton.js"] [] 
 
 // let editUser (user:Db.User) = [
 //     h2 (local.EditUser + user.Username)
@@ -1635,7 +1644,6 @@ let manageStandardVariations (standardVariations: List<OrdersSystem.Models.Ingre
 
         h2 local.ExistingStandardVariation 
 
-
         table  [
             for variation in standardVariations ->  
             tr [
@@ -1649,6 +1657,113 @@ let manageStandardVariations (standardVariations: List<OrdersSystem.Models.Ingre
             ]
         ]
     ]
+
+let manageStandardVariation
+    (standardVariation: StandardVariation)
+    (ingredientVariations: List<IngredientVariation * string>)
+    (ingredientCategories: List<IngredientType>)
+    (ingredientsYouCanAdd: List<Ingredient>)
+    (specificCustomAddQuantitiesForIngredients: Map<System.Guid,List<IngredientPrice>>)  =
+        let flatListOfIngredientButtons =
+            (ingredientCategories |> List.map (fun (x:IngredientType) -> 
+                td [ a ((sprintf Path.Admin.manageStandardVariationByIngredientCategory (standardVariation.Id.ToString())
+                        (x.Id.ToString()) )) ["class","buttonX"]
+                            [Text (x.Name)] ])) @ [ td [  a ((sprintf Path.Admin.manageStandardVariation (standardVariation.Id.ToString()) )) ["class","buttonX"] [Text(local.All)] ]]
+
+        let mappedSpecificCustomAddQuantititesForAddIngredients = 
+            specificCustomAddQuantitiesForIngredients |> Map.toList |> List.map (fun (x,y:IngredientPrice list) -> (x,y |> List.map (fun (z:IngredientPrice) -> (z.Id, z.Quantity) )))
+
+        // let javascriptFormatOfCustomAddQantititesForAddingredients = Utils.intPairsMapToJavascriptString mappedSpecificCustomAddQuantititesForAddIngredients
+        let javascriptFormatOfCustomAddQantititesForAddingredients = Utils.strPairsMapToJavascriptString mappedSpecificCustomAddQuantititesForAddIngredients
+        printf "XXXX\n"
+        printf "%A\n" javascriptFormatOfCustomAddQantititesForAddingredients
+        printf "XXXX\n"
+        let ingredientMap = ingredientsYouCanAdd |> List.map (fun (x:Ingredient) -> (x.Id.ToString(),x.Name))
+        
+        let varTypes = [("Abudant", "Abudant"); ("Scarce", "Scarce")] // todo fix
+         
+        [ 
+             h2 (local.StandardVariation + standardVariation.Name)
+             renderForm
+                 { 
+                     Form = Form.ingredientVariation
+                     Fieldsets =
+                         [ 
+                             { 
+                                 Legend = local.ModifyIngredient
+                                 Fields = 
+                                     [
+                                         {
+                                             Label = local.Choose
+                                             Html = selectInput (fun f -> <@ f.IngredientBySelect @>) 
+                                                 ingredientMap (None)
+                                         }
+                                         {  
+                                             Label = local.Quantity
+                                             Html =  selectInput (fun f -> <@ f.Quantity  @>)
+                                                 varTypes (Some "Abundant")
+                                         }
+
+                                     ]
+                             }
+                         ]
+                     SubmitText = local.Add
+                 }
+             div [] [
+                for detail in ingredientVariations |> List.sortBy (fun (_, name) -> name) ->
+                    div [] 
+                        [
+                            tag "p" [] [(Text((detail |> snd)+ ": " + (detail |> fst).VariationType.ToString()))];
+                        ]
+             ]
+             script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
+             // script [] [Raw("var ingrAdds = "+"1")]
+             script ["type","text/javascript"; "src","/autocompleteEditStandardVariationIng.js"] []
+        ] 
+          
+       
+             
+            //  [
+            //         for detail in standardVariation.IngredientVariations ->
+            //          [
+            //              tag "p" [] [(Text("bla"))];
+            //              tag "p" [] [(Text(detail.VariationType + " - "))];
+            //              // (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione)) + " "));
+            //              // (Text((detail.Tipovariazione) + " "));
+            //              // (Text(local.AddPrice + ": " + ((string)(detail.Addprice)) + ". "));
+            //              // (Text(local.SubtractPrice + ((string)(detail.Subtractprice)) + ". "));
+            //              // (Text(local.Quantity + ((string)(detail.Quantity))));
+            //              // ((a (sprintf Path.Admin.removeStandardVariationItem detail.)) ["class","buttonX"] [Text(local.Remove)])
+            //          ]
+            //     
+            // ]
+        
+    
+        
+
+
+//
+//         div [] [
+//             for detail in standardVariationItemDetails ->
+//                 div [] 
+//                     [
+//                         tag "p" [] [(Text(detail.Ingredientname+" - "));
+//                         // (Text((Globals.replaceEmojWithPlainText(detail.Tipovariazione)) + " "));
+//                         (Text((detail.Tipovariazione) + " "));
+//                         (Text(local.AddPrice + ": " + ((string)(detail.Addprice)) + ". "));
+//                         (Text(local.SubtractPrice + ((string)(detail.Subtractprice)) + ". "));
+//                         (Text(local.Quantity + ((string)(detail.Quantity))));
+//                         ((a (sprintf Path.Admin.removeStandardVariationItem detail.Standardvariationitemid)) ["class","buttonX"] [Text(local.Remove)])
+//                     ]
+//                 ]
+//         ]
+//
+//         script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
+//         script ["type","text/javascript"; "src","/autocompleteEditStandardVariationIng.js"] []
+//
+//     ]
+
+
 
 // let manageStandardVariation (standardVariation:Db.StandardVariation) (standardVariationItemDetails:Db.StandardVariationItemDetails list) (ingredientCategories:Db.IngredientCategory list) (ingredientsYouCanAdd:Db.Ingredient list) specificCustomAddQuantitiesForIngredients  =
 //     let flatListOfIngredientButtons = (ingredientCategories |> List.map (fun (x:Db.IngredientCategory) -> 
@@ -3635,6 +3750,10 @@ let standardCommentsForCourse (course: Dish) (commentsForCourse: List<StandardCo
                          a (sprintf Path.Admin.removeStandardCommentForCourse (course.Id.ToString())  (commentForCourse.CommentId.ToString()) ) ["class","buttonX"]  [Text (local.Remove)]
                      ]
              ]
+         // br []
+         a (sprintf Path.Courses.editCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.GoBack)]
+         // tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
+         // script ["type","text/javascript"; "src","/backbutton.js"] [] 
     ]
          
         
