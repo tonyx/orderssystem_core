@@ -56,10 +56,6 @@
     <Compile Include="Models/Table/Table.fs" />
     <Compile Include="Models/Table/Events.fs" />
     <Compile Include="Models/Table/Commands.fs" />
-
-    <Compile Include="Models/Role/Role.fs" />
-    <Compile Include="Models/Role/Events.fs" />
-    <Compile Include="Models/Role/Commands.fs" />
     
     <Compile Include="Models/OrderItem/OrderItem.fs" />
     <Compile Include="Models/OrderItem/Events.fs" />

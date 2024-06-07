@@ -27,8 +27,6 @@ type RestaurantEvents =
     | OrderRefRemoved of Guid
     | UserRefAdded of Guid
     | UserRemoved of Guid
-    | RoleRefAdded of Guid
-    | RoleRefRemoved of Guid
     | OrderItemRefAdded of Guid
     | OrderItemRefRemoved of Guid
     | IngredientTypeAdded of IngredientType
@@ -40,6 +38,7 @@ type RestaurantEvents =
     | StandardVariationAdded of StandardVariation
     | StandardVariationRemoved of Guid
     | StandardVariationUpdated of StandardVariation
+    | UserRoleAdded of UserRole
 
     interface Event<Restaurant> with
         member this.Process restaurant =
@@ -70,10 +69,6 @@ type RestaurantEvents =
                 restaurant.AddUserRef id
             | UserRemoved id ->
                 restaurant.RemoveUserRef id
-            | RoleRefAdded id ->
-                restaurant.AddRoleRef id
-            | RoleRefRemoved id ->
-                restaurant.RemoveRoleRef id
             | OrderItemRefAdded id ->
                 restaurant.AddOrderItemRef id
             | OrderItemRefRemoved id ->
@@ -96,6 +91,8 @@ type RestaurantEvents =
                 restaurant.RemoveStandardVariation guid
             | StandardVariationUpdated standardVariation ->
                 restaurant.UpdateStandardVariation standardVariation
+            | UserRoleAdded userRole ->
+                restaurant.AddUserRole userRole
                 
 
     member this.Serialize =

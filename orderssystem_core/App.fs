@@ -1466,11 +1466,17 @@ let adminIngredientCategories =
 
 let adminRoles  =
     log.Debug("adminRoles")
+    warbler (fun _ ->
+        let allRoles = ordersSystem.GetAllUserRoles().OkValue
+        let bla = "foo"
+        let bla2 = "bar"
+        View.rolesAdministrationPage allRoles bla bla2 |> html
+        )
     
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
     // log.Debug("adminRoles")
-    // let ctx = Db.getContext()
     // warbler (fun _ ->
+    //         let allRoles = ordersSystem.GetR
     //         let allRoles = Db.getAllRoles ctx
     //         let allRolesWithObservers = Db.getObserverRoleStatusCategory ctx
     //         let allRolesWithEnablers = Db.getEnablerRoleStatusCategory ctx
@@ -3114,25 +3120,22 @@ let resetVariationThenEditOrderItemByCatRef (orderItemId:int) categoryId landing
     //     | _ -> UNAUTHORIZED "Not logged on")
     // )
 
-let createRole (user:UserLoggedOnSession ) =
+let createUserRole (user: UserLoggedOnSession ) =
     log.Debug "createRole"
-    Redirection.FOUND Path.home
-    
-    // log.Debug(sprintf "createRole, logged user: %s" user.Username)
-    // let ctx = Db.getContext() 
-    // choose [
-    //     GET >=> html (View.createRole user)
-    //     POST >=> bindToForm Form.role (fun form ->
-    //
-    //         try
-    //             Db.createRole form.Name form.Comment ctx 
-    //             Redirection.FOUND Path.home
-    //         with
-    //         | ex ->
-    //             log.Error("Error in createRole", ex)
-    //             Redirection.FOUND Path.Errors.unableToCompleteOperation
-    //     )
-    // ]
+    log.Debug(sprintf "createRole, logged user: %s" user.Username)
+    choose [
+        GET >=> html (View.createRole user)
+        POST >=> bindToForm Form.role (fun form ->
+            try
+                let created = ordersSystem.CreateUserRole form.Name
+                // Db.createRole form.Name form.Comment ctx 
+                Redirection.FOUND Path.Admin.roles
+            with
+            | ex ->
+                log.Error("Error in createRole", ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+    ]
 
 let createOrderByUserLoggedOn (user:UserLoggedOnSession) =
     log.Debug "createOrderByUserLoggedOn"
@@ -4981,31 +4984,48 @@ let standardCommentsForCourse (courseId: string) =
     //     )
     // ]
 
-let standardVariationsForCourse courseId =
-    log.Debug (sprintf "standardVariationsForCourse %s" courseId)
+let standardVariationsForCourse (strCourseId: string) =
+    let dishId = Guid.Parse strCourseId
+    log.Debug (sprintf "standardVariationsForCourse %s" strCourseId)
     Redirection.FOUND Path.home
     
     // let ctx = Db.getContext()
     // let course = Db.Courses.getCourse courseId ctx
+    // let dish = ordersSystem.GetDish dishId
+    // let standardVariationsForCourseDetails = (ordersSystem.GetStandardVariationsForDish dishId).OkValue
+    // let allStandardVariations = (ordersSystem.GetAllStandardVariations ()).OkValue
+    // let standardVariationsForCourseIds = standardVariationsForCourseDetails |> List.map (fun x -> x.Id)
+    // let selectableStandardVariations = allStandardVariations |> (List.filter (fun x -> (not (List.contains x.Id standardVariationsForCourseIds) )))
     
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let standardVariationsForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails courseId ctx
-    //         let allStandardVariations = Db.StandardVariations.getAllStandardVariations ctx
-    //         let existingVariationForCourseIds = standardVariationsForCourseDetails |> List.map (fun x -> x.Standardvariationid)
-    //         let selectableStandardVariations = allStandardVariations |> (List.filter (fun x -> (not (List.contains x.Standardvariationid existingVariationForCourseIds) )))
-    //         View.standardVariationsForCourse course standardVariationsForCourseDetails selectableStandardVariations |> html
-    //     )
-        // POST >=> bindToForm Form.variationForCourse (fun form ->
-        //     try
-        //         let _ = Db.StandardVariations.addStandardVariationForCourse ((int )form.VariationForCourse) courseId ctx
-        //         Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse courseId)
-        //     with
-        //     | ex -> 
-        //         log.Error(sprintf "%A" ex)
-        //         Redirection.FOUND Path.Errors.unableToCompleteOperation
-        // )
-    // ]
+    choose [
+        GET >=> warbler (fun _ ->
+            let dish = (ordersSystem.GetDish dishId).OkValue
+            let standardVariationsForCourseDetails = (ordersSystem.GetStandardVariationsForDish dishId).OkValue
+            let allStandardVariations = (ordersSystem.GetAllStandardVariations ()).OkValue
+            let standardVariationsForCourseIds = standardVariationsForCourseDetails |> List.map (fun x -> x.Id)
+            let selectableStandardVariations = allStandardVariations |> (List.filter (fun x -> (not (List.contains x.Id standardVariationsForCourseIds) )))
+            
+            View.standardVariationsForCourse dish standardVariationsForCourseDetails selectableStandardVariations |> html
+            
+            
+            // let standardVariationsForCourseDetails = Db.StandardVariations.getStandardVariationsForCourseDetails courseId ctx
+            // let allStandardVariations = Db.StandardVariations.getAllStandardVariations ctx
+            // let existingVariationForCourseIds = standardVariationsForCourseDetails |> List.map (fun x -> x.Standardvariationid)
+            // let selectableStandardVariations = allStandardVariations |> (List.filter (fun x -> (not (List.contains x.Standardvariationid existingVariationForCourseIds) )))
+            // View.standardVariationsForCourse course standardVariationsForCourseDetails selectableStandardVariations |> html
+        )
+        
+        POST >=> bindToForm Form.variationForCourse (fun form ->
+            try
+                let added = (ordersSystem.AddStandardVariationToDish (dishId, Guid.Parse form.VariationForCourse)).OkValue
+                // let _ = Db.StandardVariations.addStandardVariationForCourse ((int )form.VariationForCourse) courseId ctx
+                Redirection.FOUND (sprintf Path.Admin.standardVariationsForCourse strCourseId)
+            with
+            | ex ->
+                log.Error(sprintf "%A" ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+    ]
 
 // let stateGroupIdentifierMappingForImportedOrderItems (orderItems: OrderItemDetailsWrapped list) =
 //     let ctx = Db.getContext()
@@ -5206,10 +5226,20 @@ let removeStandardVariation (variationId: string) =
     // let _ = Db.removeStandardVariation variationId ctx
     // Redirection.FOUND Path.Admin.manageStandardVariations
 
-let removeStandardVariationItem id =
-    log.Debug (sprintf "removeStandardVariationItem %d" id)
-    Redirection.FOUND Path.home
+let removeStandardVariationItem (strVariationId: string) (strIngredientVariation: string) =
+    let ingredientVariationId = Guid.Parse strIngredientVariation
+    let variationId = Guid.Parse strVariationId
+    // let ingredient = (ordersSystem.GetIngredient ingredientId).OkValue
+    let variation = (ordersSystem.GetStandardVariation variationId).OkValue
+    let newVariation =
+        {
+            variation with
+                IngredientVariations = variation.IngredientVariations |> List.filter (fun x -> x.Id <> ingredientVariationId)
+        }
+    let removed = (ordersSystem.UpdateStandardVariation newVariation).OkValue    
+    Redirection.FOUND (sprintf Path.Admin.manageStandardVariation strVariationId)
     
+    // let removed = (ordersSystem.RemoveIngredientVariationFromStandardVariation (variationId, ingredientId)).OkValue 
     // try
     //     log.Debug(sprintf "removeStandardVariationItem %d " id)
     //     let ctx = Db.getContext()
@@ -5223,7 +5253,7 @@ let removeStandardVariationItem id =
     //     log.Error(sprintf "%A" ex)
     //     Redirection.FOUND Path.Errors.unableToCompleteOperation
 
-let removeStandardVariationForCourse variationId courseId =
+let removeStandardVariationForCourse (strVariationId: string) (strCourseId: string) =
     log.Debug "removeStandardVariationForCourse"
     Redirection.FOUND Path.home
     
@@ -5301,7 +5331,7 @@ let noCache =
 let webPart =
     choose [
         pathScan Path.Admin.standardVariationsForCourse (fun id -> (admin (standardVariationsForCourse id )))
-        pathScan Path.Admin.removeStandardVariationItem (fun id -> (admin (removeStandardVariationItem id)))
+        pathScan Path.Admin.removeStandardVariationItem (fun (id, ingredientId) -> (admin (removeStandardVariationItem id ingredientId)))
         pathScan Path.Admin.removeStandardVariationForCourse (fun (variationId,courseId) -> (loggedOn (removeStandardVariationForCourse variationId courseId)))
 
         pathScan Path.Admin.manageStandardVariationByIngredientCategory (fun (variationId,categoryId) -> (admin (manageStandardVariationByIngredientCategory variationId categoryId)))
@@ -5453,7 +5483,7 @@ let webPart =
         
         pathScan Path.Admin.editIngredientCategoryPaginated (fun (categoryid, pageNumber) -> (canManageIngredients (editIngredientCategoryPaginated categoryid pageNumber)))
         
-        path Path.Admin.addRole >=> adminPassingUserLoggedOn createRole
+        path Path.Admin.addRole >=> adminPassingUserLoggedOn createUserRole
         path Path.Admin.roleEnablerObserverCategoriesByCheckBoxes >=> admin roleEnablerObserverCategoriesByCheckBoxes
         pathScan Path.Admin.roleEnablerObserverCategoriesByCheckBoxesByRoleAndCat (fun (roleId,catId) -> admin (roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId catId))
         pathScan Path.Admin.setStateAsActionableForSpecificWaiter  (fun (userId, stateId) -> admin (setStateAsActionableForWaiter userId stateId))

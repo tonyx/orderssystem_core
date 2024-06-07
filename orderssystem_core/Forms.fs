@@ -339,7 +339,7 @@ let qrUser: Form<QrUser> =
 
 type Role = {
     Name: string
-    Comment: string option
+    // Comment: string option
 }
 
 let role: Form<Role> =
@@ -393,12 +393,12 @@ let commentForCourse:Form<CommentForCourse>  =
     )
 
 type VariationForCourse = {
-    VariationForCourse: decimal
+    VariationForCourse: string
 }
 
 let variationForCourse:Form<VariationForCourse>  =
     Form (
-        [DecimalProp ((fun f -> <@ f.VariationForCourse @>),[])],[]
+        [TextProp ((fun f -> <@ f.VariationForCourse @>),[])],[]
     )
 
 type StandardVariationForm = {

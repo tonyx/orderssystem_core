@@ -183,43 +183,6 @@ $$;
 
 
 --
--- Name: insert_01_roles_aggregate_event_and_return_id(text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.insert_01_roles_aggregate_event_and_return_id(event_in text, aggregate_id uuid, aggregate_state_id uuid) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-inserted_id integer;
-    event_id integer;
-BEGIN
-    event_id := insert_01_roles_event_and_return_id(event_in, aggregate_id, aggregate_state_id);
-
-INSERT INTO aggregate_events_01_roles(aggregate_id, event_id, aggregate_state_id )
-VALUES(aggregate_id, event_id, aggregate_state_id) RETURNING id INTO inserted_id;
-return event_id;
-END;
-$$;
-
-
---
--- Name: insert_01_roles_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.insert_01_roles_event_and_return_id(event_in text, aggregate_id uuid) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-inserted_id integer;
-BEGIN
-INSERT INTO events_01_roles(event, aggregate_id, timestamp)
-VALUES(event_in::text, aggregate_id,  now()) RETURNING id INTO inserted_id;
-return inserted_id;
-END;
-$$;
-
-
---
 -- Name: insert_01_tables_aggregate_event_and_return_id(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -385,30 +348,6 @@ CREATE SEQUENCE public.aggregate_events_01_orders_id_seq
 
 CREATE TABLE public.aggregate_events_01_orders (
     id integer DEFAULT nextval('public.aggregate_events_01_orders_id_seq'::regclass) NOT NULL,
-    aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
-    event_id integer
-);
-
-
---
--- Name: aggregate_events_01_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.aggregate_events_01_roles_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: aggregate_events_01_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.aggregate_events_01_roles (
-    id integer DEFAULT nextval('public.aggregate_events_01_roles_id_seq'::regclass) NOT NULL,
     aggregate_id uuid NOT NULL,
     aggregate_state_id uuid,
     event_id integer
@@ -587,35 +526,6 @@ CREATE TABLE public.events_01_restaurant (
 
 ALTER TABLE public.events_01_restaurant ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.events_01_restaurant_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
---
--- Name: events_01_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.events_01_roles (
-    id integer NOT NULL,
-    aggregate_id uuid NOT NULL,
-    event text NOT NULL,
-    published boolean DEFAULT false NOT NULL,
-    kafkaoffset bigint,
-    kafkapartition integer,
-    "timestamp" timestamp without time zone NOT NULL
-);
-
-
---
--- Name: events_01_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.events_01_roles ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.events_01_roles_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -812,32 +722,6 @@ CREATE TABLE public.snapshots_01_restaurant (
 
 
 --
--- Name: snapshots_01_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.snapshots_01_roles_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: snapshots_01_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.snapshots_01_roles (
-    id integer DEFAULT nextval('public.snapshots_01_roles_id_seq'::regclass) NOT NULL,
-    snapshot text NOT NULL,
-    event_id integer,
-    aggregate_id uuid NOT NULL,
-    aggregate_state_id uuid,
-    "timestamp" timestamp without time zone NOT NULL
-);
-
-
---
 -- Name: snapshots_01_tables_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -921,14 +805,6 @@ ALTER TABLE ONLY public.aggregate_events_01_orders
 
 
 --
--- Name: aggregate_events_01_roles aggregate_events_01_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.aggregate_events_01_roles
-    ADD CONSTRAINT aggregate_events_01_roles_pkey PRIMARY KEY (id);
-
-
---
 -- Name: aggregate_events_01_tables aggregate_events_01_tables_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -982,14 +858,6 @@ ALTER TABLE ONLY public.events_01_orders
 
 ALTER TABLE ONLY public.events_01_restaurant
     ADD CONSTRAINT events_restaurant_pkey PRIMARY KEY (id);
-
-
---
--- Name: events_01_roles events_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.events_01_roles
-    ADD CONSTRAINT events_roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -1057,14 +925,6 @@ ALTER TABLE ONLY public.snapshots_01_restaurant
 
 
 --
--- Name: snapshots_01_roles snapshots_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.snapshots_01_roles
-    ADD CONSTRAINT snapshots_roles_pkey PRIMARY KEY (id);
-
-
---
 -- Name: snapshots_01_tables snapshots_tables_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1121,14 +981,6 @@ ALTER TABLE ONLY public.aggregate_events_01_dishes
 
 
 --
--- Name: aggregate_events_01_roles aggregate_events_01_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.aggregate_events_01_roles
-    ADD CONSTRAINT aggregate_events_01_fk FOREIGN KEY (event_id) REFERENCES public.events_01_roles(id) MATCH FULL ON DELETE CASCADE;
-
-
---
 -- Name: aggregate_events_01_orderitems aggregate_events_01_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1174,14 +1026,6 @@ ALTER TABLE ONLY public.snapshots_01_orders
 
 ALTER TABLE ONLY public.snapshots_01_restaurant
     ADD CONSTRAINT event_01_restaurant_fk FOREIGN KEY (event_id) REFERENCES public.events_01_restaurant(id) MATCH FULL ON DELETE CASCADE;
-
-
---
--- Name: snapshots_01_roles event_01_roles_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.snapshots_01_roles
-    ADD CONSTRAINT event_01_roles_fk FOREIGN KEY (event_id) REFERENCES public.events_01_roles(id) MATCH FULL ON DELETE CASCADE;
 
 
 --

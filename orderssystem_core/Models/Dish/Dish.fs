@@ -1,20 +1,14 @@
 
 module OrdersSystem.Models.Dish
 open OrdersSystem.Commons
-open OrdersSystem.Models.Ingredient
 open OrdersSystem.Shared
+open OrdersSystem.Models.Ingredient
 open System
 open Sharpino
 open FSharpPlus
 open FsToolkit.ErrorHandling
 open Sharpino.Core
     
-    type DishType =
-        {
-            DishTypeId: Guid
-            Name: string
-            Visible: bool
-        } 
 
     type IngredientMeasureItemType =
         | Specific of  IngredientMeasureType * float

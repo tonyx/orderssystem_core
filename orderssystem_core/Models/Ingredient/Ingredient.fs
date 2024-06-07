@@ -50,7 +50,17 @@ open Sharpino.Core
             | "Scarce" -> Scarce
             | "Add" -> Add None
             | "Remove" -> Remove None
+            // | x when x.StartsWith "Remove" -> Remove (Some { Id = Guid.NewGuid(); Price = 0.0; Quantity = float (x.Substring 7) })
+            // | x when x.StartsWith "Add" -> Add (Some { Id = Guid.NewGuid(); Price = 0.0; Quantity = float (x.Substring 4) })
             | _ -> Abundant
+        override this.ToString() =
+            match this with
+            | Abundant -> "Abundant"
+            | Scarce -> "Scarce"
+            | Add None -> "Add"
+            | Remove None -> "Remove"
+            | Remove x when x.IsSome -> sprintf "Remove %f" x.Value.Quantity
+            | Add x when x.IsSome -> sprintf "Add %f" x.Value.Quantity
         
     type IngredientVariation =
         {

@@ -131,8 +131,6 @@ let standardComments (comments: StandardComment list) =
                             ]
                     ]
             ]
-        tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
-        script ["type","text/javascript"; "src","/backbutton.js"] [] 
     ]
          
          // tag "button" [("onclick","goBack()");("class","buttonX")] [Text(local.GoBack)]
@@ -274,7 +272,6 @@ let editCourse  (course : OrdersSystem.Models.Dish.Dish) (courseCategoriesForm: 
     (ingredientsOfTheCourse: List<Ingredient * IngredientMeasureItemType>) (commentsForCourse: List<StandardComment>) (allStandardComments: List<StandardComment>) 
     (standardVariationForCourseDetails : List<OrdersSystem.Models.Ingredient.StandardVariation>)  (message: string) =
     [
-         Text("here you go")
          h2 ("Edit: " + course.Name)
          div ["id", "register-message"] 
              [
@@ -1680,7 +1677,7 @@ let manageStandardVariation
         printf "XXXX\n"
         let ingredientMap = ingredientsYouCanAdd |> List.map (fun (x:Ingredient) -> (x.Id.ToString(),x.Name))
         
-        let varTypes = [("Abudant", "Abudant"); ("Scarce", "Scarce")] // todo fix
+        let varTypes = [("Abundant", "Abundant"); ("Scarce", "Scarce"); ("Add", "Add"); ("Remove", "Remove")] // todo fix
          
         [ 
              h2 (local.StandardVariation + standardVariation.Name)
@@ -1713,11 +1710,14 @@ let manageStandardVariation
                 for detail in ingredientVariations |> List.sortBy (fun (_, name) -> name) ->
                     div [] 
                         [
-                            tag "p" [] [(Text((detail |> snd)+ ": " + (detail |> fst).VariationType.ToString()))];
+                            tag "p" []
+                                [
+                                    (Text((detail |> snd)+ ": " + (detail |> fst).VariationType.ToString()))
+                                    (a (sprintf Path.Admin.removeStandardVariationItem (standardVariation.Id.ToString()) ((detail |> fst).Id.ToString())) ["class","buttonX"] [Text(local.Remove)])
+                                ];
                         ]
              ]
              script [] [Raw("var ingrAdds = "+javascriptFormatOfCustomAddQantititesForAddingredients)]
-             // script [] [Raw("var ingrAdds = "+"1")]
              script ["type","text/javascript"; "src","/autocompleteEditStandardVariationIng.js"] []
         ] 
           
@@ -2582,9 +2582,9 @@ let createRole (user:UserLoggedOnSession) =
                                         { 
                                             Label = local.RoleName
                                             Html = formInput (fun f -> <@ f.Name @>) [ ] } 
-                                        {   
-                                            Label = local.Comment
-                                            Html = formInput (fun f -> <@ f.Comment @>) [ ] } 
+                                        // {   
+                                        //     Label = local.Comment
+                                        //     Html = formInput (fun f -> <@ f.Comment @>) [ ] } 
                                     ] 
                             } 
                         ]
@@ -2592,34 +2592,35 @@ let createRole (user:UserLoggedOnSession) =
         ]
     | _ -> failwith local.UserIsNotEnabled
 
-// let rolesAdministrationPage  (roles: Db.Role list) (allRolesWithObservers:Db.ObserverRoleStatusCategory list)  (allRolesWithEnablers:Db.EnablerRoleStatusCategory list)  =
-//     let roleEnablerObserverCategoriesByCheckBoxes = tag "p" [] [a Path.Admin.roleEnablerObserverCategoriesByCheckBoxes   ["class","buttonX"] [Text local.AccessRights]]
-//     let defaultStateEnabler = tag "p" [] [a Path.Admin.defaultActionableStatesForOrderOwner   ["class","buttonX"] [Text local.DefaultStatesForWaiter]]
-//     let tempUserDefaultStateEnabler = tag "p" [] [a Path.Admin.tempUserDefaultActionableStates   ["class","buttonX"] [Text local.DefaultStatesForTemporaryUsers]]
-//     [
-//         tag "h1" [] [Text local.ManageRoles ];
-//         tag "p" [] [a Path.Admin.addRole ["class","buttonX"] [Text local.AddRole] ]
-//
-//         roleEnablerObserverCategoriesByCheckBoxes
-//
-//         defaultStateEnabler
-//         tempUserDefaultStateEnabler
-//
-//         tag "h2" [] [Text local.ListOfExistingRoles]
-//
-//         // ulAttr ["id ","item-list"] 
-//         table
-//             [
-//                 for role in  roles -> 
-//                     tr [
-//                             td [
-//                                 strong (role.Rolename)
-//                                 br []
-//                             ]
-//                         
-//                     ]
-//             ]
-//     ]
+// let rolesAdministrationPage  (roles: List<UserRole>) (allRolesWithObservers:b.ObserverRoleStatusCategory list)  (allRolesWithEnablers:Db.EnablerRoleStatusCategory list)  =
+let rolesAdministrationPage  (roles: List<UserRole>) allRolesWithObservers  allRolesWithEnablers  =
+    let roleEnablerObserverCategoriesByCheckBoxes = tag "p" [] [a Path.Admin.roleEnablerObserverCategoriesByCheckBoxes   ["class","buttonX"] [Text local.AccessRights]]
+    let defaultStateEnabler = tag "p" [] [a Path.Admin.defaultActionableStatesForOrderOwner   ["class","buttonX"] [Text local.DefaultStatesForWaiter]]
+    let tempUserDefaultStateEnabler = tag "p" [] [a Path.Admin.tempUserDefaultActionableStates   ["class","buttonX"] [Text local.DefaultStatesForTemporaryUsers]]
+    [
+        tag "h1" [] [Text local.ManageRoles ];
+        tag "p" [] [a Path.Admin.addRole ["class","buttonX"] [Text local.AddRole] ]
+
+        roleEnablerObserverCategoriesByCheckBoxes
+
+        defaultStateEnabler
+        tempUserDefaultStateEnabler
+
+        tag "h2" [] [Text local.ListOfExistingRoles]
+
+        // ulAttr ["id ","item-list"] 
+        table
+            [
+                for role in  roles -> 
+                    tr [
+                            td [
+                                strong (role.Name)
+                                br []
+                            ]
+                        
+                    ]
+            ]
+    ]
         
 let coursesAdministrationPage  (categories: DishType list) (dishes: Dish list) =
     [
@@ -3797,39 +3798,39 @@ let standardCommentsForCourse (course: Dish) (commentsForCourse: List<StandardCo
 //         a (sprintf Path.Courses.editCourse course.Courseid) ["class","buttonX"] [Text (local.GoBack)]
 //     ]
 
-// let standardVariationsForCourse (course:Db.Course) (standardVariationsForCourseDetails:Db.StandardVariationForCourseDetails list) (selectableStandardVariations:Db.StandardVariation list) =
-//     let selectableStandardVariationsMap = selectableStandardVariations |> List.map (fun x -> (((decimal)x.Standardvariationid), x.Name))
-//     [
-//         h2 (local.AddSelectableVariationsFor+course.Name)
-//         renderForm 
-//             {
-//                 Form = Form.variationForCourse
-//                 Fieldsets =
-//                     [ 
-//                         { 
-//                             Legend = local.SelectableStandardVariations
-//                             Fields =
-//                                 [
-//                                     { 
-//                                         Label = local.AddSelectableVariation
-//                                         Html = selectInput (fun f -> <@ f.VariationForCourse @>) selectableStandardVariationsMap  (None)
-//                                     }
-//                                 ]
-//                         }
-//                     ]
-//                 SubmitText = local.Insert
-//             }
-//
-//         h2 local.ExistingVariations
-//         ulAttr ["id","item-list"] [
-//         for standardVariationForCourseDetail in standardVariationsForCourseDetails ->
-//             tag "p" [] [
-//                 Text(standardVariationForCourseDetail.Standardvariationname)
-//                 a (sprintf Path.Admin.removeStandardVariationForCourse standardVariationForCourseDetail.Standardvariationforcourseid course.Courseid) ["class","buttonX"]  [Text (local.Remove)]
-//             ]
-//         ]
-//         a (sprintf Path.Courses.editCourse course.Courseid) ["class","buttonX"] [Text (local.GoBack) ]
-//     ]
+let standardVariationsForCourse (course:Dish) (standardVariationsForCourseDetails:List<StandardVariation>) (selectableStandardVariations: List<StandardVariation>) =
+    let selectableStandardVariationsMap = selectableStandardVariations |> List.map (fun x -> (x.Id.ToString(), x.Name))
+    [
+        h2 (local.AddSelectableVariationsFor+course.Name)
+        renderForm 
+            {
+                Form = Form.variationForCourse
+                Fieldsets =
+                    [ 
+                        { 
+                            Legend = local.SelectableStandardVariations
+                            Fields =
+                                [
+                                    { 
+                                        Label = local.AddSelectableVariation
+                                        Html = selectInput (fun f -> <@ f.VariationForCourse @>) selectableStandardVariationsMap  (None)
+                                    }
+                                ]
+                        }
+                    ]
+                SubmitText = local.Insert
+            }
+
+        h2 local.ExistingVariations
+        ulAttr ["id","item-list"] [
+        for standardVariationForCourseDetail in standardVariationsForCourseDetails ->
+            tag "p" [] [
+                Text(standardVariationForCourseDetail.Name)
+                a (sprintf Path.Admin.removeStandardVariationForCourse (standardVariationForCourseDetail.Id.ToString()) (course.Id.ToString())) ["class","buttonX"]  [Text (local.Remove)]
+            ]
+        ]
+        a (sprintf Path.Courses.editCourse (course.Id.ToString())) ["class","buttonX"] [Text (local.GoBack) ]
+    ]
 
 // let selectStandardCommentsAndVariationsForOrderItem (orderItem:Db.OrderItemDetails) (selectableStandardComments:Db.CommentForCourseDetails list) (selectableStandardVariations:Db.StandardVariationForCourseDetails list) =
 //     let linkToContinue = 

@@ -4,6 +4,7 @@ open OrdersSystem.Models
 open Sharpino
 open Sharpino.MemoryStorage
 open Sharpino.Storage
+open Sharpino.PgStorage
 open Sharpino.CommandHandler
 open FSharpPlus
 open FsToolkit.ErrorHandling
@@ -13,10 +14,13 @@ open OrdersSystem.Models.UserCommands
 open OrdersSystem.Models.Ingredient
 open OrdersSystem.Contexts.RestaurantCommands
 open OrdersSystem.Models.Table
-open OrdersSystem.Models.Role
-open OrdersSystem.Models.RoleCommands
-open OrdersSystem.Models.RoleEvents
 open OrdersSystem.Models.OrderItem
+open OrdersSystem.Models.IngredientEvents
+open OrdersSystem.Models.DishEvents
+open OrdersSystem.Models.TableEvents
+open OrdersSystem.Models.UserEvents
+open OrdersSystem.Models.OrderEvents
+open OrdersSystem.Models.OrderItemEvents
 open OrdersSystem.Contexts.Restaurant.Restaurant
 open OrdersSystem.Contexts.RestaurantEvents
 open OrdersSystem.Models.User
@@ -26,15 +30,6 @@ open OrdersSystem.Shared
 open System
 
 module OrdersSystem =
-    open Sharpino.PgStorage
-    open OrdersSystem.Models.IngredientEvents
-    open OrdersSystem.Models.DishEvents
-    open OrdersSystem.Models.TableEvents
-    open OrdersSystem.Models.UserEvents
-    open OrdersSystem.Models.OrderEvents
-    open OrdersSystem.Models.OrderItemEvents
-    open OrdersSystem.Models.IngredientCommands
-    open OrdersSystem.Models.DishCommands
     let pgEventStoreconnection =
         "Server=127.0.0.1;"+
         "Database=orderssystem_02;" +
@@ -54,7 +49,6 @@ module OrdersSystem =
     let storageDishViewer = getAggregateStorageFreshStateViewer<Dish, DishEvents, string>  pgEventStore
     let storageIngredientViewer = getAggregateStorageFreshStateViewer<Ingredient, IngredientEvents, string>  pgEventStore
     let storageOrdersViewer = getAggregateStorageFreshStateViewer<Order, OrderEvents, string>  pgEventStore
-    let storageRoleViewer = getAggregateStorageFreshStateViewer<Role, RoleEvents, string>  pgEventStore
     let storageTablesViewer = getAggregateStorageFreshStateViewer<Table, TableEvents, string>  pgEventStore
     let storageUsersViewer = getAggregateStorageFreshStateViewer<User, UserEvents, string>  pgEventStore
     let storageOrderItemViewer = getAggregateStorageFreshStateViewer<OrderItem, OrderItemEvents, string>  pgEventStore
@@ -156,6 +150,8 @@ module OrdersSystem =
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker 
                 return result
             }
+            
+            
         member this.UpdateDishType (dishType: DishType) =
             result {
                 let! existingDishTypes = this.GetallDishTypes ()
@@ -265,34 +261,49 @@ module OrdersSystem =
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
             }
 
-        // check that no user uses this role
-        member this.RemoveRole (id: Guid) =
-            result {
-                let! users = this.GetAllUsers ()
-                let existingRoles = 
-                    users 
-                    |>> (fun x -> x.OptionalRoleId)
-                    |> List.fold (fun acc x -> 
-                        match x with
-                        | Some r -> r :: acc
-                        | None -> acc) []
-                do! 
-                    existingRoles
-                    |> List.contains id
-                    |> not
-                    |> Result.ofBool (sprintf "Role with id '%A' is still in use" id)
+        // // check that no user uses this role
+        // member this.RemoveRole (id: Guid) =
+        //     result {
+        //         let! users = this.GetAllUsers ()
+        //         let existingRoles = 
+        //             users 
+        //             |>> (fun x -> x.OptionalRoleId)
+        //             |> List.fold (fun acc x -> 
+        //                 match x with
+        //                 | Some r -> r :: acc
+        //                 | None -> acc) []
+        //         do! 
+        //             existingRoles
+        //             |> List.contains id
+        //             |> not
+        //             |> Result.ofBool (sprintf "Role with id '%A' is still in use" id)
+        //
+        //         let! role = this.GetRole id
+        //         let deactivate = RoleCommands.Deactivate
+        //         let! _  =
+        //             deactivate
+        //             |> runAggregateCommand<Role, RoleEvents, string> role.Id eventStore eventBroker 
+        //         let removeId = RestaurantCommands.RemoveRoleRef id
+        //         return!
+        //             removeId
+        //             |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+        //     }
 
-                let! role = this.GetRole id
-                let deactivate = RoleCommands.Deactivate
-                let! _  =
-                    deactivate
-                    |> runAggregateCommand<Role, RoleEvents, string> role.Id eventStore eventBroker 
-                let removeId = RestaurantCommands.RemoveRoleRef id
+        member this.CreateUserRole (roleName: string) =
+            result {
+                let! existingRoles = this.GetAllUserRoles ()
+                let! notAlreadyExists =
+                    existingRoles
+                    |> List.exists (fun x -> x.Name = roleName)
+                    |> not
+                    |> Result.ofBool (sprintf "Role with name '%s' already exists" roleName)
+                
+                let role = UserRole.MkUserRole roleName
                 return!
-                    removeId
+                    role
+                    |> RestaurantCommands.CreateUserRole
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
             }
-
 
         member this.GetIngredient id =
             result {
@@ -395,15 +406,6 @@ module OrdersSystem =
                     removeIngredientPrice
                     |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
             } 
-        // member this.RemoveIngredientPrice (ingredientId: Guid, price: float, quantity: float, measuringSystem: IngredientMeasureType) =
-        //     result {
-        //         let! ingredient = this.GetIngredient ingredientId
-        //         let ingredientPrice = IngredientPrice.mkIngredientPrice (ingredientId, price, quantity, measuringSystem)
-        //         let removeIngredientPrice = IngredientCommands.RemoveIngredientPrice ingredientPrice
-        //         return!
-        //             removeIngredientPrice
-        //             |> runAggregateCommand<Ingredient, IngredientEvents, string> ingredient.Id eventStore eventBroker
-        //     }
         
         member this.UpdateDish (dish: Dish) =
             result {
@@ -430,7 +432,6 @@ module OrdersSystem =
 
         member this.UpdateIngredient (ingredient: Ingredient) =
             printf "going to upgrade ingredient 100\n"
-            printf "QQQQ policy %A \n" (ingredient.CheckUpdatePolicy.ToString())
             result {
                 let! ingredientExists =
                     this.GetIngredient ingredient.Id
@@ -598,30 +599,43 @@ module OrdersSystem =
                     |> RestaurantCommands.AddOrderRef
                     |> runInitAndCommand<Restaurant, RestaurantEvents, Order, string> eventStore eventBroker order
             }
-
-        member this.CreateRole (roleName: string) =
-            result {
-                let id = Guid.NewGuid()
-                let role = Role (id, roleName)
-                return!
-                    id
-                    |> RestaurantCommands.AddRoleRef
-                    |> runInitAndCommand<Restaurant, RestaurantEvents, Role, string> eventStore eventBroker role
-            }
-        member this.GetRole id: Result<Role, string> =
+        member this.GetAllUserRoles (): Result<List<UserRole>, string> =
             result {
                 let! (_, restaurant) = restaurantViewer ()
-                do! 
-                    restaurant.RoleRefs 
-                    |> List.contains id 
-                    |> Result.ofBool (sprintf "Role with id '%A' does not exist" id)
-
-                let! (_, state) = storageRoleViewer id
-                do! 
-                    state.Active
-                    |> Result.ofBool (sprintf "Role with id '%A' is not active" id)
-                return state
+                return restaurant.UserRoles
             }
+
+        // member this.CreateRole (roleName: string) =
+        //     result {
+        //         let id = Guid.NewGuid()
+        //         let role = Role (id, roleName)
+        //         return!
+        //             id
+        //             |> RestaurantCommands.AddRoleRef
+        //             |> runInitAndCommand<Restaurant, RestaurantEvents, Role, string> eventStore eventBroker role
+        //     }
+        // member this.GetRole id: Result<Role, string> =
+        //     result {
+        //         let! (_, restaurant) = restaurantViewer ()
+        //         do! 
+        //             restaurant.RoleRefs 
+        //             |> List.contains id 
+        //             |> Result.ofBool (sprintf "Role with id '%A' does not exist" id)
+        //
+        //         let! (_, state) = storageRoleViewer id
+        //         do! 
+        //             state.Active
+        //             |> Result.ofBool (sprintf "Role with id '%A' is not active" id)
+        //         return state
+        //     }
+        // member this.GetAllRoles () =
+        //     result {
+        //         let! (_, restaurant) = restaurantViewer ()
+        //         let roleIds = restaurant.RoleRefs
+        //         let! roles = 
+        //             roleIds
+        //             |> List.traverseResultM (fun id -> storageRoleViewer id)
+        //     }
 
         // todo: see what to do with optionalRoleIds
         member this.CreateUser (username: string, password: string, roles: List<Guid>) =
@@ -1051,6 +1065,13 @@ module OrdersSystem =
                     addStandardVariation
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker   
             }
+        member this.UpdateStandardVariation (standardVariation: StandardVariation) =
+            result {
+                let updateStandardVariation = RestaurantCommands.UpdateStandardVariation standardVariation
+                return!
+                    updateStandardVariation
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }    
         member this.RemoveStandardVariation (id: Guid) =
             result {
                 let removeStandardVariation = RestaurantCommands.RemoveStandardVariation id
@@ -1075,9 +1096,11 @@ module OrdersSystem =
                     {
                         standardVariation with
                             IngredientVariations =
-                                if (standardVariation.IngredientVariations |>> (fun x -> x.IngredientId)) |> List.contains ingredientVariation.IngredientId then 
+                                if (standardVariation.IngredientVariations |>> (fun x -> x.IngredientId)) |> List.contains ingredientVariation.IngredientId then
+                                    printf "IngredientVariation with id '%A' already exists" ingredientVariation.IngredientId
                                     ingredientVariation :: (standardVariation.IngredientVariations |> List.filter (fun x -> x.IngredientId <> ingredientVariation.IngredientId))
                                 else
+                                    printf "IngredientVariation with id '%A' does not exist" ingredientVariation.IngredientId
                                     ingredientVariation :: standardVariation.IngredientVariations
                     }
               
@@ -1086,6 +1109,15 @@ module OrdersSystem =
                     updateStandardVariation
                     |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
             }
+        member this.AddStandardVariationToDish (dishId: Guid, standardVariationId: Guid) =
+            result {
+                let! dish = this.GetDish dishId
+                let! standardVariation = this.GetStandardVariation standardVariationId
+                let addStandardVariation = DishCommands.AddStandardVariation standardVariationId
+                return!
+                    addStandardVariation
+                    |> runAggregateCommand<Dish, DishEvents, string> dish.Id eventStore eventBroker
+            }    
             
             
             
