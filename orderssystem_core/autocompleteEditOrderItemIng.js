@@ -3,6 +3,7 @@ var dropList = document.getElementsByName("IngredientBySelect")[0];
 var mapIngredients = new Map();
 var mapIngredientsNameId = new Map();
 
+// todo: check the part that are not used anymore like this 'values' (part of some old spike probably)
 var values = [];
 
 for (i =0;i<dropList.length;i++) {
@@ -13,11 +14,9 @@ for (i =0;i<dropList.length;i++) {
 
 addNewOption(document.getElementsByName("IngredientBySelect")[0].value);
 
-
 document.getElementsByName("IngredientBySelect")[0].addEventListener("change", function() {
     addNewOption(document.getElementsByName("IngredientBySelect")[0].value);
 });
-
 
 function cleanSelectQuantity() {
   var selectQuantityList = document.getElementsById("Quantity")[0];
@@ -38,7 +37,6 @@ function addNewOption(key) {
       theSelect.remove(i);
      }
   }
-
 
   let specificIngrAdds = ingrAdds.get(parseInt(key));
   let specificIngrAddsKeySet = specificIngrAdds.keys();
