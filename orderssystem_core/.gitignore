@@ -3,6 +3,7 @@ bin/*
 .fake
 .ionide
 .idea
+.env
 *.ok
 *.pdf
 *.txt
