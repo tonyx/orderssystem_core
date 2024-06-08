@@ -93,7 +93,6 @@ type RestaurantEvents =
                 restaurant.UpdateStandardVariation standardVariation
             | UserRoleAdded userRole ->
                 restaurant.AddUserRole userRole
-                
 
     member this.Serialize =
         globalSerializer.Serialize this

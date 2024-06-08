@@ -20,6 +20,19 @@ type State =
     | Started
     | Done
     | Closed
+    with
+    static member
+        FromString x =
+            match x with
+            | "Collecting" -> Collecting
+            | "Started" -> Started
+            | "Done" -> Done
+            | "Closed" -> Closed
+            | _ -> failwith "Unknown state"
+    static member
+        GetCases() =
+            [Collecting; Started; Done; Closed]
+    
 
 type Role =
     | Observer of State * DishTypeId

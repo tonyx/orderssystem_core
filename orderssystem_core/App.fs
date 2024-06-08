@@ -3195,11 +3195,36 @@ type RolesCategoryMappings =
         selectcategoryid: string
         backurl: string
     }
+type RolesCategoryMappingsRef = 
+    {
+        roleidname: IndexNameRecord list
+        categoriesidname: IndexNameRecord list
+        existingrolestatemapping:  TwoIndexNameRecord list
+        selectroleid: string
+        selectcategoryid: string
+        backurl: string
+    }
 
-let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
-    log.Debug (sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat %d %d" roleId categoryId)
-    failwith "unimplemented"
+let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat (strRoleId: string) (strCategoryId: string) =
+    log.Debug (sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat %s %s" strRoleId strCategoryId)
+    let roleId = Guid.Parse strRoleId
+    let dishTypeId = Guid.Parse strCategoryId 
     
+    // choose [
+    //     GET >=> warbler (fun _ ->
+    //         let roleIdNameMapRef = ordersSystem.GetAllUserRoles() |>  List.map (fun (g: UserRole) -> (g.RoleId.ToString()), g.Name) |> Map.ofList
+    //         let states = State.GetCases()
+    //         let dishTypesIdNameMapRef = ordersSystem.GetAllDishTypes() |> List.map (fun (g: DishType) -> (g.DishTypeId.ToString(), g.Name)) |> Map.ofList
+    //         let roleIds = roleIdNameMapRef |> Map.toSeq |> Seq.map (fun (id,_) -> id)
+    //         let dishIds = dishTypesIdNameMapRef |> Map.toSeq |> Seq.map (fun (id,_) -> id) |> Seq.toList
+    //         let rolesDishTypeCombinations =
+    //             [
+    //                 for i in roleIds do 
+    //                     for j in dishIds do
+    //                         
+    //             ]
+            
+     
     // log.Debug(sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId: %d, categoryId: %d " roleId categoryId)
     // let ctx = Db.getContext()
     // choose [
@@ -3343,10 +3368,24 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId categoryId =
     //     )
     //     
     // ]
+    Redirection.FOUND Path.home
 
 let roleEnablerObserverCategoriesByCheckBoxes   =
     log.Debug "roleEnablerObserverCategoriesByCheckBoxes"
-    Redirection.FOUND Path.home
+    let firstRole = ordersSystem.GetAllUserRoles() 
+    
+    let firstRoleId = 
+        match firstRole with
+        | Ok (h::_) -> h.RoleId
+        | _ -> Guid.Empty
+       
+    let firstDishType = ordersSystem.GetallDishTypes()
+    let firstDishTypeId = 
+        match firstDishType with
+        | Ok (h::_)  -> h.DishTypeId
+        | _ -> Guid.Empty
+        
+    roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat (firstRoleId.ToString()) (firstDishTypeId.ToString())
     
     // log.Debug("roleEnablerObserverCategoriesByCheckBoxes")
     // let ctx = Db.getContext()
