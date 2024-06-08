@@ -160,10 +160,10 @@ module Restaurant =
             }
         member this.UpdateUserRole (userRole: UserRole) =
             result {
-                let! chckExists =
-                    this.UserRoles
-                    |> List.exists (fun x -> x.Name = userRole.Name && x.RoleId <> userRole.RoleId)
-                    |> Result.ofBool (sprintf "A user role with name '%s' does not exist" userRole.Name)
+                // let! chckExists =
+                //     this.UserRoles
+                //     |> List.exists (fun x -> x.Name = userRole.Name && x.RoleId <> userRole.RoleId)
+                //     |> Result.ofBool (sprintf "A user role with name '%s' does not exist" userRole.Name)
                 return Restaurant
                     (
                         this.DishRefs,
@@ -177,7 +177,29 @@ module Restaurant =
                         this.DishTypes,
                         this.StandardComments,
                         this.StandardVariations,
-                        this.UserRoles |> List.map (fun x -> if x.Name = userRole.Name then userRole else x)
+                        this.UserRoles |> List.map (fun x -> if x.RoleId = userRole.RoleId then userRole else x)
+                    )
+            }
+        member this.DeleteUserRole (id: Guid) =
+            result {
+                let! chckExists =
+                    this.UserRoles
+                    |> List.exists (fun x -> x.RoleId = id)
+                    |> Result.ofBool (sprintf "A user role with id '%A' does not exist" id)
+                return Restaurant
+                    (
+                        this.DishRefs,
+                        this.IngredientRefs,
+                        this.TableRefs,
+                        this.OrderRefs,
+                        this.UsersRefs,
+                        this.Printers,
+                        this.OrderItemRefs,
+                        this.IngredientTypes,
+                        this.DishTypes,
+                        this.StandardComments,
+                        this.StandardVariations,
+                        this.UserRoles |> List.filter (fun x -> x.RoleId <> id)
                     )
             }
             

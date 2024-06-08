@@ -268,4 +268,5 @@
         <Empty>Vuoto</Empty>
         <GerateQrCode>Genera codice Qr</GerateQrCode>
         <AskConfirmDeletion>Sei sicuro di voler cancellare questo elemento?</AskConfirmDeletion>
+        <ManageTables>Gestisci Tavoli</ManageTables>
     </localization>

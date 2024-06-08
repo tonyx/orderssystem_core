@@ -15,6 +15,9 @@ type StandardComment =
         Text: string;
     }
 
+type TemporaryUser =
+    AssociatedTable of TableId
+
 type State =
     | Collecting
     | Started
@@ -37,7 +40,6 @@ type State =
 type Role =
     | Observer of State * DishTypeId
     | Manager of State * DishTypeId
-   
 
 type UserRole =
     {
@@ -52,7 +54,27 @@ type UserRole =
                 Name = name
                 Roles = []
             }
-    
+        member this.IsManager(state: State, dishTypeId: DishTypeId) =
+            this.Roles |> List.exists (fun x -> match x with | Manager (s, d) -> s = state && d = dishTypeId | _ -> false)
+        member this.IsObserver(state: State, dishTypeId: DishTypeId) =
+            this.Roles |> List.exists (fun x -> match x with | Observer (s, d) -> s = state && d = dishTypeId | _ -> false)
+        member this.SetManager state dishTypeId =
+            if
+                this.Roles |> List.exists (fun x -> match x with | Manager (s, d) -> s = state && d = dishTypeId | _ -> false) then
+                    this
+                else 
+                    { this with Roles = Manager(state, dishTypeId) :: this.Roles }
+        member this.SetObserver state dishTypeId =
+            if
+                this.Roles |> List.exists (fun x -> match x with | Observer (s, d) -> s = state && d = dishTypeId | _ -> false) then
+                    this
+                else 
+                    { this with Roles = Observer(state, dishTypeId) :: this.Roles }
+        member this.UnSetManager state dishTypeId =
+            { this with Roles = this.Roles |> List.filter (fun x -> match x with | Manager (s, d) -> not (s = state && d = dishTypeId) | _ -> true) }
+        member this.UnSetObserver state dishTypeId =
+            { this with Roles = this.Roles |> List.filter (fun x -> match x with | Observer (s, d) -> not (s = state && d = dishTypeId) | _ -> true) }    
+        
 type Printer  =
     {
         Id: Guid

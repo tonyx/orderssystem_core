@@ -1,8 +1,10 @@
 module OrdersSystem.View
 
 open OrdersSystem.Contexts.Restaurant
+open OrdersSystem.Models
 open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
+open OrdersSystem.Models.User
 open OrdersSystem.Shared
 open Suave.Form
 open FSharp.Data
@@ -657,64 +659,66 @@ let changePassword message (user:UserLoggedOnSession) =
                 SubmitText = "Confirm" }
     ]
 
-// let register (roles: Db.Role list) msg = 
-//     let rolesIdAndNames = List.map (fun (x:Db.Role) -> ((decimal)x.Roleid,x.Rolename)) roles
-//
-//     [
-//         h2 local.CreateNewAccount
-//         p [] 
-//             [
-//                 Text local.FillData
-//             ]
-//
-//         div ["id", "register-message"] 
-//             [
-//                 Text msg
-//             ]
-//
-//         renderForm
-//             {
-//                 Form = Form.register
-//                 Fieldsets = 
-//                     [ 
-//                         {  
-//                             Legend=  local.CreateNewAccount
-//                             Fields = 
-//                                 [  
-//                                     { 
-//                                         Label = "User name (max 30 characters)"
-//                                         Html = formInput (fun f -> <@ f.Username @>) [] 
-//                                     }
-//                                     { 
-//                                         Label = local.Role
-//                                         Html = selectInput (fun f -> <@ f.Role @>) rolesIdAndNames (None) 
-//                                     }
-//                                     { 
-//                                         Label = local.CanSeeAllOrders
-//                                         Html = selectInput (fun f -> <@ f.CanManageAllorders @>) yesOrNo  (Some "No") 
-//                                     }
-//                                     { 
-//                                         Label = local.CanOverWritePrices
-//                                         Html = selectInput (fun f -> <@ f.CanChangeThePrices @>) yesOrNo  (Some "No") 
-//                                     }
-//                                     { 
-//                                         Label = local.UserCanChangePrices
-//                                         Html = selectInput (fun f -> <@ f.CanManageAllCourses @>) yesOrNo  (Some "No") 
-//                                     }
-//                                     { 
-//                                         Label = local.SixToTwentyChars 
-//                                         Html = formInput (fun f -> <@ f.Password @>) [] 
-//                                     }
-//                                     { 
-//                                         Label = local.ConfirmPassword
-//                                         Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] 
-//                                     }
-//                                 ] 
-//                         }   
-//                     ]
-//                 SubmitText = local.SaveChanges 
-//             }
-//     ]
+let register (roles: List<UserRole>) msg = 
+    let rolesIdAndNames = List.map (fun (x: UserRole) -> (x.RoleId.ToString(), x.Name)) roles
+
+    [
+        h2 local.CreateNewAccount
+        p [] 
+            [
+                Text local.FillData
+            ]
+
+        div ["id", "register-message"] 
+            [
+                Text msg
+            ]
+
+        renderForm
+            {
+                Form = Form.register
+                Fieldsets = 
+                    [ 
+                        {  
+                            Legend=  local.CreateNewAccount
+                            Fields = 
+                                [  
+                                    { 
+                                        Label = "User name (max 30 characters)"
+                                        Html = formInput (fun f -> <@ f.Username @>) [] 
+                                    }
+                                    { 
+                                        Label = local.Role
+                                        Html = selectInput (fun f -> <@ f.Role @>) rolesIdAndNames (None) 
+                                    }
+                                    { 
+                                        Label = local.CanSeeAllOrders
+                                        Html = selectInput (fun f -> <@ f.CanManageAllorders @>) yesOrNo  (Some "No") 
+                                    }
+                                    
+                                    // { 
+                                    //     Label = local.CanOverWritePrices
+                                    //     Html = selectInput (fun f -> <@ f.CanChangeThePrices @>) yesOrNo  (Some "No") 
+                                    // }
+                                    
+                                    { 
+                                        Label = local.UserCanManageCourses
+                                        Html = selectInput (fun f -> <@ f.CanManageAllCourses @>) yesOrNo  (Some "No") 
+                                    }
+                                    { 
+                                        Label = local.SixToTwentyChars 
+                                        Html = formInput (fun f -> <@ f.Password @>) [] 
+                                    }
+                                    { 
+                                        Label = local.ConfirmPassword
+                                        Html = formInput (fun f -> <@ f.ConfirmPassword @>) [] 
+                                    }
+                                ] 
+                        }   
+                    ]
+                SubmitText = local.SaveChanges 
+            }
+    ]
 
 let notFound =
     log.Debug "Page not found"  
@@ -2352,67 +2356,67 @@ let recycleQrUser  =
             }
     ]
 
-// let temporaryUsersAdministrationPage  (users: Db.UsersView list) =
-//     [
-//         tag "h1" [] [Text local.ManageTemporaryUsers];
-//
-//         a Path.Extension.addQruser ["class","buttonX"] [Text local.CreateTemporaryUsers] 
-//
-//         ulAttr ["id ","item-list"] 
-//             [
-//                 for user in users  -> 
-//                     let enabledview = 
-//                         match user.Enabled with
-//                         | true -> "enabled"
-//                         | false -> "disabled"
-//
-//                     let isExpired = user.Creationtime.AddMinutes(Globals.EXPIRATION_TIME_TEMPORARY_USERS).CompareTo(System.DateTime.Now)<0
-//                     let regenLink = 
-//                         if (isExpired) then (a (sprintf Path.Extension.regenTempUser user.Userid ) [] [Text local.UserExpired])  else em ""
-//                     tag "p" [] 
-//                         [
-//                             a (sprintf Path.Admin.editTemporaryUser user.Userid) [] [Text (user.Username+" "+user.Rolename+" "+enabledview)]
-//                             regenLink
-//                             br []
-//                         ]
-//             ]
-//     ]
+let temporaryUsersAdministrationPage  (users: List<User>) =
+    [
+        tag "h1" [] [Text local.ManageTemporaryUsers];
+
+        a Path.Extension.addQruser ["class","buttonX"] [Text local.CreateTemporaryUsers] 
+
+        ulAttr ["id ","item-list"] 
+            [
+                for user in users  -> 
+                    // let enabledview = 
+                    //     match user.Enabled with
+                    //     | true -> "enabled"
+                    //     | false -> "disabled"
+
+                    let isExpired = user.CreationDate.AddMinutes(Globals.EXPIRATION_TIME_TEMPORARY_USERS).CompareTo(System.DateTime.Now)<0
+                    let regenLink = 
+                        if (isExpired) then (a (sprintf Path.Extension.regenTempUser (user.Id.ToString())) [] [Text local.UserExpired])  else em ""
+                    tag "p" [] 
+                        [
+                            a (sprintf Path.Admin.editTemporaryUser (user.Id.ToString())) [] [Text (user.Username)] // +" "+user.Rolename+" "+enabledview)]
+                            regenLink
+                            br []
+                        ]
+            ]
+    ]
 
 
-// let userAdministrationPage  (users: Db.UsersView list) =
-//     [
-//         tag "h1" [] [Text local.ManageUsers ];
-//         a Path.Admin.addUser ["class","buttonX"] [Text local.AddUser ] 
-//
-//         br []
-//         br []
-//         table 
-//             [
-//                 tr 
-//                     [
-//                         td [Text(local.UserName)]
-//                         td [Text(local.Role)]
-//                         td [Text(local.EnableState)]
-//                         td [Text(local.ViewStates)]
-//                     ]
-//             ]
-//         table 
-//             [
-//                 for user in users  -> 
-//                     let enabledview = 
-//                         match user.Enabled with
-//                         | true -> "enabled"
-//                         | false -> "disabled"
-//
-//                     tr 
-//                         [
-//                             td [a (sprintf Path.Admin.editUser user.Userid) [] [Text (user.Username)]]
-//                             td [Text (user.Rolename)]
-//                             td [Text (enabledview)]
-//                             td [a (sprintf Path.Admin.actionableStatesForSpecificOrderOwner user.Userid) ["class","buttonX"] [Text(local.LinkStates)]]
-//                         ]
-//             ]
-//     ]
+let userAdministrationPage  (users: List<User>) =
+    [
+        tag "h1" [] [Text local.ManageUsers ];
+        a Path.Admin.addUser ["class","buttonX"] [Text local.AddUser ] 
+
+        br []
+        br []
+        table 
+            [
+                tr 
+                    [
+                        td [Text(local.UserName)]
+                        td [Text(local.Role)]
+                        td [Text(local.EnableState)]
+                        td [Text(local.ViewStates)]
+                    ]
+            ]
+        table 
+            [
+                for user in users  -> 
+                    // let enabledview = 
+                    //     match user.Enabled with
+                    //     | true -> "enabled"
+                    //     | false -> "disabled"
+
+                    tr 
+                        [
+                            td [a (sprintf Path.Admin.editUser (user.Id.ToString())) [] [Text (user.Username)]]
+                            // td [Text (user.Rolename)]
+                            // td [Text (enabledview)]
+                            // td [a (sprintf Path.Admin.actionableStatesForSpecificOrderOwner (user.Id.ToString())) ["class","buttonX"] [Text(local.LinkStates)]]
+                        ]
+            ]
+    ]
 
 let objectDeletionPage = 
     [
@@ -2595,16 +2599,19 @@ let createRole (user:UserLoggedOnSession) =
 // let rolesAdministrationPage  (roles: List<UserRole>) (allRolesWithObservers:b.ObserverRoleStatusCategory list)  (allRolesWithEnablers:Db.EnablerRoleStatusCategory list)  =
 let rolesAdministrationPage  (roles: List<UserRole>) allRolesWithObservers  allRolesWithEnablers  =
     let roleEnablerObserverCategoriesByCheckBoxes = tag "p" [] [a Path.Admin.roleEnablerObserverCategoriesByCheckBoxes   ["class","buttonX"] [Text local.AccessRights]]
-    let defaultStateEnabler = tag "p" [] [a Path.Admin.defaultActionableStatesForOrderOwner   ["class","buttonX"] [Text local.DefaultStatesForWaiter]]
-    let tempUserDefaultStateEnabler = tag "p" [] [a Path.Admin.tempUserDefaultActionableStates   ["class","buttonX"] [Text local.DefaultStatesForTemporaryUsers]]
+    
+    // let defaultStateEnabler = tag "p" [] [a Path.Admin.defaultActionableStatesForOrderOwner   ["class","buttonX"] [Text local.DefaultStatesForWaiter]]
+    // let tempUserDefaultStateEnabler = tag "p" [] [a Path.Admin.tempUserDefaultActionableStates   ["class","buttonX"] [Text local.DefaultStatesForTemporaryUsers]]
+    
     [
         tag "h1" [] [Text local.ManageRoles ];
         tag "p" [] [a Path.Admin.addRole ["class","buttonX"] [Text local.AddRole] ]
 
         roleEnablerObserverCategoriesByCheckBoxes
 
-        defaultStateEnabler
-        tempUserDefaultStateEnabler
+        // don't
+        // defaultStateEnabler
+        // tempUserDefaultStateEnabler
 
         tag "h2" [] [Text local.ListOfExistingRoles]
 
@@ -2764,17 +2771,16 @@ let myOrdersButtonSingles =
     tag "p" [] [a Path.Orders.myOrdersSingles  ["class","buttonX"] [Text local.Orders]]
 
 let logOffButton =
-    tag "p" [] [a Path.Account.logoff ["class","buttonX"] [Text local.Logoff]] 
+    tag "p" [] [a Path.Account.logoff ["class","buttonX"] [Text local.Logoff]]
+
+let adminTables =
+    tag "p" [] [a Path.Tables.adminTables ["class","buttonX"] [Text local.ManageTables]]
 
 // let empty (user:UserLoggedOnSession) (dbUser: Db.User) =
 //     [
 //         Text("it works")
 //     ]
 let controlPanel (user:UserLoggedOnSession) (dbUser: Models.User.User)=
-    
-    printf "XXXXXX. entered in controlPanel userLoggedOn A %A\n"  (user.Username)
-    printf "XXXXXX. entered in controlPanel userLoggedOn B %A\n"  (dbUser.Username)
-    printf "XXXXXX. entered in controlPanel userLoggedOn userrole %A\n"  (dbUser.Role)
     
     let orderItemsProgressLink = tag "p" [] [a (Path.Orders.orderItemsProgress) ["class","buttonX"] [Text local.OrderItemStates]]
     [
@@ -2789,6 +2795,7 @@ let controlPanel (user:UserLoggedOnSession) (dbUser: Models.User.User)=
         allUsersLink dbUser
         temporaryUsersLink dbUser
         orderItemsProgressLink
+        adminTables
         
         // seeDoneOrdersLink  dbUser
         

@@ -150,21 +150,15 @@ type IngredientSelector = {
 }
 
 type EnablersObserverForStateAbilities = {
-    CategoryId: decimal
-    RoleId: decimal
-    ObserverCOLLECTING: string option
-    ObserverTOBEWORKED: string option
-    ObserverSTARTEDWORKING: string option
-    ObserverREADYFORDELIVERY: string option
-    ObserverDELIVERED: string option
-    ObserverDONE: string option
+    CategoryId: string
+    RoleId: string
+    ObserverCollecting: string option
+    ObserverStarted: string option
+    ObserverDone: string option
 
-    EnablerCOLLECTING: string option
-    EnablerTOBEWORKED: string option
-    EnablerSTARTEDWORKING: string option
-    EnablerREADYFORDELIVERY: string option
-    EnablerDELIVERED: string option
-    EnablerDONE: string option
+    ManagerCollecting: string option
+    ManagerStarted: string option
+    ManagerDone: string option
 }
 let enablersObserverForStateAbilities:Form<EnablersObserverForStateAbilities> = 
     Form ([],[])
@@ -269,9 +263,9 @@ type Register = {
     Password : Password
     ConfirmPassword : Password
     CanManageAllorders : string
-    CanChangeThePrices : string
+    // CanChangeThePrices : string
     CanManageAllCourses : string
-    Role: decimal
+    Role: string
 }
 
 let passwordsMatch = 
@@ -281,7 +275,7 @@ let register : Form<Register> =
     Form (
         [  
             TextProp ((fun f -> <@ f.Username @>), [ maxLength 30 ] )
-            DecimalProp ((fun f -> <@f.Role @>), [])
+            TextProp ((fun f -> <@f.Role @>), [])
             PasswordProp ((fun f -> <@ f.Password @>), [ pattern ] )
             PasswordProp ((fun f -> <@ f.ConfirmPassword @>), [ pattern ] )
         ],

@@ -6,6 +6,7 @@ open System.Linq
 open OrdersSystem.Contexts.Restaurant
 open OrdersSystem.Models.Dish
 open OrdersSystem.Models.Ingredient
+open OrdersSystem.Models.User
 open OrdersSystem.Shared
 open Xceed.Words.NET
 open System.Drawing
@@ -69,7 +70,11 @@ type IndexNameDataRecord = {index: int; name: string; data: string}
 type NameDataRecord = {name: string; data: string}
 // type IndexUnitMeasureMap = {index: int; unitmeasure: string}
 type IndexUnitMeasureMap = {index: string; unitmeasure: string}
-type TwoIndexNameRecord = {index1: int; index2: int; enablers: Stritem list;observers: Stritem list}
+
+// type TwoIndexNameRecord = {index1: int; index2: int; enablers: Stritem list;observers: Stritem list}
+
+
+type TwoIndexNameRecord = {index1: string; index2: string; enablers: Stritem list;observers: Stritem list}
 type PerRoleCategories = {roleid: int; categories: string list}
 type ManyRolesCategories = {rolecategories: PerRoleCategories}
 type OrdersLiquidModel = {orders:  OrderWrapped list; targetOrder: OrderWrapped}
@@ -99,15 +104,19 @@ let session f =
         | Some state ->
             printf "this is the state %A\n" state
             
-            match state.get "cartid", state.get "username", state.get "role", state.get "userid", state.get "roleid",state.get "temporary", state.get "canmanagecourses", state.get "canmanageallorders"  with 
-            | Some cartId, None, None, None,None,None,None,None ->
+            // match state.get "cartid", state.get "username", state.get "role", state.get "userid", state.get "roleid",state.get "temporary", state.get "canmanagecourses", state.get "canmanageallorders"  with 
+            match state.get "cartid", state.get "username", state.get "role", state.get "userid", state.get "roleid", state.get "canmanagecourses", state.get "canmanageallorders"  with 
+            | Some cartId, None, None, None,None,None,None ->
                 printf "XXx. cart only"
                 f (CartIdOnly cartId)
             // | _, Some username, Some role, Some userid, Some roleid,Some temporary,Some canmanagecourses,Some canmanageallorders ->
-            | _, Some username, _, Some userid, _ ,Some temporary,Some canmanagecourses,Some canmanageallorders -> // focus I am faking
+            // | _, Some username, _, Some userid, _ ,Some temporary,Some canmanagecourses,Some canmanageallorders -> // focus I am faking
+            | _, Some username, _, Some userid, _ ,Some canmanagecourses,Some canmanageallorders -> // focus I am faking
                 log.Debug (sprintf "QQQQQQ.. %s is logged on" username)
                 printf "XXx. is logged on\n"
-                f (UserLoggedOn {Username = username; Role = "admin"; UserId = userid; RoleId = 0 ;Temporary=temporary;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
+                
+                // todo: fix the temporary user issue
+                f (UserLoggedOn {Username = username; Role = "admin"; UserId = userid; RoleId = 0 ;Temporary=false;CanManageAllCourses=canmanagecourses;CanManageAllOrders=canmanageallorders})
             | _ -> 
                 printf "XXx. is not logged on"
                 f NoSession)
@@ -766,7 +775,12 @@ let myOrdersSingles (userLoggedOn:UserLoggedOnSession) =
 
 let ordinaryUsers  =
     log.Debug("ordinaryUsers")
-    Redirection.FOUND Path.home
+    warbler (fun _ ->
+        log.Debug("ordinaryUsers")
+        let allUsers = ordersSystem.GetAllUsers().OkValue
+        View.userAdministrationPage  allUsers |> html)
+        
+    
     
     // warbler (fun _ ->
     // log.Debug("ordinaryUsers")
@@ -779,12 +793,13 @@ let temporaryUsers =
     log.Debug("temporaryUsers")
     Redirection.FOUND Path.home
     
-//     warbler (fun _ ->
-//     log.Debug("temporaryUsers")
-//     let ctx = Db.getContext()
-//     let temporaryUsers = Db.Users.getTemporaryUsersView ctx |> List.sortBy (fun (x:Db.UsersView) -> (x.Creationtime))
-//     View.temporaryUsersAdministrationPage  temporaryUsers |> html
-// )
+    warbler (fun _ ->
+        log.Debug("temporaryUsers")
+        let users = (ordersSystem.GetAllUsers()).OkValue
+        let temporaryUsers = users |> List.filter (fun x -> x.Temporary.IsSome) |> List.sortBy (fun x -> x.CreationDate)
+        // let temporaryUsers = Db.Users.getTemporaryUsersView ctx |> List.sortBy (fun (x:Db.UsersView) -> (x.Creationtime))
+        View.temporaryUsersAdministrationPage  temporaryUsers |> html
+    )
 
 // not done
 let switchVisbilityOfIngredientCategory ingredientCatgoryId encodedBackUrl  =
@@ -1488,13 +1503,13 @@ let adminCategories  =
     choose [
             GET >=> 
                 warbler (fun _ ->
-                    let coursesCategories = (ordersSystem.GetallDishTypes ()).OkValue
+                    let coursesCategories = (ordersSystem.GetAllDishTypes ()).OkValue
                     
                     // let coursesCategories = Db.Courses.getAllRootCategories ctx
                     View.coursesAdministrationPage  coursesCategories [] |> html
                 )
             POST >=> bindToForm Form.searchCourse (fun form ->
-                let coursesCategories = (ordersSystem.GetallDishTypes()).OkValue
+                let coursesCategories = (ordersSystem.GetAllDishTypes()).OkValue
                 let resultSearch = (ordersSystem.FindDishByName form.Name).OkValue
                 View.coursesAdministrationPage  coursesCategories resultSearch |> html
             )
@@ -1742,7 +1757,7 @@ let manageCategories =
 let editCourse (id: string) =
     log.Debug(sprintf "%s %A " "editCourse" id)
    
-    let courseCategoriesFormData = (ordersSystem.GetallDishTypes ()).OkValue |> List.filter (fun x -> x.Visible) |> List.map (fun x -> (x.DishTypeId.ToString(), x.Name))
+    let courseCategoriesFormData = (ordersSystem.GetAllDishTypes ()).OkValue |> List.filter (fun x -> x.Visible) |> List.map (fun x -> (x.DishTypeId.ToString(), x.Name))
     let standardCommentsOfDish = (ordersSystem.GetStandardCommentsForDish (Guid.Parse id)).OkValue
     let allStandardComments = (ordersSystem.GetStandardComments ()).OkValue
     let visibleIngredientCategories = (ordersSystem.GetIngredientTypes ()).OkValue |> List.filter (fun x -> x.Visible)
@@ -1874,8 +1889,8 @@ let editCourseCategory (id: string) =
     // Redirection.FOUND Path.home
         
 // user update is ok in domain model etc... but let's see if it should be based on list of fiels, the To or the data itself
-let editUser id =
-    log.Debug(sprintf "%s %d " "editUser" id)
+let editUser (id: string) =
+    log.Debug(sprintf "%s %s " "editUser" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d " "editUser" id)
@@ -1902,8 +1917,8 @@ let editUser id =
     //     ]
     // | None -> never
 
-let editTemporaryUser id   =
-    log.Debug(sprintf "%s %d \n " "editTemporaryUser" id)
+let editTemporaryUser (id: string)   =
+    log.Debug(sprintf "%s %s \n " "editTemporaryUser" id)
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d \n " "editTemporaryUser" id)
@@ -1978,8 +1993,10 @@ let randomAlphanumericString() =
             yield chars.[random.Next(chars.Length)]
     } |> Seq.toArray |> (fun x -> new String(x))
 
-let regenTempUser userId =
-    log.Debug(sprintf "%s %d" "regenTempUser" userId)
+let regenTempUser strUserId =
+    log.Debug(sprintf "%s %s" "regenTempUser" strUserId)
+    let userId = Guid.Parse strUserId
+    
     Redirection.FOUND Path.home
     
     // log.Debug(sprintf "%s %d" "regenTempUser" userId)
@@ -2008,7 +2025,39 @@ let regenTempUser userId =
 let addQrUser =
     log.Debug("addQrUser")
     
-    Redirection.FOUND Path.home
+    choose [
+        GET >=> (View.addQrUser |> html)
+        POST >=> bindToForm Form.qrUser (fun form ->
+            try
+                let userName  =  randomAlphanumericString()
+                let canManageAllOrders = false
+                let password = ""
+                let canChangeThePrices = false
+                let canManageCourses = false
+                let table = form.TableName // should be an id
+               
+                let temporary = AssociatedTable (Guid.Parse table)  
+                // let defaultTempUserEnablingStates = (ordersSystem.GetDefaultActionableStatesForTempUser()).OkValue
+                let user = User(Guid.NewGuid(), userName, password, "", true, temporary |> Some , None, canManageCourses, canManageAllOrders)
+                // user.Creationtime <- System.DateTime.Now
+                // user.Istemporary<- true
+                // user.Table <- form.TableName
+                // let added = (ordersSystem.CreateUser user).OkValue
+                // let order = (ordersSystem.CreateOrderByUser form.TableName "" user.Userid).OkValue
+                // let actionablesStatesIds = List.map (fun x -> x.Stateid) defaultTempUserEnablingStates
+                // let setEnablerStates = (ordersSystem.SetEnablerStatesForUser actionablesStatesIds user.Userid).OkValue
+                Redirection.FOUND Path.Admin.temporaryUsers
+            with
+            | ex ->
+                log.Error("Error in addQrUser", ex)
+                Redirection.FOUND Path.Errors.unableToCompleteOperation
+        )
+        
+        
+        
+    ]
+    
+    // Redirection.FOUND Path.home
     
     // log.Debug("addQrUser")
     // let ctx = Db.getContext()
@@ -2041,11 +2090,41 @@ let addQrUser =
     // ]
 
 let addUser =
-    log.Debug "addUser"
-    Redirection.FOUND Path.home
+    log.Debug("addUser")
+    choose [
+        GET >=> warbler
+                    (fun _ ->
+                          let allroles  = (ordersSystem.GetAllUserRoles()).OkValue
+                          View.register allroles "" |> html
+                    )
+                    
+        POST >=> bindToForm Form.register
+                     (fun form ->
+                            let allroles  = (ordersSystem.GetAllUserRoles()).OkValue
+                            match (ordersSystem.GetUserByName form.Username) with
+                            | Ok existing ->
+                                local.UserNameIsTaken
+                                |> View.register allroles
+                                |> html
+                            | _ ->
+                                try
+                                    let (Password password) = form.Password
+                                    let optionalRoleId = Guid.Parse form.Role
+                                    printf "we are here\n"
+                                    let user = User(Guid.NewGuid(), form.Username, password, "", true, None, optionalRoleId |> Some, form.CanManageAllCourses = "YES" , form.CanManageAllorders = "YES")
+                                    let added = (ordersSystem.CreateUser user).OkValue
+                                    Redirection.FOUND Path.Admin.allUsers
+                                with
+                                | ex ->
+                                    log.Error("Error in addUser", ex)
+                                    Redirection.FOUND Path.Errors.unableToCompleteOperation 
+                                           
+                                           
+                                           
+                     )            
+                    
+    ] 
     
-    // log.Debug("addUser")
-    // let ctx = Db.getContext()
     // choose [
     //     GET >=> warbler (fun _ ->  (View.register ((Db.getRoles ctx)|> List.filter (fun (x:Db.Role) -> x.Rolename <> "admin")  )"" |> html))
     //     POST >=> bindToForm Form.register (fun form ->
@@ -2076,6 +2155,7 @@ let addUser =
     //                 Redirection.FOUND Path.Errors.unableToCompleteOperation
     //         )
     // ]
+    // Redirection.FOUND Path.home
 
 let getViableGroupOutIdentifiers orderId =
     log.Debug (sprintf "getViableGroupOutIdentifiers %d" orderId)
@@ -3210,19 +3290,123 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat (strRoleId: string) 
     let roleId = Guid.Parse strRoleId
     let dishTypeId = Guid.Parse strCategoryId 
     
-    // choose [
-    //     GET >=> warbler (fun _ ->
-    //         let roleIdNameMapRef = ordersSystem.GetAllUserRoles() |>  List.map (fun (g: UserRole) -> (g.RoleId.ToString()), g.Name) |> Map.ofList
-    //         let states = State.GetCases()
-    //         let dishTypesIdNameMapRef = ordersSystem.GetAllDishTypes() |> List.map (fun (g: DishType) -> (g.DishTypeId.ToString(), g.Name)) |> Map.ofList
-    //         let roleIds = roleIdNameMapRef |> Map.toSeq |> Seq.map (fun (id,_) -> id)
-    //         let dishIds = dishTypesIdNameMapRef |> Map.toSeq |> Seq.map (fun (id,_) -> id) |> Seq.toList
-    //         let rolesDishTypeCombinations =
-    //             [
-    //                 for i in roleIds do 
-    //                     for j in dishIds do
-    //                         
-    //             ]
+    choose [
+        GET >=> warbler (fun _ ->
+            let allRoles = (ordersSystem.GetAllUserRoles()).OkValue
+            
+            // let _ = printf "allRoles %A\n" allRoles
+            // let _ =
+            //     allRoles
+            //     |> List.iter (fun (x:UserRole) -> 
+            //         printf "Role %s\n" x.Name
+            //         State.GetCases() |> List.iter (fun state -> 
+            //                 printf "State %s\n" (state.ToString())
+            //                 if (x.IsManager (state, dishTypeId)) then printf "IsManager\n"
+            //                 if (x.IsObserver (state, dishTypeId)) then printf "IsObserver\n"
+            //             )
+            //     )
+            
+            let allDishTypes = (ordersSystem.GetAllDishTypes()).OkValue
+            
+            let roleIdNameMap = (ordersSystem.GetAllUserRoles()).OkValue |>  List.map (fun (g: UserRole) -> (g.RoleId.ToString()), g.Name)//  |> Map.ofList
+            let states = State.GetCases()
+            let dishTypesIdNameMapRef = (ordersSystem.GetAllDishTypes()).OkValue |> List.map (fun (g: DishType) -> (g.DishTypeId.ToString(), g.Name))
+            let roleIds = roleIdNameMap |> List.toSeq |> Seq.map (fun (id,_) -> id)
+            let dishIds = dishTypesIdNameMapRef |> Seq.map (fun (id,_) -> id) |> Seq.toList
+            let rolesDishTypeCombinations =
+                [
+                    for role in allRoles do 
+                        for dishType in allDishTypes do
+                            State.GetCases() |> List.map (fun stat ->
+                                printf "YYYYY: supposed to be here\n"
+                                let observers = List.fold (fun acc state ->  (if (role.IsObserver (state, dishType.DishTypeId)) then ({entry="Observer"+(state.ToString())})::acc else acc)) [] states
+                                let enablers = List.fold (fun acc state ->  (if (role.IsManager (state, dishType.DishTypeId)) then ({entry="Manager"+(state.ToString())})::acc else acc)) [] states
+                                // printf "WWWWWWW. OBSERVERS %A\n" observers
+                                // printf "WWWWWWW. ENABLERS %A\n" enablers
+                                let toield = {index1=role.RoleId.ToString();index2=dishType.DishTypeId.ToString();enablers = enablers; observers = observers}
+                                // printf "XXXXXXx. toield %A\n" toield
+                                toield
+                            )
+                ]
+                |> List.fold (fun acc x -> acc@x) []
+            let o = {
+                roleidname = roleIdNameMap|> List.map (fun (ind,value)-> {index=ind;name=value});
+                categoriesidname = dishTypesIdNameMapRef |> List.map (fun (ind,value) -> {index = ind; name = value});
+                existingrolestatemapping= rolesDishTypeCombinations; 
+                selectroleid = roleId.ToString(); 
+                selectcategoryid = dishTypeId.ToString();
+                backurl = Path.Admin.roles
+            }     
+            DotLiquid.page("rolesCategoryMappings.html")  o
+        )
+        POST >=> bindToForm Form.enablersObserverForStateAbilities (fun form -> 
+            let _ =  
+                match form.ManagerCollecting with
+                | Some X ->
+                    // printf "ManagerCOLLECTING\n"
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.SetManager State.Collecting dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                | None ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.UnSetManager State.Collecting dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+            let _ = 
+                match form.ManagerStarted with
+                | Some X ->
+                    // printf "ManagerSTARTED\n"
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.SetManager State.Started dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                | None ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.UnSetManager State.Started dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+            let _ = 
+                match form.ManagerDone with
+                | Some X ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.SetManager State.Done dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                | _ ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.UnSetManager State.Done dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                    
+            let _ = 
+                match form.ObserverCollecting with
+                | Some X ->
+                    // printf "ObserverCOLLECTING\n"
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.SetObserver State.Collecting dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                | _ ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.UnSetObserver State.Collecting dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+            let _ = 
+                match form.ObserverStarted with
+                | Some X ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.SetObserver State.Started dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                | _ ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.UnSetObserver State.Started dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+            let _ = 
+                match form.ObserverDone with
+                | Some X ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.SetObserver State.Done dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+                | _ ->
+                    let userRole = (ordersSystem.GetUserRole roleId).OkValue
+                    let newUserRole = userRole.UnSetObserver State.Done dishTypeId
+                    ordersSystem.UpdateUserRole newUserRole |> ignore
+            Redirection.found (sprintf Path.Admin.roleEnablerObserverCategoriesByCheckBoxesByRoleAndCat (form.RoleId) (form.CategoryId))
+        )
+    ]
             
      
     // log.Debug(sprintf "roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat roleId: %d, categoryId: %d " roleId categoryId)
@@ -3368,7 +3552,7 @@ let roleEnablerObserverCategoriesByCheckBoxesWithRoleAndCat (strRoleId: string) 
     //     )
     //     
     // ]
-    Redirection.FOUND Path.home
+    // Redirection.FOUND Path.home
 
 let roleEnablerObserverCategoriesByCheckBoxes   =
     log.Debug "roleEnablerObserverCategoriesByCheckBoxes"
@@ -3379,7 +3563,7 @@ let roleEnablerObserverCategoriesByCheckBoxes   =
         | Ok (h::_) -> h.RoleId
         | _ -> Guid.Empty
        
-    let firstDishType = ordersSystem.GetallDishTypes()
+    let firstDishType = ordersSystem.GetAllDishTypes()
     let firstDishTypeId = 
         match firstDishType with
         | Ok (h::_)  -> h.DishTypeId
@@ -3550,13 +3734,13 @@ let createCourseByCatgory (strId: string) =
     choose [
         GET >=> warbler (fun _ -> 
             // let visibleCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun (g:Db.CourseCategories) -> (decimal)g.Categoryid,g.Name)
-            let visibleCategories = (ordersSystem.GetallDishTypes ()).OkValue |> List.map (fun g -> g.DishTypeId.ToString() ,g.Name)
+            let visibleCategories = (ordersSystem.GetAllDishTypes ()).OkValue |> List.map (fun g -> g.DishTypeId.ToString() ,g.Name)
             html (View.createCourseByCategory "" visibleCategories strId))
     
         POST >=> bindToForm Form.course (fun form ->
             try
                 let visibleCategories =
-                    (ordersSystem.GetallDishTypes ()).OkValue
+                    (ordersSystem.GetAllDishTypes ()).OkValue
                 let viscategorypairs = visibleCategories |> List.map (fun g -> g.DishTypeId.ToString() ,g.Name)     
                 // let visibleCategories = Db.Courses.getVisibleCourseCategories ctx |> List.map (fun (g:Db.CourseCategories) -> (decimal)g.Categoryid,g.Name)
                 match (ordersSystem.GetDishByName form.Name) with   

@@ -1,6 +1,7 @@
 module OrdersSystem.Models.User
 open OrdersSystem.Commons
 open System
+open OrdersSystem.Shared
 open Sharpino
 open FsToolkit.ErrorHandling
 open Sharpino.Core
@@ -11,14 +12,13 @@ type User
     password: string,
     role: string,
     active: bool, 
-    temporary: bool, 
+    temporary: Option<TemporaryUser>, 
     optionalRoleId: Option<Guid>,
     canManageAllDishes: bool,
     canManageAllOrders: bool) = 
 
     member val CreationDate = DateTime.UtcNow with get
     member val Username = username with get
-    // member val Role = role with get
     member this.Role = role
     member val Password = (passHash password) with get
     member val Id = guid with get
@@ -46,7 +46,7 @@ type User
         else
             Ok ()
     member this.Deactivate () =
-        User(guid, username, password, role, false, true, this.OptionalRoleId, canManageAllDishes, canManageAllOrders) |> Ok
+        User(guid, username, password, role, false, None, this.OptionalRoleId, canManageAllDishes, canManageAllOrders) |> Ok
 
     member this.SetDishManager () =
         User(guid, username, password, role, active, temporary, this.OptionalRoleId, true, canManageAllOrders) |> Ok
@@ -84,14 +84,15 @@ type User
     static member MkUser (username: string, password: string, role: string) =
         result {
             let! _ = User.Validate(username, password)
-            return User(Guid.NewGuid(), username, password, role, active = true, temporary = false, optionalRoleId = None, canManageAllDishes = true, canManageAllOrders = true)
+            return User(Guid.NewGuid(), username, password, role, active = true, temporary = None, optionalRoleId = None, canManageAllDishes = true, canManageAllOrders = true)
         }
 
-    static member MkTemporaryUser (username: string, password: string) =
-        result {
-            let! _ = User.Validate(username, password)
-            return User(Guid.NewGuid(), username, password, "temporary", active = true, temporary = true, optionalRoleId = None, canManageAllDishes = true, canManageAllOrders =  true)
-        }
+    // // todo: fix
+    // static member MkTemporaryUser (username: string, password: string) =
+    //     result {
+    //         let! _ = User.Validate(username, password)
+    //         return User(Guid.NewGuid(), username, password, "temporary", active = true, temporary = None, optionalRoleId = None, canManageAllDishes = true, canManageAllOrders =  true)
+    //     }
 
     override this.ToString() = sprintf "User(%s)" this.Username
 

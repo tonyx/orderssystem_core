@@ -272,4 +272,5 @@
         <Empty>Empty</Empty>
         <GerateQrCode>Generate Qr code</GerateQrCode>
         <AskConfirmDeletion>Are you sure you want to remove this item?</AskConfirmDeletion>
+        <ManageTables>Manage tables</ManageTables>    
     </localization>

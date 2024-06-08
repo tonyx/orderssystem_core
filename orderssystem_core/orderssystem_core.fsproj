@@ -25,6 +25,7 @@
     <Content Include="jquery-3.1.1.min.js" />
     <Content Include="jquery-ui.js" />
     <Content Include="printer_state_category.js" />
+    <Content Include="role_cat_enablers_observers.js" />
     <!-- those include probably are not necessary : to be investigated-->
     
     

@@ -137,7 +137,7 @@ module OrdersSystem =
         
         member this.CreateDishType (dishType: DishType)  =
             result {
-                let! existingDishTypes = this.GetallDishTypes ()
+                let! existingDishTypes = this.GetAllDishTypes ()
                 let! notAlreadyExists =
                     existingDishTypes
                     |> List.exists (fun x -> x.Name = dishType.Name)
@@ -151,10 +151,9 @@ module OrdersSystem =
                 return result
             }
             
-            
         member this.UpdateDishType (dishType: DishType) =
             result {
-                let! existingDishTypes = this.GetallDishTypes ()
+                let! existingDishTypes = this.GetAllDishTypes ()
                 let! notAlreadyExists =
                     existingDishTypes
                     |> List.exists (fun x -> x.Name = dishType.Name)
@@ -168,7 +167,7 @@ module OrdersSystem =
                 return result
             }
        
-        member this.GetallDishTypes (): Result<List<DishType>, string> =
+        member this.GetAllDishTypes (): Result<List<DishType>, string> =
             result {
                 let! (_, restaurant) = restaurantViewer ()
                 return restaurant.DishTypes
@@ -499,7 +498,7 @@ module OrdersSystem =
                 let! allUsers = this.GetAllUsers ()
                 let temporaryUsers = 
                     allUsers
-                    |> List.filter (fun x -> x.Temporary)
+                    |> List.filter (fun x -> x.Temporary.IsSome)
                 return temporaryUsers
             }
 
@@ -508,7 +507,7 @@ module OrdersSystem =
                 let! allUsers = this.GetAllUsers ()
                 let ordinaryUsers = 
                     allUsers
-                    |> List.filter (fun x -> not x.Temporary)
+                    |> List.filter (fun x -> x.Temporary.IsNone)
                 return ordinaryUsers
             }
 
@@ -566,7 +565,7 @@ module OrdersSystem =
                 return ingredients |>> snd
             }
 
-        member this.GetAllTables () =
+        member this.GetAllTables (): Result<List<Table>, string> =
             result {
                 let! (_, restaurant) = restaurantViewer ()
                 let tablesRefs = restaurant.TableRefs
@@ -604,55 +603,81 @@ module OrdersSystem =
                 let! (_, restaurant) = restaurantViewer ()
                 return restaurant.UserRoles
             }
+        member this.GetUserRole (id: Guid) =
+            result {
+                let! (_, restaurant) = restaurantViewer ()
+                do! 
+                    restaurant.UserRoles |>> (fun x -> x.RoleId)
+                    |> List.contains id 
+                    |> Result.ofBool (sprintf "UserRole with id '%A' does not exist" id)
+                    
+                let! result =
+                    restaurant.UserRoles
+                    |> List.tryFind (fun x -> x.RoleId = id)
+                    |> Result.ofOption (sprintf "UserRole with id '%A' does not exist" id)
+                return result
+            }
+        member this.UpdateUserRole (role: UserRole) =
+            printf "XXXXX. Updating\n"
+            result {
+                let! existingRoles = this.GetAllUserRoles ()
+                let! notAlreadyExists =
+                    existingRoles
+                    |> List.exists (fun x -> x.Name = role.Name && x.RoleId <> role.RoleId)
+                    |> not
+                    |> Result.ofBool (sprintf "UserRole with name '%s' already exists" role.Name)
+                
+                let! result =
+                    role
+                    |> RestaurantCommands.UpdateUserRole
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+                return result
+            }
+        member this.DeleteUserRole (id: Guid) =
+            result {
+                let command = RestaurantCommands.DeleteUserRole id
+                return!
+                    command 
+                    |> runCommand<Restaurant, RestaurantEvents, string> eventStore eventBroker
+            }
 
-        // member this.CreateRole (roleName: string) =
+        // // todo: see what to do with optionalRoleIds
+        // member this.CreateUser (username: string, password: string, roles: List<Guid>) =
         //     result {
-        //         let id = Guid.NewGuid()
-        //         let role = Role (id, roleName)
-        //         return!
-        //             id
-        //             |> RestaurantCommands.AddRoleRef
-        //             |> runInitAndCommand<Restaurant, RestaurantEvents, Role, string> eventStore eventBroker role
-        //     }
-        // member this.GetRole id: Result<Role, string> =
-        //     result {
-        //         let! (_, restaurant) = restaurantViewer ()
-        //         do! 
-        //             restaurant.RoleRefs 
-        //             |> List.contains id 
-        //             |> Result.ofBool (sprintf "Role with id '%A' does not exist" id)
+        //         let! existingUsers = this.GetAllUsers ()
+        //         let! notAlreadyExists =
+        //             existingUsers
+        //             |> List.exists (fun x -> x.Username = username)
+        //             |> not
+        //             |> Result.ofBool (sprintf "User with name '%s' already exists" username)
         //
-        //         let! (_, state) = storageRoleViewer id
-        //         do! 
-        //             state.Active
-        //             |> Result.ofBool (sprintf "Role with id '%A' is not active" id)
-        //         return state
+        //         let! user = User.MkUser (username, password, "") // todo: see what to do with string based role 
+        //         return!
+        //             user.Id
+        //             |> RestaurantCommands.AddUserRef
+        //             |> runInitAndCommand<Restaurant, RestaurantEvents, User, string> eventStore eventBroker user
         //     }
-        // member this.GetAllRoles () =
-        //     result {
-        //         let! (_, restaurant) = restaurantViewer ()
-        //         let roleIds = restaurant.RoleRefs
-        //         let! roles = 
-        //             roleIds
-        //             |> List.traverseResultM (fun id -> storageRoleViewer id)
-        //     }
-
-        // todo: see what to do with optionalRoleIds
-        member this.CreateUser (username: string, password: string, roles: List<Guid>) =
+       
+        member this.CreateUser (user: User) =
             result {
                 let! existingUsers = this.GetAllUsers ()
                 let! notAlreadyExists =
                     existingUsers
-                    |> List.exists (fun x -> x.Username = username)
+                    |> List.exists (fun x -> x.Username = user.Username)
                     |> not
-                    |> Result.ofBool (sprintf "User with name '%s' already exists" username)
+                    |> Result.ofBool (sprintf "User with name '%s' already exists" user.Username)
 
-                let! user = User.MkUser (username, password, "") // todo: see what to do with string based role 
+                let! idIsNotUsed =
+                    existingUsers
+                    |> List.exists (fun x -> x.Id = user.Id)
+                    |> not
+                    |> Result.ofBool (sprintf "User with id '%A' already exists" user.Id)
+                    
                 return!
                     user.Id
                     |> RestaurantCommands.AddUserRef
                     |> runInitAndCommand<Restaurant, RestaurantEvents, User, string> eventStore eventBroker user
-            }
+            }     
 
         member this.CreateDish (name: string, description: Option<string>, dishType: Guid, ingredientAndQuantities: List<IngredientAndQuantity>, price: decimal) =
             result {

@@ -5,6 +5,7 @@ open OrdersSystem.Models.User
 open OrdersSystem.Models.UserEvents
 
 open System
+open OrdersSystem.Shared
 open Sharpino
 open FsToolkit.ErrorHandling
 open Sharpino.Core
@@ -19,7 +20,7 @@ type UserCommands =
     | SetOrderManager
     | UnSetDishManager
     | UnSetOrderManager
-    | Update of  Guid * string * string * string * bool * bool * Option<Guid> * bool * bool 
+    | Update of  Guid * string * string * string * bool * Option<TemporaryUser> * Option<Guid> * bool * bool 
         interface Command<User, UserEvents> with
             member this.Execute user = 
                 match this with

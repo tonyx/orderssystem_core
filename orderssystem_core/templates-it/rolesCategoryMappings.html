@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <div id="header"><h1><a href="/">Orders System</a><br><br></h1></div>
+<!--<script src="path/to/your/script.js" defer></script>-->
 
 <script>
 
@@ -19,22 +20,28 @@
 
 
   let allCheckBoxes = [
-      "EnablerCOLLECTING",
-      "EnablerTOBEWORKED",
-      // "EnablerSTARTEDWORKING",
-      // "EnablerREADYFORDELIVERY",
-      // "EnablerDELIVERED",
-      "EnablerDONE",
-      "ObserverCOLLECTING",
-      "ObserverTOBEWORKED",
-      // "ObserverSTARTEDWORKING",
-      // "ObserverREADYFORDELIVERY",
-      // "ObserverDELIVERED",
-      "ObserverDONE",
+    "ManagerCollecting",
+    "ManagerStarted",
+    "ManagerDone",
+    "ObserverCollecting",
+    "ObserverStarted",
+    "ObserverDone",
+          
+    // old:      
+          
+      // "EnablerCOLLECTING",
+      // "EnablerTOBEWORKED",
+      // // "EnablerSTARTEDWORKING",
+      // // "EnablerREADYFORDELIVERY",
+      // // "EnablerDELIVERED",
+      // "EnablerDONE",
+      // "ObserverCOLLECTING",
+      // "ObserverTOBEWORKED",
+      // // "ObserverSTARTEDWORKING",
+      // // "ObserverREADYFORDELIVERY",
+      // // "ObserverDELIVERED",
+      // "ObserverDONE",
    ];
-
-
-
 
 </script>
 
@@ -65,28 +72,27 @@
     </select>
     </fieldset>
 
-
     <fieldset>
       <legend>Abilitatore</legend>
+      <input type="checkbox" onchange='handleChange(this)' name="ManagerCollecting">Collecting</label>
+      <input type="checkbox" onchange='handleChange(this)' name="ManagerStarted">Started</label>
+      <input type="checkbox" onchange='handleChange(this)' name="ManagerDone">Done</label>
 
-        <input type="checkbox" onchange='handleChange(this)' name="EnablerCOLLECTING">Collecting</label>
-        <input type="checkbox" onchange='handleChange(this)' name="EnablerTOBEWORKED">To be worked</label>
-
-
-        <input type="checkbox" onchange='handleChange(this)' name="EnablerDONE">Done</label>
+<!--        <input type="checkbox" onchange='handleChange(this)' name="EnablerCOLLECTING">Collecting</label>-->
+<!--        <input type="checkbox" onchange='handleChange(this)' name="EnablerTOBEWORKED">To be worked</label>-->
+<!--        <input type="checkbox" onchange='handleChange(this)' name="EnablerDONE">Done</label>-->
+      
     </fieldset>
     <fieldset>
       <legend>Osservatore</legend>
-        <input type="checkbox" onchange='handleChange(this)' name="ObserverCOLLECTING">Collecting</label>
-        <input type="checkbox" onchange='handleChange(this)' name="ObserverTOBEWORKED">To be worked</label>
-
-
-        <input type="checkbox" onchange='handleChange(this)' name="ObserverDONE">Done</label>
+        <input type="checkbox" onchange='handleChange(this)' name="ObserverCollecting">Collecting</label>
+        <input type="checkbox" onchange='handleChange(this)' name="ObserverStarted">Started</label>
+        <input type="checkbox" onchange='handleChange(this)' name="ObserverDone">Done</label>
     </fieldset>
 
     <input type="submit" value="Aggiorna">
   </form>
-  <script type="text/javascript" src="/role_cat_enablers_observers.js"></script></div>
+  <script type="text/javascript" src="/role_cat_enablers_observers.js"></script>
 
   <br/>
   <br/>

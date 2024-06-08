@@ -12,9 +12,8 @@ function alignCheckBoxes() {
     var enablers = (rolescategoriesenablers.get(compositeIndex));
     var observers = (rolescategoriesobservers.get(compositeIndex));
 
-    // var rolescatKeys = rolescategoriesenablers.keys();
-    // var observersKeys = rolescategoriesobservers.keys();
-
+    var rolescatKeys = rolescategoriesenablers.keys();
+    var observersKeys = rolescategoriesobservers.keys();
 
     // for (var key in rolescatKeys ) {
     // 	alert(key);
@@ -36,18 +35,19 @@ function alignCheckBoxes() {
     }
 }
 
-
 function handleChange(checkbox) {
+    // alert ("Checkbox clicked: "+checkbox.getAttribute("name"));
+    console.log ("Checkbox clicked: "+checkbox.getAttribute("name"));
 	var name = checkbox.getAttribute("name");
 	if (checkbox.checked == true) {
-		if (name.startsWith("Enabler")) {
+		if (name.startsWith("Manager")) {
 			var propagateTo = "Observer"+name.substring(7);
 			document.getElementsByName(propagateTo)[0].checked=true;
 		}
 	}
 	else  {
 		if (name.startsWith("Observer")) {
-			var propagateTo = "Enabler"+name.substring(8);
+			var propagateTo = "Manager"+name.substring(8);
 			document.getElementsByName(propagateTo)[0].checked=false;
 		}
 	}

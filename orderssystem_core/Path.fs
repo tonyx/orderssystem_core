@@ -21,6 +21,9 @@ let home = "/"
 module Errors =
     let unableToCompleteOperation = "/errors/unabletoCompleteOperation"
 
+module Tables =
+    let adminTables = "/tables/adminTables"
+
 module Orders =
 
     let removeExistingCommentToOrderItem: IntPath = "/orders/removeExistingCommenToOrderItem/%d"
@@ -171,8 +174,9 @@ module Admin =
     let removeObserverMapping: IntPath = "/admin/roles/removeObserver/%d"
     let removeEnablerMapping: IntPath = "/admin/roles/removeEnabler/%d"
     let addUser = "/admin/users/addUser"
-    let editUser: IntPath  = "/admin/editUser/%d"
-    let editTemporaryUser: IntPath = "/admin/editTemporaryUser/%d"
+    let editUser: StrPath  = "/admin/editUser/%s"
+    // let editTemporaryUser: IntPath = "/admin/editTemporaryUser/%d"
+    let editTemporaryUser: StrPath = "/admin/editTemporaryUser/%s"
     let allUsers = "/admin/users"
     let temporaryUsers = "/admin/temporaryUsers"
 
@@ -215,7 +219,8 @@ module Extension =
     let addQruser  = "/addQrUser"
     let qrUserOrder = "/qrUser/order"
     let qrUserImageGen = "/qrUser/qrUserImageGen"
-    let regenTempUser: IntPath = "/qrUser/regenTempUser/%d"
+    // let regenTempUser: IntPath = "/qrUser/regenTempUser/%d"
+    let regenTempUser: StrPath = "/qrUser/regenTempUser/%s"
 
 module Spikes =
     let strPassTest:StrPath = "/spikes/test/%s"

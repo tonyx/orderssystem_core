@@ -39,6 +39,8 @@ type RestaurantEvents =
     | StandardVariationRemoved of Guid
     | StandardVariationUpdated of StandardVariation
     | UserRoleAdded of UserRole
+    | UserRoleUpdated of UserRole
+    | UserRoleDeleted of Guid
 
     interface Event<Restaurant> with
         member this.Process restaurant =
@@ -93,6 +95,10 @@ type RestaurantEvents =
                 restaurant.UpdateStandardVariation standardVariation
             | UserRoleAdded userRole ->
                 restaurant.AddUserRole userRole
+            | UserRoleUpdated userRole ->
+                restaurant.UpdateUserRole userRole    
+            | UserRoleDeleted userRoleId ->
+                restaurant.DeleteUserRole userRoleId
 
     member this.Serialize =
         globalSerializer.Serialize this

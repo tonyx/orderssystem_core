@@ -3,6 +3,7 @@ module OrdersSystem.Models.UserEvents
 open OrdersSystem.Models.User
 open OrdersSystem.Commons
 open System
+open OrdersSystem.Shared
 open Sharpino
 open FsToolkit.ErrorHandling
 open Sharpino.Core
@@ -17,7 +18,7 @@ type UserEvents =
     | DishManagerUnSet
     | OrderManagerSet
     | OrderManagerUnSet
-    | Updated of  Guid * string * string * string * bool * bool * Option<Guid> * bool * bool 
+    | Updated of  Guid * string * string * string * bool * Option<TemporaryUser> * Option<Guid> * bool * bool 
         interface Event<User>  with
             member this.Process user =
                 match this with

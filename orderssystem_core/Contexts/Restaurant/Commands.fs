@@ -41,7 +41,8 @@ type RestaurantCommands =
     | RemoveStandardVariation of Guid
     | UpdateStandardVariation of StandardVariation
     | CreateUserRole of UserRole
-     
+    | UpdateUserRole of UserRole
+    | DeleteUserRole of Guid
      
     interface Command<Restaurant, RestaurantEvents> with
         member this.Execute restaurant =
@@ -121,6 +122,11 @@ type RestaurantCommands =
             | CreateUserRole userRole ->
                 restaurant.CreateUserRole userRole
                 |> Result.map (fun r -> [UserRoleAdded userRole])
-                
+            | UpdateUserRole userRole ->
+                restaurant.UpdateUserRole userRole
+                |> Result.map (fun r -> [UserRoleUpdated userRole])    
+            | DeleteUserRole userRoleId ->
+                restaurant.DeleteUserRole userRoleId
+                |> Result.map (fun r -> [UserRoleDeleted userRoleId]) 
                 
         member this.Undoer = None
